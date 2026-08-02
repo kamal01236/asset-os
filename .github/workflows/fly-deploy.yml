@@ -1,0 +1,50 @@
+# Deploy Flutter web (Docker/nginx) to Fly.io on pushes to main.
+# Secrets/vars live under GitHub Environment: Production
+# (Settings → Environments → Production). Required: FLY_API_TOKEN.
+name: Fly Deploy
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy to Fly.io
+    runs-on: ubuntu-latest
+    environment: Production
+    concurrency:
+      group: fly-deploy-production
+      cancel-in-progress: false
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Fly CLI
+        uses: superfly/flyctl-actions/setup-flyctl@1
+
+      - name: Deploy
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "${FLY_API_TOKEN:-}" ]; then
+            echo "::error::FLY_API_TOKEN is empty. Set the secret under GitHub Environment 'Production' (Settings → Environments → Production → Secrets)."
+            exit 1
+          fi
+
+          # Optional overrides from Environment variables. Only apply when
+          # non-empty so blank GitHub vars do not override fly.toml defaults.
+          DEPLOY_ARGS=(deploy --remote-only)
+          FLY_APP_VAR='${{ vars.FLY_APP }}'
+          FLY_ORG_VAR='${{ vars.FLY_ORG }}'
+          if [ -n "$FLY_APP_VAR" ]; then
+            DEPLOY_ARGS+=(--app "$FLY_APP_VAR")
+          fi
+          if [ -n "$FLY_ORG_VAR" ]; then
+            export FLY_ORG="$FLY_ORG_VAR"
+          fi
+
+          # Docker/Flutter build runs on Fly remote builders (--remote-only).
+          flyctl "${DEPLOY_ARGS[@]}"

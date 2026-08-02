@@ -1,0 +1,228 @@
+import 'package:drift/drift.dart' show driftRuntimeOptions;
+import 'package:drift/native.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'package:asset_os/app_shell.dart';
+import 'package:asset_os/core/config/app_branding.dart';
+import 'package:asset_os/core/db/app_database.dart';
+import 'package:asset_os/core/models/entities.dart';
+import 'package:asset_os/core/providers/app_providers.dart';
+import 'package:asset_os/core/repositories/local_repository.dart';
+import 'package:asset_os/core/theme/app_theme.dart';
+
+Future<ProviderContainer> _bootTestContainer({
+  Map<String, Object> prefs = const <String, Object>{},
+  AppDatabase? database,
+}) async {
+  SharedPreferences.setMockInitialValues(prefs);
+  final SharedPreferences preferences = await SharedPreferences.getInstance();
+  final AppDatabase db = database ?? AppDatabase(NativeDatabase.memory());
+  addTearDown(db.close);
+  final LocalRepository repository = await bootstrapRepository(
+    database: db,
+    preferences: preferences,
+  );
+  final ProviderContainer container = ProviderContainer(
+    overrides: <Override>[
+      sharedPreferencesProvider.overrideWithValue(preferences),
+      databaseProvider.overrideWithValue(db),
+      repositoryProvider.overrideWithValue(repository),
+    ],
+  );
+  addTearDown(container.dispose);
+  return container;
+}
+
+Future<ProviderContainer> _pumpAppShell(WidgetTester tester) async {
+  final ProviderContainer container = await _bootTestContainer();
+  await tester.pumpWidget(
+    UncontrolledProviderScope(
+      container: container,
+      child: MaterialApp(
+        theme: AppTheme.build(),
+        home: const AppShell(),
+      ),
+    ),
+  );
+  await tester.pumpAndSettle();
+  return container;
+}
+
+void main() {
+  driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
+
+  testWidgets('app loads smoke test with Drift seed', (WidgetTester tester) async {
+    await _pumpAppShell(tester);
+
+    expect(find.text(kAppDisplayName), findsOneWidget);
+    expect(find.text('Search Anything'), findsOneWidget);
+    expect(find.text('Today at a glance'), findsOneWidget);
+  });
+
+  testWidgets('primary tabs show seeded rentals, inventory, and customers', (
+    WidgetTester tester,
+  ) async {
+    await _pumpAppShell(tester);
+
+    await tester.tap(find.text('Rentals'));
+    await tester.pumpAndSettle();
+    expect(find.text('REN-3001'), findsOneWidget);
+
+    await tester.tap(find.text('Inventory'));
+    await tester.pumpAndSettle();
+    expect(find.text('Canon DSLR Camera'), findsOneWidget);
+    expect(find.text('Audio Mixer X12'), findsOneWidget);
+
+    await tester.tap(find.text('Customers'));
+    await tester.pumpAndSettle();
+    expect(find.text('Priya Patel'), findsWidgets);
+    expect(find.textContaining('9876500001'), findsOneWidget);
+
+    await tester.tap(find.text('More'));
+    await tester.pumpAndSettle();
+    expect(find.text('Offline simulation'), findsOneWidget);
+  });
+
+  testWidgets('opens Search and New Rental from Home', (WidgetTester tester) async {
+    await _pumpAppShell(tester);
+
+    await tester.tap(find.text('Search Anything'));
+    await tester.pumpAndSettle();
+    expect(find.text('Find customer, rental, or inventory'), findsOneWidget);
+    expect(find.widgetWithText(AppBar, 'Search'), findsOneWidget);
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(find.text('Search Anything'), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(FilledButton, 'New Rental'));
+    await tester.pumpAndSettle();
+    expect(find.widgetWithText(AppBar, 'New Rental'), findsOneWidget);
+    expect(find.text('Step 1 of 3'), findsOneWidget);
+    expect(find.text('Phone number'), findsOneWidget);
+  });
+
+  test('seeds demo data when DB empty and no snapshot', () async {
+    final ProviderContainer container = await _bootTestContainer();
+
+    final LocalRepository repo = container.read(repositoryProvider);
+    final List<Customer> customers = await repo.listCustomers();
+    final List<InventoryItem> inventory = await repo.listInventory();
+    final List<Rental> rentals = await repo.listRentals();
+
+    expect(customers, hasLength(3));
+    expect(inventory, hasLength(3));
+    expect(rentals, hasLength(2));
+    expect(customers.any((c) => c.phone == '9876500001'), isTrue);
+  });
+
+  test('migrates SharedPreferences snapshot once', () async {
+    final DateTime now = DateTime(2026, 8, 2, 12);
+    final AppDataSnapshot snapshot = AppDataSnapshot(
+      customers: <Customer>[
+        const Customer(
+          id: 'CUS-M1',
+          name: 'Migrated User',
+          phone: '9000000001',
+          isTrusted: true,
+          qrCode: 'customer:m1',
+        ),
+      ],
+      inventory: <InventoryItem>[
+        const InventoryItem(
+          id: 'INV-M1',
+          name: 'Migrated Camera',
+          category: 'Camera',
+          availableUnits: 1,
+          totalUnits: 1,
+          status: AssetStatus.available,
+          qrCode: 'inventory:m1',
+        ),
+      ],
+      rentals: <Rental>[
+        Rental(
+          id: 'REN-M1',
+          customerId: 'CUS-M1',
+          itemIds: <String>['INV-M1'],
+          startedAt: now.subtract(const Duration(days: 1)),
+          dueAt: now.add(const Duration(days: 2)),
+          timeline: <RentalEvent>[
+            RentalEvent(
+              title: 'Rental opened',
+              subtitle: 'From prefs snapshot',
+              at: now.subtract(const Duration(days: 1)),
+            ),
+          ],
+          qrCode: 'rental:m1',
+        ),
+      ],
+    );
+
+    final ProviderContainer container = await _bootTestContainer(
+      prefs: <String, Object>{
+        LocalRepository.snapshotKey: snapshot.encode(),
+      },
+    );
+
+    final LocalRepository repo = container.read(repositoryProvider);
+    final SharedPreferences prefs = container.read(sharedPreferencesProvider);
+
+    expect(await repo.listCustomers(), hasLength(1));
+    expect((await repo.listCustomers()).first.name, 'Migrated User');
+    expect(await repo.listInventory(), hasLength(1));
+    expect(await repo.listRentals(), hasLength(1));
+    expect(prefs.getString(LocalRepository.snapshotKey), isNull);
+
+    // Re-initialize against same DB must not duplicate.
+    await repo.initialize();
+    expect(await repo.listCustomers(), hasLength(1));
+  });
+
+  test('create rental, return, phone lookup, search, and QR resolve', () async {
+    final AppDatabase db = AppDatabase(NativeDatabase.memory());
+    addTearDown(db.close);
+    SharedPreferences.setMockInitialValues(<String, Object>{});
+    final SharedPreferences preferences = await SharedPreferences.getInstance();
+    final LocalRepository repo = LocalRepository(db, preferences);
+    await repo.initialize();
+
+    final Customer existing = (await repo.customerByPhone('9876500001'))!;
+    expect(existing.name, 'Priya Patel');
+
+    final InventoryItem camera = (await repo.listInventory())
+        .firstWhere((item) => item.id == 'INV-2001');
+    expect(camera.availableUnits, 2);
+
+    await repo.createRental(customer: existing, selectedItems: <InventoryItem>[camera]);
+    final List<Rental> afterCreate = await repo.listRentals();
+    expect(afterCreate.length, greaterThanOrEqualTo(3));
+    final Rental created = afterCreate.first;
+    expect(created.customerId, existing.id);
+    expect(created.isActive, isTrue);
+
+    final InventoryItem afterRent = (await repo.listInventory())
+        .firstWhere((item) => item.id == 'INV-2001');
+    expect(afterRent.availableUnits, 1);
+
+    final SearchResults results = await repo.search('priya');
+    expect(results.customers, isNotEmpty);
+    expect(results.customers.first.phone, '9876500001');
+
+    final QrDestination? destination = await repo.resolveQr('customer:1001');
+    expect(destination, isA<QrCustomer>());
+    expect((destination! as QrCustomer).customerId, 'CUS-1001');
+
+    await repo.returnRental(created.id);
+    final Rental returned =
+        (await repo.listRentals()).firstWhere((item) => item.id == created.id);
+    expect(returned.isActive, isFalse);
+    expect(returned.timeline.map((e) => e.title), contains('Returned'));
+
+    final InventoryItem afterReturn = (await repo.listInventory())
+        .firstWhere((item) => item.id == 'INV-2001');
+    expect(afterReturn.availableUnits, 2);
+  });
+}

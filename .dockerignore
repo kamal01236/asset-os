@@ -1,0 +1,17 @@
+.git
+.cursor
+**/.dart_tool
+**/build
+**/.idea
+**/*.iml
+**/android/.gradle
+**/android/local.properties
+**/doc
+docs
+*.md
+!apps/web/README.md
+scripts
+.env
+.env.*
+agent-transcripts
+terminals
