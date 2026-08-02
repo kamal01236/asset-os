@@ -3,6 +3,17 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../db/app_database.dart';
 import '../models/entities.dart';
+import '../templates/industry_templates.dart';
+
+class TemplateImportResult {
+  const TemplateImportResult({
+    required this.added,
+    required this.skipped,
+  });
+
+  final int added;
+  final int skipped;
+}
 
 class SearchResults {
   const SearchResults({
@@ -213,6 +224,90 @@ class LocalRepository {
         totalUnits: units,
         status: AssetStatus.available.name,
         qrCode: 'inventory:${now.millisecondsSinceEpoch}',
+        notes: Value<String?>(notes?.isEmpty == true ? null : notes),
+      ),
+    );
+  }
+
+  /// Merge selected template items into inventory. Same name (case-insensitive) is skipped.
+  Future<TemplateImportResult> importTemplateInventory(
+    List<TemplateInventoryItem> selected,
+  ) async {
+    if (selected.isEmpty) {
+      return const TemplateImportResult(added: 0, skipped: 0);
+    }
+
+    final List<InventoryItem> existing = await listInventory();
+    final Set<String> existingNames = existing
+        .map((item) => item.name.trim().toLowerCase())
+        .toSet();
+
+    int added = 0;
+    int skipped = 0;
+    // Stagger ids when inserting multiple items in one tick.
+    int stamp = DateTime.now().millisecondsSinceEpoch;
+
+    for (final TemplateInventoryItem item in selected) {
+      final String key = item.name.trim().toLowerCase();
+      if (key.isEmpty || existingNames.contains(key)) {
+        skipped += 1;
+        continue;
+      }
+      final int units = item.defaultUnits < 1 ? 1 : item.defaultUnits;
+      await _db.into(_db.inventoryItems).insert(
+        InventoryItemsCompanion.insert(
+          id: 'INV-$stamp',
+          name: item.name.trim(),
+          category: item.category.trim(),
+          availableUnits: units,
+          totalUnits: units,
+          status: AssetStatus.available.name,
+          qrCode: 'inventory:$stamp',
+          notes: Value<String?>(item.notes?.isEmpty == true ? null : item.notes),
+        ),
+      );
+      existingNames.add(key);
+      added += 1;
+      stamp += 1;
+    }
+
+    return TemplateImportResult(added: added, skipped: skipped);
+  }
+
+  Future<void> updateInventory({
+    required String id,
+    required String name,
+    required String category,
+    required int units,
+    String? notes,
+  }) async {
+    final InventoryItemRow? row = await (_db.select(_db.inventoryItems)
+          ..where((t) => t.id.equals(id)))
+        .getSingleOrNull();
+    if (row == null) {
+      return;
+    }
+
+    final int nextTotal = units < 1 ? 1 : units;
+    final int delta = nextTotal - row.totalUnits;
+    int nextAvailable = row.availableUnits;
+    if (delta > 0) {
+      // Extra units start available.
+      nextAvailable = row.availableUnits + delta;
+    } else if (delta < 0) {
+      nextAvailable = (row.availableUnits + delta).clamp(0, nextTotal);
+    }
+    nextAvailable = nextAvailable.clamp(0, nextTotal);
+
+    await (_db.update(_db.inventoryItems)..where((t) => t.id.equals(id))).write(
+      InventoryItemsCompanion(
+        name: Value<String>(name.trim()),
+        category: Value<String>(category.trim()),
+        totalUnits: Value<int>(nextTotal),
+        availableUnits: Value<int>(nextAvailable),
+        status: Value<String>(
+          nextAvailable > 0 ? AssetStatus.available.name : AssetStatus.rented.name,
+        ),
         notes: Value<String?>(notes?.isEmpty == true ? null : notes),
       ),
     );
@@ -455,30 +550,31 @@ AppDataSnapshot buildDemoSnapshot({DateTime? now}) {
     const Customer(
       id: 'CUS-1001',
       name: 'Priya Patel',
-      phone: '9876500001',
+      phone: '6666666666',
       isTrusted: true,
       qrCode: 'customer:1001',
     ),
     const Customer(
       id: 'CUS-1002',
       name: 'Amit Sharma',
-      phone: '9876500002',
+      phone: '7777777777',
       isTrusted: false,
       qrCode: 'customer:1002',
     ),
     const Customer(
       id: 'CUS-1003',
       name: 'Ravi Das',
-      phone: '9876500003',
+      phone: '9999999999',
       isTrusted: true,
       qrCode: 'customer:1003',
     ),
   ];
 
+  // Camera-light + one tools item so Home/rentals stay coherent with templates.
   final List<InventoryItem> seedInventory = <InventoryItem>[
     const InventoryItem(
       id: 'INV-2001',
-      name: 'Canon DSLR Camera',
+      name: 'DSLR',
       category: 'Camera',
       availableUnits: 2,
       totalUnits: 3,
@@ -487,7 +583,7 @@ AppDataSnapshot buildDemoSnapshot({DateTime? now}) {
     ),
     const InventoryItem(
       id: 'INV-2002',
-      name: 'Bosch Drill Kit',
+      name: 'Drill Kit',
       category: 'Tools',
       availableUnits: 0,
       totalUnits: 2,
@@ -496,8 +592,8 @@ AppDataSnapshot buildDemoSnapshot({DateTime? now}) {
     ),
     const InventoryItem(
       id: 'INV-2003',
-      name: 'Audio Mixer X12',
-      category: 'Audio',
+      name: 'Tripod',
+      category: 'Camera',
       availableUnits: 1,
       totalUnits: 1,
       status: AssetStatus.available,

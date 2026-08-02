@@ -7,6 +7,7 @@ import 'core/providers/app_providers.dart';
 import 'core/repositories/local_repository.dart';
 import 'core/widgets/rental_timeline.dart';
 import 'core/widgets/ui_primitives.dart';
+import 'features/templates/business_templates_screen.dart';
 
 class AppShell extends ConsumerWidget {
   const AppShell({super.key});
@@ -460,13 +461,13 @@ class MoreScreen extends ConsumerWidget {
         ),
         const SizedBox(height: 10),
         EntityCard(
-          title: 'Business Templates (stub)',
-          subtitle: 'Library, camera, and hospital label presets.',
+          title: 'Business Templates',
+          subtitle: 'Import starter inventory by industry (merge).',
           leadingIcon: Icons.dashboard_customize_outlined,
           trailing: const Icon(Icons.chevron_right),
           onTap: () {
             Navigator.of(context).push(
-              MaterialPageRoute<void>(builder: (_) => const BusinessTemplateStubScreen()),
+              MaterialPageRoute<void>(builder: (_) => const BusinessTemplatesScreen()),
             );
           },
         ),
@@ -671,7 +672,7 @@ class RentalDetailScreen extends ConsumerWidget {
   }
 }
 
-class InventoryDetailScreen extends ConsumerWidget {
+class InventoryDetailScreen extends ConsumerStatefulWidget {
   const InventoryDetailScreen({
     required this.itemId,
     super.key,
@@ -680,45 +681,172 @@ class InventoryDetailScreen extends ConsumerWidget {
   final String itemId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<InventoryDetailScreen> createState() => _InventoryDetailScreenState();
+}
+
+class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
+  bool _editing = false;
+  bool _saving = false;
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _categoryController = TextEditingController();
+  final TextEditingController _unitsController = TextEditingController();
+  final TextEditingController _notesController = TextEditingController();
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _categoryController.dispose();
+    _unitsController.dispose();
+    _notesController.dispose();
+    super.dispose();
+  }
+
+  void _beginEdit(InventoryItem item) {
+    _nameController.text = item.name;
+    _categoryController.text = item.category;
+    _unitsController.text = '${item.totalUnits}';
+    _notesController.text = item.notes ?? '';
+    setState(() => _editing = true);
+  }
+
+  Future<void> _saveEdit() async {
+    if (_saving) {
+      return;
+    }
+    final String name = _nameController.text.trim();
+    final String category = _categoryController.text.trim();
+    if (name.isEmpty || category.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Name and category are required.')),
+      );
+      return;
+    }
+    final int units = int.tryParse(_unitsController.text.trim()) ?? 1;
+    setState(() => _saving = true);
+    await ref.read(repositoryProvider).updateInventory(
+      id: widget.itemId,
+      name: name,
+      category: category,
+      units: units < 1 ? 1 : units,
+      notes: _notesController.text.trim(),
+    );
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _saving = false;
+      _editing = false;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Inventory updated.')),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final AsyncValue<List<InventoryItem>> inventoryAsync = ref.watch(inventoryProvider);
     return inventoryAsync.when(
       loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (Object error, StackTrace _) => Scaffold(body: Center(child: Text('$error'))),
       data: (List<InventoryItem> inventory) {
-        final InventoryItem item = inventory.firstWhere((entry) => entry.id == itemId);
+        final InventoryItem item =
+            inventory.firstWhere((entry) => entry.id == widget.itemId);
         final AssetStatus status =
             item.availableUnits > 0 ? AssetStatus.available : AssetStatus.rented;
         return Scaffold(
-          appBar: AppBar(title: const Text('Inventory detail')),
-          body: ListView(
-            padding: const EdgeInsets.all(16),
-            children: <Widget>[
-              EntityCard(
-                title: item.name,
-                subtitle: '${item.category} • ${item.availableUnits}/${item.totalUnits} available',
-                leadingIcon: Icons.inventory_2_outlined,
-                status: status,
-              ),
-              const SizedBox(height: 10),
-              Card(
-                child: ListTile(
-                  leading: const Icon(Icons.qr_code_2_outlined),
-                  title: const Text('QR code'),
-                  subtitle: Text(item.qrCode),
+          appBar: AppBar(
+            title: Text(_editing ? 'Edit inventory' : 'Inventory detail'),
+            actions: <Widget>[
+              if (!_editing)
+                IconButton(
+                  tooltip: 'Edit',
+                  icon: const Icon(Icons.edit_outlined),
+                  onPressed: () => _beginEdit(item),
                 ),
-              ),
-              if ((item.notes ?? '').isNotEmpty) ...<Widget>[
-                const SizedBox(height: 10),
-                Card(
-                  child: ListTile(
-                    title: const Text('Notes'),
-                    subtitle: Text(item.notes!),
-                  ),
-                ),
-              ],
             ],
           ),
+          body: ListView(
+            padding: const EdgeInsets.all(16),
+            children: _editing
+                ? <Widget>[
+                    TextField(
+                      controller: _nameController,
+                      decoration: const InputDecoration(labelText: 'Item name'),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: _categoryController,
+                      decoration: const InputDecoration(labelText: 'Category'),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: _unitsController,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: 'Total units',
+                        helperText: 'Available adjusts with total; cannot exceed total.',
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: _notesController,
+                      decoration: const InputDecoration(
+                        labelText: 'Notes',
+                        hintText: 'Warranty / serial / condition',
+                      ),
+                    ),
+                  ]
+                : <Widget>[
+                    EntityCard(
+                      title: item.name,
+                      subtitle:
+                          '${item.category} • ${item.availableUnits}/${item.totalUnits} available',
+                      leadingIcon: Icons.inventory_2_outlined,
+                      status: status,
+                    ),
+                    const SizedBox(height: 10),
+                    Card(
+                      child: ListTile(
+                        leading: const Icon(Icons.qr_code_2_outlined),
+                        title: const Text('QR code'),
+                        subtitle: Text(item.qrCode),
+                      ),
+                    ),
+                    if ((item.notes ?? '').isNotEmpty) ...<Widget>[
+                      const SizedBox(height: 10),
+                      Card(
+                        child: ListTile(
+                          title: const Text('Notes'),
+                          subtitle: Text(item.notes!),
+                        ),
+                      ),
+                    ],
+                  ],
+          ),
+          bottomNavigationBar: _editing
+              ? SafeArea(
+                  minimum: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                  child: Row(
+                    children: <Widget>[
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: _saving
+                              ? null
+                              : () => setState(() => _editing = false),
+                          child: const Text('Cancel'),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: FilledButton(
+                          onPressed: _saving ? null : _saveEdit,
+                          child: Text(_saving ? 'Saving…' : 'Save changes'),
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              : null,
         );
       },
     );
@@ -1423,18 +1551,6 @@ class VoiceSearchStubScreen extends StatelessWidget {
     return const _StubScaffold(
       title: 'Voice Search',
       body: 'Stub only: voice commands map to universal search intents in phase 5+.',
-    );
-  }
-}
-
-class BusinessTemplateStubScreen extends StatelessWidget {
-  const BusinessTemplateStubScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const _StubScaffold(
-      title: 'Business Templates',
-      body: 'Stub only: preset vocabulary and labels for library/camera/hospital.',
     );
   }
 }

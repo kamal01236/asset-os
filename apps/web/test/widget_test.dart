@@ -11,6 +11,7 @@ import 'package:asset_os/core/db/app_database.dart';
 import 'package:asset_os/core/models/entities.dart';
 import 'package:asset_os/core/providers/app_providers.dart';
 import 'package:asset_os/core/repositories/local_repository.dart';
+import 'package:asset_os/core/templates/industry_templates.dart';
 import 'package:asset_os/core/theme/app_theme.dart';
 
 Future<ProviderContainer> _bootTestContainer({
@@ -73,13 +74,13 @@ void main() {
 
     await tester.tap(find.text('Inventory'));
     await tester.pumpAndSettle();
-    expect(find.text('Canon DSLR Camera'), findsOneWidget);
-    expect(find.text('Audio Mixer X12'), findsOneWidget);
+    expect(find.text('DSLR'), findsOneWidget);
+    expect(find.text('Tripod'), findsOneWidget);
 
     await tester.tap(find.text('Customers'));
     await tester.pumpAndSettle();
     expect(find.text('Priya Patel'), findsWidgets);
-    expect(find.textContaining('9876500001'), findsOneWidget);
+    expect(find.textContaining('6666666666'), findsOneWidget);
 
     await tester.tap(find.text('More'));
     await tester.pumpAndSettle();
@@ -119,7 +120,7 @@ void main() {
     expect(customers, hasLength(3));
     expect(inventory, hasLength(3));
     expect(rentals, hasLength(2));
-    expect(customers.any((c) => c.phone == '9876500001'), isTrue);
+    expect(customers.any((c) => c.phone == '6666666666'), isTrue);
   });
 
   test('migrates SharedPreferences snapshot once', () async {
@@ -192,7 +193,7 @@ void main() {
     final LocalRepository repo = LocalRepository(db, preferences);
     await repo.initialize();
 
-    final Customer existing = (await repo.customerByPhone('9876500001'))!;
+    final Customer existing = (await repo.customerByPhone('6666666666'))!;
     expect(existing.name, 'Priya Patel');
 
     final InventoryItem camera = (await repo.listInventory())
@@ -212,7 +213,7 @@ void main() {
 
     final SearchResults results = await repo.search('priya');
     expect(results.customers, isNotEmpty);
-    expect(results.customers.first.phone, '9876500001');
+    expect(results.customers.first.phone, '6666666666');
 
     final QrDestination? destination = await repo.resolveQr('customer:1001');
     expect(destination, isA<QrCustomer>());
@@ -227,5 +228,60 @@ void main() {
     final InventoryItem afterReturn = (await repo.listInventory())
         .firstWhere((item) => item.id == 'INV-2001');
     expect(afterReturn.availableUnits, 2);
+  });
+
+  test('importTemplateInventory merges and skips duplicates', () async {
+    final ProviderContainer container = await _bootTestContainer();
+    final LocalRepository repo = container.read(repositoryProvider);
+
+    final TemplateImportResult first = await repo.importTemplateInventory(
+      const <TemplateInventoryItem>[
+        TemplateInventoryItem(name: 'DSLR', category: 'Camera', defaultUnits: 3),
+        TemplateInventoryItem(name: 'Lens', category: 'Camera', defaultUnits: 4),
+      ],
+    );
+    expect(first.added, 1);
+    expect(first.skipped, 1);
+
+    final TemplateImportResult second = await repo.importTemplateInventory(
+      const <TemplateInventoryItem>[
+        TemplateInventoryItem(name: 'Lens', category: 'Camera', defaultUnits: 4),
+      ],
+    );
+    expect(second.added, 0);
+    expect(second.skipped, 1);
+
+    final List<InventoryItem> inventory = await repo.listInventory();
+    expect(inventory.where((item) => item.name == 'Lens'), hasLength(1));
+    expect(inventory.where((item) => item.name.toLowerCase() == 'dslr'), hasLength(1));
+  });
+
+  test('updateInventory adjusts units without exceeding total', () async {
+    final ProviderContainer container = await _bootTestContainer();
+    final LocalRepository repo = container.read(repositoryProvider);
+
+    await repo.updateInventory(
+      id: 'INV-2001',
+      name: 'DSLR Pro',
+      category: 'Camera',
+      units: 5,
+      notes: 'Updated body',
+    );
+    InventoryItem updated =
+        (await repo.listInventory()).firstWhere((item) => item.id == 'INV-2001');
+    expect(updated.name, 'DSLR Pro');
+    expect(updated.totalUnits, 5);
+    expect(updated.availableUnits, 4); // was 2/3; +2 total → +2 available
+    expect(updated.notes, 'Updated body');
+
+    await repo.updateInventory(
+      id: 'INV-2001',
+      name: 'DSLR Pro',
+      category: 'Camera',
+      units: 3,
+    );
+    updated = (await repo.listInventory()).firstWhere((item) => item.id == 'INV-2001');
+    expect(updated.totalUnits, 3);
+    expect(updated.availableUnits, 2); // 4 + (-2) clamped
   });
 }

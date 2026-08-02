@@ -29,3 +29,7 @@ Use repo-root scripts from WSL (or `.\scripts\wsl.ps1` from Windows):
 ```
 
 See the [repository README](../../README.md) for the full command table and Fly.io feedback workflow.
+
+## Business Templates
+
+**More → Business Templates** → pick an industry → select starter items → **Add selected to inventory** (merge; same-name items are skipped). Edit existing rows from Inventory detail.
