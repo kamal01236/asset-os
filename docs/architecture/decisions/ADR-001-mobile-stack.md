@@ -54,6 +54,7 @@ For broader local-first architecture, stack context (Riverpod, Drift, SQLCipher)
 | ID | Topic | Notes |
 |----|-------|-------|
 | [ADR-002](ADR-002-local-first-foundation.md) | Local DB foundation | Drift + Riverpod (accepted) |
+| [ADR-003](ADR-003-localization.md) | UI localization | gen-l10n en + hi (accepted) |
 
 ## Future ADR placeholders
 

@@ -1,0 +1,243 @@
+{
+  "@@locale": "hi",
+  "navHome": "होम",
+  "navRentals": "किराए",
+  "navInventory": "इन्वेंटरी",
+  "navCustomers": "ग्राहक",
+  "navMore": "और",
+  "actionSearch": "खोजें",
+  "actionNewRental": "नया किराया",
+  "actionReturn": "वापसी",
+  "actionReturnItem": "वस्तु वापस लें",
+  "actionAddInventory": "इन्वेंटरी जोड़ें",
+  "actionScan": "स्कैन",
+  "actionActions": "कार्रवाई",
+  "searchAnything": "कुछ भी खोजें",
+  "todayAtAGlance": "आज एक नज़र में",
+  "kpiActive": "सक्रिय",
+  "statusAvailable": "उपलब्ध",
+  "statusRented": "किराए पर",
+  "statusDueToday": "आज देय",
+  "statusOverdue": "अतिदेय",
+  "statusArchived": "संग्रहीत",
+  "quickActions": "त्वरित कार्रवाई",
+  "aiSuggestionsTitle": "AI सुझाव (बीटा)",
+  "aiSuggestionsBody": "• 1 अतिदेय किराए का फ़ॉलो-अप करें\n• Bosch Drill Kit को प्रीमियम मूल्य पर ले जाएँ\n• विस्तार पुष्टि के लिए Priya Patel को कॉल करें",
+  "offlineBanner": "ऑफ़लाइन काम कर रहे हैं — बदलाव बाद में सिंक होंगे।",
+  "noRentalsYetTitle": "अभी कोई किराया नहीं",
+  "noRentalsYetSubtitle": "अपना पहला लेन-देन बनाने के लिए नया किराया शुरू करें।",
+  "unknownCustomer": "अज्ञात ग्राहक",
+  "rentalDueSubtitle": "{customerName} • देय {date}",
+  "@rentalDueSubtitle": {
+    "placeholders": {
+      "customerName": {"type": "String"},
+      "date": {"type": "String"}
+    }
+  },
+  "inventoryAvailableSubtitle": "{category} • {available}/{total} उपलब्ध",
+  "@inventoryAvailableSubtitle": {
+    "placeholders": {
+      "category": {"type": "String"},
+      "available": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "customerTrusted": "विश्वसनीय",
+  "customerStandard": "सामान्य",
+  "customerSubtitle": "{phone} • {tier}",
+  "@customerSubtitle": {
+    "placeholders": {
+      "phone": {"type": "String"},
+      "tier": {"type": "String"}
+    }
+  },
+  "offlineSimulationTitle": "ऑफ़लाइन सिमुलेशन",
+  "offlineSimulationSubtitle": "केवल डेमो: नॉन-ब्लॉकिंग ऑफ़लाइन UX जाँचें (उत्पाद स्थिति नहीं)।",
+  "languageTitle": "भाषा",
+  "languageSubtitle": "ऐप की भाषा चुनें",
+  "languageEnglish": "English",
+  "languageHindi": "हिन्दी",
+  "voiceSearchStubTitle": "वॉइस खोज (स्टब)",
+  "voiceSearchStubSubtitle": "इंटेंट-आधारित खोज कमांड के लिए प्लेसहोल्डर।",
+  "businessTemplatesTitle": "व्यवसाय टेम्पलेट",
+  "businessTemplatesSubtitle": "उद्योग के अनुसार स्टार्टर इन्वेंटरी आयात करें (मर्ज)।",
+  "phoneLabel": "फ़ोन: {phone}",
+  "@phoneLabel": {
+    "placeholders": {
+      "phone": {"type": "String"}
+    }
+  },
+  "itemsHeading": "वस्तुएँ",
+  "timelineHeading": "टाइमलाइन",
+  "extendAction": "बढ़ाएँ",
+  "shareAction": "शेयर",
+  "extendPlaceholder": "बढ़ाना एक प्लेसहोल्डर कार्रवाई है।",
+  "sharePlaceholder": "शेयर एक प्लेसहोल्डर कार्रवाई है।",
+  "editInventoryTitle": "इन्वेंटरी संपादित करें",
+  "inventoryDetailTitle": "इन्वेंटरी विवरण",
+  "editTooltip": "संपादित करें",
+  "itemNameLabel": "वस्तु का नाम",
+  "categoryLabel": "श्रेणी",
+  "totalUnitsLabel": "कुल इकाइयाँ",
+  "totalUnitsHelper": "उपलब्ध कुल के साथ समायोजित होता है; कुल से अधिक नहीं हो सकता।",
+  "notesLabel": "नोट्स",
+  "notesHint": "वारंटी / सीरियल / स्थिति",
+  "qrCodeLabel": "QR कोड",
+  "cancel": "रद्द करें",
+  "saving": "सहेजा जा रहा है…",
+  "saveChanges": "बदलाव सहेजें",
+  "nameCategoryRequired": "नाम और श्रेणी आवश्यक हैं।",
+  "inventoryUpdated": "इन्वेंटरी अपडेट हो गई।",
+  "customerProfileTitle": "ग्राहक प्रोफ़ाइल",
+  "callAction": "कॉल",
+  "whatsAppAction": "WhatsApp",
+  "whatsAppSubtitle": "प्लेसहोल्डर इंटीग्रेशन हुक",
+  "callPlaceholder": "कॉल प्लेसहोल्डर कार्रवाई।",
+  "whatsAppPlaceholder": "WhatsApp प्लेसहोल्डर कार्रवाई।",
+  "recentRentals": "हाल के किराए",
+  "dueDate": "देय {date}",
+  "@dueDate": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "returnedDate": "वापस {date}",
+  "@returnedDate": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "searchHint": "ग्राहक, किराया या इन्वेंटरी खोजें",
+  "searchSectionCustomers": "ग्राहक",
+  "searchSectionCurrentRentals": "वर्तमान किराए",
+  "searchSectionPreviousRentals": "पिछले किराए",
+  "searchSectionInventory": "इन्वेंटरी",
+  "noMatchingSection": "कोई मिलान नहीं: {section}",
+  "@noMatchingSection": {
+    "placeholders": {
+      "section": {"type": "String"}
+    }
+  },
+  "inventoryUnitsSubtitle": "{category} • {available}/{total}",
+  "@inventoryUnitsSubtitle": {
+    "placeholders": {
+      "category": {"type": "String"},
+      "available": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "stepOf": "चरण {current} / {total}",
+  "@stepOf": {
+    "placeholders": {
+      "current": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "phoneNumberLabel": "फ़ोन नंबर",
+  "phoneNumberHint": "10 अंकों का ग्राहक फ़ोन",
+  "existingCustomer": "मौजूदा ग्राहक",
+  "existingCustomerSubtitle": "{phone} • मौजूदा ग्राहक",
+  "@existingCustomerSubtitle": {
+    "placeholders": {
+      "phone": {"type": "String"}
+    }
+  },
+  "customerNameNewLabel": "ग्राहक का नाम (नया)",
+  "customerNameNewHint": "केवल नए ग्राहक के लिए आवश्यक",
+  "selectItems": "वस्तुएँ चुनें",
+  "itemAvailableCount": "{category} • {available} उपलब्ध",
+  "@itemAvailableCount": {
+    "placeholders": {
+      "category": {"type": "String"},
+      "available": {"type": "int"}
+    }
+  },
+  "reviewHeading": "समीक्षा",
+  "reviewPhone": "फ़ोन: {phone}",
+  "@reviewPhone": {
+    "placeholders": {
+      "phone": {"type": "String"}
+    }
+  },
+  "reviewName": "नाम: {name}",
+  "@reviewName": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "reviewItemsLabel": "वस्तुएँ:",
+  "back": "वापस",
+  "continueAction": "आगे बढ़ें",
+  "confirmRental": "किराया पुष्टि करें",
+  "noActiveRentalsTitle": "कोई सक्रिय किराया नहीं",
+  "noActiveRentalsSubtitle": "सब कुछ पहले ही वापस हो चुका है।",
+  "backToHome": "होम पर वापस जाएँ",
+  "rentalReturned": "{id} वापस हो गया",
+  "@rentalReturned": {
+    "placeholders": {
+      "id": {"type": "String"}
+    }
+  },
+  "quickAdd": "त्वरित जोड़ें",
+  "unitsLabel": "इकाइयाँ",
+  "advancedFields": "उन्नत फ़ील्ड",
+  "advancedFieldsSubtitle": "MVP में वैकल्पिक",
+  "saveItem": "वस्तु सहेजें",
+  "scanIntro": "अगले चरण में कैमरा इंटीग्रेशन। अभी QR टेक्स्ट पेस्ट/दर्ज करें।",
+  "qrContentLabel": "QR सामग्री",
+  "qrContentHint": "customer:1001",
+  "noEntityMatched": "इस कोड से कोई रिकॉर्ड नहीं मिला।",
+  "openLinkedRecord": "लिंक किया गया रिकॉर्ड खोलें",
+  "voiceSearchTitle": "वॉइस खोज",
+  "voiceSearchBody": "केवल स्टब: वॉइस कमांड चरण 5+ में यूनिवर्सल खोज इंटेंट से जुड़ेंगे।",
+  "templatesIntro": "एक उद्योग चुनें, फिर जोड़ने वाली स्टार्टर वस्तुएँ चुनें। समान नाम वाली मौजूदा वस्तुएँ बनी रहती हैं (मर्ज)।",
+  "starterItemsCount": "{count} स्टार्टर वस्तुएँ",
+  "@starterItemsCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "templateCardSubtitle": "{description}\n{count} स्टार्टर वस्तुएँ",
+  "@templateCardSubtitle": {
+    "placeholders": {
+      "description": {"type": "String"},
+      "count": {"type": "int"}
+    }
+  },
+  "selectAll": "सभी चुनें",
+  "clearSelection": "साफ़ करें",
+  "selectedCount": "{count} चयनित",
+  "@selectedCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "unitSingular": "{count} इकाई",
+  "@unitSingular": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "unitPlural": "{count} इकाइयाँ",
+  "@unitPlural": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "templateItemSubtitle": "{category} • {units}",
+  "@templateItemSubtitle": {
+    "placeholders": {
+      "category": {"type": "String"},
+      "units": {"type": "String"}
+    }
+  },
+  "adding": "जोड़ा जा रहा है…",
+  "addSelectedToInventory": "चयनित को इन्वेंटरी में जोड़ें",
+  "templateImportResult": "{added} वस्तुएँ जोड़ी गईं ({skipped} पहले से मौजूद)",
+  "@templateImportResult": {
+    "placeholders": {
+      "added": {"type": "int"},
+      "skipped": {"type": "int"}
+    }
+  }
+}

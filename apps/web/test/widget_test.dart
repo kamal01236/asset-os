@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:asset_os/app_shell.dart';
 import 'package:asset_os/core/config/app_branding.dart';
 import 'package:asset_os/core/db/app_database.dart';
+import 'package:asset_os/core/l10n/l10n_ext.dart';
 import 'package:asset_os/core/models/entities.dart';
 import 'package:asset_os/core/providers/app_providers.dart';
 import 'package:asset_os/core/repositories/local_repository.dart';
@@ -37,17 +38,29 @@ Future<ProviderContainer> _bootTestContainer({
   return container;
 }
 
-Future<ProviderContainer> _pumpAppShell(WidgetTester tester) async {
-  final ProviderContainer container = await _bootTestContainer();
-  await tester.pumpWidget(
-    UncontrolledProviderScope(
-      container: container,
-      child: MaterialApp(
-        theme: AppTheme.build(),
-        home: const AppShell(),
-      ),
+Widget _localizedApp({
+  required ProviderContainer container,
+  Locale? locale,
+}) {
+  return UncontrolledProviderScope(
+    container: container,
+    child: MaterialApp(
+      theme: AppTheme.build(),
+      locale: locale ?? container.read(localeProvider),
+      supportedLocales: AppLocalizations.supportedLocales,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      home: const AppShell(),
     ),
   );
+}
+
+Future<ProviderContainer> _pumpAppShell(
+  WidgetTester tester, {
+  Map<String, Object> prefs = const <String, Object>{},
+  Locale? locale,
+}) async {
+  final ProviderContainer container = await _bootTestContainer(prefs: prefs);
+  await tester.pumpWidget(_localizedApp(container: container, locale: locale));
   await tester.pumpAndSettle();
   return container;
 }
@@ -85,6 +98,7 @@ void main() {
     await tester.tap(find.text('More'));
     await tester.pumpAndSettle();
     expect(find.text('Offline simulation'), findsOneWidget);
+    expect(find.text('Language'), findsOneWidget);
   });
 
   testWidgets('opens Search from home search bar', (WidgetTester tester) async {
@@ -107,6 +121,32 @@ void main() {
     expect(find.widgetWithText(AppBar, 'New Rental'), findsOneWidget);
     expect(find.text('Step 1 of 3'), findsOneWidget);
     expect(find.text('Phone number'), findsOneWidget);
+  });
+
+  testWidgets('Hindi locale shows localized chrome', (WidgetTester tester) async {
+    await _pumpAppShell(tester, locale: const Locale('hi'));
+
+    expect(find.text(kAppDisplayName), findsOneWidget);
+    expect(find.text('कुछ भी खोजें'), findsOneWidget);
+    expect(find.text('आज एक नज़र में'), findsOneWidget);
+    expect(find.text('होम'), findsOneWidget);
+  });
+
+  test('localeProvider persists Hindi preference', () async {
+    final ProviderContainer container = await _bootTestContainer();
+    expect(container.read(localeProvider).languageCode, 'en');
+
+    await container.read(localeProvider.notifier).setLocale(const Locale('hi'));
+    expect(container.read(localeProvider).languageCode, 'hi');
+    expect(
+      container.read(sharedPreferencesProvider).getString(kLocalePrefsKey),
+      'hi',
+    );
+
+    final ProviderContainer reloaded = await _bootTestContainer(
+      prefs: <String, Object>{kLocalePrefsKey: 'hi'},
+    );
+    expect(reloaded.read(localeProvider).languageCode, 'hi');
   });
 
   test('seeds demo data when DB empty and no snapshot', () async {

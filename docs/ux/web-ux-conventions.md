@@ -30,3 +30,8 @@ UI-first conventions for `apps/web` to keep flows fast, clear, and touch-friendl
 - Use a subtle non-blocking offline banner; never block primary workflows.
 - Favor lightweight confirmations (snackbars, status pills) over modal interruptions.
 - Optional offline simulation (More tab) is for UX checks only — not product positioning.
+
+## Localization
+- All user-visible chrome (nav, actions, forms, empty states, status labels, More) is l10n-backed via Flutter gen-l10n (`en` default, `hi` selectable).
+- Add new chrome strings to ARB files first; do not hardcode UI copy in widgets.
+- Keep `kAppDisplayName` and seeded entity/data names untranslated.

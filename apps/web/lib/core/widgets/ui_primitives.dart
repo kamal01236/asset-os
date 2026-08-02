@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/l10n_ext.dart';
 import '../models/entities.dart';
 import '../theme/app_theme.dart';
 
 class LargeSearchBar extends StatelessWidget {
   const LargeSearchBar({
     required this.onTap,
-    this.hintText = 'Search anything: customer, rental, item',
+    required this.hintText,
     super.key,
   });
 
@@ -65,7 +66,7 @@ class StatusPill extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
-        status.label,
+        localizedStatusLabel(context.l10n, status),
         style: Theme.of(context).textTheme.labelMedium?.copyWith(
           color: color,
           fontWeight: FontWeight.w700,
@@ -254,7 +255,7 @@ class OfflineBanner extends StatelessWidget {
       color: Colors.amber.shade100,
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       child: Text(
-        'Working offline — changes will sync later.',
+        context.l10n.offlineBanner,
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
           color: Colors.amber.shade900,
           fontWeight: FontWeight.w600,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/config/app_branding.dart';
+import 'core/l10n/l10n_ext.dart';
 import 'core/models/entities.dart';
 import 'core/providers/app_providers.dart';
 import 'core/repositories/local_repository.dart';
@@ -14,6 +15,7 @@ class AppShell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final AppLocalizations l10n = context.l10n;
     final int tabIndex = ref.watch(currentTabIndexProvider);
     final bool offlineMode = ref.watch(offlineModeProvider);
     final List<Widget> pages = <Widget>[
@@ -40,7 +42,7 @@ class AppShell extends ConsumerWidget {
         title: const Text(kAppDisplayName),
         actions: <Widget>[
           IconButton(
-            tooltip: 'Search',
+            tooltip: l10n.actionSearch,
             icon: const Icon(Icons.search),
             onPressed: () => _openSearch(context),
           ),
@@ -69,12 +71,12 @@ class AppShell extends ConsumerWidget {
         onDestinationSelected: (int index) {
           ref.read(currentTabIndexProvider.notifier).state = index;
         },
-        destinations: const <NavigationDestination>[
-          NavigationDestination(icon: Icon(Icons.home_outlined), label: 'Home'),
-          NavigationDestination(icon: Icon(Icons.assignment_outlined), label: 'Rentals'),
-          NavigationDestination(icon: Icon(Icons.inventory_2_outlined), label: 'Inventory'),
-          NavigationDestination(icon: Icon(Icons.groups_outlined), label: 'Customers'),
-          NavigationDestination(icon: Icon(Icons.more_horiz), label: 'More'),
+        destinations: <NavigationDestination>[
+          NavigationDestination(icon: const Icon(Icons.home_outlined), label: l10n.navHome),
+          NavigationDestination(icon: const Icon(Icons.assignment_outlined), label: l10n.navRentals),
+          NavigationDestination(icon: const Icon(Icons.inventory_2_outlined), label: l10n.navInventory),
+          NavigationDestination(icon: const Icon(Icons.groups_outlined), label: l10n.navCustomers),
+          NavigationDestination(icon: const Icon(Icons.more_horiz), label: l10n.navMore),
         ],
       ),
     );
@@ -161,6 +163,7 @@ class HomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final AppLocalizations l10n = context.l10n;
     final AsyncValue<List<InventoryItem>> inventoryAsync = ref.watch(inventoryProvider);
     final AsyncValue<List<Rental>> rentalsAsync = ref.watch(rentalsProvider);
 
@@ -174,10 +177,10 @@ class HomeScreen extends ConsumerWidget {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: <Widget>[
-        LargeSearchBar(onTap: onOpenSearch, hintText: 'Search Anything'),
+        LargeSearchBar(onTap: onOpenSearch, hintText: l10n.searchAnything),
         const SizedBox(height: 14),
         Text(
-          'Today at a glance',
+          l10n.todayAtAGlance,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.w700,
           ),
@@ -192,7 +195,7 @@ class HomeScreen extends ConsumerWidget {
           childAspectRatio: 1.8,
           children: <Widget>[
             KpiCard(
-              label: 'Active',
+              label: l10n.kpiActive,
               value: summaryCount(
                 status: AssetStatus.rented,
                 inventory: inventory,
@@ -201,7 +204,7 @@ class HomeScreen extends ConsumerWidget {
               status: AssetStatus.rented,
             ),
             KpiCard(
-              label: 'Due Today',
+              label: l10n.statusDueToday,
               value: summaryCount(
                 status: AssetStatus.dueToday,
                 inventory: inventory,
@@ -210,7 +213,7 @@ class HomeScreen extends ConsumerWidget {
               status: AssetStatus.dueToday,
             ),
             KpiCard(
-              label: 'Overdue',
+              label: l10n.statusOverdue,
               value: summaryCount(
                 status: AssetStatus.overdue,
                 inventory: inventory,
@@ -219,7 +222,7 @@ class HomeScreen extends ConsumerWidget {
               status: AssetStatus.overdue,
             ),
             KpiCard(
-              label: 'Available',
+              label: l10n.statusAvailable,
               value: summaryCount(
                 status: AssetStatus.available,
                 inventory: inventory,
@@ -231,7 +234,7 @@ class HomeScreen extends ConsumerWidget {
         ),
         const SizedBox(height: 14),
         Text(
-          'Quick actions',
+          l10n.quickActions,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.w700,
           ),
@@ -244,17 +247,17 @@ class HomeScreen extends ConsumerWidget {
             FilledButton.icon(
               onPressed: onNewRental,
               icon: const Icon(Icons.playlist_add_circle_outlined),
-              label: const Text('New Rental'),
+              label: Text(l10n.actionNewRental),
             ),
             FilledButton.tonalIcon(
               onPressed: onReturnItem,
               icon: const Icon(Icons.assignment_return_outlined),
-              label: const Text('Return Item'),
+              label: Text(l10n.actionReturnItem),
             ),
             FilledButton.tonalIcon(
               onPressed: onAddInventory,
               icon: const Icon(Icons.add_box_outlined),
-              label: const Text('Add Inventory'),
+              label: Text(l10n.actionAddInventory),
             ),
           ],
         ),
@@ -266,16 +269,14 @@ class HomeScreen extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 Text(
-                  'AI suggestions (beta)',
+                  l10n.aiSuggestionsTitle,
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w700,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '• Follow up on 1 overdue rental\n'
-                  '• Move Bosch Drill Kit to premium pricing\n'
-                  '• Call Priya Patel for extension confirmation',
+                  l10n.aiSuggestionsBody,
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ],
@@ -297,6 +298,7 @@ class RentalsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final AppLocalizations l10n = context.l10n;
     final AsyncValue<List<Rental>> rentalsAsync = ref.watch(rentalsProvider);
     final AsyncValue<List<Customer>> customersAsync = ref.watch(customersProvider);
 
@@ -310,9 +312,9 @@ class RentalsScreen extends ConsumerWidget {
           return Padding(
             padding: const EdgeInsets.all(16),
             child: EmptyStatePane(
-              title: 'No rentals yet',
-              subtitle: 'Start a new rental to create your first transaction.',
-              ctaLabel: 'New Rental',
+              title: l10n.noRentalsYetTitle,
+              subtitle: l10n.noRentalsYetSubtitle,
+              ctaLabel: l10n.actionNewRental,
               onPressed: () {
                 Navigator.of(context).push(
                   MaterialPageRoute<void>(
@@ -329,9 +331,9 @@ class RentalsScreen extends ConsumerWidget {
             final Rental rental = rentals[index];
             final Customer customer = customers.firstWhere(
               (item) => item.id == rental.customerId,
-              orElse: () => const Customer(
+              orElse: () => Customer(
                 id: 'unknown',
-                name: 'Unknown customer',
+                name: l10n.unknownCustomer,
                 phone: '--',
                 isTrusted: false,
                 qrCode: 'unknown',
@@ -339,7 +341,7 @@ class RentalsScreen extends ConsumerWidget {
             );
             return EntityCard(
               title: rental.id,
-              subtitle: '${customer.name} • Due ${_date(rental.dueAt)}',
+              subtitle: l10n.rentalDueSubtitle(customer.name, _date(rental.dueAt)),
               leadingIcon: Icons.assignment_outlined,
               status: rental.statusFor(now),
               trailing: const Icon(Icons.chevron_right),
@@ -364,6 +366,7 @@ class InventoryScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final AppLocalizations l10n = context.l10n;
     final AsyncValue<List<InventoryItem>> inventoryAsync = ref.watch(inventoryProvider);
     return inventoryAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -377,7 +380,11 @@ class InventoryScreen extends ConsumerWidget {
                 item.availableUnits > 0 ? AssetStatus.available : AssetStatus.rented;
             return EntityCard(
               title: item.name,
-              subtitle: '${item.category} • ${item.availableUnits}/${item.totalUnits} available',
+              subtitle: l10n.inventoryAvailableSubtitle(
+                item.category,
+                item.availableUnits,
+                item.totalUnits,
+              ),
               leadingIcon: Icons.inventory_2_outlined,
               status: status,
               trailing: const Icon(Icons.chevron_right),
@@ -402,6 +409,7 @@ class CustomersScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final AppLocalizations l10n = context.l10n;
     final AsyncValue<List<Customer>> customersAsync = ref.watch(customersProvider);
     return customersAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -411,9 +419,11 @@ class CustomersScreen extends ConsumerWidget {
           padding: const EdgeInsets.all(16),
           itemBuilder: (BuildContext context, int index) {
             final Customer customer = customers[index];
+            final String tier =
+                customer.isTrusted ? l10n.customerTrusted : l10n.customerStandard;
             return EntityCard(
               title: customer.name,
-              subtitle: '${customer.phone} • ${customer.isTrusted ? 'Trusted' : 'Standard'}',
+              subtitle: l10n.customerSubtitle(customer.phone, tier),
               leadingIcon: Icons.person_outline,
               status: customer.isTrusted ? AssetStatus.available : AssetStatus.archived,
               trailing: const Icon(Icons.chevron_right),
@@ -433,24 +443,61 @@ class MoreScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final AppLocalizations l10n = context.l10n;
     final bool offlineMode = ref.watch(offlineModeProvider);
+    final Locale locale = ref.watch(localeProvider);
     return ListView(
       padding: const EdgeInsets.all(16),
       children: <Widget>[
         Card(
           child: SwitchListTile(
             value: offlineMode,
-            title: const Text('Offline simulation'),
-            subtitle: const Text('Demo only: verify non-blocking offline UX (not product positioning).'),
+            title: Text(l10n.offlineSimulationTitle),
+            subtitle: Text(l10n.offlineSimulationSubtitle),
             onChanged: (bool value) {
               ref.read(offlineModeProvider.notifier).state = value;
             },
           ),
         ),
         const SizedBox(height: 10),
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(l10n.languageTitle),
+                  subtitle: Text(l10n.languageSubtitle),
+                  leading: const Icon(Icons.language),
+                ),
+                const SizedBox(height: 4),
+                SegmentedButton<String>(
+                  segments: <ButtonSegment<String>>[
+                    ButtonSegment<String>(
+                      value: 'en',
+                      label: Text(l10n.languageEnglish),
+                    ),
+                    ButtonSegment<String>(
+                      value: 'hi',
+                      label: Text(l10n.languageHindi),
+                    ),
+                  ],
+                  selected: <String>{locale.languageCode},
+                  onSelectionChanged: (Set<String> selection) {
+                    final String code = selection.first;
+                    ref.read(localeProvider.notifier).setLocale(Locale(code));
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
         EntityCard(
-          title: 'Voice Search (stub)',
-          subtitle: 'Placeholder for intent-based search commands.',
+          title: l10n.voiceSearchStubTitle,
+          subtitle: l10n.voiceSearchStubSubtitle,
           leadingIcon: Icons.keyboard_voice_outlined,
           trailing: const Icon(Icons.chevron_right),
           onTap: () {
@@ -461,8 +508,8 @@ class MoreScreen extends ConsumerWidget {
         ),
         const SizedBox(height: 10),
         EntityCard(
-          title: 'Business Templates',
-          subtitle: 'Import starter inventory by industry (merge).',
+          title: l10n.businessTemplatesTitle,
+          subtitle: l10n.businessTemplatesSubtitle,
           leadingIcon: Icons.dashboard_customize_outlined,
           trailing: const Icon(Icons.chevron_right),
           onTap: () {
@@ -494,18 +541,20 @@ class GlobalActionsButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations l10n = context.l10n;
     return FloatingActionButton.extended(
       onPressed: () {
         showModalBottomSheet<void>(
           context: context,
           showDragHandle: true,
           builder: (BuildContext context) {
+            final AppLocalizations sheetL10n = context.l10n;
             return SafeArea(
               child: Wrap(
                 children: <Widget>[
                   ListTile(
                     leading: const Icon(Icons.search),
-                    title: const Text('Search'),
+                    title: Text(sheetL10n.actionSearch),
                     onTap: () {
                       Navigator.of(context).pop();
                       onSearch();
@@ -513,7 +562,7 @@ class GlobalActionsButton extends StatelessWidget {
                   ),
                   ListTile(
                     leading: const Icon(Icons.playlist_add_circle_outlined),
-                    title: const Text('New Rental'),
+                    title: Text(sheetL10n.actionNewRental),
                     onTap: () {
                       Navigator.of(context).pop();
                       onNewRental();
@@ -521,7 +570,7 @@ class GlobalActionsButton extends StatelessWidget {
                   ),
                   ListTile(
                     leading: const Icon(Icons.assignment_return_outlined),
-                    title: const Text('Return'),
+                    title: Text(sheetL10n.actionReturn),
                     onTap: () {
                       Navigator.of(context).pop();
                       onReturnItem();
@@ -529,7 +578,7 @@ class GlobalActionsButton extends StatelessWidget {
                   ),
                   ListTile(
                     leading: const Icon(Icons.add_box_outlined),
-                    title: const Text('Add Inventory'),
+                    title: Text(sheetL10n.actionAddInventory),
                     onTap: () {
                       Navigator.of(context).pop();
                       onAddInventory();
@@ -537,7 +586,7 @@ class GlobalActionsButton extends StatelessWidget {
                   ),
                   ListTile(
                     leading: const Icon(Icons.qr_code_scanner_outlined),
-                    title: const Text('Scan'),
+                    title: Text(sheetL10n.actionScan),
                     onTap: () {
                       Navigator.of(context).pop();
                       onScan();
@@ -550,7 +599,7 @@ class GlobalActionsButton extends StatelessWidget {
         );
       },
       icon: const Icon(Icons.flash_on),
-      label: const Text('Actions'),
+      label: Text(l10n.actionActions),
     );
   }
 }
@@ -565,6 +614,7 @@ class RentalDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final AppLocalizations l10n = context.l10n;
     final AsyncValue<List<Rental>> rentalsAsync = ref.watch(rentalsProvider);
     final AsyncValue<List<Customer>> customersAsync = ref.watch(customersProvider);
     final AsyncValue<List<InventoryItem>> inventoryAsync = ref.watch(inventoryProvider);
@@ -589,7 +639,7 @@ class RentalDetailScreen extends ConsumerWidget {
         children: <Widget>[
           EntityCard(
             title: customer.name,
-            subtitle: 'Phone: ${customer.phone}',
+            subtitle: l10n.phoneLabel(customer.phone),
             leadingIcon: Icons.person_outline,
             status: rental.statusFor(DateTime.now()),
           ),
@@ -600,7 +650,7 @@ class RentalDetailScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  Text('Items', style: Theme.of(context).textTheme.titleSmall),
+                  Text(l10n.itemsHeading, style: Theme.of(context).textTheme.titleSmall),
                   const SizedBox(height: 6),
                   ...items.map((item) => Padding(
                     padding: const EdgeInsets.only(bottom: 4),
@@ -617,7 +667,7 @@ class RentalDetailScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  Text('Timeline', style: Theme.of(context).textTheme.titleSmall),
+                  Text(l10n.timelineHeading, style: Theme.of(context).textTheme.titleSmall),
                   const SizedBox(height: 8),
                   RentalTimeline(events: rental.timeline),
                 ],
@@ -634,10 +684,10 @@ class RentalDetailScreen extends ConsumerWidget {
               child: OutlinedButton(
                 onPressed: () {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Extend is a placeholder action.')),
+                    SnackBar(content: Text(l10n.extendPlaceholder)),
                   );
                 },
-                child: const Text('Extend'),
+                child: Text(l10n.extendAction),
               ),
             ),
             const SizedBox(width: 8),
@@ -645,10 +695,10 @@ class RentalDetailScreen extends ConsumerWidget {
               child: OutlinedButton(
                 onPressed: () {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Share is a placeholder action.')),
+                    SnackBar(content: Text(l10n.sharePlaceholder)),
                   );
                 },
-                child: const Text('Share'),
+                child: Text(l10n.shareAction),
               ),
             ),
             const SizedBox(width: 8),
@@ -662,7 +712,7 @@ class RentalDetailScreen extends ConsumerWidget {
                         }
                       }
                     : null,
-                child: const Text('Return'),
+                child: Text(l10n.actionReturn),
               ),
             ),
           ],
@@ -713,11 +763,12 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
     if (_saving) {
       return;
     }
+    final AppLocalizations l10n = context.l10n;
     final String name = _nameController.text.trim();
     final String category = _categoryController.text.trim();
     if (name.isEmpty || category.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Name and category are required.')),
+        SnackBar(content: Text(l10n.nameCategoryRequired)),
       );
       return;
     }
@@ -738,12 +789,13 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
       _editing = false;
     });
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Inventory updated.')),
+      SnackBar(content: Text(context.l10n.inventoryUpdated)),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations l10n = context.l10n;
     final AsyncValue<List<InventoryItem>> inventoryAsync = ref.watch(inventoryProvider);
     return inventoryAsync.when(
       loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
@@ -755,11 +807,11 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
             item.availableUnits > 0 ? AssetStatus.available : AssetStatus.rented;
         return Scaffold(
           appBar: AppBar(
-            title: Text(_editing ? 'Edit inventory' : 'Inventory detail'),
+            title: Text(_editing ? l10n.editInventoryTitle : l10n.inventoryDetailTitle),
             actions: <Widget>[
               if (!_editing)
                 IconButton(
-                  tooltip: 'Edit',
+                  tooltip: l10n.editTooltip,
                   icon: const Icon(Icons.edit_outlined),
                   onPressed: () => _beginEdit(item),
                 ),
@@ -771,36 +823,39 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
                 ? <Widget>[
                     TextField(
                       controller: _nameController,
-                      decoration: const InputDecoration(labelText: 'Item name'),
+                      decoration: InputDecoration(labelText: l10n.itemNameLabel),
                     ),
                     const SizedBox(height: 8),
                     TextField(
                       controller: _categoryController,
-                      decoration: const InputDecoration(labelText: 'Category'),
+                      decoration: InputDecoration(labelText: l10n.categoryLabel),
                     ),
                     const SizedBox(height: 8),
                     TextField(
                       controller: _unitsController,
                       keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        labelText: 'Total units',
-                        helperText: 'Available adjusts with total; cannot exceed total.',
+                      decoration: InputDecoration(
+                        labelText: l10n.totalUnitsLabel,
+                        helperText: l10n.totalUnitsHelper,
                       ),
                     ),
                     const SizedBox(height: 8),
                     TextField(
                       controller: _notesController,
-                      decoration: const InputDecoration(
-                        labelText: 'Notes',
-                        hintText: 'Warranty / serial / condition',
+                      decoration: InputDecoration(
+                        labelText: l10n.notesLabel,
+                        hintText: l10n.notesHint,
                       ),
                     ),
                   ]
                 : <Widget>[
                     EntityCard(
                       title: item.name,
-                      subtitle:
-                          '${item.category} • ${item.availableUnits}/${item.totalUnits} available',
+                      subtitle: l10n.inventoryAvailableSubtitle(
+                        item.category,
+                        item.availableUnits,
+                        item.totalUnits,
+                      ),
                       leadingIcon: Icons.inventory_2_outlined,
                       status: status,
                     ),
@@ -808,7 +863,7 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
                     Card(
                       child: ListTile(
                         leading: const Icon(Icons.qr_code_2_outlined),
-                        title: const Text('QR code'),
+                        title: Text(l10n.qrCodeLabel),
                         subtitle: Text(item.qrCode),
                       ),
                     ),
@@ -816,7 +871,7 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
                       const SizedBox(height: 10),
                       Card(
                         child: ListTile(
-                          title: const Text('Notes'),
+                          title: Text(l10n.notesLabel),
                           subtitle: Text(item.notes!),
                         ),
                       ),
@@ -833,14 +888,14 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
                           onPressed: _saving
                               ? null
                               : () => setState(() => _editing = false),
-                          child: const Text('Cancel'),
+                          child: Text(l10n.cancel),
                         ),
                       ),
                       const SizedBox(width: 10),
                       Expanded(
                         child: FilledButton(
                           onPressed: _saving ? null : _saveEdit,
-                          child: Text(_saving ? 'Saving…' : 'Save changes'),
+                          child: Text(_saving ? l10n.saving : l10n.saveChanges),
                         ),
                       ),
                     ],
@@ -863,6 +918,7 @@ class CustomerDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final AppLocalizations l10n = context.l10n;
     final AsyncValue<List<Customer>> customersAsync = ref.watch(customersProvider);
     final AsyncValue<List<Rental>> rentalsAsync = ref.watch(rentalsProvider);
 
@@ -877,7 +933,7 @@ class CustomerDetailScreen extends ConsumerWidget {
         rentals.where((entry) => entry.customerId == customer.id).toList();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Customer profile')),
+      appBar: AppBar(title: Text(l10n.customerProfileTitle)),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: <Widget>[
@@ -893,22 +949,22 @@ class CustomerDetailScreen extends ConsumerWidget {
               children: <Widget>[
                 ListTile(
                   leading: const Icon(Icons.call_outlined),
-                  title: const Text('Call'),
+                  title: Text(l10n.callAction),
                   subtitle: Text(customer.phone),
                   onTap: () {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Call placeholder action.')),
+                      SnackBar(content: Text(l10n.callPlaceholder)),
                     );
                   },
                 ),
                 const Divider(height: 1),
                 ListTile(
                   leading: const Icon(Icons.chat_outlined),
-                  title: const Text('WhatsApp'),
-                  subtitle: const Text('Placeholder integration hook'),
+                  title: Text(l10n.whatsAppAction),
+                  subtitle: Text(l10n.whatsAppSubtitle),
                   onTap: () {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('WhatsApp placeholder action.')),
+                      SnackBar(content: Text(l10n.whatsAppPlaceholder)),
                     );
                   },
                 ),
@@ -917,7 +973,7 @@ class CustomerDetailScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            'Recent rentals',
+            l10n.recentRentals,
             style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 8),
@@ -926,7 +982,7 @@ class CustomerDetailScreen extends ConsumerWidget {
               padding: const EdgeInsets.only(bottom: 8),
               child: EntityCard(
                 title: rental.id,
-                subtitle: 'Due ${_date(rental.dueAt)}',
+                subtitle: l10n.dueDate(_date(rental.dueAt)),
                 leadingIcon: Icons.assignment_outlined,
                 status: rental.statusFor(DateTime.now()),
                 onTap: () {
@@ -977,23 +1033,24 @@ class _UniversalSearchScreenState extends ConsumerState<UniversalSearchScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations l10n = context.l10n;
     return Scaffold(
-      appBar: AppBar(title: const Text('Search')),
+      appBar: AppBar(title: Text(l10n.actionSearch)),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: <Widget>[
           TextField(
             controller: _controller,
             autofocus: true,
-            decoration: const InputDecoration(
-              prefixIcon: Icon(Icons.search),
-              hintText: 'Find customer, rental, or inventory',
+            decoration: InputDecoration(
+              prefixIcon: const Icon(Icons.search),
+              hintText: l10n.searchHint,
             ),
             onChanged: _runSearch,
           ),
           const SizedBox(height: 12),
           _SearchSection<Customer>(
-            title: 'Customers',
+            title: l10n.searchSectionCustomers,
             items: _results.customers,
             itemBuilder: (customer) => EntityCard(
               title: customer.name,
@@ -1009,11 +1066,11 @@ class _UniversalSearchScreenState extends ConsumerState<UniversalSearchScreen> {
             ),
           ),
           _SearchSection<Rental>(
-            title: 'Current rentals',
+            title: l10n.searchSectionCurrentRentals,
             items: _results.currentRentals,
             itemBuilder: (rental) => EntityCard(
               title: rental.id,
-              subtitle: 'Due ${_date(rental.dueAt)}',
+              subtitle: l10n.dueDate(_date(rental.dueAt)),
               leadingIcon: Icons.assignment_outlined,
               status: rental.statusFor(DateTime.now()),
               onTap: () {
@@ -1026,11 +1083,11 @@ class _UniversalSearchScreenState extends ConsumerState<UniversalSearchScreen> {
             ),
           ),
           _SearchSection<Rental>(
-            title: 'Previous rentals',
+            title: l10n.searchSectionPreviousRentals,
             items: _results.previousRentals,
             itemBuilder: (rental) => EntityCard(
               title: rental.id,
-              subtitle: 'Returned ${_date(rental.returnedAt ?? rental.dueAt)}',
+              subtitle: l10n.returnedDate(_date(rental.returnedAt ?? rental.dueAt)),
               leadingIcon: Icons.history,
               status: AssetStatus.archived,
               onTap: () {
@@ -1043,11 +1100,15 @@ class _UniversalSearchScreenState extends ConsumerState<UniversalSearchScreen> {
             ),
           ),
           _SearchSection<InventoryItem>(
-            title: 'Inventory',
+            title: l10n.searchSectionInventory,
             items: _results.inventory,
             itemBuilder: (item) => EntityCard(
               title: item.name,
-              subtitle: '${item.category} • ${item.availableUnits}/${item.totalUnits}',
+              subtitle: l10n.inventoryUnitsSubtitle(
+                item.category,
+                item.availableUnits,
+                item.totalUnits,
+              ),
               leadingIcon: Icons.inventory_2_outlined,
               status: item.availableUnits > 0 ? AssetStatus.available : AssetStatus.rented,
               onTap: () {
@@ -1078,6 +1139,7 @@ class _SearchSection<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations l10n = context.l10n;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
@@ -1092,7 +1154,7 @@ class _SearchSection<T> extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(bottom: 12),
             child: Text(
-              'No matching $title',
+              l10n.noMatchingSection(title),
               style: Theme.of(context).textTheme.bodySmall,
             ),
           )
@@ -1133,6 +1195,7 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations l10n = context.l10n;
     final List<InventoryItem> inventory =
         ref.watch(inventoryProvider).valueOrNull ?? const <InventoryItem>[];
     final List<InventoryItem> availableItems =
@@ -1147,12 +1210,12 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
     };
 
     return Scaffold(
-      appBar: AppBar(title: const Text('New Rental')),
+      appBar: AppBar(title: Text(l10n.actionNewRental)),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: <Widget>[
           Text(
-            'Step ${_step + 1} of 3',
+            l10n.stepOf(_step + 1, 3),
             style: Theme.of(context).textTheme.labelLarge,
           ),
           const SizedBox(height: 8),
@@ -1160,9 +1223,9 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
             TextField(
               controller: _phoneController,
               keyboardType: TextInputType.phone,
-              decoration: const InputDecoration(
-                labelText: 'Phone number',
-                hintText: '10-digit customer phone',
+              decoration: InputDecoration(
+                labelText: l10n.phoneNumberLabel,
+                hintText: l10n.phoneNumberHint,
               ),
               onChanged: (value) async {
                 final Customer? matched =
@@ -1177,22 +1240,22 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
             if (_resolvedCustomer != null)
               EntityCard(
                 title: _resolvedCustomer!.name,
-                subtitle: '${_resolvedCustomer!.phone} • Existing customer',
+                subtitle: l10n.existingCustomerSubtitle(_resolvedCustomer!.phone),
                 leadingIcon: Icons.verified_user_outlined,
                 status: AssetStatus.available,
               )
             else
               TextField(
                 controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Customer name (new)',
-                  hintText: 'Only needed if new customer',
+                decoration: InputDecoration(
+                  labelText: l10n.customerNameNewLabel,
+                  hintText: l10n.customerNameNewHint,
                 ),
               ),
           ],
           if (_step == 1) ...<Widget>[
             Text(
-              'Select items',
+              l10n.selectItems,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w700,
               ),
@@ -1202,7 +1265,9 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
               (item) => CheckboxListTile(
                 value: _selectedInventoryIds.contains(item.id),
                 title: Text(item.name),
-                subtitle: Text('${item.category} • ${item.availableUnits} available'),
+                subtitle: Text(
+                  l10n.itemAvailableCount(item.category, item.availableUnits),
+                ),
                 onChanged: (checked) {
                   setState(() {
                     if (checked == true) {
@@ -1223,16 +1288,20 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Text(
-                      'Review',
+                      l10n.reviewHeading,
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w700,
                       ),
                     ),
                     const SizedBox(height: 8),
-                    Text('Phone: ${_phoneController.text.trim()}'),
-                    Text('Name: ${_resolvedCustomer?.name ?? _nameController.text.trim()}'),
+                    Text(l10n.reviewPhone(_phoneController.text.trim())),
+                    Text(
+                      l10n.reviewName(
+                        _resolvedCustomer?.name ?? _nameController.text.trim(),
+                      ),
+                    ),
                     const SizedBox(height: 6),
-                    const Text('Items:'),
+                    Text(l10n.reviewItemsLabel),
                     ...selectedItems.map((item) => Text('• ${item.name}')),
                   ],
                 ),
@@ -1253,7 +1322,7 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
                       : () => setState(() {
                           _step -= 1;
                         }),
-                  child: const Text('Back'),
+                  child: Text(l10n.back),
                 ),
               ),
             if (_step > 0) const SizedBox(width: 8),
@@ -1283,7 +1352,7 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
                           Navigator.of(context).pop();
                         }
                       },
-                child: Text(_step < 2 ? 'Continue' : 'Confirm rental'),
+                child: Text(_step < 2 ? l10n.continueAction : l10n.confirmRental),
               ),
             ),
           ],
@@ -1298,6 +1367,7 @@ class ReturnFlowScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final AppLocalizations l10n = context.l10n;
     final AsyncValue<List<Rental>> rentalsAsync = ref.watch(rentalsProvider);
     return rentalsAsync.when(
       loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
@@ -1305,14 +1375,14 @@ class ReturnFlowScreen extends ConsumerWidget {
       data: (List<Rental> rentals) {
         final List<Rental> active = rentals.where((item) => item.isActive).toList();
         return Scaffold(
-          appBar: AppBar(title: const Text('Return Item')),
+          appBar: AppBar(title: Text(l10n.actionReturnItem)),
           body: Padding(
             padding: const EdgeInsets.all(16),
             child: active.isEmpty
                 ? EmptyStatePane(
-                    title: 'No active rentals',
-                    subtitle: 'Everything is already returned.',
-                    ctaLabel: 'Back to Home',
+                    title: l10n.noActiveRentalsTitle,
+                    subtitle: l10n.noActiveRentalsSubtitle,
+                    ctaLabel: l10n.backToHome,
                     onPressed: () => Navigator.of(context).pop(),
                   )
                 : ListView.separated(
@@ -1320,7 +1390,7 @@ class ReturnFlowScreen extends ConsumerWidget {
                       final Rental rental = active[index];
                       return EntityCard(
                         title: rental.id,
-                        subtitle: 'Due ${_date(rental.dueAt)}',
+                        subtitle: l10n.dueDate(_date(rental.dueAt)),
                         leadingIcon: Icons.assignment_return_outlined,
                         status: rental.statusFor(DateTime.now()),
                         trailing: FilledButton(
@@ -1328,11 +1398,11 @@ class ReturnFlowScreen extends ConsumerWidget {
                             await ref.read(repositoryProvider).returnRental(rental.id);
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('${rental.id} returned')),
+                                SnackBar(content: Text(l10n.rentalReturned(rental.id))),
                               );
                             }
                           },
-                          child: const Text('Return'),
+                          child: Text(l10n.actionReturn),
                         ),
                       );
                     },
@@ -1371,39 +1441,40 @@ class _AddInventoryFlowScreenState extends ConsumerState<AddInventoryFlowScreen>
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations l10n = context.l10n;
     return Scaffold(
-      appBar: AppBar(title: const Text('Add Inventory')),
+      appBar: AppBar(title: Text(l10n.actionAddInventory)),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: <Widget>[
-          const Text('Quick add'),
+          Text(l10n.quickAdd),
           const SizedBox(height: 8),
           TextField(
             controller: _nameController,
-            decoration: const InputDecoration(labelText: 'Item name'),
+            decoration: InputDecoration(labelText: l10n.itemNameLabel),
           ),
           const SizedBox(height: 8),
           TextField(
             controller: _categoryController,
-            decoration: const InputDecoration(labelText: 'Category'),
+            decoration: InputDecoration(labelText: l10n.categoryLabel),
           ),
           const SizedBox(height: 8),
           TextField(
             controller: _unitsController,
             keyboardType: TextInputType.number,
-            decoration: const InputDecoration(labelText: 'Units'),
+            decoration: InputDecoration(labelText: l10n.unitsLabel),
           ),
           const SizedBox(height: 8),
           ExpansionTile(
             tilePadding: EdgeInsets.zero,
-            title: const Text('Advanced fields'),
-            subtitle: const Text('Optional in MVP'),
+            title: Text(l10n.advancedFields),
+            subtitle: Text(l10n.advancedFieldsSubtitle),
             children: <Widget>[
               TextField(
                 controller: _notesController,
-                decoration: const InputDecoration(
-                  labelText: 'Notes',
-                  hintText: 'Warranty / serial / condition',
+                decoration: InputDecoration(
+                  labelText: l10n.notesLabel,
+                  hintText: l10n.notesHint,
                 ),
               ),
             ],
@@ -1419,7 +1490,7 @@ class _AddInventoryFlowScreenState extends ConsumerState<AddInventoryFlowScreen>
                   if (_nameController.text.trim().isEmpty ||
                       _categoryController.text.trim().isEmpty) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Name and category are required.')),
+                      SnackBar(content: Text(l10n.nameCategoryRequired)),
                     );
                     return;
                   }
@@ -1435,7 +1506,7 @@ class _AddInventoryFlowScreenState extends ConsumerState<AddInventoryFlowScreen>
                     Navigator.of(context).pop();
                   }
                 },
-          child: const Text('Save item'),
+          child: Text(l10n.saveItem),
         ),
       ),
     );
@@ -1460,25 +1531,24 @@ class _ScanEntryScreenState extends ConsumerState<ScanEntryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations l10n = context.l10n;
     final List<String> quickCodes = <String>[
       'customer:1001',
       'rental:3001',
       'inventory:2001',
     ];
     return Scaffold(
-      appBar: AppBar(title: const Text('Scan')),
+      appBar: AppBar(title: Text(l10n.actionScan)),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: <Widget>[
-          const Text(
-            'Use camera integration in the next phase. For now, paste/enter QR text.',
-          ),
+          Text(l10n.scanIntro),
           const SizedBox(height: 10),
           TextField(
             controller: _controller,
-            decoration: const InputDecoration(
-              labelText: 'QR content',
-              hintText: 'customer:1001',
+            decoration: InputDecoration(
+              labelText: l10n.qrContentLabel,
+              hintText: l10n.qrContentHint,
             ),
           ),
           const SizedBox(height: 10),
@@ -1507,7 +1577,7 @@ class _ScanEntryScreenState extends ConsumerState<ScanEntryScreen> {
             }
             if (destination == null) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('No entity matched this code.')),
+                SnackBar(content: Text(l10n.noEntityMatched)),
               );
               return;
             }
@@ -1536,7 +1606,7 @@ class _ScanEntryScreenState extends ConsumerState<ScanEntryScreen> {
             }
           },
           icon: const Icon(Icons.open_in_new),
-          label: const Text('Open linked record'),
+          label: Text(l10n.openLinkedRecord),
         ),
       ),
     );
@@ -1548,9 +1618,10 @@ class VoiceSearchStubScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const _StubScaffold(
-      title: 'Voice Search',
-      body: 'Stub only: voice commands map to universal search intents in phase 5+.',
+    final AppLocalizations l10n = context.l10n;
+    return _StubScaffold(
+      title: l10n.voiceSearchTitle,
+      body: l10n.voiceSearchBody,
     );
   }
 }

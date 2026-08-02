@@ -1,0 +1,434 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
+import 'app_localizations.dart';
+
+// ignore_for_file: type=lint
+
+/// The translations for Hindi (`hi`).
+class AppLocalizationsHi extends AppLocalizations {
+  AppLocalizationsHi([String locale = 'hi']) : super(locale);
+
+  @override
+  String get navHome => 'होम';
+
+  @override
+  String get navRentals => 'किराए';
+
+  @override
+  String get navInventory => 'इन्वेंटरी';
+
+  @override
+  String get navCustomers => 'ग्राहक';
+
+  @override
+  String get navMore => 'और';
+
+  @override
+  String get actionSearch => 'खोजें';
+
+  @override
+  String get actionNewRental => 'नया किराया';
+
+  @override
+  String get actionReturn => 'वापसी';
+
+  @override
+  String get actionReturnItem => 'वस्तु वापस लें';
+
+  @override
+  String get actionAddInventory => 'इन्वेंटरी जोड़ें';
+
+  @override
+  String get actionScan => 'स्कैन';
+
+  @override
+  String get actionActions => 'कार्रवाई';
+
+  @override
+  String get searchAnything => 'कुछ भी खोजें';
+
+  @override
+  String get todayAtAGlance => 'आज एक नज़र में';
+
+  @override
+  String get kpiActive => 'सक्रिय';
+
+  @override
+  String get statusAvailable => 'उपलब्ध';
+
+  @override
+  String get statusRented => 'किराए पर';
+
+  @override
+  String get statusDueToday => 'आज देय';
+
+  @override
+  String get statusOverdue => 'अतिदेय';
+
+  @override
+  String get statusArchived => 'संग्रहीत';
+
+  @override
+  String get quickActions => 'त्वरित कार्रवाई';
+
+  @override
+  String get aiSuggestionsTitle => 'AI सुझाव (बीटा)';
+
+  @override
+  String get aiSuggestionsBody =>
+      '• 1 अतिदेय किराए का फ़ॉलो-अप करें\n• Bosch Drill Kit को प्रीमियम मूल्य पर ले जाएँ\n• विस्तार पुष्टि के लिए Priya Patel को कॉल करें';
+
+  @override
+  String get offlineBanner =>
+      'ऑफ़लाइन काम कर रहे हैं — बदलाव बाद में सिंक होंगे।';
+
+  @override
+  String get noRentalsYetTitle => 'अभी कोई किराया नहीं';
+
+  @override
+  String get noRentalsYetSubtitle =>
+      'अपना पहला लेन-देन बनाने के लिए नया किराया शुरू करें।';
+
+  @override
+  String get unknownCustomer => 'अज्ञात ग्राहक';
+
+  @override
+  String rentalDueSubtitle(String customerName, String date) {
+    return '$customerName • देय $date';
+  }
+
+  @override
+  String inventoryAvailableSubtitle(String category, int available, int total) {
+    return '$category • $available/$total उपलब्ध';
+  }
+
+  @override
+  String get customerTrusted => 'विश्वसनीय';
+
+  @override
+  String get customerStandard => 'सामान्य';
+
+  @override
+  String customerSubtitle(String phone, String tier) {
+    return '$phone • $tier';
+  }
+
+  @override
+  String get offlineSimulationTitle => 'ऑफ़लाइन सिमुलेशन';
+
+  @override
+  String get offlineSimulationSubtitle =>
+      'केवल डेमो: नॉन-ब्लॉकिंग ऑफ़लाइन UX जाँचें (उत्पाद स्थिति नहीं)।';
+
+  @override
+  String get languageTitle => 'भाषा';
+
+  @override
+  String get languageSubtitle => 'ऐप की भाषा चुनें';
+
+  @override
+  String get languageEnglish => 'English';
+
+  @override
+  String get languageHindi => 'हिन्दी';
+
+  @override
+  String get voiceSearchStubTitle => 'वॉइस खोज (स्टब)';
+
+  @override
+  String get voiceSearchStubSubtitle =>
+      'इंटेंट-आधारित खोज कमांड के लिए प्लेसहोल्डर।';
+
+  @override
+  String get businessTemplatesTitle => 'व्यवसाय टेम्पलेट';
+
+  @override
+  String get businessTemplatesSubtitle =>
+      'उद्योग के अनुसार स्टार्टर इन्वेंटरी आयात करें (मर्ज)।';
+
+  @override
+  String phoneLabel(String phone) {
+    return 'फ़ोन: $phone';
+  }
+
+  @override
+  String get itemsHeading => 'वस्तुएँ';
+
+  @override
+  String get timelineHeading => 'टाइमलाइन';
+
+  @override
+  String get extendAction => 'बढ़ाएँ';
+
+  @override
+  String get shareAction => 'शेयर';
+
+  @override
+  String get extendPlaceholder => 'बढ़ाना एक प्लेसहोल्डर कार्रवाई है।';
+
+  @override
+  String get sharePlaceholder => 'शेयर एक प्लेसहोल्डर कार्रवाई है।';
+
+  @override
+  String get editInventoryTitle => 'इन्वेंटरी संपादित करें';
+
+  @override
+  String get inventoryDetailTitle => 'इन्वेंटरी विवरण';
+
+  @override
+  String get editTooltip => 'संपादित करें';
+
+  @override
+  String get itemNameLabel => 'वस्तु का नाम';
+
+  @override
+  String get categoryLabel => 'श्रेणी';
+
+  @override
+  String get totalUnitsLabel => 'कुल इकाइयाँ';
+
+  @override
+  String get totalUnitsHelper =>
+      'उपलब्ध कुल के साथ समायोजित होता है; कुल से अधिक नहीं हो सकता।';
+
+  @override
+  String get notesLabel => 'नोट्स';
+
+  @override
+  String get notesHint => 'वारंटी / सीरियल / स्थिति';
+
+  @override
+  String get qrCodeLabel => 'QR कोड';
+
+  @override
+  String get cancel => 'रद्द करें';
+
+  @override
+  String get saving => 'सहेजा जा रहा है…';
+
+  @override
+  String get saveChanges => 'बदलाव सहेजें';
+
+  @override
+  String get nameCategoryRequired => 'नाम और श्रेणी आवश्यक हैं।';
+
+  @override
+  String get inventoryUpdated => 'इन्वेंटरी अपडेट हो गई।';
+
+  @override
+  String get customerProfileTitle => 'ग्राहक प्रोफ़ाइल';
+
+  @override
+  String get callAction => 'कॉल';
+
+  @override
+  String get whatsAppAction => 'WhatsApp';
+
+  @override
+  String get whatsAppSubtitle => 'प्लेसहोल्डर इंटीग्रेशन हुक';
+
+  @override
+  String get callPlaceholder => 'कॉल प्लेसहोल्डर कार्रवाई।';
+
+  @override
+  String get whatsAppPlaceholder => 'WhatsApp प्लेसहोल्डर कार्रवाई।';
+
+  @override
+  String get recentRentals => 'हाल के किराए';
+
+  @override
+  String dueDate(String date) {
+    return 'देय $date';
+  }
+
+  @override
+  String returnedDate(String date) {
+    return 'वापस $date';
+  }
+
+  @override
+  String get searchHint => 'ग्राहक, किराया या इन्वेंटरी खोजें';
+
+  @override
+  String get searchSectionCustomers => 'ग्राहक';
+
+  @override
+  String get searchSectionCurrentRentals => 'वर्तमान किराए';
+
+  @override
+  String get searchSectionPreviousRentals => 'पिछले किराए';
+
+  @override
+  String get searchSectionInventory => 'इन्वेंटरी';
+
+  @override
+  String noMatchingSection(String section) {
+    return 'कोई मिलान नहीं: $section';
+  }
+
+  @override
+  String inventoryUnitsSubtitle(String category, int available, int total) {
+    return '$category • $available/$total';
+  }
+
+  @override
+  String stepOf(int current, int total) {
+    return 'चरण $current / $total';
+  }
+
+  @override
+  String get phoneNumberLabel => 'फ़ोन नंबर';
+
+  @override
+  String get phoneNumberHint => '10 अंकों का ग्राहक फ़ोन';
+
+  @override
+  String get existingCustomer => 'मौजूदा ग्राहक';
+
+  @override
+  String existingCustomerSubtitle(String phone) {
+    return '$phone • मौजूदा ग्राहक';
+  }
+
+  @override
+  String get customerNameNewLabel => 'ग्राहक का नाम (नया)';
+
+  @override
+  String get customerNameNewHint => 'केवल नए ग्राहक के लिए आवश्यक';
+
+  @override
+  String get selectItems => 'वस्तुएँ चुनें';
+
+  @override
+  String itemAvailableCount(String category, int available) {
+    return '$category • $available उपलब्ध';
+  }
+
+  @override
+  String get reviewHeading => 'समीक्षा';
+
+  @override
+  String reviewPhone(String phone) {
+    return 'फ़ोन: $phone';
+  }
+
+  @override
+  String reviewName(String name) {
+    return 'नाम: $name';
+  }
+
+  @override
+  String get reviewItemsLabel => 'वस्तुएँ:';
+
+  @override
+  String get back => 'वापस';
+
+  @override
+  String get continueAction => 'आगे बढ़ें';
+
+  @override
+  String get confirmRental => 'किराया पुष्टि करें';
+
+  @override
+  String get noActiveRentalsTitle => 'कोई सक्रिय किराया नहीं';
+
+  @override
+  String get noActiveRentalsSubtitle => 'सब कुछ पहले ही वापस हो चुका है।';
+
+  @override
+  String get backToHome => 'होम पर वापस जाएँ';
+
+  @override
+  String rentalReturned(String id) {
+    return '$id वापस हो गया';
+  }
+
+  @override
+  String get quickAdd => 'त्वरित जोड़ें';
+
+  @override
+  String get unitsLabel => 'इकाइयाँ';
+
+  @override
+  String get advancedFields => 'उन्नत फ़ील्ड';
+
+  @override
+  String get advancedFieldsSubtitle => 'MVP में वैकल्पिक';
+
+  @override
+  String get saveItem => 'वस्तु सहेजें';
+
+  @override
+  String get scanIntro =>
+      'अगले चरण में कैमरा इंटीग्रेशन। अभी QR टेक्स्ट पेस्ट/दर्ज करें।';
+
+  @override
+  String get qrContentLabel => 'QR सामग्री';
+
+  @override
+  String get qrContentHint => 'customer:1001';
+
+  @override
+  String get noEntityMatched => 'इस कोड से कोई रिकॉर्ड नहीं मिला।';
+
+  @override
+  String get openLinkedRecord => 'लिंक किया गया रिकॉर्ड खोलें';
+
+  @override
+  String get voiceSearchTitle => 'वॉइस खोज';
+
+  @override
+  String get voiceSearchBody =>
+      'केवल स्टब: वॉइस कमांड चरण 5+ में यूनिवर्सल खोज इंटेंट से जुड़ेंगे।';
+
+  @override
+  String get templatesIntro =>
+      'एक उद्योग चुनें, फिर जोड़ने वाली स्टार्टर वस्तुएँ चुनें। समान नाम वाली मौजूदा वस्तुएँ बनी रहती हैं (मर्ज)।';
+
+  @override
+  String starterItemsCount(int count) {
+    return '$count स्टार्टर वस्तुएँ';
+  }
+
+  @override
+  String templateCardSubtitle(String description, int count) {
+    return '$description\n$count स्टार्टर वस्तुएँ';
+  }
+
+  @override
+  String get selectAll => 'सभी चुनें';
+
+  @override
+  String get clearSelection => 'साफ़ करें';
+
+  @override
+  String selectedCount(int count) {
+    return '$count चयनित';
+  }
+
+  @override
+  String unitSingular(int count) {
+    return '$count इकाई';
+  }
+
+  @override
+  String unitPlural(int count) {
+    return '$count इकाइयाँ';
+  }
+
+  @override
+  String templateItemSubtitle(String category, String units) {
+    return '$category • $units';
+  }
+
+  @override
+  String get adding => 'जोड़ा जा रहा है…';
+
+  @override
+  String get addSelectedToInventory => 'चयनित को इन्वेंटरी में जोड़ें';
+
+  @override
+  String templateImportResult(int added, int skipped) {
+    return '$added वस्तुएँ जोड़ी गईं ($skipped पहले से मौजूद)';
+  }
+}

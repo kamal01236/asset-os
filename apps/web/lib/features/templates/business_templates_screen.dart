@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/l10n/l10n_ext.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/repositories/local_repository.dart';
 import '../../core/templates/industry_templates.dart';
@@ -12,13 +13,14 @@ class BusinessTemplatesScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final AppLocalizations l10n = context.l10n;
     return Scaffold(
-      appBar: AppBar(title: const Text('Business Templates')),
+      appBar: AppBar(title: Text(l10n.businessTemplatesTitle)),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: <Widget>[
           Text(
-            'Pick an industry, then choose which starter items to add. Existing items with the same name are kept (merge).',
+            l10n.templatesIntro,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: Colors.grey.shade700,
             ),
@@ -29,7 +31,10 @@ class BusinessTemplatesScreen extends ConsumerWidget {
               padding: const EdgeInsets.only(bottom: 10),
               child: EntityCard(
                 title: template.name,
-                subtitle: '${template.description}\n${template.items.length} starter items',
+                subtitle: l10n.templateCardSubtitle(
+                  template.description,
+                  template.items.length,
+                ),
                 leadingIcon: Icons.dashboard_customize_outlined,
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () {
@@ -89,6 +94,7 @@ class _TemplateItemPickerScreenState extends ConsumerState<TemplateItemPickerScr
     if (_selected.isEmpty || _submitting) {
       return;
     }
+    final AppLocalizations l10n = context.l10n;
     final List<TemplateInventoryItem> selected = _selected
         .map((int index) => widget.template.items[index])
         .toList();
@@ -102,7 +108,7 @@ class _TemplateItemPickerScreenState extends ConsumerState<TemplateItemPickerScr
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          'Added ${result.added} items (${result.skipped} already present)',
+          l10n.templateImportResult(result.added, result.skipped),
         ),
       ),
     );
@@ -114,6 +120,7 @@ class _TemplateItemPickerScreenState extends ConsumerState<TemplateItemPickerScr
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations l10n = context.l10n;
     final IndustryTemplate template = widget.template;
     return Scaffold(
       appBar: AppBar(title: Text(template.name)),
@@ -129,11 +136,11 @@ class _TemplateItemPickerScreenState extends ConsumerState<TemplateItemPickerScr
           const SizedBox(height: 10),
           Row(
             children: <Widget>[
-              TextButton(onPressed: _selectAll, child: const Text('Select all')),
-              TextButton(onPressed: _clear, child: const Text('Clear')),
+              TextButton(onPressed: _selectAll, child: Text(l10n.selectAll)),
+              TextButton(onPressed: _clear, child: Text(l10n.clearSelection)),
               const Spacer(),
               Text(
-                '${_selected.length} selected',
+                l10n.selectedCount(_selected.length),
                 style: Theme.of(context).textTheme.labelLarge,
               ),
             ],
@@ -142,12 +149,15 @@ class _TemplateItemPickerScreenState extends ConsumerState<TemplateItemPickerScr
           ...List<Widget>.generate(template.items.length, (int index) {
             final TemplateInventoryItem item = template.items[index];
             final bool checked = _selected.contains(index);
+            final String unitsLabel = item.defaultUnits == 1
+                ? l10n.unitSingular(item.defaultUnits)
+                : l10n.unitPlural(item.defaultUnits);
             return CheckboxListTile(
               value: checked,
               contentPadding: EdgeInsets.zero,
               title: Text(item.name),
               subtitle: Text(
-                '${item.category} • ${item.defaultUnits} unit${item.defaultUnits == 1 ? '' : 's'}',
+                l10n.templateItemSubtitle(item.category, unitsLabel),
               ),
               onChanged: (bool? value) {
                 setState(() {
@@ -167,7 +177,7 @@ class _TemplateItemPickerScreenState extends ConsumerState<TemplateItemPickerScr
         child: FilledButton(
           onPressed: _selected.isEmpty || _submitting ? null : _importSelected,
           child: Text(
-            _submitting ? 'Adding…' : 'Add selected to inventory',
+            _submitting ? l10n.adding : l10n.addSelectedToInventory,
           ),
         ),
       ),

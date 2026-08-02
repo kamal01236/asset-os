@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'app_shell.dart';
 import 'core/config/app_branding.dart';
 import 'core/db/app_database.dart';
+import 'core/l10n/l10n_ext.dart';
 import 'core/providers/app_providers.dart';
 import 'core/repositories/local_repository.dart';
 import 'core/theme/app_theme.dart';
@@ -30,15 +31,19 @@ Future<void> main() async {
   );
 }
 
-class MainApp extends StatelessWidget {
+class MainApp extends ConsumerWidget {
   const MainApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final Locale locale = ref.watch(localeProvider);
     return MaterialApp(
       title: kAppDisplayName,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.build(),
+      locale: locale,
+      supportedLocales: AppLocalizations.supportedLocales,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
       home: const AppShell(),
     );
   }
