@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Shared helpers for Asset OS WSL scripts.
+# Shared helpers for Hando WSL scripts (Flutter web).
 # shellcheck disable=SC2034
 
 set -euo pipefail

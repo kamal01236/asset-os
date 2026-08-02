@@ -35,10 +35,9 @@ echo
 echo "Web build succeeded."
 echo "  Artifacts: ${OUT}"
 echo
-echo "Serve locally (pick one):"
-echo "  cd apps/web && flutter run -d web-server --web-hostname=0.0.0.0"
-echo "  python3 -m http.server 8080 --directory ${OUT}"
-echo "  npx --yes serve ${OUT}"
+echo "Serve locally and open the printed URL:"
+echo "  ./scripts/dev.sh servelocal"
+echo "  # from Windows PowerShell: .\\scripts\\wsl.ps1 servelocal"
 echo
-echo "Then open http://localhost:8080 (or the port you chose) in a browser."
+echo "Optional port: ./scripts/dev.sh servelocal 8787"
 echo "For a public feedback URL, use: ./scripts/flydeploy.sh"

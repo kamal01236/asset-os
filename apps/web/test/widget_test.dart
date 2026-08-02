@@ -86,20 +86,23 @@ void main() {
     expect(find.text('Offline simulation'), findsOneWidget);
   });
 
-  testWidgets('opens Search and New Rental from Home', (WidgetTester tester) async {
+  testWidgets('opens Search from home search bar', (WidgetTester tester) async {
     await _pumpAppShell(tester);
 
     await tester.tap(find.text('Search Anything'));
     await tester.pumpAndSettle();
     expect(find.text('Find customer, rental, or inventory'), findsOneWidget);
     expect(find.widgetWithText(AppBar, 'Search'), findsOneWidget);
+  });
 
-    await tester.pageBack();
-    await tester.pumpAndSettle();
-    expect(find.text('Search Anything'), findsOneWidget);
+  testWidgets('starts New Rental flow from Actions sheet', (WidgetTester tester) async {
+    await _pumpAppShell(tester);
 
-    await tester.tap(find.widgetWithText(FilledButton, 'New Rental'));
+    await tester.tap(find.text('Actions'));
     await tester.pumpAndSettle();
+    await tester.tap(find.text('New Rental'));
+    await tester.pumpAndSettle();
+
     expect(find.widgetWithText(AppBar, 'New Rental'), findsOneWidget);
     expect(find.text('Step 1 of 3'), findsOneWidget);
     expect(find.text('Phone number'), findsOneWidget);

@@ -1,0 +1,16 @@
+---
+description: Web UX contract for Hando shell and flows
+globs: apps/web/lib/**/*.dart
+alwaysApply: false
+---
+
+# Web UX contract
+
+Follow `docs/ux/web-ux-conventions.md` (source of truth). Digest:
+
+- Bottom nav has 5 stable tabs: Home, Rentals, Inventory, Customers, More. Do not add/remove tabs without updating that doc.
+- Global actions always include Search, New Rental, Return, Add Inventory, Scan.
+- Thumb-zone primary actions; one dominant choice per step; list/status-first (no chart dashboards in MVP).
+- Status colors: Available green, Rented blue, Due Today orange, Overdue red, Archived grey.
+- Offline: subtle non-blocking banner only. More-tab offline toggle is demo/simulation, not product positioning.
+- Forms: phone-first customer lookup; minimal required fields first; advanced details collapsed.

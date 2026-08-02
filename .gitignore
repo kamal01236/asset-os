@@ -7,29 +7,19 @@
 .pub-cache/
 .pub/
 **/doc/api/
-**/ios/Flutter/.last_build_id
-*.iml
 
-# Android
-**/android/.gradle/
-**/android/local.properties
-**/android/**/GeneratedPluginRegistrant.java
-**/android/key.properties
+# Native platform scaffolds (web-only client — do not commit)
+**/android/
+**/ios/
+**/linux/
+**/macos/
+**/windows/
+*.iml
 *.jks
 *.keystore
-**/android/app/debug
-**/android/app/profile
-**/android/app/release
 
 # Web
 **/web/.dart_tool/
-
-# iOS / macOS (future)
-**/ios/Pods/
-**/ios/.symlinks/
-**/macos/Flutter/ephemeral/
-**/ios/Flutter/Flutter.framework
-**/ios/Flutter/Flutter.podspec
 
 # IDE / editor
 .idea/

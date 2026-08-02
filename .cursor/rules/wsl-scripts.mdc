@@ -1,0 +1,12 @@
+---
+description: WSL/script dispatcher and web-only deploy conventions
+globs: scripts/**/*
+alwaysApply: false
+---
+
+# Scripts / deploy
+
+- Keep `scripts/wsl.ps1` and `scripts/dev.sh` as the dispatcher surface. New commands must be wired into both.
+- Web-only messaging; no adb, APK, emulator, or native packaging steps.
+- Fly deploy stays behind `flydeploy`; do not embed secrets in scripts.
+- Prefer extending `_lib.sh` helpers over duplicating Flutter/path logic.

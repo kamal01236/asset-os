@@ -1,0 +1,14 @@
+---
+description: Flutter web client stack and lib layout conventions
+globs: apps/web/**/*.dart
+alwaysApply: false
+---
+
+# Flutter web client
+
+- Stack: Flutter + Riverpod + Drift. Local DB is the source of truth; sync must stay additive and never required for core flows.
+- Put shared logic under `lib/core/` (db, providers, repositories, widgets, theme, config). Keep screens in `app_shell.dart` until a clear split is needed.
+- Reuse `lib/core/widgets/ui_primitives.dart` and `lib/core/theme/app_theme.dart`; avoid one-off styles that fight the shell.
+- User-visible product name: import `kAppDisplayName` from `lib/core/config/app_branding.dart` — never literal brand strings.
+- Run checks via `.\scripts\wsl.ps1 test` or `./scripts/test.sh`, not a second ad-hoc CI path.
+- Do not add Android/iOS platform folders for web features.

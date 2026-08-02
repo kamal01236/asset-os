@@ -40,7 +40,7 @@ if [[ ! -f "${ROOT}/Dockerfile" ]]; then
   exit 1
 fi
 
-echo "==> Deploying Asset OS web to Fly.io (${FLY_BIN})"
+echo "==> Deploying Hando web to Fly.io (${FLY_BIN})"
 echo "    app config: ${ROOT}/fly.toml"
 echo
 

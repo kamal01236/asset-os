@@ -9,7 +9,7 @@ source "${SCRIPT_DIR}/_lib.sh"
 ROOT="$(repo_root)"
 WEB="$(web_dir)"
 
-echo "==> Asset OS setup (web)"
+echo "==> Hando setup (Flutter web)"
 echo "    repo: ${ROOT}"
 echo "    web:  ${WEB}"
 
@@ -35,7 +35,7 @@ else
   echo "  Optional: apt install chromium-browser, or set CHROME_EXECUTABLE" >&2
 fi
 
-echo "==> flutter doctor (warnings are non-fatal)"
+echo "==> flutter doctor (web-only: ignore Android/Linux desktop ✗)"
 flutter doctor -v || true
 
 if [[ ! -d "$WEB" ]]; then
@@ -68,7 +68,6 @@ echo "Next steps:"
 echo "  ./scripts/test.sh          # analyze + unit/widget tests"
 echo "  ./scripts/localrun.sh      # run in Chrome or web-server"
 echo "  ./scripts/wsldeploy.sh     # flutter build web (artifacts under build/web)"
+echo "  ./scripts/servelocal.sh    # serve build/web and print open URL"
 echo "  ./scripts/flydeploy.sh     # deploy static web app to Fly.io"
-echo "  ./scripts/dev.sh doctor    # re-check tooling"
-echo
-echo "Native Android/iOS packaging is deferred until after customer feedback."
+echo "  ./scripts/dev.sh doctor    # re-check tooling (Chrome ✓ is enough)"

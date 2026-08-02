@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Single entrypoint for Asset OS WSL dev commands (web).
+# Single entrypoint for Hando WSL dev commands (Flutter web).
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -15,11 +15,12 @@ Commands:
   localrun    Run the app on Chrome or web-server (extra args → flutter run)
   test        flutter analyze + flutter test
   wsldeploy   Build web artifacts (build/web) and print serve hints
+  servelocal  Serve build/web locally and print the open URL (optional port)
   flydeploy   Deploy static web app to Fly.io (requires fly auth login)
   doctor      flutter doctor -v
   help        Show this help
 
-Web client only. Native Android/iOS packaging is deferred until after feedback.
+Flutter web client only (apps/web). Android/Linux desktop doctor failures are expected.
 EOF
 }
 
@@ -42,6 +43,9 @@ case "$cmd" in
     ;;
   wsldeploy)
     exec bash "${SCRIPT_DIR}/wsldeploy.sh" "$@"
+    ;;
+  servelocal)
+    exec bash "${SCRIPT_DIR}/servelocal.sh" "$@"
     ;;
   flydeploy)
     exec bash "${SCRIPT_DIR}/flydeploy.sh" "$@"
