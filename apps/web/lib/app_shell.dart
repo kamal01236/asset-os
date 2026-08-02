@@ -8,6 +8,7 @@ import 'core/providers/app_providers.dart';
 import 'core/repositories/local_repository.dart';
 import 'core/widgets/rental_timeline.dart';
 import 'core/widgets/ui_primitives.dart';
+import 'features/reports/share_reports_screen.dart';
 import 'features/templates/business_templates_screen.dart';
 
 class AppShell extends ConsumerWidget {
@@ -493,6 +494,20 @@ class MoreScreen extends ConsumerWidget {
               ],
             ),
           ),
+        ),
+        const SizedBox(height: 10),
+        const MyWhatsAppSettingsCard(),
+        const SizedBox(height: 10),
+        EntityCard(
+          title: l10n.shareReportsTitle,
+          subtitle: l10n.shareReportsSubtitle,
+          leadingIcon: Icons.share_outlined,
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(builder: (_) => const ShareReportsScreen()),
+            );
+          },
         ),
         const SizedBox(height: 10),
         EntityCard(

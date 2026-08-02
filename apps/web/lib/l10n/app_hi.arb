@@ -239,5 +239,32 @@
       "added": {"type": "int"},
       "skipped": {"type": "int"}
     }
-  }
+  },
+  "myWhatsAppTitle": "मेरा WhatsApp नंबर",
+  "myWhatsAppSubtitle": "रिपोर्ट अपने WhatsApp पर भेजने के लिए",
+  "myWhatsAppHint": "10 अंकों का मोबाइल (डिफ़ॉल्ट +91)",
+  "myWhatsAppSaved": "WhatsApp नंबर सहेजा गया।",
+  "myWhatsAppInvalid": "मान्य 10 अंकों का (या पूरा) मोबाइल नंबर दर्ज करें।",
+  "shareReportsTitle": "रिपोर्ट शेयर करें",
+  "shareReportsSubtitle": "टेक्स्ट रिपोर्ट बनाएँ और अपने WhatsApp पर भेजें",
+  "reportTypeLabel": "रिपोर्ट प्रकार",
+  "reportTypeSummary": "सारांश",
+  "reportTypeCustomerWise": "ग्राहक-वार",
+  "reportTypeInventoryWise": "इन्वेंटरी-वार",
+  "reportPeriodLabel": "अवधि",
+  "reportPeriodDaily": "दैनिक",
+  "reportPeriodWeekly": "साप्ताहिक",
+  "reportPeriodMonthly": "मासिक",
+  "reportPeriodCustom": "कस्टम",
+  "reportStartDate": "प्रारंभ तिथि",
+  "reportEndDate": "समाप्ति तिथि",
+  "reportPreviewLabel": "पूर्वावलोकन",
+  "shareToMyWhatsApp": "मेरे WhatsApp पर शेयर करें",
+  "copyReportText": "टेक्स्ट कॉपी करें",
+  "reportCopied": "रिपोर्ट क्लिपबोर्ड पर कॉपी हो गई।",
+  "reportWhatsAppOpened": "WhatsApp खुला — भेजने के लिए Send टैप करें।",
+  "reportWhatsAppFallback": "WhatsApp नहीं खुल सका। रिपोर्ट कॉपी कर दी गई।",
+  "reportMissingPhone": "पहले More में मेरा WhatsApp नंबर सेट करें।",
+  "setWhatsAppAction": "नंबर सेट करें",
+  "saveAction": "सहेजें"
 }

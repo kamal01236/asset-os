@@ -1,0 +1,189 @@
+import '../config/app_branding.dart';
+import '../models/entities.dart';
+import 'report_models.dart';
+
+/// Soft cap for WhatsApp URL length; longer text is truncated with a note.
+const int kReportMaxChars = 3500;
+
+/// Builds plain-text business reports from local Drift-backed entities.
+class ReportBuilder {
+  const ReportBuilder({
+    this.appName = kAppDisplayName,
+    this.maxChars = kReportMaxChars,
+  });
+
+  final String appName;
+  final int maxChars;
+
+  String build({
+    required ReportType type,
+    required ReportDateRange range,
+    required List<Customer> customers,
+    required List<InventoryItem> inventory,
+    required List<Rental> rentals,
+    DateTime? now,
+  }) {
+    final DateTime clock = now ?? range.end;
+    final String body;
+    switch (type) {
+      case ReportType.summary:
+        body = _buildSummary(range, rentals, clock);
+      case ReportType.customerWise:
+        body = _buildCustomerWise(range, customers, inventory, rentals, clock);
+      case ReportType.inventoryWise:
+        body = _buildInventoryWise(range, inventory, rentals);
+    }
+    final String header =
+        '$appName report\n${_formatDate(range.start)} → ${_formatDate(range.end)}\n';
+    return _truncate('$header\n$body'.trimRight());
+  }
+
+  String _buildSummary(ReportDateRange range, List<Rental> rentals, DateTime clock) {
+    final int active = rentals.where((Rental r) => r.isActive).length;
+    final int opened = rentals
+        .where((Rental r) => _inRange(r.startedAt, range))
+        .length;
+    final int returned = rentals
+        .where(
+          (Rental r) => r.returnedAt != null && _inRange(r.returnedAt!, range),
+        )
+        .length;
+    final int overdue = rentals
+        .where((Rental r) => r.statusFor(clock) == AssetStatus.overdue)
+        .length;
+
+    return <String>[
+      'Summary',
+      'Active: $active',
+      'Opened: $opened',
+      'Returned: $returned',
+      'Overdue: $overdue',
+    ].join('\n');
+  }
+
+  String _buildCustomerWise(
+    ReportDateRange range,
+    List<Customer> customers,
+    List<InventoryItem> inventory,
+    List<Rental> rentals,
+    DateTime clock,
+  ) {
+    final Map<String, Customer> byId = <String, Customer>{
+      for (final Customer c in customers) c.id: c,
+    };
+    final Map<String, InventoryItem> itemsById = <String, InventoryItem>{
+      for (final InventoryItem i in inventory) i.id: i,
+    };
+
+    final List<Rental> inScope = rentals.where((Rental r) {
+      if (_inRange(r.startedAt, range)) {
+        return true;
+      }
+      if (r.returnedAt != null && _inRange(r.returnedAt!, range)) {
+        return true;
+      }
+      // Active rentals that overlap the window (due/open during period).
+      if (r.isActive && !r.startedAt.isAfter(range.end)) {
+        return true;
+      }
+      return false;
+    }).toList();
+
+    final Map<String, List<Rental>> byCustomer = <String, List<Rental>>{};
+    for (final Rental r in inScope) {
+      byCustomer.putIfAbsent(r.customerId, () => <Rental>[]).add(r);
+    }
+
+    if (byCustomer.isEmpty) {
+      return 'Customer-wise\n(no rentals in range)';
+    }
+
+    final List<String> lines = <String>['Customer-wise'];
+    final List<String> customerIds = byCustomer.keys.toList()..sort();
+    for (final String customerId in customerIds) {
+      final Customer? customer = byId[customerId];
+      final String name = customer?.name ?? customerId;
+      final String phone = customer?.phone ?? '';
+      lines.add('');
+      lines.add(phone.isEmpty ? name : '$name ($phone)');
+      for (final Rental rental in byCustomer[customerId]!) {
+        final String itemNames = rental.itemIds
+            .map((String id) => itemsById[id]?.name ?? id)
+            .join(', ');
+        final AssetStatus status = rental.statusFor(clock);
+        lines.add(
+          '  • ${rental.id}: $itemNames | due ${_formatDate(rental.dueAt)} | ${status.label}',
+        );
+      }
+    }
+    return lines.join('\n');
+  }
+
+  String _buildInventoryWise(
+    ReportDateRange range,
+    List<InventoryItem> inventory,
+    List<Rental> rentals,
+  ) {
+    final List<Rental> openedInRange =
+        rentals.where((Rental r) => _inRange(r.startedAt, range)).toList();
+
+    final Map<String, int> rentCount = <String, int>{};
+    final Map<String, int> unitsOut = <String, int>{};
+
+    for (final InventoryItem item in inventory) {
+      rentCount[item.id] = 0;
+      unitsOut[item.id] = 0;
+    }
+
+    for (final Rental rental in openedInRange) {
+      for (final String itemId in rental.itemIds) {
+        rentCount[itemId] = (rentCount[itemId] ?? 0) + 1;
+      }
+    }
+
+    for (final Rental rental in rentals.where((Rental r) => r.isActive)) {
+      for (final String itemId in rental.itemIds) {
+        unitsOut[itemId] = (unitsOut[itemId] ?? 0) + 1;
+      }
+    }
+
+    if (inventory.isEmpty) {
+      return 'Inventory-wise\n(no inventory)';
+    }
+
+    final List<String> lines = <String>['Inventory-wise'];
+    final List<InventoryItem> sorted = List<InventoryItem>.from(inventory)
+      ..sort((InventoryItem a, InventoryItem b) => a.name.compareTo(b.name));
+    for (final InventoryItem item in sorted) {
+      final int rented = rentCount[item.id] ?? 0;
+      final int out = unitsOut[item.id] ?? 0;
+      lines.add(
+        '• ${item.name}: rented $rented× | out $out | avail ${item.availableUnits}/${item.totalUnits}',
+      );
+    }
+    return lines.join('\n');
+  }
+
+  bool _inRange(DateTime value, ReportDateRange range) {
+    return !value.isBefore(range.start) && !value.isAfter(range.end);
+  }
+
+  String _formatDate(DateTime value) {
+    final String y = value.year.toString().padLeft(4, '0');
+    final String m = value.month.toString().padLeft(2, '0');
+    final String d = value.day.toString().padLeft(2, '0');
+    return '$y-$m-$d';
+  }
+
+  String _truncate(String text) {
+    if (text.length <= maxChars) {
+      return text;
+    }
+    final String suffix = '\n…(truncated — open $appName for full)';
+    final int keep = maxChars - suffix.length;
+    if (keep <= 0) {
+      return suffix.trim();
+    }
+    return '${text.substring(0, keep)}$suffix';
+  }
+}

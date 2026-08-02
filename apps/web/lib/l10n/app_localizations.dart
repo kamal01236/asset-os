@@ -841,6 +841,168 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Added {added} items ({skipped} already present)'**
   String templateImportResult(int added, int skipped);
+
+  /// No description provided for @myWhatsAppTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'My WhatsApp number'**
+  String get myWhatsAppTitle;
+
+  /// No description provided for @myWhatsAppSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Used to share reports to yourself'**
+  String get myWhatsAppSubtitle;
+
+  /// No description provided for @myWhatsAppHint.
+  ///
+  /// In en, this message translates to:
+  /// **'10-digit mobile (default +91)'**
+  String get myWhatsAppHint;
+
+  /// No description provided for @myWhatsAppSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'WhatsApp number saved.'**
+  String get myWhatsAppSaved;
+
+  /// No description provided for @myWhatsAppInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid 10-digit (or full) mobile number.'**
+  String get myWhatsAppInvalid;
+
+  /// No description provided for @shareReportsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Share reports'**
+  String get shareReportsTitle;
+
+  /// No description provided for @shareReportsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate and send a text report to your WhatsApp'**
+  String get shareReportsSubtitle;
+
+  /// No description provided for @reportTypeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Report type'**
+  String get reportTypeLabel;
+
+  /// No description provided for @reportTypeSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Summary'**
+  String get reportTypeSummary;
+
+  /// No description provided for @reportTypeCustomerWise.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer-wise'**
+  String get reportTypeCustomerWise;
+
+  /// No description provided for @reportTypeInventoryWise.
+  ///
+  /// In en, this message translates to:
+  /// **'Inventory-wise'**
+  String get reportTypeInventoryWise;
+
+  /// No description provided for @reportPeriodLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Period'**
+  String get reportPeriodLabel;
+
+  /// No description provided for @reportPeriodDaily.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily'**
+  String get reportPeriodDaily;
+
+  /// No description provided for @reportPeriodWeekly.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly'**
+  String get reportPeriodWeekly;
+
+  /// No description provided for @reportPeriodMonthly.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly'**
+  String get reportPeriodMonthly;
+
+  /// No description provided for @reportPeriodCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get reportPeriodCustom;
+
+  /// No description provided for @reportStartDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Start date'**
+  String get reportStartDate;
+
+  /// No description provided for @reportEndDate.
+  ///
+  /// In en, this message translates to:
+  /// **'End date'**
+  String get reportEndDate;
+
+  /// No description provided for @reportPreviewLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get reportPreviewLabel;
+
+  /// No description provided for @shareToMyWhatsApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Share to my WhatsApp'**
+  String get shareToMyWhatsApp;
+
+  /// No description provided for @copyReportText.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy text'**
+  String get copyReportText;
+
+  /// No description provided for @reportCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Report copied to clipboard.'**
+  String get reportCopied;
+
+  /// No description provided for @reportWhatsAppOpened.
+  ///
+  /// In en, this message translates to:
+  /// **'WhatsApp opened — tap Send to deliver.'**
+  String get reportWhatsAppOpened;
+
+  /// No description provided for @reportWhatsAppFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open WhatsApp. Report copied instead.'**
+  String get reportWhatsAppFallback;
+
+  /// No description provided for @reportMissingPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Set My WhatsApp number in More first.'**
+  String get reportMissingPhone;
+
+  /// No description provided for @setWhatsAppAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Set number'**
+  String get setWhatsAppAction;
+
+  /// No description provided for @saveAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get saveAction;
 }
 
 class _AppLocalizationsDelegate

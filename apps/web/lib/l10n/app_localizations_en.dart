@@ -430,4 +430,88 @@ class AppLocalizationsEn extends AppLocalizations {
   String templateImportResult(int added, int skipped) {
     return 'Added $added items ($skipped already present)';
   }
+
+  @override
+  String get myWhatsAppTitle => 'My WhatsApp number';
+
+  @override
+  String get myWhatsAppSubtitle => 'Used to share reports to yourself';
+
+  @override
+  String get myWhatsAppHint => '10-digit mobile (default +91)';
+
+  @override
+  String get myWhatsAppSaved => 'WhatsApp number saved.';
+
+  @override
+  String get myWhatsAppInvalid =>
+      'Enter a valid 10-digit (or full) mobile number.';
+
+  @override
+  String get shareReportsTitle => 'Share reports';
+
+  @override
+  String get shareReportsSubtitle =>
+      'Generate and send a text report to your WhatsApp';
+
+  @override
+  String get reportTypeLabel => 'Report type';
+
+  @override
+  String get reportTypeSummary => 'Summary';
+
+  @override
+  String get reportTypeCustomerWise => 'Customer-wise';
+
+  @override
+  String get reportTypeInventoryWise => 'Inventory-wise';
+
+  @override
+  String get reportPeriodLabel => 'Period';
+
+  @override
+  String get reportPeriodDaily => 'Daily';
+
+  @override
+  String get reportPeriodWeekly => 'Weekly';
+
+  @override
+  String get reportPeriodMonthly => 'Monthly';
+
+  @override
+  String get reportPeriodCustom => 'Custom';
+
+  @override
+  String get reportStartDate => 'Start date';
+
+  @override
+  String get reportEndDate => 'End date';
+
+  @override
+  String get reportPreviewLabel => 'Preview';
+
+  @override
+  String get shareToMyWhatsApp => 'Share to my WhatsApp';
+
+  @override
+  String get copyReportText => 'Copy text';
+
+  @override
+  String get reportCopied => 'Report copied to clipboard.';
+
+  @override
+  String get reportWhatsAppOpened => 'WhatsApp opened — tap Send to deliver.';
+
+  @override
+  String get reportWhatsAppFallback =>
+      'Could not open WhatsApp. Report copied instead.';
+
+  @override
+  String get reportMissingPhone => 'Set My WhatsApp number in More first.';
+
+  @override
+  String get setWhatsAppAction => 'Set number';
+
+  @override
+  String get saveAction => 'Save';
 }

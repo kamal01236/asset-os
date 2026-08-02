@@ -239,5 +239,32 @@
       "added": {"type": "int"},
       "skipped": {"type": "int"}
     }
-  }
+  },
+  "myWhatsAppTitle": "My WhatsApp number",
+  "myWhatsAppSubtitle": "Used to share reports to yourself",
+  "myWhatsAppHint": "10-digit mobile (default +91)",
+  "myWhatsAppSaved": "WhatsApp number saved.",
+  "myWhatsAppInvalid": "Enter a valid 10-digit (or full) mobile number.",
+  "shareReportsTitle": "Share reports",
+  "shareReportsSubtitle": "Generate and send a text report to your WhatsApp",
+  "reportTypeLabel": "Report type",
+  "reportTypeSummary": "Summary",
+  "reportTypeCustomerWise": "Customer-wise",
+  "reportTypeInventoryWise": "Inventory-wise",
+  "reportPeriodLabel": "Period",
+  "reportPeriodDaily": "Daily",
+  "reportPeriodWeekly": "Weekly",
+  "reportPeriodMonthly": "Monthly",
+  "reportPeriodCustom": "Custom",
+  "reportStartDate": "Start date",
+  "reportEndDate": "End date",
+  "reportPreviewLabel": "Preview",
+  "shareToMyWhatsApp": "Share to my WhatsApp",
+  "copyReportText": "Copy text",
+  "reportCopied": "Report copied to clipboard.",
+  "reportWhatsAppOpened": "WhatsApp opened — tap Send to deliver.",
+  "reportWhatsAppFallback": "Could not open WhatsApp. Report copied instead.",
+  "reportMissingPhone": "Set My WhatsApp number in More first.",
+  "setWhatsAppAction": "Set number",
+  "saveAction": "Save"
 }

@@ -431,4 +431,89 @@ class AppLocalizationsHi extends AppLocalizations {
   String templateImportResult(int added, int skipped) {
     return '$added वस्तुएँ जोड़ी गईं ($skipped पहले से मौजूद)';
   }
+
+  @override
+  String get myWhatsAppTitle => 'मेरा WhatsApp नंबर';
+
+  @override
+  String get myWhatsAppSubtitle => 'रिपोर्ट अपने WhatsApp पर भेजने के लिए';
+
+  @override
+  String get myWhatsAppHint => '10 अंकों का मोबाइल (डिफ़ॉल्ट +91)';
+
+  @override
+  String get myWhatsAppSaved => 'WhatsApp नंबर सहेजा गया।';
+
+  @override
+  String get myWhatsAppInvalid =>
+      'मान्य 10 अंकों का (या पूरा) मोबाइल नंबर दर्ज करें।';
+
+  @override
+  String get shareReportsTitle => 'रिपोर्ट शेयर करें';
+
+  @override
+  String get shareReportsSubtitle =>
+      'टेक्स्ट रिपोर्ट बनाएँ और अपने WhatsApp पर भेजें';
+
+  @override
+  String get reportTypeLabel => 'रिपोर्ट प्रकार';
+
+  @override
+  String get reportTypeSummary => 'सारांश';
+
+  @override
+  String get reportTypeCustomerWise => 'ग्राहक-वार';
+
+  @override
+  String get reportTypeInventoryWise => 'इन्वेंटरी-वार';
+
+  @override
+  String get reportPeriodLabel => 'अवधि';
+
+  @override
+  String get reportPeriodDaily => 'दैनिक';
+
+  @override
+  String get reportPeriodWeekly => 'साप्ताहिक';
+
+  @override
+  String get reportPeriodMonthly => 'मासिक';
+
+  @override
+  String get reportPeriodCustom => 'कस्टम';
+
+  @override
+  String get reportStartDate => 'प्रारंभ तिथि';
+
+  @override
+  String get reportEndDate => 'समाप्ति तिथि';
+
+  @override
+  String get reportPreviewLabel => 'पूर्वावलोकन';
+
+  @override
+  String get shareToMyWhatsApp => 'मेरे WhatsApp पर शेयर करें';
+
+  @override
+  String get copyReportText => 'टेक्स्ट कॉपी करें';
+
+  @override
+  String get reportCopied => 'रिपोर्ट क्लिपबोर्ड पर कॉपी हो गई।';
+
+  @override
+  String get reportWhatsAppOpened =>
+      'WhatsApp खुला — भेजने के लिए Send टैप करें।';
+
+  @override
+  String get reportWhatsAppFallback =>
+      'WhatsApp नहीं खुल सका। रिपोर्ट कॉपी कर दी गई।';
+
+  @override
+  String get reportMissingPhone => 'पहले More में मेरा WhatsApp नंबर सेट करें।';
+
+  @override
+  String get setWhatsAppAction => 'नंबर सेट करें';
+
+  @override
+  String get saveAction => 'सहेजें';
 }

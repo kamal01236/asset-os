@@ -5,8 +5,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../db/app_database.dart';
 import '../models/entities.dart';
 import '../repositories/local_repository.dart';
+import '../sharing/whatsapp_share.dart';
 
 const String kLocalePrefsKey = 'asset_os_locale';
+const String kOwnerWhatsAppPhoneKey = 'owner_whatsapp_phone';
+const String kOwnerWhatsAppCountryCodeKey = 'owner_whatsapp_country_code';
+const String kDefaultWhatsAppCountryCode = '91';
 
 final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
   throw UnimplementedError('SharedPreferences must be overridden in ProviderScope.');
@@ -65,6 +69,70 @@ class LocaleNotifier extends StateNotifier<Locale> {
     }
     state = Locale(code);
     await _preferences.setString(kLocalePrefsKey, code);
+  }
+}
+
+/// Owner WhatsApp number for share-to-self reports (digits + country code).
+class OwnerWhatsAppSettings {
+  const OwnerWhatsAppSettings({
+    required this.phoneDigits,
+    required this.countryCode,
+  });
+
+  /// Stored digits as entered (typically 10-digit local, or full E.164 digits).
+  final String phoneDigits;
+
+  /// Default country calling code without `+` (e.g. `91`).
+  final String countryCode;
+
+  /// Digits suitable for `wa.me` (10-digit local numbers get [countryCode] prefix).
+  String get e164Digits => normalizeWhatsAppPhone(
+        phoneDigits,
+        countryCode: countryCode,
+      );
+
+  bool get isConfigured {
+    final String local = phoneDigits.replaceAll(RegExp(r'\D'), '');
+    return local.length >= 10;
+  }
+}
+
+final ownerWhatsAppProvider =
+    StateNotifierProvider<OwnerWhatsAppNotifier, OwnerWhatsAppSettings>((ref) {
+  return OwnerWhatsAppNotifier(ref.watch(sharedPreferencesProvider));
+});
+
+class OwnerWhatsAppNotifier extends StateNotifier<OwnerWhatsAppSettings> {
+  OwnerWhatsAppNotifier(this._preferences) : super(_fromPrefs(_preferences));
+
+  final SharedPreferences _preferences;
+
+  static OwnerWhatsAppSettings _fromPrefs(SharedPreferences preferences) {
+    final String phone =
+        preferences.getString(kOwnerWhatsAppPhoneKey) ?? '';
+    final String country =
+        preferences.getString(kOwnerWhatsAppCountryCodeKey) ??
+            kDefaultWhatsAppCountryCode;
+    return OwnerWhatsAppSettings(
+      phoneDigits: phone.replaceAll(RegExp(r'\D'), ''),
+      countryCode: country.replaceAll(RegExp(r'\D'), '').isEmpty
+          ? kDefaultWhatsAppCountryCode
+          : country.replaceAll(RegExp(r'\D'), ''),
+    );
+  }
+
+  Future<void> setPhone(String rawPhone, {String? countryCode}) async {
+    final String digits = rawPhone.replaceAll(RegExp(r'\D'), '');
+    final String cc = (countryCode ?? state.countryCode)
+        .replaceAll(RegExp(r'\D'), '');
+    final String resolvedCc =
+        cc.isEmpty ? kDefaultWhatsAppCountryCode : cc;
+    state = OwnerWhatsAppSettings(
+      phoneDigits: digits,
+      countryCode: resolvedCc,
+    );
+    await _preferences.setString(kOwnerWhatsAppPhoneKey, digits);
+    await _preferences.setString(kOwnerWhatsAppCountryCodeKey, resolvedCc);
   }
 }
 
