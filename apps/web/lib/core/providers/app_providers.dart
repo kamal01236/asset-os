@@ -47,6 +47,13 @@ final depositLedgerProvider =
   return ref.watch(repositoryProvider).watchDepositLedger(customerId);
 });
 
+/// Bottom-nav tab indices for [currentTabIndexProvider].
+const int kTabIndexHome = 0;
+const int kTabIndexRentals = 1;
+const int kTabIndexInventory = 2;
+const int kTabIndexCustomers = 3;
+const int kTabIndexMore = 4;
+
 final currentTabIndexProvider = StateProvider<int>((ref) => 0);
 
 final offlineModeProvider = StateProvider<bool>((ref) => false);

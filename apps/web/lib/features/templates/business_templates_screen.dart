@@ -119,7 +119,7 @@ class _TemplateItemPickerScreenState extends ConsumerState<TemplateItemPickerScr
       return;
     }
     if (result.added > 0) {
-      ref.read(currentTabIndexProvider.notifier).state = 2; // Inventory
+      ref.read(currentTabIndexProvider.notifier).state = kTabIndexInventory; // Inventory
       Navigator.of(context).popUntil((Route<void> route) => route.isFirst);
     }
   }

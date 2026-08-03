@@ -583,10 +583,10 @@
   "customizeHomeIntro": "Search stays on. Toggle other modules to keep Home focused.",
   "moduleSearch": "Search",
   "moduleSearchLocked": "Always on",
-  "moduleKpis": "Status cards",
-  "moduleKpisSubtitle": "Active, Due Today, Overdue, Available",
+  "moduleKpis": "Status chips",
+  "moduleKpisSubtitle": "Compact chips; tap opens Rentals or Inventory filtered",
   "moduleFilterResults": "Filter results",
-  "moduleFilterResultsSubtitle": "List under status cards when a filter is selected",
+  "moduleFilterResultsSubtitle": "Optional in-place list under chips when a Home filter is set",
   "moduleNeedsAttention": "Needs attention",
   "moduleNeedsAttentionSubtitle": "Due today and overdue rentals",
   "moduleQuickActions": "Quick actions",
@@ -622,5 +622,25 @@
       "amount": {"type": "String"}
     }
   },
-  "accruedAmountHint": "Accrued so far"
+  "accruedAmountHint": "Accrued so far",
+  "balanceAdvanceLabel": "Advance",
+  "balancePendingLabel": "Pending",
+  "balanceDueLabel": "Due",
+  "balancesAsOfTodayHeading": "Balances as of today",
+  "balanceOpenItemsCount": "{count} item(s) out",
+  "@balanceOpenItemsCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "customerSubtitleWithBalances": "{phone} • {tier} • Advance {advance} · Pending {pending} · Due {due}",
+  "@customerSubtitleWithBalances": {
+    "placeholders": {
+      "phone": {"type": "String"},
+      "tier": {"type": "String"},
+      "advance": {"type": "String"},
+      "pending": {"type": "String"},
+      "due": {"type": "String"}
+    }
+  }
 }

@@ -97,12 +97,7 @@ class HomeScreen extends ConsumerWidget {
         return HomeKpisSection(
           inventory: inventory,
           rentals: rentals,
-          selected: filter,
-          onSelect: (HomeFilter next) {
-            final StateController<HomeFilter?> notifier =
-                ref.read(homeFilterProvider.notifier);
-            notifier.state = notifier.state == next ? null : next;
-          },
+          onSelect: (HomeFilter next) => _navigateWithFilter(ref, next),
         );
       case HomeModuleId.filterResults:
         if (filter == null) {
@@ -145,20 +140,40 @@ class HomeScreen extends ConsumerWidget {
         return const HomeSuggestionsSection();
     }
   }
+
+  void _navigateWithFilter(WidgetRef ref, HomeFilter filter) {
+    ref.read(homeFilterProvider.notifier).state = null;
+    switch (filter) {
+      case HomeFilter.active:
+        ref.read(rentalsListFilterProvider.notifier).state =
+            RentalsListFilter.active;
+        ref.read(currentTabIndexProvider.notifier).state = kTabIndexRentals;
+      case HomeFilter.dueToday:
+        ref.read(rentalsListFilterProvider.notifier).state =
+            RentalsListFilter.dueToday;
+        ref.read(currentTabIndexProvider.notifier).state = kTabIndexRentals;
+      case HomeFilter.overdue:
+        ref.read(rentalsListFilterProvider.notifier).state =
+            RentalsListFilter.overdue;
+        ref.read(currentTabIndexProvider.notifier).state = kTabIndexRentals;
+      case HomeFilter.available:
+        ref.read(inventoryListFilterProvider.notifier).state =
+            InventoryListFilter.available;
+        ref.read(currentTabIndexProvider.notifier).state = kTabIndexInventory;
+    }
+  }
 }
 
 class HomeKpisSection extends StatelessWidget {
   const HomeKpisSection({
     required this.inventory,
     required this.rentals,
-    required this.selected,
     required this.onSelect,
     super.key,
   });
 
   final List<InventoryItem> inventory;
   final List<Rental> rentals;
-  final HomeFilter? selected;
   final ValueChanged<HomeFilter> onSelect;
 
   @override
@@ -174,15 +189,11 @@ class HomeKpisSection extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 8),
-        GridView.count(
-          crossAxisCount: 2,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisSpacing: 10,
-          mainAxisSpacing: 10,
-          childAspectRatio: 1.8,
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
           children: <Widget>[
-            KpiCard(
+            KpiChip(
               label: l10n.kpiActive,
               value: summaryCount(
                 status: AssetStatus.rented,
@@ -190,10 +201,9 @@ class HomeKpisSection extends StatelessWidget {
                 rentals: rentals,
               ),
               status: AssetStatus.rented,
-              selected: selected == HomeFilter.active,
               onTap: () => onSelect(HomeFilter.active),
             ),
-            KpiCard(
+            KpiChip(
               label: l10n.statusDueToday,
               value: summaryCount(
                 status: AssetStatus.dueToday,
@@ -201,10 +211,9 @@ class HomeKpisSection extends StatelessWidget {
                 rentals: rentals,
               ),
               status: AssetStatus.dueToday,
-              selected: selected == HomeFilter.dueToday,
               onTap: () => onSelect(HomeFilter.dueToday),
             ),
-            KpiCard(
+            KpiChip(
               label: l10n.statusOverdue,
               value: summaryCount(
                 status: AssetStatus.overdue,
@@ -212,10 +221,9 @@ class HomeKpisSection extends StatelessWidget {
                 rentals: rentals,
               ),
               status: AssetStatus.overdue,
-              selected: selected == HomeFilter.overdue,
               onTap: () => onSelect(HomeFilter.overdue),
             ),
-            KpiCard(
+            KpiChip(
               label: l10n.statusAvailable,
               value: summaryCount(
                 status: AssetStatus.available,
@@ -223,7 +231,6 @@ class HomeKpisSection extends StatelessWidget {
                 rentals: rentals,
               ),
               status: AssetStatus.available,
-              selected: selected == HomeFilter.available,
               onTap: () => onSelect(HomeFilter.available),
             ),
           ],
@@ -269,7 +276,7 @@ class HomeFilterResultsSection extends StatelessWidget {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          _FilterChipRow(label: filterLabel, onClear: onClear),
+          ActiveFilterBar(label: filterLabel, onClear: onClear),
           const SizedBox(height: 8),
           if (items.isEmpty)
             EmptyStatePane(
@@ -291,7 +298,7 @@ class HomeFilterResultsSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        _FilterChipRow(label: filterLabel, onClear: onClear),
+        ActiveFilterBar(label: filterLabel, onClear: onClear),
         const SizedBox(height: 8),
         if (matched.isEmpty)
           EmptyStatePane(
@@ -493,37 +500,6 @@ class HomeSuggestionsSection extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-class _FilterChipRow extends StatelessWidget {
-  const _FilterChipRow({
-    required this.label,
-    required this.onClear,
-  });
-
-  final String label;
-  final VoidCallback onClear;
-
-  @override
-  Widget build(BuildContext context) {
-    final AppLocalizations l10n = context.l10n;
-    return Row(
-      children: <Widget>[
-        Expanded(
-          child: Text(
-            l10n.showingFilter(label),
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ),
-        TextButton(
-          onPressed: onClear,
-          child: Text(l10n.clearFilter),
-        ),
-      ],
     );
   }
 }

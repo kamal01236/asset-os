@@ -952,17 +952,18 @@ class AppLocalizationsHi extends AppLocalizations {
   String get moduleSearchLocked => 'हमेशा चालू';
 
   @override
-  String get moduleKpis => 'स्थिति कार्ड';
+  String get moduleKpis => 'स्थिति चिप्स';
 
   @override
-  String get moduleKpisSubtitle => 'सक्रिय, आज देय, अतिदेय, उपलब्ध';
+  String get moduleKpisSubtitle =>
+      'कॉम्पैक्ट चिप्स; टैप पर फ़िल्टर के साथ किराए या इन्वेंटरी खोलता है';
 
   @override
   String get moduleFilterResults => 'फ़िल्टर परिणाम';
 
   @override
   String get moduleFilterResultsSubtitle =>
-      'फ़िल्टर चुनने पर स्थिति कार्ड के नीचे सूची';
+      'होम फ़िल्टर सेट होने पर चिप्स के नीचे वैकल्पिक सूची';
 
   @override
   String get moduleNeedsAttention => 'ध्यान दें';

@@ -583,10 +583,10 @@
   "customizeHomeIntro": "खोज हमेशा चालू रहती है। होम को फोकस्ड रखने के लिए अन्य मॉड्यूल टॉगल करें।",
   "moduleSearch": "खोज",
   "moduleSearchLocked": "हमेशा चालू",
-  "moduleKpis": "स्थिति कार्ड",
-  "moduleKpisSubtitle": "सक्रिय, आज देय, अतिदेय, उपलब्ध",
+  "moduleKpis": "स्थिति चिप्स",
+  "moduleKpisSubtitle": "कॉम्पैक्ट चिप्स; टैप पर फ़िल्टर के साथ किराए या इन्वेंटरी खोलता है",
   "moduleFilterResults": "फ़िल्टर परिणाम",
-  "moduleFilterResultsSubtitle": "फ़िल्टर चुनने पर स्थिति कार्ड के नीचे सूची",
+  "moduleFilterResultsSubtitle": "होम फ़िल्टर सेट होने पर चिप्स के नीचे वैकल्पिक सूची",
   "moduleNeedsAttention": "ध्यान दें",
   "moduleNeedsAttentionSubtitle": "आज देय और अतिदेय किराए",
   "moduleQuickActions": "त्वरित कार्रवाई",
@@ -622,5 +622,25 @@
       "amount": {"type": "String"}
     }
   },
-  "accruedAmountHint": "अब तक अर्जित"
+  "accruedAmountHint": "अब तक अर्जित",
+  "balanceAdvanceLabel": "अग्रिम",
+  "balancePendingLabel": "लंबित",
+  "balanceDueLabel": "देय",
+  "balancesAsOfTodayHeading": "आज तक के शेष",
+  "balanceOpenItemsCount": "{count} वस्तु बाहर",
+  "@balanceOpenItemsCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "customerSubtitleWithBalances": "{phone} • {tier} • अग्रिम {advance} · लंबित {pending} · देय {due}",
+  "@customerSubtitleWithBalances": {
+    "placeholders": {
+      "phone": {"type": "String"},
+      "tier": {"type": "String"},
+      "advance": {"type": "String"},
+      "pending": {"type": "String"},
+      "due": {"type": "String"}
+    }
+  }
 }

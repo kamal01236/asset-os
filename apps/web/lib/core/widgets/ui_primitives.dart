@@ -253,6 +253,94 @@ class KpiCard extends StatelessWidget {
   }
 }
 
+/// Compact content-sized KPI for Home; value + short label in one chip.
+class KpiChip extends StatelessWidget {
+  const KpiChip({
+    required this.label,
+    required this.value,
+    required this.status,
+    this.onTap,
+    super.key,
+  });
+
+  final String label;
+  final int value;
+  final AssetStatus status;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final Color color = AppTheme.colorForStatus(status);
+    return Material(
+      color: color.withValues(alpha: 0.08),
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: color.withValues(alpha: 0.35)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Text(
+                '$value',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: color,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Banner row: "Showing: {label}" + Clear, used on filtered list tabs.
+class ActiveFilterBar extends StatelessWidget {
+  const ActiveFilterBar({
+    required this.label,
+    required this.onClear,
+    super.key,
+  });
+
+  final String label;
+  final VoidCallback onClear;
+
+  @override
+  Widget build(BuildContext context) {
+    final AppLocalizations l10n = context.l10n;
+    return Row(
+      children: <Widget>[
+        Expanded(
+          child: Text(
+            l10n.showingFilter(label),
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+        TextButton(
+          onPressed: onClear,
+          child: Text(l10n.clearFilter),
+        ),
+      ],
+    );
+  }
+}
+
 class OfflineBanner extends StatelessWidget {
   const OfflineBanner({
     required this.show,

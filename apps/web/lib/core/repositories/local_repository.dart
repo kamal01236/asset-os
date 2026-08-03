@@ -652,7 +652,7 @@ class LocalRepository {
       );
       await _db.into(_db.depositLedger).insert(
         DepositLedgerCompanion.insert(
-          id: 'DEP-${now.millisecondsSinceEpoch}',
+          id: 'DEP-${DateTime.now().microsecondsSinceEpoch}-topup',
           customerId: customerId,
           type: DepositLedgerType.topUp.storageValue,
           amount: amountPaise,
@@ -694,7 +694,7 @@ class LocalRepository {
       );
       await _db.into(_db.depositLedger).insert(
         DepositLedgerCompanion.insert(
-          id: 'DEP-${now.millisecondsSinceEpoch}',
+          id: 'DEP-${DateTime.now().microsecondsSinceEpoch}-refund',
           customerId: customerId,
           type: DepositLedgerType.refund.storageValue,
           amount: -amountPaise,

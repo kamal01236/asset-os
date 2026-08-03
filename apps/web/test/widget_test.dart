@@ -85,10 +85,10 @@ void main() {
     expect(find.text('AI suggestions (beta)'), findsNothing);
   });
 
-  testWidgets('Home Due Today KPI filters rentals and Clear restores attention', (
+  testWidgets('Home Due Today KPI navigates to Rentals with filter', (
     WidgetTester tester,
   ) async {
-    await _pumpAppShell(tester);
+    final ProviderContainer container = await _pumpAppShell(tester);
 
     expect(find.text('Needs attention'), findsOneWidget);
     expect(find.textContaining('Workshop set A'), findsOneWidget);
@@ -96,17 +96,77 @@ void main() {
     await tester.tap(find.text('Due Today').first);
     await tester.pumpAndSettle();
 
+    expect(container.read(currentTabIndexProvider), kTabIndexRentals);
+    expect(
+      container.read(rentalsListFilterProvider),
+      RentalsListFilter.dueToday,
+    );
     expect(find.text('Showing: Due Today'), findsOneWidget);
     expect(find.text('Clear'), findsOneWidget);
     expect(find.textContaining('Workshop set A'), findsOneWidget);
-    expect(find.text('Needs attention'), findsNothing);
 
     await tester.tap(find.text('Clear'));
     await tester.pumpAndSettle();
 
     expect(find.text('Showing: Due Today'), findsNothing);
+    expect(container.read(rentalsListFilterProvider), isNull);
+  });
+
+  testWidgets('Home Available KPI navigates to Inventory with filter', (
+    WidgetTester tester,
+  ) async {
+    final ProviderContainer container = await _pumpAppShell(tester);
+
+    await tester.tap(find.text('Available').first);
+    await tester.pumpAndSettle();
+
+    expect(container.read(currentTabIndexProvider), kTabIndexInventory);
+    expect(
+      container.read(inventoryListFilterProvider),
+      InventoryListFilter.available,
+    );
+    expect(find.text('Showing: Available'), findsOneWidget);
+    expect(find.text('Clear'), findsOneWidget);
+    expect(find.text('DSLR'), findsOneWidget);
+
+    await tester.tap(find.text('Clear'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Showing: Available'), findsNothing);
+    expect(container.read(inventoryListFilterProvider), isNull);
+  });
+
+  testWidgets('Home Overdue KPI navigates to Rentals overdue filter', (
+    WidgetTester tester,
+  ) async {
+    final ProviderContainer container = await _pumpAppShell(tester);
+
+    await tester.tap(find.text('Overdue').first);
+    await tester.pumpAndSettle();
+
+    expect(container.read(currentTabIndexProvider), kTabIndexRentals);
+    expect(
+      container.read(rentalsListFilterProvider),
+      RentalsListFilter.overdue,
+    );
+    expect(find.text('Showing: Overdue'), findsOneWidget);
+  });
+
+  testWidgets('default Home modules omit filterResults under KPIs', (
+    WidgetTester tester,
+  ) async {
+    final ProviderContainer container = await _pumpAppShell(tester);
+
+    expect(
+      container.read(homeModulesProvider).contains(HomeModuleId.filterResults),
+      isFalse,
+    );
     expect(find.text('Needs attention'), findsOneWidget);
-    expect(find.textContaining('Workshop set A'), findsOneWidget);
+    // KPI tap leaves Home; no in-place Showing: banner on Home.
+    await tester.tap(find.text('Active').first);
+    await tester.pumpAndSettle();
+    expect(container.read(currentTabIndexProvider), kTabIndexRentals);
+    expect(container.read(homeFilterProvider), isNull);
   });
 
   testWidgets('disabled Home module stays hidden until enabled via provider', (

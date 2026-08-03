@@ -950,17 +950,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get moduleSearchLocked => 'Always on';
 
   @override
-  String get moduleKpis => 'Status cards';
+  String get moduleKpis => 'Status chips';
 
   @override
-  String get moduleKpisSubtitle => 'Active, Due Today, Overdue, Available';
+  String get moduleKpisSubtitle =>
+      'Compact chips; tap opens Rentals or Inventory filtered';
 
   @override
   String get moduleFilterResults => 'Filter results';
 
   @override
   String get moduleFilterResultsSubtitle =>
-      'List under status cards when a filter is selected';
+      'Optional in-place list under chips when a Home filter is set';
 
   @override
   String get moduleNeedsAttention => 'Needs attention';

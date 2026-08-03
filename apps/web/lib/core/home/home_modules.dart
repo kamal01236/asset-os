@@ -13,10 +13,11 @@ const String kHomeModulesPrefsKey = 'asset_os_home_modules';
 const String kHomeModulesCustomizedKey = 'asset_os_home_modules_customized';
 
 /// Default enabled set for Generic / Camera-style templates.
+/// KPIs navigate to filtered Rentals/Inventory tabs; in-place filterResults
+/// stays optional via Customize Home.
 const List<HomeModuleId> kDefaultHomeModules = <HomeModuleId>[
   HomeModuleId.search,
   HomeModuleId.kpis,
-  HomeModuleId.filterResults,
   HomeModuleId.needsAttention,
   HomeModuleId.quickActions,
 ];
@@ -25,7 +26,6 @@ const List<HomeModuleId> kDefaultHomeModules = <HomeModuleId>[
 const List<HomeModuleId> kLibraryHomeModules = <HomeModuleId>[
   HomeModuleId.search,
   HomeModuleId.kpis,
-  HomeModuleId.filterResults,
   HomeModuleId.needsAttention,
   HomeModuleId.quickActions,
   HomeModuleId.recentActivity,

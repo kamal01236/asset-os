@@ -17,8 +17,8 @@ UI-first conventions for `apps/web` to keep flows fast, clear, and touch-friendl
 - Archived = grey
 
 ## Home (attention-first)
-- Home KPI status cards are tappable filters: tap stays on Home and shows matching rentals/inventory in a Results section; tap again or Clear clears the filter.
-- Home is modular (`search`, `kpis`, `filterResults`, `needsAttention`, `quickActions`, `recentActivity`, `suggestions`). Business templates set default module sets; More → Customize Home lets users show/hide removable modules. Search is always on.
+- Home KPI status chips are compact and tappable: tap navigates to the matching tab with that list filter applied (Active / Due today / Overdue → Rentals; Available → Inventory). Clear the filter chip on the destination tab to restore the full list.
+- Home is modular (`search`, `kpis`, `filterResults`, `needsAttention`, `quickActions`, `recentActivity`, `suggestions`). Defaults are `search`, `kpis`, `needsAttention`, `quickActions` — no in-place `filterResults` under KPIs. Business templates may add `recentActivity` / `suggestions`; More → Customize Home lets users show/hide removable modules (including optional `filterResults`). Search is always on.
 - Prefer overdue/due lists and status filters over chart dashboards.
 
 ## Universal navigation contract

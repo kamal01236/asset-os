@@ -180,6 +180,7 @@ class RentalsScreen extends ConsumerWidget {
     final AppLocalizations l10n = context.l10n;
     final AsyncValue<List<Rental>> rentalsAsync = ref.watch(rentalsProvider);
     final AsyncValue<List<Customer>> customersAsync = ref.watch(customersProvider);
+    final RentalsListFilter? listFilter = ref.watch(rentalsListFilterProvider);
 
     return rentalsAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -204,10 +205,45 @@ class RentalsScreen extends ConsumerWidget {
             ),
           );
         }
+
+        final List<Rental> visible = listFilter == null
+            ? rentals
+            : rentals
+                .where(
+                  (Rental rental) =>
+                      rental.statusFor(now) == listFilter.status,
+                )
+                .toList();
+        final String? filterLabel = listFilter == null
+            ? null
+            : _rentalsListFilterLabel(l10n, listFilter);
+
         return ListView.separated(
           padding: const EdgeInsets.all(16),
           itemBuilder: (BuildContext context, int index) {
-            final Rental rental = rentals[index];
+            if (filterLabel != null && index == 0) {
+              return ActiveFilterBar(
+                label: filterLabel,
+                onClear: () =>
+                    ref.read(rentalsListFilterProvider.notifier).state = null,
+              );
+            }
+            final int rentalIndex = filterLabel == null ? index : index - 1;
+            if (visible.isEmpty) {
+              return EmptyStatePane(
+                title: l10n.homeFilterEmptyTitle,
+                subtitle: l10n.homeFilterEmptyRentalsSubtitle(filterLabel!),
+                ctaLabel: l10n.actionNewRental,
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const NewRentalFlowScreen(),
+                    ),
+                  );
+                },
+              );
+            }
+            final Rental rental = visible[rentalIndex];
             final Customer customer = customers.firstWhere(
               (item) => item.id == rental.customerId,
               orElse: () => Customer(
@@ -229,10 +265,23 @@ class RentalsScreen extends ConsumerWidget {
             );
           },
           separatorBuilder: (_, _) => const SizedBox(height: 10),
-          itemCount: rentals.length,
+          itemCount: filterLabel == null
+              ? visible.length
+              : (visible.isEmpty ? 2 : visible.length + 1),
         );
       },
     );
+  }
+}
+
+String _rentalsListFilterLabel(AppLocalizations l10n, RentalsListFilter filter) {
+  switch (filter) {
+    case RentalsListFilter.active:
+      return l10n.kpiActive;
+    case RentalsListFilter.dueToday:
+      return l10n.statusDueToday;
+    case RentalsListFilter.overdue:
+      return l10n.statusOverdue;
   }
 }
 
@@ -302,11 +351,19 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
   }
 
   List<InventoryItem> _visibleInventory(List<InventoryItem> inventory) {
+    List<InventoryItem> visible = inventory;
+    final InventoryListFilter? listFilter =
+        ref.read(inventoryListFilterProvider);
+    if (listFilter == InventoryListFilter.available) {
+      visible = visible
+          .where((InventoryItem item) => item.availableUnits > 0)
+          .toList();
+    }
     final String q = _query.trim().toLowerCase();
     if (q.length < kMinMeaningfulTextLength) {
-      return inventory;
+      return visible;
     }
-    return inventory
+    return visible
         .where(
           (InventoryItem item) =>
               item.name.toLowerCase().contains(q) ||
@@ -322,6 +379,8 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
     final AppLocalizations l10n = context.l10n;
     final AsyncValue<List<InventoryItem>> inventoryAsync =
         ref.watch(inventoryProvider);
+    final InventoryListFilter? listFilter =
+        ref.watch(inventoryListFilterProvider);
     return inventoryAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (Object error, StackTrace _) => Center(child: Text('$error')),
@@ -344,34 +403,56 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                 widget.onOpenInventory(item);
               },
             ),
+            if (listFilter != null) ...<Widget>[
+              const SizedBox(height: 12),
+              ActiveFilterBar(
+                label: l10n.statusAvailable,
+                onClear: () =>
+                    ref.read(inventoryListFilterProvider.notifier).state = null,
+              ),
+            ],
             const SizedBox(height: 12),
-            ...visible.map((InventoryItem item) {
-              final AssetStatus status = item.availableUnits > 0
-                  ? AssetStatus.available
-                  : AssetStatus.rented;
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: EntityCard(
-                  title: item.name,
-                  subtitle:
-                      '${l10n.inventoryAvailableSubtitle(
-                        item.category,
-                        item.availableUnits,
-                        item.totalUnits,
-                      )} · ${l10n.inventoryRateSubtitle(
-                        localizedBillingMode(l10n, item.billingMode),
-                        formatMoney(
-                          item.rateAmount,
-                          currencyCode: item.currencyCode,
-                        ),
-                      )}',
-                  leadingIcon: Icons.inventory_2_outlined,
-                  status: status,
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => widget.onOpenInventory(item),
-                ),
-              );
-            }),
+            if (visible.isEmpty && listFilter != null)
+              EmptyStatePane(
+                title: l10n.homeFilterEmptyTitle,
+                subtitle: l10n.homeFilterEmptyInventorySubtitle,
+                ctaLabel: l10n.actionAddInventory,
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const AddInventoryFlowScreen(),
+                    ),
+                  );
+                },
+              )
+            else
+              ...visible.map((InventoryItem item) {
+                final AssetStatus status = item.availableUnits > 0
+                    ? AssetStatus.available
+                    : AssetStatus.rented;
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: EntityCard(
+                    title: item.name,
+                    subtitle:
+                        '${l10n.inventoryAvailableSubtitle(
+                          item.category,
+                          item.availableUnits,
+                          item.totalUnits,
+                        )} · ${l10n.inventoryRateSubtitle(
+                          localizedBillingMode(l10n, item.billingMode),
+                          formatMoney(
+                            item.rateAmount,
+                            currencyCode: item.currencyCode,
+                          ),
+                        )}',
+                    leadingIcon: Icons.inventory_2_outlined,
+                    status: status,
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => widget.onOpenInventory(item),
+                  ),
+                );
+              }),
           ],
         );
       },

@@ -2,7 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/entities.dart';
 
-/// Status filter selected from Home KPI cards. Null means no filter.
+/// Status filter selected from Home KPI chips (optional in-place Home results).
+/// Null means no Home filter.
 enum HomeFilter {
   active,
   dueToday,
@@ -25,4 +26,36 @@ extension HomeFilterX on HomeFilter {
   }
 }
 
+/// Rentals tab list filter set from Home KPI taps.
+enum RentalsListFilter {
+  active,
+  dueToday,
+  overdue,
+}
+
+extension RentalsListFilterX on RentalsListFilter {
+  AssetStatus get status {
+    switch (this) {
+      case RentalsListFilter.active:
+        return AssetStatus.rented;
+      case RentalsListFilter.dueToday:
+        return AssetStatus.dueToday;
+      case RentalsListFilter.overdue:
+        return AssetStatus.overdue;
+    }
+  }
+}
+
+/// Inventory tab list filter set from Home KPI taps.
+enum InventoryListFilter {
+  available,
+}
+
+/// Optional Home in-place filter (Customize Home → Filter results module).
 final homeFilterProvider = StateProvider<HomeFilter?>((ref) => null);
+
+final rentalsListFilterProvider =
+    StateProvider<RentalsListFilter?>((ref) => null);
+
+final inventoryListFilterProvider =
+    StateProvider<InventoryListFilter?>((ref) => null);
