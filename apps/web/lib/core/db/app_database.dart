@@ -21,7 +21,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -191,6 +191,44 @@ class AppDatabase extends _$AppDatabase {
             ELSE 0
           END
         ''');
+      }
+      if (from < 7) {
+        await m.addColumn(inventoryItems, inventoryItems.dueDateOptional);
+        // Make rentals.dueAt nullable (open-ended rentals) via table rebuild.
+        await customStatement('''
+          CREATE TABLE rentals_new (
+            id TEXT NOT NULL PRIMARY KEY,
+            customer_id TEXT NOT NULL REFERENCES customers (id),
+            started_at INTEGER NOT NULL,
+            due_at INTEGER NULL,
+            returned_at INTEGER NULL,
+            qr_code TEXT NOT NULL,
+            nickname TEXT NULL,
+            billing_mode TEXT NOT NULL DEFAULT 'weekly',
+            rate_amount INTEGER NOT NULL DEFAULT 0,
+            late_fee_per_day INTEGER NOT NULL DEFAULT 0,
+            base_amount INTEGER NOT NULL DEFAULT 0,
+            late_amount INTEGER NOT NULL DEFAULT 0,
+            total_amount INTEGER NOT NULL DEFAULT 0,
+            deposit_applied INTEGER NOT NULL DEFAULT 0,
+            duration_units INTEGER NOT NULL DEFAULT 1,
+            replaced_from_rental_id TEXT NULL
+          )
+        ''');
+        await customStatement('''
+          INSERT INTO rentals_new (
+            id, customer_id, started_at, due_at, returned_at, qr_code, nickname,
+            billing_mode, rate_amount, late_fee_per_day, base_amount, late_amount,
+            total_amount, deposit_applied, duration_units, replaced_from_rental_id
+          )
+          SELECT
+            id, customer_id, started_at, due_at, returned_at, qr_code, nickname,
+            billing_mode, rate_amount, late_fee_per_day, base_amount, late_amount,
+            total_amount, deposit_applied, duration_units, replaced_from_rental_id
+          FROM rentals
+        ''');
+        await customStatement('DROP TABLE rentals');
+        await customStatement('ALTER TABLE rentals_new RENAME TO rentals');
       }
     },
   );

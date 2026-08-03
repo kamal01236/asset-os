@@ -609,5 +609,18 @@
   },
   "searchTypeMinChars": "कम से कम 3 अक्षर लिखें",
   "searchCustomersHint": "नाम, फ़ोन या उपनाम से खोजें",
-  "searchNoResults": "कोई मिलान नहीं"
+  "searchNoResults": "कोई मिलान नहीं",
+  "dueDateOptionalLabel": "देय तिथि वैकल्पिक",
+  "dueDateOptionalSubtitle": "निश्चित वापसी तिथि के बिना जारी करने की अनुमति दें (वापसी तक शुल्क बढ़ता रहेगा)।",
+  "continueWithoutDueDate": "देय तिथि के बिना जारी रखें",
+  "openEndedDurationHint": "चयनित सभी वस्तुएँ खुली अवधि की अनुमति देती हैं। अवधि दर्ज करें, या देय तिथि के बिना जारी रखें।",
+  "openEndedLabel": "खुली अवधि",
+  "reviewOpenEndedLabel": "देय: खुली अवधि (वापसी तक बढ़ता रहेगा)",
+  "rentalAmountOpenEnded": "खुली अवधि · {amount}",
+  "@rentalAmountOpenEnded": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "accruedAmountHint": "अब तक अर्जित"
 }

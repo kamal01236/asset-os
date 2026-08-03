@@ -147,7 +147,7 @@ void main() {
     test('schema v6 tables include line id primary key', () async {
       final AppDatabase db = AppDatabase(NativeDatabase.memory());
       addTearDown(db.close);
-      expect(db.schemaVersion, 6);
+      expect(db.schemaVersion, 7);
 
       await db.into(db.customers).insert(
         CustomersCompanion.insert(
@@ -173,7 +173,7 @@ void main() {
           id: 'REN-X',
           customerId: 'CUS-X',
           startedAt: DateTime(2026, 8, 1),
-          dueAt: DateTime(2026, 8, 4),
+          dueAt: Value<DateTime?>(DateTime(2026, 8, 4)),
           qrCode: 'rental:x',
         ),
       );

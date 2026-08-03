@@ -1007,7 +1007,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get applyHomeLayoutDone => 'Home layout updated.';
 
   @override
-  String minMeaningfulTextError(int min) => 'Enter at least $min characters.';
+  String minMeaningfulTextError(int min) {
+    return 'Enter at least $min characters.';
+  }
 
   @override
   String get searchTypeMinChars => 'Type at least 3 characters';
@@ -1017,4 +1019,32 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get searchNoResults => 'No matches';
+
+  @override
+  String get dueDateOptionalLabel => 'Due date optional';
+
+  @override
+  String get dueDateOptionalSubtitle =>
+      'Allow issuing without a fixed return date (charge accrues until return).';
+
+  @override
+  String get continueWithoutDueDate => 'Continue without due date';
+
+  @override
+  String get openEndedDurationHint =>
+      'All selected items allow open-ended rentals. Enter a duration, or continue without a due date.';
+
+  @override
+  String get openEndedLabel => 'Open-ended';
+
+  @override
+  String get reviewOpenEndedLabel => 'Due: Open-ended (accrues until return)';
+
+  @override
+  String rentalAmountOpenEnded(String amount) {
+    return 'Open-ended · $amount';
+  }
+
+  @override
+  String get accruedAmountHint => 'Accrued so far';
 }

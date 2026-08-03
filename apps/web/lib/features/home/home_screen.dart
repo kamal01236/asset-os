@@ -329,7 +329,20 @@ class HomeNeedsAttentionSection extends StatelessWidget {
       final AssetStatus status = rental.statusFor(now);
       return status == AssetStatus.dueToday || status == AssetStatus.overdue;
     }).toList()
-      ..sort((Rental a, Rental b) => a.dueAt.compareTo(b.dueAt));
+      ..sort((Rental a, Rental b) {
+        final DateTime? aDue = a.dueAt;
+        final DateTime? bDue = b.dueAt;
+        if (aDue == null && bDue == null) {
+          return 0;
+        }
+        if (aDue == null) {
+          return 1;
+        }
+        if (bDue == null) {
+          return -1;
+        }
+        return aDue.compareTo(bDue);
+      });
     final List<Rental> limited = attention.take(5).toList();
 
     return Column(
@@ -614,8 +627,12 @@ String _shortDate(DateTime value) {
 
 String _rentalAmountSubtitle(AppLocalizations l10n, Rental rental) {
   final DateTime now = DateTime.now();
+  final String amount = formatMoney(rental.totalAmountAsOf(now));
+  if (rental.isOpenEnded) {
+    return l10n.rentalAmountOpenEnded(amount);
+  }
   return l10n.rentalAmountSubtitle(
-    _shortDate(rental.dueAt),
-    formatMoney(rental.totalAmountAsOf(now)),
+    _shortDate(rental.dueAt!),
+    amount,
   );
 }

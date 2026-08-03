@@ -609,5 +609,18 @@
   },
   "searchTypeMinChars": "Type at least 3 characters",
   "searchCustomersHint": "Search by name, phone, or nickname",
-  "searchNoResults": "No matches"
+  "searchNoResults": "No matches",
+  "dueDateOptionalLabel": "Due date optional",
+  "dueDateOptionalSubtitle": "Allow issuing without a fixed return date (charge accrues until return).",
+  "continueWithoutDueDate": "Continue without due date",
+  "openEndedDurationHint": "All selected items allow open-ended rentals. Enter a duration, or continue without a due date.",
+  "openEndedLabel": "Open-ended",
+  "reviewOpenEndedLabel": "Due: Open-ended (accrues until return)",
+  "rentalAmountOpenEnded": "Open-ended · {amount}",
+  "@rentalAmountOpenEnded": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "accruedAmountHint": "Accrued so far"
 }

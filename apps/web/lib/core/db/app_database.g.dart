@@ -545,6 +545,21 @@ class $InventoryItemsTable extends InventoryItems
     requiredDuringInsert: false,
     defaultValue: const Constant('INR'),
   );
+  static const VerificationMeta _dueDateOptionalMeta = const VerificationMeta(
+    'dueDateOptional',
+  );
+  @override
+  late final GeneratedColumn<bool> dueDateOptional = GeneratedColumn<bool>(
+    'due_date_optional',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("due_date_optional" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -559,6 +574,7 @@ class $InventoryItemsTable extends InventoryItems
     rateAmount,
     lateFeePerDay,
     currencyCode,
+    dueDateOptional,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -667,6 +683,15 @@ class $InventoryItemsTable extends InventoryItems
         ),
       );
     }
+    if (data.containsKey('due_date_optional')) {
+      context.handle(
+        _dueDateOptionalMeta,
+        dueDateOptional.isAcceptableOrUnknown(
+          data['due_date_optional']!,
+          _dueDateOptionalMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -724,6 +749,10 @@ class $InventoryItemsTable extends InventoryItems
         DriftSqlType.string,
         data['${effectivePrefix}currency_code'],
       )!,
+      dueDateOptional: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}due_date_optional'],
+      )!,
     );
   }
 
@@ -753,6 +782,9 @@ class InventoryItemRow extends DataClass
   /// Optional overdue fee per day in paise.
   final int lateFeePerDay;
   final String currencyCode;
+
+  /// When true, rentals may omit a due date (open-ended accrual until return).
+  final bool dueDateOptional;
   const InventoryItemRow({
     required this.id,
     required this.name,
@@ -766,6 +798,7 @@ class InventoryItemRow extends DataClass
     required this.rateAmount,
     required this.lateFeePerDay,
     required this.currencyCode,
+    required this.dueDateOptional,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -784,6 +817,7 @@ class InventoryItemRow extends DataClass
     map['rate_amount'] = Variable<int>(rateAmount);
     map['late_fee_per_day'] = Variable<int>(lateFeePerDay);
     map['currency_code'] = Variable<String>(currencyCode);
+    map['due_date_optional'] = Variable<bool>(dueDateOptional);
     return map;
   }
 
@@ -803,6 +837,7 @@ class InventoryItemRow extends DataClass
       rateAmount: Value(rateAmount),
       lateFeePerDay: Value(lateFeePerDay),
       currencyCode: Value(currencyCode),
+      dueDateOptional: Value(dueDateOptional),
     );
   }
 
@@ -824,6 +859,7 @@ class InventoryItemRow extends DataClass
       rateAmount: serializer.fromJson<int>(json['rateAmount']),
       lateFeePerDay: serializer.fromJson<int>(json['lateFeePerDay']),
       currencyCode: serializer.fromJson<String>(json['currencyCode']),
+      dueDateOptional: serializer.fromJson<bool>(json['dueDateOptional']),
     );
   }
   @override
@@ -842,6 +878,7 @@ class InventoryItemRow extends DataClass
       'rateAmount': serializer.toJson<int>(rateAmount),
       'lateFeePerDay': serializer.toJson<int>(lateFeePerDay),
       'currencyCode': serializer.toJson<String>(currencyCode),
+      'dueDateOptional': serializer.toJson<bool>(dueDateOptional),
     };
   }
 
@@ -858,6 +895,7 @@ class InventoryItemRow extends DataClass
     int? rateAmount,
     int? lateFeePerDay,
     String? currencyCode,
+    bool? dueDateOptional,
   }) => InventoryItemRow(
     id: id ?? this.id,
     name: name ?? this.name,
@@ -871,6 +909,7 @@ class InventoryItemRow extends DataClass
     rateAmount: rateAmount ?? this.rateAmount,
     lateFeePerDay: lateFeePerDay ?? this.lateFeePerDay,
     currencyCode: currencyCode ?? this.currencyCode,
+    dueDateOptional: dueDateOptional ?? this.dueDateOptional,
   );
   InventoryItemRow copyWithCompanion(InventoryItemsCompanion data) {
     return InventoryItemRow(
@@ -898,6 +937,9 @@ class InventoryItemRow extends DataClass
       currencyCode: data.currencyCode.present
           ? data.currencyCode.value
           : this.currencyCode,
+      dueDateOptional: data.dueDateOptional.present
+          ? data.dueDateOptional.value
+          : this.dueDateOptional,
     );
   }
 
@@ -915,7 +957,8 @@ class InventoryItemRow extends DataClass
           ..write('billingMode: $billingMode, ')
           ..write('rateAmount: $rateAmount, ')
           ..write('lateFeePerDay: $lateFeePerDay, ')
-          ..write('currencyCode: $currencyCode')
+          ..write('currencyCode: $currencyCode, ')
+          ..write('dueDateOptional: $dueDateOptional')
           ..write(')'))
         .toString();
   }
@@ -934,6 +977,7 @@ class InventoryItemRow extends DataClass
     rateAmount,
     lateFeePerDay,
     currencyCode,
+    dueDateOptional,
   );
   @override
   bool operator ==(Object other) =>
@@ -950,7 +994,8 @@ class InventoryItemRow extends DataClass
           other.billingMode == this.billingMode &&
           other.rateAmount == this.rateAmount &&
           other.lateFeePerDay == this.lateFeePerDay &&
-          other.currencyCode == this.currencyCode);
+          other.currencyCode == this.currencyCode &&
+          other.dueDateOptional == this.dueDateOptional);
 }
 
 class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
@@ -966,6 +1011,7 @@ class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
   final Value<int> rateAmount;
   final Value<int> lateFeePerDay;
   final Value<String> currencyCode;
+  final Value<bool> dueDateOptional;
   final Value<int> rowid;
   const InventoryItemsCompanion({
     this.id = const Value.absent(),
@@ -980,6 +1026,7 @@ class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
     this.rateAmount = const Value.absent(),
     this.lateFeePerDay = const Value.absent(),
     this.currencyCode = const Value.absent(),
+    this.dueDateOptional = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   InventoryItemsCompanion.insert({
@@ -995,6 +1042,7 @@ class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
     this.rateAmount = const Value.absent(),
     this.lateFeePerDay = const Value.absent(),
     this.currencyCode = const Value.absent(),
+    this.dueDateOptional = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        name = Value(name),
@@ -1016,6 +1064,7 @@ class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
     Expression<int>? rateAmount,
     Expression<int>? lateFeePerDay,
     Expression<String>? currencyCode,
+    Expression<bool>? dueDateOptional,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -1031,6 +1080,7 @@ class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
       if (rateAmount != null) 'rate_amount': rateAmount,
       if (lateFeePerDay != null) 'late_fee_per_day': lateFeePerDay,
       if (currencyCode != null) 'currency_code': currencyCode,
+      if (dueDateOptional != null) 'due_date_optional': dueDateOptional,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -1048,6 +1098,7 @@ class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
     Value<int>? rateAmount,
     Value<int>? lateFeePerDay,
     Value<String>? currencyCode,
+    Value<bool>? dueDateOptional,
     Value<int>? rowid,
   }) {
     return InventoryItemsCompanion(
@@ -1063,6 +1114,7 @@ class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
       rateAmount: rateAmount ?? this.rateAmount,
       lateFeePerDay: lateFeePerDay ?? this.lateFeePerDay,
       currencyCode: currencyCode ?? this.currencyCode,
+      dueDateOptional: dueDateOptional ?? this.dueDateOptional,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1106,6 +1158,9 @@ class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
     if (currencyCode.present) {
       map['currency_code'] = Variable<String>(currencyCode.value);
     }
+    if (dueDateOptional.present) {
+      map['due_date_optional'] = Variable<bool>(dueDateOptional.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -1127,6 +1182,7 @@ class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
           ..write('rateAmount: $rateAmount, ')
           ..write('lateFeePerDay: $lateFeePerDay, ')
           ..write('currencyCode: $currencyCode, ')
+          ..write('dueDateOptional: $dueDateOptional, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -1174,9 +1230,9 @@ class $RentalsTable extends Rentals with TableInfo<$RentalsTable, RentalRow> {
   late final GeneratedColumn<DateTime> dueAt = GeneratedColumn<DateTime>(
     'due_at',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.dateTime,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
   );
   static const VerificationMeta _returnedAtMeta = const VerificationMeta(
     'returnedAt',
@@ -1373,8 +1429,6 @@ class $RentalsTable extends Rentals with TableInfo<$RentalsTable, RentalRow> {
         _dueAtMeta,
         dueAt.isAcceptableOrUnknown(data['due_at']!, _dueAtMeta),
       );
-    } else if (isInserting) {
-      context.missing(_dueAtMeta);
     }
     if (data.containsKey('returned_at')) {
       context.handle(
@@ -1492,7 +1546,7 @@ class $RentalsTable extends Rentals with TableInfo<$RentalsTable, RentalRow> {
       dueAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}due_at'],
-      )!,
+      ),
       returnedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}returned_at'],
@@ -1554,7 +1608,9 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
   final String id;
   final String customerId;
   final DateTime startedAt;
-  final DateTime dueAt;
+
+  /// Null for open-ended rentals (no fixed due date).
+  final DateTime? dueAt;
   final DateTime? returnedAt;
   final String qrCode;
 
@@ -1585,7 +1641,7 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
     required this.id,
     required this.customerId,
     required this.startedAt,
-    required this.dueAt,
+    this.dueAt,
     this.returnedAt,
     required this.qrCode,
     this.nickname,
@@ -1605,7 +1661,9 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
     map['id'] = Variable<String>(id);
     map['customer_id'] = Variable<String>(customerId);
     map['started_at'] = Variable<DateTime>(startedAt);
-    map['due_at'] = Variable<DateTime>(dueAt);
+    if (!nullToAbsent || dueAt != null) {
+      map['due_at'] = Variable<DateTime>(dueAt);
+    }
     if (!nullToAbsent || returnedAt != null) {
       map['returned_at'] = Variable<DateTime>(returnedAt);
     }
@@ -1632,7 +1690,9 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
       id: Value(id),
       customerId: Value(customerId),
       startedAt: Value(startedAt),
-      dueAt: Value(dueAt),
+      dueAt: dueAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(dueAt),
       returnedAt: returnedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(returnedAt),
@@ -1663,7 +1723,7 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
       id: serializer.fromJson<String>(json['id']),
       customerId: serializer.fromJson<String>(json['customerId']),
       startedAt: serializer.fromJson<DateTime>(json['startedAt']),
-      dueAt: serializer.fromJson<DateTime>(json['dueAt']),
+      dueAt: serializer.fromJson<DateTime?>(json['dueAt']),
       returnedAt: serializer.fromJson<DateTime?>(json['returnedAt']),
       qrCode: serializer.fromJson<String>(json['qrCode']),
       nickname: serializer.fromJson<String?>(json['nickname']),
@@ -1687,7 +1747,7 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
       'id': serializer.toJson<String>(id),
       'customerId': serializer.toJson<String>(customerId),
       'startedAt': serializer.toJson<DateTime>(startedAt),
-      'dueAt': serializer.toJson<DateTime>(dueAt),
+      'dueAt': serializer.toJson<DateTime?>(dueAt),
       'returnedAt': serializer.toJson<DateTime?>(returnedAt),
       'qrCode': serializer.toJson<String>(qrCode),
       'nickname': serializer.toJson<String?>(nickname),
@@ -1707,7 +1767,7 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
     String? id,
     String? customerId,
     DateTime? startedAt,
-    DateTime? dueAt,
+    Value<DateTime?> dueAt = const Value.absent(),
     Value<DateTime?> returnedAt = const Value.absent(),
     String? qrCode,
     Value<String?> nickname = const Value.absent(),
@@ -1724,7 +1784,7 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
     id: id ?? this.id,
     customerId: customerId ?? this.customerId,
     startedAt: startedAt ?? this.startedAt,
-    dueAt: dueAt ?? this.dueAt,
+    dueAt: dueAt.present ? dueAt.value : this.dueAt,
     returnedAt: returnedAt.present ? returnedAt.value : this.returnedAt,
     qrCode: qrCode ?? this.qrCode,
     nickname: nickname.present ? nickname.value : this.nickname,
@@ -1851,7 +1911,7 @@ class RentalsCompanion extends UpdateCompanion<RentalRow> {
   final Value<String> id;
   final Value<String> customerId;
   final Value<DateTime> startedAt;
-  final Value<DateTime> dueAt;
+  final Value<DateTime?> dueAt;
   final Value<DateTime?> returnedAt;
   final Value<String> qrCode;
   final Value<String?> nickname;
@@ -1888,7 +1948,7 @@ class RentalsCompanion extends UpdateCompanion<RentalRow> {
     required String id,
     required String customerId,
     required DateTime startedAt,
-    required DateTime dueAt,
+    this.dueAt = const Value.absent(),
     this.returnedAt = const Value.absent(),
     required String qrCode,
     this.nickname = const Value.absent(),
@@ -1905,7 +1965,6 @@ class RentalsCompanion extends UpdateCompanion<RentalRow> {
   }) : id = Value(id),
        customerId = Value(customerId),
        startedAt = Value(startedAt),
-       dueAt = Value(dueAt),
        qrCode = Value(qrCode);
   static Insertable<RentalRow> custom({
     Expression<String>? id,
@@ -1952,7 +2011,7 @@ class RentalsCompanion extends UpdateCompanion<RentalRow> {
     Value<String>? id,
     Value<String>? customerId,
     Value<DateTime>? startedAt,
-    Value<DateTime>? dueAt,
+    Value<DateTime?>? dueAt,
     Value<DateTime?>? returnedAt,
     Value<String>? qrCode,
     Value<String?>? nickname,
@@ -3969,6 +4028,7 @@ typedef $$InventoryItemsTableCreateCompanionBuilder =
       Value<int> rateAmount,
       Value<int> lateFeePerDay,
       Value<String> currencyCode,
+      Value<bool> dueDateOptional,
       Value<int> rowid,
     });
 typedef $$InventoryItemsTableUpdateCompanionBuilder =
@@ -3985,6 +4045,7 @@ typedef $$InventoryItemsTableUpdateCompanionBuilder =
       Value<int> rateAmount,
       Value<int> lateFeePerDay,
       Value<String> currencyCode,
+      Value<bool> dueDateOptional,
       Value<int> rowid,
     });
 
@@ -4054,6 +4115,11 @@ class $$InventoryItemsTableFilterComposer
 
   ColumnFilters<String> get currencyCode => $composableBuilder(
     column: $table.currencyCode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get dueDateOptional => $composableBuilder(
+    column: $table.dueDateOptional,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -4126,6 +4192,11 @@ class $$InventoryItemsTableOrderingComposer
     column: $table.currencyCode,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<bool> get dueDateOptional => $composableBuilder(
+    column: $table.dueDateOptional,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$InventoryItemsTableAnnotationComposer
@@ -4184,6 +4255,11 @@ class $$InventoryItemsTableAnnotationComposer
     column: $table.currencyCode,
     builder: (column) => column,
   );
+
+  GeneratedColumn<bool> get dueDateOptional => $composableBuilder(
+    column: $table.dueDateOptional,
+    builder: (column) => column,
+  );
 }
 
 class $$InventoryItemsTableTableManager
@@ -4235,6 +4311,7 @@ class $$InventoryItemsTableTableManager
                 Value<int> rateAmount = const Value.absent(),
                 Value<int> lateFeePerDay = const Value.absent(),
                 Value<String> currencyCode = const Value.absent(),
+                Value<bool> dueDateOptional = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => InventoryItemsCompanion(
                 id: id,
@@ -4249,6 +4326,7 @@ class $$InventoryItemsTableTableManager
                 rateAmount: rateAmount,
                 lateFeePerDay: lateFeePerDay,
                 currencyCode: currencyCode,
+                dueDateOptional: dueDateOptional,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -4265,6 +4343,7 @@ class $$InventoryItemsTableTableManager
                 Value<int> rateAmount = const Value.absent(),
                 Value<int> lateFeePerDay = const Value.absent(),
                 Value<String> currencyCode = const Value.absent(),
+                Value<bool> dueDateOptional = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => InventoryItemsCompanion.insert(
                 id: id,
@@ -4279,6 +4358,7 @@ class $$InventoryItemsTableTableManager
                 rateAmount: rateAmount,
                 lateFeePerDay: lateFeePerDay,
                 currencyCode: currencyCode,
+                dueDateOptional: dueDateOptional,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -4311,7 +4391,7 @@ typedef $$RentalsTableCreateCompanionBuilder =
       required String id,
       required String customerId,
       required DateTime startedAt,
-      required DateTime dueAt,
+      Value<DateTime?> dueAt,
       Value<DateTime?> returnedAt,
       required String qrCode,
       Value<String?> nickname,
@@ -4331,7 +4411,7 @@ typedef $$RentalsTableUpdateCompanionBuilder =
       Value<String> id,
       Value<String> customerId,
       Value<DateTime> startedAt,
-      Value<DateTime> dueAt,
+      Value<DateTime?> dueAt,
       Value<DateTime?> returnedAt,
       Value<String> qrCode,
       Value<String?> nickname,
@@ -4638,7 +4718,7 @@ class $$RentalsTableTableManager
                 Value<String> id = const Value.absent(),
                 Value<String> customerId = const Value.absent(),
                 Value<DateTime> startedAt = const Value.absent(),
-                Value<DateTime> dueAt = const Value.absent(),
+                Value<DateTime?> dueAt = const Value.absent(),
                 Value<DateTime?> returnedAt = const Value.absent(),
                 Value<String> qrCode = const Value.absent(),
                 Value<String?> nickname = const Value.absent(),
@@ -4676,7 +4756,7 @@ class $$RentalsTableTableManager
                 required String id,
                 required String customerId,
                 required DateTime startedAt,
-                required DateTime dueAt,
+                Value<DateTime?> dueAt = const Value.absent(),
                 Value<DateTime?> returnedAt = const Value.absent(),
                 required String qrCode,
                 Value<String?> nickname = const Value.absent(),

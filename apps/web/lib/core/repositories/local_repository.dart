@@ -151,6 +151,7 @@ class LocalRepository {
     DateTime? customEnd,
     BillingMode? billingModeOverride,
     String? replacedFromRentalId,
+    bool openEnded = false,
   }) async {
     final String? trimmedNick = nickname?.trim();
     final String? storedNick =
@@ -236,24 +237,40 @@ class LocalRepository {
       // v1: duration UI follows primary (first) item mode; charges are per-line.
       final BillingMode mode = billingModeOverride ??
           BillingMode.parse(itemRows.first.billingMode);
-      final DateTime dueAt = computeDueAt(
-        start: now,
-        mode: mode,
-        durationUnits: units,
-        customEnd: customEnd,
-      );
+
+      if (openEnded) {
+        for (final InventoryItemRow row in itemById.values) {
+          if (!row.dueDateOptional) {
+            throw ArgumentError(
+              'Open-ended rental requires all items to allow optional due date',
+            );
+          }
+        }
+      }
+
+      final DateTime? dueAt = openEnded
+          ? null
+          : computeDueAt(
+              start: now,
+              mode: mode,
+              durationUnits: units,
+              customEnd: customEnd,
+            );
+      final int storedDurationUnits = openEnded ? 0 : units;
 
       final List<int> lineBaseAmounts = <int>[];
       int baseAmount = 0;
       int lateFeePerDay = 0;
       for (final InventoryItemRow row in itemRows) {
         final BillingMode lineMode = BillingMode.parse(row.billingMode);
-        final int lineBase = computeBaseAmount(
-          mode: lineMode,
-          rateAmount: row.rateAmount,
-          start: now,
-          due: dueAt,
-        );
+        final int lineBase = openEnded
+            ? 0
+            : computeBaseAmount(
+                mode: lineMode,
+                rateAmount: row.rateAmount,
+                start: now,
+                due: dueAt!,
+              );
         lineBaseAmounts.add(lineBase);
         baseAmount += lineBase;
         lateFeePerDay += row.lateFeePerDay;
@@ -264,7 +281,7 @@ class LocalRepository {
           id: rentalId,
           customerId: customer.id,
           startedAt: now,
-          dueAt: dueAt,
+          dueAt: Value<DateTime?>(dueAt),
           qrCode: qrCode,
           nickname: Value<String?>(storedNick),
           billingMode: Value<String>(mode.name),
@@ -273,7 +290,7 @@ class LocalRepository {
           baseAmount: Value<int>(baseAmount),
           lateAmount: const Value<int>(0),
           totalAmount: Value<int>(baseAmount),
-          durationUnits: Value<int>(units),
+          durationUnits: Value<int>(storedDurationUnits),
           replacedFromRentalId: Value<String?>(replacedFrom),
         ),
       );
@@ -403,12 +420,24 @@ class LocalRepository {
         final InventoryItemRow? item = await (_db.select(_db.inventoryItems)
               ..where((t) => t.id.equals(link.itemId)))
             .getSingleOrNull();
-        final int lineBase = link.baseAmount;
-        final int lineLate = computeLateAmount(
-          due: rental.dueAt,
-          asOf: now,
-          lateFeePerDay: item?.lateFeePerDay ?? 0,
-        );
+        final int lineBase;
+        final int lineLate;
+        if (rental.dueAt == null) {
+          lineBase = computeBaseAmount(
+            mode: BillingMode.parse(item?.billingMode),
+            rateAmount: item?.rateAmount ?? 0,
+            start: rental.startedAt,
+            due: now,
+          );
+          lineLate = 0;
+        } else {
+          lineBase = link.baseAmount;
+          lineLate = computeLateAmount(
+            due: rental.dueAt!,
+            asOf: now,
+            lateFeePerDay: item?.lateFeePerDay ?? 0,
+          );
+        }
         final int lineTotal = computeTotalAmount(
           baseAmount: lineBase,
           lateAmount: lineLate,
@@ -424,6 +453,7 @@ class LocalRepository {
             .write(
           RentalItemsCompanion(
             returnedAt: Value<DateTime?>(now),
+            baseAmount: Value<int>(lineBase),
             lateAmount: Value<int>(lineLate),
             depositApplied: Value<int>(lineDeposit),
           ),
@@ -709,6 +739,7 @@ class LocalRepository {
     int rateAmount = 0,
     int lateFeePerDay = 0,
     String currencyCode = 'INR',
+    bool dueDateOptional = false,
   }) async {
     final String trimmedName = name.trim();
     final String trimmedCategory = category.trim();
@@ -743,6 +774,7 @@ class LocalRepository {
         currencyCode: Value<String>(
           currencyCode.trim().isEmpty ? 'INR' : currencyCode.trim().toUpperCase(),
         ),
+        dueDateOptional: Value<bool>(dueDateOptional),
       ),
     );
   }
@@ -812,6 +844,7 @@ class LocalRepository {
     int? rateAmount,
     int? lateFeePerDay,
     String? currencyCode,
+    bool? dueDateOptional,
   }) async {
     final String trimmedName = name.trim();
     final String trimmedCategory = category.trim();
@@ -873,6 +906,9 @@ class LocalRepository {
                     ? 'INR'
                     : currencyCode.trim().toUpperCase(),
               ),
+        dueDateOptional: dueDateOptional == null
+            ? const Value.absent()
+            : Value<bool>(dueDateOptional),
       ),
     );
   }
@@ -1070,7 +1106,7 @@ class LocalRepository {
             id: rental.id,
             customerId: rental.customerId,
             startedAt: rental.startedAt,
-            dueAt: rental.dueAt,
+            dueAt: Value<DateTime?>(rental.dueAt),
             returnedAt: Value<DateTime?>(rental.returnedAt),
             qrCode: rental.qrCode,
             nickname: Value<String?>(rental.nickname),
@@ -1151,6 +1187,7 @@ class LocalRepository {
       rateAmount: Value<int>(item.rateAmount),
       lateFeePerDay: Value<int>(item.lateFeePerDay),
       currencyCode: Value<String>(item.currencyCode),
+      dueDateOptional: Value<bool>(item.dueDateOptional),
     );
   }
 
@@ -1192,6 +1229,7 @@ class LocalRepository {
       rateAmount: row.rateAmount,
       lateFeePerDay: row.lateFeePerDay,
       currencyCode: row.currencyCode,
+      dueDateOptional: row.dueDateOptional,
     );
   }
 
@@ -1220,6 +1258,8 @@ class LocalRepository {
           lateAmount: link.lateAmount,
           depositApplied: link.depositApplied,
           lateFeePerDay: item?.lateFeePerDay ?? 0,
+          billingMode: BillingMode.parse(item?.billingMode),
+          rateAmount: item?.rateAmount ?? 0,
         ),
       );
     }

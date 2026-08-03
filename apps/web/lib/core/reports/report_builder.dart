@@ -189,8 +189,11 @@ class ReportBuilder {
         final String depositBit = rental.depositApplied > 0
             ? ' | deposit ${formatMoney(rental.depositApplied)} | due ${formatMoney(rental.amountDueAfterDeposit)}'
             : '';
+        final String dueBit = rental.dueAt == null
+            ? 'open-ended'
+            : 'due ${_formatDate(rental.dueAt!)}';
         lines.add(
-          '  • $prefix${rental.id}: $itemNames | due ${_formatDate(rental.dueAt)} | ${status.label} | ${formatMoney(amount)}$partialBit$depositBit',
+          '  • $prefix${rental.id}: $itemNames | $dueBit | ${status.label} | ${formatMoney(amount)}$partialBit$depositBit',
         );
       }
     }

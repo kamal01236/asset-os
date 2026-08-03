@@ -94,6 +94,7 @@ class InventoryItem {
     this.rateAmount = 0,
     this.lateFeePerDay = 0,
     this.currencyCode = 'INR',
+    this.dueDateOptional = false,
   });
 
   final String id;
@@ -108,6 +109,7 @@ class InventoryItem {
   final int rateAmount;
   final int lateFeePerDay;
   final String currencyCode;
+  final bool dueDateOptional;
 
   InventoryItem copyWith({
     int? availableUnits,
@@ -117,6 +119,7 @@ class InventoryItem {
     int? rateAmount,
     int? lateFeePerDay,
     String? currencyCode,
+    bool? dueDateOptional,
   }) => InventoryItem(
     id: id,
     name: name,
@@ -130,6 +133,7 @@ class InventoryItem {
     rateAmount: rateAmount ?? this.rateAmount,
     lateFeePerDay: lateFeePerDay ?? this.lateFeePerDay,
     currencyCode: currencyCode ?? this.currencyCode,
+    dueDateOptional: dueDateOptional ?? this.dueDateOptional,
   );
 
   Map<String, dynamic> toJson() => <String, dynamic>{
@@ -145,6 +149,7 @@ class InventoryItem {
     'rateAmount': rateAmount,
     'lateFeePerDay': lateFeePerDay,
     'currencyCode': currencyCode,
+    'dueDateOptional': dueDateOptional,
   };
 
   factory InventoryItem.fromJson(Map<String, dynamic> json) => InventoryItem(
@@ -160,6 +165,7 @@ class InventoryItem {
     rateAmount: (json['rateAmount'] as int?) ?? 0,
     lateFeePerDay: (json['lateFeePerDay'] as int?) ?? 0,
     currencyCode: (json['currencyCode'] as String?) ?? 'INR',
+    dueDateOptional: (json['dueDateOptional'] as bool?) ?? false,
   );
 }
 
@@ -213,6 +219,8 @@ class RentalLine {
     this.lateAmount = 0,
     this.depositApplied = 0,
     this.lateFeePerDay = 0,
+    this.billingMode = BillingMode.weekly,
+    this.rateAmount = 0,
   });
 
   final String id;
@@ -226,6 +234,10 @@ class RentalLine {
   final int depositApplied;
   /// Catalog late fee used for open-line estimates (paise/day).
   final int lateFeePerDay;
+  /// Catalog billing mode used for open-ended accrual estimates.
+  final BillingMode billingMode;
+  /// Catalog rate (paise) used for open-ended accrual estimates.
+  final int rateAmount;
 
   bool get isOpen => returnedAt == null;
 
@@ -234,9 +246,27 @@ class RentalLine {
   int get amountDueAfterDeposit =>
       (totalAmount - depositApplied).clamp(0, totalAmount);
 
-  int lateAmountAsOf(DateTime due, DateTime asOf) {
+  int baseAmountAsOf(DateTime startedAt, DateTime? due, DateTime asOf) {
+    if (!isOpen) {
+      return baseAmount;
+    }
+    if (due == null) {
+      return computeBaseAmount(
+        mode: billingMode,
+        rateAmount: rateAmount,
+        start: startedAt,
+        due: asOf,
+      );
+    }
+    return baseAmount;
+  }
+
+  int lateAmountAsOf(DateTime? due, DateTime asOf) {
     if (!isOpen) {
       return lateAmount;
+    }
+    if (due == null) {
+      return 0;
     }
     return computeLateAmount(
       due: due,
@@ -245,12 +275,12 @@ class RentalLine {
     );
   }
 
-  int totalAmountAsOf(DateTime due, DateTime asOf) {
+  int totalAmountAsOf(DateTime startedAt, DateTime? due, DateTime asOf) {
     if (!isOpen) {
       return totalAmount;
     }
     return computeTotalAmount(
-      baseAmount: baseAmount,
+      baseAmount: baseAmountAsOf(startedAt, due, asOf),
       lateAmount: lateAmountAsOf(due, asOf),
     );
   }
@@ -283,6 +313,8 @@ class RentalLine {
     'lateAmount': lateAmount,
     'depositApplied': depositApplied,
     'lateFeePerDay': lateFeePerDay,
+    'billingMode': billingMode.name,
+    'rateAmount': rateAmount,
   };
 
   factory RentalLine.fromJson(Map<String, dynamic> json) => RentalLine(
@@ -299,6 +331,8 @@ class RentalLine {
     lateAmount: (json['lateAmount'] as int?) ?? 0,
     depositApplied: (json['depositApplied'] as int?) ?? 0,
     lateFeePerDay: (json['lateFeePerDay'] as int?) ?? 0,
+    billingMode: BillingMode.parse(json['billingMode'] as String?),
+    rateAmount: (json['rateAmount'] as int?) ?? 0,
   );
 }
 
@@ -410,7 +444,7 @@ class Rental {
     required this.customerId,
     required this.lines,
     required this.startedAt,
-    required this.dueAt,
+    this.dueAt,
     required this.timeline,
     required this.qrCode,
     this.returnedAt,
@@ -430,7 +464,8 @@ class Rental {
   final String customerId;
   final List<RentalLine> lines;
   final DateTime startedAt;
-  final DateTime dueAt;
+  /// Null for open-ended rentals (no fixed due date).
+  final DateTime? dueAt;
   final DateTime? returnedAt;
   final List<RentalEvent> timeline;
   final String qrCode;
@@ -458,6 +493,10 @@ class Rental {
 
   bool get isActive => returnedAt == null;
 
+  bool get hasDueDate => dueAt != null;
+
+  bool get isOpenEnded => isActive && dueAt == null;
+
   /// Cash still owed after deposit applied (finalized on returned rentals).
   int get amountDueAfterDeposit =>
       (totalAmount - depositApplied).clamp(0, totalAmount);
@@ -466,6 +505,9 @@ class Rental {
   int lateAmountAsOf(DateTime asOf) {
     if (!isActive) {
       return lateAmount;
+    }
+    if (dueAt == null) {
+      return 0;
     }
     int late = 0;
     for (final RentalLine line in lines) {
@@ -480,7 +522,7 @@ class Rental {
     }
     int total = 0;
     for (final RentalLine line in lines) {
-      total += line.totalAmountAsOf(dueAt, asOf);
+      total += line.totalAmountAsOf(startedAt, dueAt, asOf);
     }
     return total;
   }
@@ -489,12 +531,16 @@ class Rental {
     if (!isActive) {
       return AssetStatus.archived;
     }
-    if (dueAt.year == now.year &&
-        dueAt.month == now.month &&
-        dueAt.day == now.day) {
+    final DateTime? due = dueAt;
+    if (due == null) {
+      return AssetStatus.rented;
+    }
+    if (due.year == now.year &&
+        due.month == now.month &&
+        due.day == now.day) {
       return AssetStatus.dueToday;
     }
-    if (dueAt.isBefore(now)) {
+    if (due.isBefore(now)) {
       return AssetStatus.overdue;
     }
     return AssetStatus.rented;
@@ -542,7 +588,7 @@ class Rental {
     'itemIds': itemIds,
     'lines': lines.map((RentalLine line) => line.toJson()).toList(),
     'startedAt': startedAt.toIso8601String(),
-    'dueAt': dueAt.toIso8601String(),
+    'dueAt': dueAt?.toIso8601String(),
     'returnedAt': returnedAt?.toIso8601String(),
     'timeline': timeline.map((event) => event.toJson()).toList(),
     'qrCode': qrCode,
@@ -585,7 +631,9 @@ class Rental {
       customerId: json['customerId'] as String,
       lines: lines,
       startedAt: DateTime.parse(json['startedAt'] as String),
-      dueAt: DateTime.parse(json['dueAt'] as String),
+      dueAt: json['dueAt'] == null
+          ? null
+          : DateTime.parse(json['dueAt'] as String),
       returnedAt: json['returnedAt'] == null
           ? null
           : DateTime.parse(json['returnedAt'] as String),

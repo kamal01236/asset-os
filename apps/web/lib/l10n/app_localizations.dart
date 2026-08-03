@@ -1837,6 +1837,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No matches'**
   String get searchNoResults;
+
+  /// No description provided for @dueDateOptionalLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Due date optional'**
+  String get dueDateOptionalLabel;
+
+  /// No description provided for @dueDateOptionalSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow issuing without a fixed return date (charge accrues until return).'**
+  String get dueDateOptionalSubtitle;
+
+  /// No description provided for @continueWithoutDueDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue without due date'**
+  String get continueWithoutDueDate;
+
+  /// No description provided for @openEndedDurationHint.
+  ///
+  /// In en, this message translates to:
+  /// **'All selected items allow open-ended rentals. Enter a duration, or continue without a due date.'**
+  String get openEndedDurationHint;
+
+  /// No description provided for @openEndedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Open-ended'**
+  String get openEndedLabel;
+
+  /// No description provided for @reviewOpenEndedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Due: Open-ended (accrues until return)'**
+  String get reviewOpenEndedLabel;
+
+  /// No description provided for @rentalAmountOpenEnded.
+  ///
+  /// In en, this message translates to:
+  /// **'Open-ended · {amount}'**
+  String rentalAmountOpenEnded(String amount);
+
+  /// No description provided for @accruedAmountHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Accrued so far'**
+  String get accruedAmountHint;
 }
 
 class _AppLocalizationsDelegate

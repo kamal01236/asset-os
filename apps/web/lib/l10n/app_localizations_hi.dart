@@ -1010,7 +1010,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get applyHomeLayoutDone => 'होम लेआउट अपडेट हो गया।';
 
   @override
-  String minMeaningfulTextError(int min) => 'कम से कम $min अक्षर दर्ज करें।';
+  String minMeaningfulTextError(int min) {
+    return 'कम से कम $min अक्षर दर्ज करें।';
+  }
 
   @override
   String get searchTypeMinChars => 'कम से कम 3 अक्षर लिखें';
@@ -1020,4 +1022,32 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get searchNoResults => 'कोई मिलान नहीं';
+
+  @override
+  String get dueDateOptionalLabel => 'देय तिथि वैकल्पिक';
+
+  @override
+  String get dueDateOptionalSubtitle =>
+      'निश्चित वापसी तिथि के बिना जारी करने की अनुमति दें (वापसी तक शुल्क बढ़ता रहेगा)।';
+
+  @override
+  String get continueWithoutDueDate => 'देय तिथि के बिना जारी रखें';
+
+  @override
+  String get openEndedDurationHint =>
+      'चयनित सभी वस्तुएँ खुली अवधि की अनुमति देती हैं। अवधि दर्ज करें, या देय तिथि के बिना जारी रखें।';
+
+  @override
+  String get openEndedLabel => 'खुली अवधि';
+
+  @override
+  String get reviewOpenEndedLabel => 'देय: खुली अवधि (वापसी तक बढ़ता रहेगा)';
+
+  @override
+  String rentalAmountOpenEnded(String amount) {
+    return 'खुली अवधि · $amount';
+  }
+
+  @override
+  String get accruedAmountHint => 'अब तक अर्जित';
 }

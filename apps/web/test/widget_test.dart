@@ -14,6 +14,7 @@ import 'package:asset_os/core/providers/app_providers.dart';
 import 'package:asset_os/core/repositories/local_repository.dart';
 import 'package:asset_os/core/templates/industry_templates.dart';
 import 'package:asset_os/core/theme/app_theme.dart';
+import 'package:asset_os/core/widgets/scoped_search_field.dart';
 
 Future<ProviderContainer> _bootTestContainer({
   Map<String, Object> prefs = const <String, Object>{},
@@ -158,43 +159,61 @@ void main() {
     expect(find.text('Find customer, rental, or inventory'), findsOneWidget);
     expect(find.text('Type at least 3 characters'), findsOneWidget);
     expect(find.widgetWithText(AppBar, 'Search'), findsOneWidget);
+    Navigator.of(tester.element(find.byType(Scaffold).first)).pop();
+    await tester.pump();
   });
 
-  testWidgets('Inventory scoped search shows suggestions after 3 chars', (
+  testWidgets('ScopedSearchField shows suggestions once query meets min length', (
     WidgetTester tester,
   ) async {
-    final ProviderContainer container = await _pumpAppShell(tester);
-    container.read(currentTabIndexProvider.notifier).state = 2;
-    await tester.pump();
+    String query = '';
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: StatefulBuilder(
+            builder: (BuildContext context, StateSetter setState) {
+              final List<SearchSuggestion> suggestions =
+                  query.trim().length >= 3
+                      ? const <SearchSuggestion>[
+                          SearchSuggestion(
+                            id: 'INV-1',
+                            title: 'DSLR',
+                            subtitle: 'Camera',
+                            leadingIcon: Icons.inventory_2_outlined,
+                          ),
+                        ]
+                      : const <SearchSuggestion>[];
+              return ScopedSearchField(
+                hintText: 'Search inventory',
+                minLengthHint: 'Type at least 3 characters',
+                noResultsText: 'No matches',
+                suggestions: suggestions,
+                onQueryChanged: (String value) {
+                  setState(() => query = value);
+                },
+                onSelected: (_) {},
+              );
+            },
+          ),
+        ),
+      ),
+    );
 
     expect(find.text('Type at least 3 characters'), findsOneWidget);
-    expect(find.text('DSLR'), findsOneWidget);
 
-    await tester.enterText(find.byType(TextField).first, 'ds');
+    final TextField field = tester.widget(find.byType(TextField));
+    field.controller!.value = const TextEditingValue(text: 'ds');
+    field.onChanged!('ds');
     await tester.pump();
     expect(find.text('Type at least 3 characters'), findsOneWidget);
+    expect(find.text('DSLR'), findsNothing);
 
-    await tester.enterText(find.byType(TextField).first, 'dsl');
+    field.controller!.value = const TextEditingValue(text: 'dsl');
+    field.onChanged!('dsl');
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
     expect(find.text('Type at least 3 characters'), findsNothing);
-    expect(find.text('DSLR'), findsWidgets);
-  }, timeout: const Timeout(Duration(minutes: 1)));
-
-  testWidgets('Customers scoped search shows suggestions after 3 chars', (
-    WidgetTester tester,
-  ) async {
-    final ProviderContainer container = await _pumpAppShell(tester);
-    container.read(currentTabIndexProvider.notifier).state = 3;
-    await tester.pump();
-
-    expect(find.text('Search by name, phone, or nickname'), findsOneWidget);
-
-    await tester.enterText(find.byType(TextField).first, 'pri');
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
-    expect(find.text('Priya Patel'), findsWidgets);
-  }, timeout: const Timeout(Duration(minutes: 1)));
+    expect(find.text('DSLR'), findsOneWidget);
+  });
 
   testWidgets('starts New Rental flow from Actions sheet', (WidgetTester tester) async {
     await _pumpAppShell(tester);

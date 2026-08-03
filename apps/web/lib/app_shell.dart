@@ -266,10 +266,19 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
       setState(() => _suggestions = const <SearchSuggestion>[]);
       return;
     }
-    final SearchResults results = await ref.read(repositoryProvider).search(
-          trimmed,
-          scope: SearchScope.inventory,
-        );
+    final SearchResults results;
+    try {
+      results = await ref.read(repositoryProvider).search(
+            trimmed,
+            scope: SearchScope.inventory,
+          );
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      setState(() => _suggestions = const <SearchSuggestion>[]);
+      return;
+    }
     if (!mounted) {
       return;
     }
@@ -404,10 +413,22 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
       });
       return;
     }
-    final SearchResults results = await ref.read(repositoryProvider).search(
-          trimmed,
-          scope: SearchScope.customers,
-        );
+    final SearchResults results;
+    try {
+      results = await ref.read(repositoryProvider).search(
+            trimmed,
+            scope: SearchScope.customers,
+          );
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _suggestions = const <SearchSuggestion>[];
+        _matchedIds = const <String>{};
+      });
+      return;
+    }
     if (!mounted) {
       return;
     }
@@ -765,7 +786,7 @@ class _RentalDetailScreenState extends ConsumerState<RentalDetailScreen> {
                     Text(l10n.selectLinesToReturn),
                     ...openLines.map((RentalLine line) {
                       final bool selected = selectedIds.contains(line.id);
-                      final int lineTotal = line.totalAmountAsOf(rental.dueAt, now);
+                      final int lineTotal = line.totalAmountAsOf(rental.startedAt, rental.dueAt, now);
                       return CheckboxListTile(
                         contentPadding: EdgeInsets.zero,
                         dense: true,
@@ -829,14 +850,28 @@ class _RentalDetailScreenState extends ConsumerState<RentalDetailScreen> {
                 children: <Widget>[
                   Text(l10n.chargesHeading, style: Theme.of(context).textTheme.titleSmall),
                   const SizedBox(height: 6),
-                  Text(l10n.reviewDueLabel(_date(rental.dueAt))),
+                  Text(
+                    rental.isOpenEnded
+                        ? l10n.reviewOpenEndedLabel
+                        : l10n.reviewDueLabel(_date(rental.dueAt!)),
+                  ),
+                  if (rental.isOpenEnded && rental.isActive)
+                    Text(l10n.accruedAmountHint),
                   Text(
                     l10n.inventoryRateSubtitle(
                       localizedBillingMode(l10n, rental.billingMode),
                       formatMoney(rental.rateAmount),
                     ),
                   ),
-                  Text(l10n.chargeBaseLabel(formatMoney(rental.baseAmount))),
+                  Text(
+                    l10n.chargeBaseLabel(
+                      formatMoney(
+                        rental.isOpenEnded && rental.isActive
+                            ? totalShown
+                            : rental.baseAmount,
+                      ),
+                    ),
+                  ),
                   if (lateShown > 0)
                     Text(l10n.chargeLateLabel(formatMoney(lateShown))),
                   Text(
@@ -861,7 +896,7 @@ class _RentalDetailScreenState extends ConsumerState<RentalDetailScreen> {
                                 .toList();
                         int previewTotal = 0;
                         for (final RentalLine line in settleLines) {
-                          previewTotal += line.totalAmountAsOf(rental.dueAt, now);
+                          previewTotal += line.totalAmountAsOf(rental.startedAt, rental.dueAt, now);
                         }
                         final int willApply = customer.depositBalance < previewTotal
                             ? customer.depositBalance
@@ -1017,6 +1052,7 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
   final TextEditingController _rateController = TextEditingController();
   final TextEditingController _lateFeeController = TextEditingController();
   BillingMode _billingMode = BillingMode.weekly;
+  bool _dueDateOptional = false;
 
   @override
   void dispose() {
@@ -1037,6 +1073,7 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
     _rateController.text = paiseToRupeesField(item.rateAmount);
     _lateFeeController.text = paiseToRupeesField(item.lateFeePerDay);
     _billingMode = item.billingMode;
+    _dueDateOptional = item.dueDateOptional;
     setState(() => _editing = true);
   }
 
@@ -1075,6 +1112,7 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
       billingMode: _billingMode,
       rateAmount: parseRupeesToPaise(_rateController.text),
       lateFeePerDay: parseRupeesToPaise(_lateFeeController.text),
+      dueDateOptional: _dueDateOptional,
     );
     if (!mounted) {
       return;
@@ -1179,6 +1217,16 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
                       ),
                     ),
                     const SizedBox(height: 8),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      value: _dueDateOptional,
+                      title: Text(l10n.dueDateOptionalLabel),
+                      subtitle: Text(l10n.dueDateOptionalSubtitle),
+                      onChanged: (bool value) {
+                        setState(() => _dueDateOptional = value);
+                      },
+                    ),
+                    const SizedBox(height: 8),
                     TextField(
                       controller: _notesController,
                       decoration: InputDecoration(
@@ -1206,7 +1254,8 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
                         subtitle: Text(
                           '${localizedBillingMode(l10n, item.billingMode)} · '
                           '${formatMoney(item.rateAmount, currencyCode: item.currencyCode)}'
-                          '${item.lateFeePerDay > 0 ? ' · ${formatMoney(item.lateFeePerDay)}/day late' : ''}',
+                          '${item.lateFeePerDay > 0 ? ' · ${formatMoney(item.lateFeePerDay)}/day late' : ''}'
+                          '${item.dueDateOptional ? ' · ${l10n.openEndedLabel}' : ''}',
                         ),
                       ),
                     ),
@@ -1588,7 +1637,7 @@ class _UniversalSearchScreenState extends ConsumerState<UniversalSearchScreen> {
               itemBuilder: (rental) => EntityCard(
                 title: _rentalLinesLabel(rental),
                 subtitle: <String>[
-                  l10n.returnedDate(_date(rental.returnedAt ?? rental.dueAt)),
+                  l10n.returnedDate(_date(rental.returnedAt ?? rental.dueAt ?? rental.startedAt)),
                   if (rental.depositApplied > 0)
                     l10n.depositAppliedLabel(formatMoney(rental.depositApplied)),
                 ].join(' · '),
@@ -1852,6 +1901,23 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
     return _durationUnitsValue() >= 1;
   }
 
+  bool _allDueDateOptional(List<InventoryItem> selectedItems) {
+    return selectedItems.isNotEmpty &&
+        selectedItems.every((InventoryItem item) => item.dueDateOptional);
+  }
+
+  bool _durationStepReady(List<InventoryItem> selectedItems) {
+    if (_allDueDateOptional(selectedItems)) {
+      return true;
+    }
+    return _durationComplete(selectedItems);
+  }
+
+  bool _issuingOpenEnded(List<InventoryItem> selectedItems) {
+    return _allDueDateOptional(selectedItems) &&
+        !_durationComplete(selectedItems);
+  }
+
   DateTime _previewDue(List<InventoryItem> selectedItems) {
     final DateTime now = DateTime.now();
     final BillingMode mode = _primaryMode(selectedItems);
@@ -1976,7 +2042,7 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
                   meetsMinMeaningfulText(_nameController.text)),
       _RentalFlowStep.items => _selectedInventoryIds.isNotEmpty,
       _RentalFlowStep.labels => _labelsComplete(selectedItems),
-      _RentalFlowStep.duration => _durationComplete(selectedItems),
+      _RentalFlowStep.duration => _durationStepReady(selectedItems),
       _RentalFlowStep.review => true,
     };
   }
@@ -2180,7 +2246,9 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
             ),
             const SizedBox(height: 4),
             Text(
-              l10n.durationHint,
+              _allDueDateOptional(selectedItems)
+                  ? l10n.openEndedDurationHint
+                  : l10n.durationHint,
               style: Theme.of(context).textTheme.bodySmall,
             ),
             const SizedBox(height: 8),
@@ -2283,7 +2351,13 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
                       ),
                     ],
                     const SizedBox(height: 6),
-                    Text(l10n.reviewDueLabel(_date(_previewDue(selectedItems)))),
+                    Text(
+                      _issuingOpenEnded(selectedItems)
+                          ? l10n.reviewOpenEndedLabel
+                          : l10n.reviewDueLabel(
+                              _date(_previewDue(selectedItems)),
+                            ),
+                    ),
                     const SizedBox(height: 6),
                     Text(l10n.reviewItemsLabel),
                     ...selectedItems.map((InventoryItem item) {
@@ -2292,8 +2366,9 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
                       final String code = LocalRepository.normalizeShortCode(
                         _shortCodeControllers[item.id]?.text ?? '',
                       );
-                      final int amount =
-                          _lineCharge(item, _previewDue(selectedItems));
+                      final int amount = _issuingOpenEnded(selectedItems)
+                          ? 0
+                          : _lineCharge(item, _previewDue(selectedItems));
                       return Text(
                         '• ${RentalLine(
                           id: 'preview-${item.id}',
@@ -2308,7 +2383,11 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
                     Text(l10n.reviewChargesLabel),
                     Text(
                       l10n.chargeTotalLabel(
-                        formatMoney(_previewBaseTotal(selectedItems)),
+                        formatMoney(
+                          _issuingOpenEnded(selectedItems)
+                              ? 0
+                              : _previewBaseTotal(selectedItems),
+                        ),
                       ),
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w700,
@@ -2382,7 +2461,7 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
                           return;
                         }
                         if (_currentStep == _RentalFlowStep.duration &&
-                            !_durationComplete(selectedItems)) {
+                            !_durationStepReady(selectedItems)) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(
@@ -2396,6 +2475,11 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
                         }
                         if (!isLastStep) {
                           setState(() {
+                            if (_currentStep == _RentalFlowStep.labels &&
+                                _allDueDateOptional(selectedItems)) {
+                              _durationController.clear();
+                              _customEnd = null;
+                            }
                             _stepIndex += 1;
                           });
                           return;
@@ -2416,18 +2500,24 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
                           nickname = null;
                         }
                         try {
+                          final bool openEnded =
+                              _issuingOpenEnded(selectedItems);
                           await repository.createRental(
                             customer: customer,
                             lines: _buildLineInputs(selectedItems),
                             nickname: nickname,
-                            durationUnits: _primaryMode(selectedItems) ==
-                                    BillingMode.custom
-                                ? 1
-                                : _durationUnitsValue(),
-                            customEnd: _primaryMode(selectedItems) ==
-                                    BillingMode.custom
-                                ? _customEnd
-                                : null,
+                            openEnded: openEnded,
+                            durationUnits: openEnded
+                                ? 0
+                                : (_primaryMode(selectedItems) ==
+                                        BillingMode.custom
+                                    ? 1
+                                    : _durationUnitsValue()),
+                            customEnd: openEnded ||
+                                    _primaryMode(selectedItems) !=
+                                        BillingMode.custom
+                                ? null
+                                : _customEnd,
                             billingModeOverride: _primaryMode(selectedItems),
                           );
                         } catch (error) {
@@ -2460,7 +2550,12 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
                         }
                       },
                 child: Text(
-                  isLastStep ? l10n.confirmRental : l10n.continueAction,
+                  isLastStep
+                      ? l10n.confirmRental
+                      : (_currentStep == _RentalFlowStep.duration &&
+                              _issuingOpenEnded(selectedItems)
+                          ? l10n.continueWithoutDueDate
+                          : l10n.continueAction),
                 ),
               ),
             ),
@@ -2536,7 +2631,7 @@ class _ReplaceLineFlowScreenState extends ConsumerState<ReplaceLineFlowScreen> {
               orElse: () => null,
             );
     final DateTime now = DateTime.now();
-    final int oldCharge = line.totalAmountAsOf(rental.dueAt, now);
+    final int oldCharge = line.totalAmountAsOf(rental.startedAt, rental.dueAt, now);
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.replaceFlowTitle)),
@@ -2775,10 +2870,13 @@ class ReturnFlowScreen extends ConsumerWidget {
                       return EntityCard(
                         title: _rentalLinesLabel(rental),
                         subtitle: <String>[
-                          l10n.rentalAmountSubtitle(
-                            _date(rental.dueAt),
-                            formatMoney(total),
-                          ),
+                          rental.isOpenEnded
+                              ? l10n.rentalAmountOpenEnded(formatMoney(total))
+                              : l10n.rentalAmountSubtitle(
+                                  _date(rental.dueAt!),
+                                  formatMoney(total),
+                                ),
+                          if (rental.isOpenEnded) l10n.accruedAmountHint,
                           if (openBit.isNotEmpty) openBit,
                           if (customer.depositBalance > 0)
                             l10n.depositWillApplyLabel(formatMoney(willApply)),
@@ -2823,6 +2921,7 @@ class _AddInventoryFlowScreenState extends ConsumerState<AddInventoryFlowScreen>
   final TextEditingController _rateController = TextEditingController(text: '0');
   final TextEditingController _lateFeeController = TextEditingController(text: '0');
   BillingMode _billingMode = BillingMode.weekly;
+  bool _dueDateOptional = false;
   bool _submitting = false;
 
   @override
@@ -2906,6 +3005,16 @@ class _AddInventoryFlowScreenState extends ConsumerState<AddInventoryFlowScreen>
             ),
           ),
           const SizedBox(height: 8),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            value: _dueDateOptional,
+            title: Text(l10n.dueDateOptionalLabel),
+            subtitle: Text(l10n.dueDateOptionalSubtitle),
+            onChanged: (bool value) {
+              setState(() => _dueDateOptional = value);
+            },
+          ),
+          const SizedBox(height: 8),
           ExpansionTile(
             tilePadding: EdgeInsets.zero,
             title: Text(l10n.advancedFields),
@@ -2962,6 +3071,7 @@ class _AddInventoryFlowScreenState extends ConsumerState<AddInventoryFlowScreen>
                     billingMode: _billingMode,
                     rateAmount: parseRupeesToPaise(_rateController.text),
                     lateFeePerDay: parseRupeesToPaise(_lateFeeController.text),
+                    dueDateOptional: _dueDateOptional,
                   );
                   if (context.mounted) {
                     Navigator.of(context).pop();
@@ -3130,10 +3240,10 @@ String _date(DateTime value) {
 
 String _rentalAmountSubtitle(AppLocalizations l10n, Rental rental) {
   final DateTime now = DateTime.now();
-  final String base = l10n.rentalAmountSubtitle(
-    _date(rental.dueAt),
-    formatMoney(rental.totalAmountAsOf(now)),
-  );
+  final String amount = formatMoney(rental.totalAmountAsOf(now));
+  final String base = rental.isOpenEnded
+      ? l10n.rentalAmountOpenEnded(amount)
+      : l10n.rentalAmountSubtitle(_date(rental.dueAt!), amount);
   if (!rental.isActive && rental.depositApplied > 0) {
     return '$base · ${l10n.depositAppliedLabel(formatMoney(rental.depositApplied))}';
   }
@@ -3196,7 +3306,7 @@ Future<bool> _confirmAndReturnRental({
 
   int total = 0;
   for (final RentalLine line in targets) {
-    total += line.totalAmountAsOf(rental.dueAt, now);
+    total += line.totalAmountAsOf(rental.startedAt, rental.dueAt, now);
   }
   final int willApply =
       customer.depositBalance < total ? customer.depositBalance : total;
@@ -3217,7 +3327,7 @@ Future<bool> _confirmAndReturnRental({
                 (RentalLine line) => Text(
                   l10n.lineChargePreview(
                     line.displayLabel,
-                    formatMoney(line.totalAmountAsOf(rental.dueAt, now)),
+                    formatMoney(line.totalAmountAsOf(rental.startedAt, rental.dueAt, now)),
                   ),
                 ),
               ),

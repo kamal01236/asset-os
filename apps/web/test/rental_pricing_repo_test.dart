@@ -62,11 +62,11 @@ void main() {
       final DateTime minDue = before.add(const Duration(days: 7));
       final DateTime maxDue = after.add(const Duration(days: 7));
       expect(
-        !created.dueAt.isBefore(minDue.subtract(const Duration(seconds: 2))),
+        !created.dueAt!.isBefore(minDue.subtract(const Duration(seconds: 2))),
         isTrue,
       );
       expect(
-        !created.dueAt.isAfter(maxDue.add(const Duration(seconds: 2))),
+        !created.dueAt!.isAfter(maxDue.add(const Duration(seconds: 2))),
         isTrue,
       );
     });
@@ -108,7 +108,7 @@ void main() {
       // Force due date into the past so return computes late fee.
       await (db.update(db.rentals)..where((t) => t.id.equals(created.id))).write(
         RentalsCompanion(
-          dueAt: Value<DateTime>(
+          dueAt: Value<DateTime?>(
             DateTime.now().subtract(const Duration(days: 3)),
           ),
         ),

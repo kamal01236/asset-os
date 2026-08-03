@@ -31,6 +31,9 @@ class InventoryItems extends Table {
   /// Optional overdue fee per day in paise.
   IntColumn get lateFeePerDay => integer().withDefault(const Constant(0))();
   TextColumn get currencyCode => text().withDefault(const Constant('INR'))();
+  /// When true, rentals may omit a due date (open-ended accrual until return).
+  BoolColumn get dueDateOptional =>
+      boolean().withDefault(const Constant(false))();
 
   @override
   Set<Column<Object>> get primaryKey => <Column<Object>>{id};
@@ -41,7 +44,8 @@ class Rentals extends Table {
   TextColumn get id => text()();
   TextColumn get customerId => text().references(Customers, #id)();
   DateTimeColumn get startedAt => dateTime()();
-  DateTimeColumn get dueAt => dateTime()();
+  /// Null for open-ended rentals (no fixed due date).
+  DateTimeColumn get dueAt => dateTime().nullable()();
   DateTimeColumn get returnedAt => dateTime().nullable()();
   TextColumn get qrCode => text()();
   /// Per-rental display name (required when issuing to SELF Known).
