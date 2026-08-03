@@ -3,12 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/config/app_branding.dart';
 import 'core/l10n/l10n_ext.dart';
+import 'core/models/customer_balance.dart';
 import 'core/models/entities.dart';
 import 'core/models/self_customer.dart';
 import 'core/pricing/rental_pricing.dart';
 import 'core/providers/app_providers.dart';
 import 'core/repositories/local_repository.dart';
 import 'core/search/search_scope.dart';
+import 'core/theme/app_theme.dart';
 import 'core/validation/text_rules.dart';
 import 'core/widgets/rental_timeline.dart';
 import 'core/widgets/scoped_search_field.dart';
@@ -542,55 +544,84 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
     final AppLocalizations l10n = context.l10n;
     final AsyncValue<List<Customer>> customersAsync =
         ref.watch(customersProvider);
-    return customersAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (Object error, StackTrace _) => Center(child: Text('$error')),
-      data: (List<Customer> customers) {
-        final List<Customer> visible = _visibleCustomers(customers);
-        return ListView(
-          padding: const EdgeInsets.all(16),
-          children: <Widget>[
-            ScopedSearchField(
-              controller: _searchController,
-              hintText: l10n.searchCustomersHint,
-              minLengthHint: l10n.searchTypeMinChars,
-              noResultsText: l10n.searchNoResults,
-              suggestions: _suggestions,
-              onQueryChanged: _onQueryChanged,
-              onSelected: (SearchSuggestion suggestion) {
-                final Customer customer = customers.firstWhere(
-                  (Customer entry) => entry.id == suggestion.id,
-                );
-                widget.onOpenCustomer(customer);
-              },
+    final AsyncValue<List<Rental>> rentalsAsync = ref.watch(rentalsProvider);
+    if (customersAsync.isLoading || rentalsAsync.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (customersAsync.hasError) {
+      return Center(child: Text('${customersAsync.error}'));
+    }
+    if (rentalsAsync.hasError) {
+      return Center(child: Text('${rentalsAsync.error}'));
+    }
+    final List<Customer> customers =
+        customersAsync.valueOrNull ?? const <Customer>[];
+    final List<Rental> rentals = rentalsAsync.valueOrNull ?? const <Rental>[];
+    final DateTime now = DateTime.now();
+    final List<Customer> visible = _visibleCustomers(customers);
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: <Widget>[
+        ScopedSearchField(
+          controller: _searchController,
+          hintText: l10n.searchCustomersHint,
+          minLengthHint: l10n.searchTypeMinChars,
+          noResultsText: l10n.searchNoResults,
+          suggestions: _suggestions,
+          onQueryChanged: _onQueryChanged,
+          onSelected: (SearchSuggestion suggestion) {
+            final Customer customer = customers.firstWhere(
+              (Customer entry) => entry.id == suggestion.id,
+            );
+            widget.onOpenCustomer(customer);
+          },
+        ),
+        const SizedBox(height: 12),
+        ...visible.map((Customer customer) {
+          final String tier =
+              customer.isTrusted ? l10n.customerTrusted : l10n.customerStandard;
+          final CustomerBalanceAsOf balance =
+              customerBalanceAsOf(customer, rentals, now);
+          final String subtitle = balance.hasActivity
+              ? l10n.customerSubtitleWithBalances(
+                  customer.phone,
+                  tier,
+                  formatMoney(balance.advancePaise),
+                  formatMoney(balance.pendingPaise),
+                  formatMoney(balance.duePaise),
+                )
+              : l10n.customerSubtitle(customer.phone, tier);
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: EntityCard(
+              title: customer.name,
+              subtitle: subtitle,
+              leadingIcon: Icons.person_outline,
+              status: customer.isTrusted
+                  ? AssetStatus.available
+                  : AssetStatus.archived,
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  if (balance.duePaise > 0)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 4),
+                      child: Text(
+                        formatMoney(balance.duePaise),
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          color: AppTheme.overdue,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  const Icon(Icons.chevron_right),
+                ],
+              ),
+              onTap: () => widget.onOpenCustomer(customer),
             ),
-            const SizedBox(height: 12),
-            ...visible.map((Customer customer) {
-              final String tier =
-                  customer.isTrusted ? l10n.customerTrusted : l10n.customerStandard;
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: EntityCard(
-                  title: customer.name,
-                  subtitle: customer.depositBalance > 0
-                      ? l10n.customerSubtitleWithDeposit(
-                          customer.phone,
-                          tier,
-                          formatMoney(customer.depositBalance),
-                        )
-                      : l10n.customerSubtitle(customer.phone, tier),
-                  leadingIcon: Icons.person_outline,
-                  status: customer.isTrusted
-                      ? AssetStatus.available
-                      : AssetStatus.archived,
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => widget.onOpenCustomer(customer),
-                ),
-              );
-            }),
-          ],
-        );
-      },
+          );
+        }),
+      ],
     );
   }
 }
@@ -1439,6 +1470,8 @@ class CustomerDetailScreen extends ConsumerWidget {
         rentals.where((entry) => entry.customerId == customer.id).toList();
     final List<DepositLedgerEntry> ledger =
         (ledgerAsync.valueOrNull ?? const <DepositLedgerEntry>[]).take(10).toList();
+    final CustomerBalanceAsOf balance =
+        customerBalanceAsOf(customer, rentals, DateTime.now());
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.customerProfileTitle)),
@@ -1450,6 +1483,54 @@ class CustomerDetailScreen extends ConsumerWidget {
             subtitle: customer.phone,
             leadingIcon: Icons.person_outline,
             status: customer.isTrusted ? AssetStatus.available : AssetStatus.archived,
+          ),
+          const SizedBox(height: 10),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    l10n.balancesAsOfTodayHeading,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  _balanceLabeledRow(
+                    context,
+                    label: l10n.balanceAdvanceLabel,
+                    amount: formatMoney(balance.advancePaise),
+                  ),
+                  const SizedBox(height: 6),
+                  _balanceLabeledRow(
+                    context,
+                    label: l10n.balancePendingLabel,
+                    amount: formatMoney(balance.pendingPaise),
+                  ),
+                  if (balance.openItemsCount > 0) ...<Widget>[
+                    const SizedBox(height: 2),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 2),
+                      child: Text(
+                        l10n.balanceOpenItemsCount(balance.openItemsCount),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Colors.grey.shade700,
+                        ),
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 6),
+                  _balanceLabeledRow(
+                    context,
+                    label: l10n.balanceDueLabel,
+                    amount: formatMoney(balance.duePaise),
+                    emphasize: balance.duePaise > 0,
+                  ),
+                ],
+              ),
+            ),
           ),
           const SizedBox(height: 10),
           Card(
@@ -3313,6 +3394,30 @@ String _rentalLinesLabel(Rental rental) {
     return rental.id;
   }
   return source.map((RentalLine line) => line.displayLabel).join(', ');
+}
+
+Widget _balanceLabeledRow(
+  BuildContext context, {
+  required String label,
+  required String amount,
+  bool emphasize = false,
+}) {
+  final TextStyle? amountStyle = emphasize
+      ? Theme.of(context).textTheme.titleMedium?.copyWith(
+          color: AppTheme.overdue,
+          fontWeight: FontWeight.w700,
+        )
+      : Theme.of(context).textTheme.titleMedium?.copyWith(
+          fontWeight: FontWeight.w600,
+        );
+  return Row(
+    children: <Widget>[
+      Expanded(
+        child: Text(label, style: Theme.of(context).textTheme.bodyMedium),
+      ),
+      Text(amount, style: amountStyle),
+    ],
+  );
 }
 
 String _date(DateTime value) {

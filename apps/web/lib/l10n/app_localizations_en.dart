@@ -1048,4 +1048,32 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get accruedAmountHint => 'Accrued so far';
+
+  @override
+  String get balanceAdvanceLabel => 'Advance';
+
+  @override
+  String get balancePendingLabel => 'Pending';
+
+  @override
+  String get balanceDueLabel => 'Due';
+
+  @override
+  String get balancesAsOfTodayHeading => 'Balances as of today';
+
+  @override
+  String balanceOpenItemsCount(int count) {
+    return '$count item(s) out';
+  }
+
+  @override
+  String customerSubtitleWithBalances(
+    String phone,
+    String tier,
+    String advance,
+    String pending,
+    String due,
+  ) {
+    return '$phone • $tier • Advance $advance · Pending $pending · Due $due';
+  }
 }

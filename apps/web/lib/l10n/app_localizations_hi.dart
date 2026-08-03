@@ -1051,4 +1051,32 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get accruedAmountHint => 'अब तक अर्जित';
+
+  @override
+  String get balanceAdvanceLabel => 'अग्रिम';
+
+  @override
+  String get balancePendingLabel => 'लंबित';
+
+  @override
+  String get balanceDueLabel => 'देय';
+
+  @override
+  String get balancesAsOfTodayHeading => 'आज तक के शेष';
+
+  @override
+  String balanceOpenItemsCount(int count) {
+    return '$count वस्तु बाहर';
+  }
+
+  @override
+  String customerSubtitleWithBalances(
+    String phone,
+    String tier,
+    String advance,
+    String pending,
+    String due,
+  ) {
+    return '$phone • $tier • अग्रिम $advance · लंबित $pending · देय $due';
+  }
 }

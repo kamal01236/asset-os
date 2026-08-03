@@ -1885,6 +1885,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Accrued so far'**
   String get accruedAmountHint;
+
+  /// No description provided for @balanceAdvanceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Advance'**
+  String get balanceAdvanceLabel;
+
+  /// No description provided for @balancePendingLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get balancePendingLabel;
+
+  /// No description provided for @balanceDueLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Due'**
+  String get balanceDueLabel;
+
+  /// No description provided for @balancesAsOfTodayHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Balances as of today'**
+  String get balancesAsOfTodayHeading;
+
+  /// No description provided for @balanceOpenItemsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} item(s) out'**
+  String balanceOpenItemsCount(int count);
+
+  /// No description provided for @customerSubtitleWithBalances.
+  ///
+  /// In en, this message translates to:
+  /// **'{phone} • {tier} • Advance {advance} · Pending {pending} · Due {due}'**
+  String customerSubtitleWithBalances(
+    String phone,
+    String tier,
+    String advance,
+    String pending,
+    String due,
+  );
 }
 
 class _AppLocalizationsDelegate
