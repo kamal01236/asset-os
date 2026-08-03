@@ -148,13 +148,23 @@
       "phone": {"type": "String"}
     }
   },
-  "customerNameNewLabel": "ग्राहक का नाम (नया)",
-  "customerNameNewHint": "केवल नए ग्राहक के लिए आवश्यक",
-  "selfKnownQuickPick": "SELF Known",
-  "rentalNicknameLabel": "इस ऑर्डर का उपनाम",
-  "rentalNicknameHint": "वस्तुएँ कौन ले जा रहा है?",
-  "rentalNicknameRequired": "SELF Known ऑर्डर के लिए उपनाम दर्ज करें।",
-  "reviewNickname": "उपनाम: {nickname} · {customerName}",
+  "customerNameNewLabel": "नाम",
+  "customerNameNewHint": "ग्राहक का नाम",
+  "noPhoneNumberLabel": "फ़ोन नंबर नहीं है",
+  "noPhoneOptionalNameHint": "इस ऑर्डर के लिए वैकल्पिक प्रदर्शन नाम",
+  "customerTypeaheadEmpty": "कोई मिलता ग्राहक नहीं",
+  "phoneRequiredError": "10 अंकों का फ़ोन दर्ज करें, या फ़ोन नंबर नहीं है चुनें।",
+  "phoneAlreadyUsedError": "यह फ़ोन पहले से किसी अन्य ग्राहक के पास है।",
+  "customerSuggestionSubtitle": "{name} · {phone}",
+  "@customerSuggestionSubtitle": {
+    "placeholders": {
+      "name": {"type": "String"},
+      "phone": {"type": "String"}
+    }
+  },
+  "rentalNicknameLabel": "इस ऑर्डर का प्रदर्शन नाम",
+  "rentalNicknameHint": "इस ऑर्डर पर दिखने वाला वैकल्पिक नाम",
+  "reviewNickname": "नाम: {nickname} · {customerName}",
   "@reviewNickname": {
     "placeholders": {
       "nickname": {"type": "String"},
@@ -611,7 +621,7 @@
     }
   },
   "searchTypeMinChars": "कम से कम 3 अक्षर लिखें",
-  "searchCustomersHint": "नाम, फ़ोन या उपनाम से खोजें",
+  "searchCustomersHint": "नाम या फ़ोन से खोजें",
   "searchNoResults": "कोई मिलान नहीं",
   "dueDateOptionalLabel": "देय तिथि वैकल्पिक",
   "dueDateOptionalSubtitle": "निश्चित वापसी तिथि के बिना जारी करने की अनुमति दें (वापसी तक शुल्क बढ़ता रहेगा)।",

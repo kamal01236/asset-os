@@ -488,7 +488,7 @@ class Rental {
   final DateTime? returnedAt;
   final List<RentalEvent> timeline;
   final String qrCode;
-  /// Per-rental nickname (used for SELF Known issues; not stored on customer).
+  /// Optional per-rental display name (e.g. Unknown path); not a Customer row.
   final String? nickname;
   final BillingMode billingMode;
   final int rateAmount;

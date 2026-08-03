@@ -308,27 +308,42 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get customerNameNewLabel => 'Customer name (new)';
+  String get customerNameNewLabel => 'Name';
 
   @override
-  String get customerNameNewHint => 'Only needed if new customer';
+  String get customerNameNewHint => 'Customer name';
 
   @override
-  String get selfKnownQuickPick => 'SELF Known';
+  String get noPhoneNumberLabel => 'No phone number';
 
   @override
-  String get rentalNicknameLabel => 'Nickname for this order';
+  String get noPhoneOptionalNameHint => 'Optional display name for this order';
 
   @override
-  String get rentalNicknameHint => 'Who is taking the items?';
+  String get customerTypeaheadEmpty => 'No matching customers';
 
   @override
-  String get rentalNicknameRequired =>
-      'Enter a nickname for SELF Known orders.';
+  String get phoneRequiredError =>
+      'Enter a 10-digit phone number, or choose No phone number.';
+
+  @override
+  String get phoneAlreadyUsedError =>
+      'This phone is already used by another customer.';
+
+  @override
+  String customerSuggestionSubtitle(String name, String phone) {
+    return '$name · $phone';
+  }
+
+  @override
+  String get rentalNicknameLabel => 'Display name for this order';
+
+  @override
+  String get rentalNicknameHint => 'Optional name shown on this order';
 
   @override
   String reviewNickname(String nickname, String customerName) {
-    return 'Nickname: $nickname · $customerName';
+    return 'Name: $nickname · $customerName';
   }
 
   @override
@@ -1025,7 +1040,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchTypeMinChars => 'Type at least 3 characters';
 
   @override
-  String get searchCustomersHint => 'Search by name, phone, or nickname';
+  String get searchCustomersHint => 'Search by name or phone';
 
   @override
   String get searchNoResults => 'No matches';

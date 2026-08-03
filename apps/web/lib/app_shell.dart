@@ -7,7 +7,7 @@ import 'core/l10n/l10n_ext.dart';
 import 'core/models/customer_activity.dart';
 import 'core/models/customer_balance.dart';
 import 'core/models/entities.dart';
-import 'core/models/self_customer.dart';
+import 'core/models/unknown_customer.dart';
 import 'core/pricing/rental_pricing.dart';
 import 'core/providers/app_providers.dart';
 import 'core/repositories/local_repository.dart';
@@ -2043,7 +2043,7 @@ class _ReplaceLineFlowScreenState extends ConsumerState<ReplaceLineFlowScreen> {
                       int.tryParse(_durationController.text.trim()) ?? 1;
                   setState(() => _submitting = true);
                   try {
-                    final String? nick = isSelfCustomer(customer)
+                    final String? nick = isUnknownCustomer(customer)
                         ? rental.nickname
                         : null;
                     final RentalReplaceResult? result = await ref

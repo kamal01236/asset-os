@@ -309,27 +309,42 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String get customerNameNewLabel => 'ग्राहक का नाम (नया)';
+  String get customerNameNewLabel => 'नाम';
 
   @override
-  String get customerNameNewHint => 'केवल नए ग्राहक के लिए आवश्यक';
+  String get customerNameNewHint => 'ग्राहक का नाम';
 
   @override
-  String get selfKnownQuickPick => 'SELF Known';
+  String get noPhoneNumberLabel => 'फ़ोन नंबर नहीं है';
 
   @override
-  String get rentalNicknameLabel => 'इस ऑर्डर का उपनाम';
+  String get noPhoneOptionalNameHint => 'इस ऑर्डर के लिए वैकल्पिक प्रदर्शन नाम';
 
   @override
-  String get rentalNicknameHint => 'वस्तुएँ कौन ले जा रहा है?';
+  String get customerTypeaheadEmpty => 'कोई मिलता ग्राहक नहीं';
 
   @override
-  String get rentalNicknameRequired =>
-      'SELF Known ऑर्डर के लिए उपनाम दर्ज करें।';
+  String get phoneRequiredError =>
+      '10 अंकों का फ़ोन दर्ज करें, या फ़ोन नंबर नहीं है चुनें।';
+
+  @override
+  String get phoneAlreadyUsedError =>
+      'यह फ़ोन पहले से किसी अन्य ग्राहक के पास है।';
+
+  @override
+  String customerSuggestionSubtitle(String name, String phone) {
+    return '$name · $phone';
+  }
+
+  @override
+  String get rentalNicknameLabel => 'इस ऑर्डर का प्रदर्शन नाम';
+
+  @override
+  String get rentalNicknameHint => 'इस ऑर्डर पर दिखने वाला वैकल्पिक नाम';
 
   @override
   String reviewNickname(String nickname, String customerName) {
-    return 'उपनाम: $nickname · $customerName';
+    return 'नाम: $nickname · $customerName';
   }
 
   @override
@@ -1027,7 +1042,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get searchTypeMinChars => 'कम से कम 3 अक्षर लिखें';
 
   @override
-  String get searchCustomersHint => 'नाम, फ़ोन या उपनाम से खोजें';
+  String get searchCustomersHint => 'नाम या फ़ोन से खोजें';
 
   @override
   String get searchNoResults => 'कोई मिलान नहीं';

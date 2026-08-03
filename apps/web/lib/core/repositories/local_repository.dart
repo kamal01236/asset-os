@@ -3,7 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../db/app_database.dart';
 import '../models/entities.dart';
-import '../models/self_customer.dart';
+import '../models/unknown_customer.dart';
 import '../pricing/rental_pricing.dart';
 import '../search/search_scope.dart';
 import '../templates/industry_templates.dart';
@@ -73,7 +73,7 @@ class LocalRepository {
       if (!alreadyMigrated) {
         await _markMigrationComplete();
       }
-      await ensureSelfCustomer();
+      await ensureUnknownCustomer();
       return;
     }
 
@@ -83,34 +83,81 @@ class LocalRepository {
       await _insertSnapshot(snapshot);
       await _markMigrationComplete();
       await _preferences.remove(snapshotKey);
-      await ensureSelfCustomer();
+      await ensureUnknownCustomer();
       return;
     }
 
     await _insertSnapshot(buildDemoSnapshot());
     await _markMigrationComplete();
-    await ensureSelfCustomer();
+    await ensureUnknownCustomer();
   }
 
-  /// Inserts the fixed SELF Known sentinel if missing; never renames it.
-  Future<Customer> ensureSelfCustomer() async {
+  /// Inserts the fixed Unknown sentinel if missing; migrates legacy CUS-SELF.
+  Future<Customer> ensureUnknownCustomer() async {
+    await _migrateLegacySelfCustomer();
+
     final CustomerRow? byId = await (_db.select(_db.customers)
-          ..where((t) => t.id.equals(kSelfCustomerId)))
+          ..where((t) => t.id.equals(kUnknownCustomerId)))
         .getSingleOrNull();
     if (byId != null) {
       return _mapCustomer(byId);
     }
 
     final CustomerRow? byPhone = await (_db.select(_db.customers)
-          ..where((t) => t.phone.equals(kSelfCustomerPhone)))
+          ..where((t) => t.phone.equals(kUnknownCustomerPhone)))
         .getSingleOrNull();
     if (byPhone != null) {
       return _mapCustomer(byPhone);
     }
 
-    final Customer self = buildSelfCustomer();
-    await _db.into(_db.customers).insert(_customerCompanion(self));
-    return self;
+    final Customer unknown = buildUnknownCustomer();
+    await _db.into(_db.customers).insert(_customerCompanion(unknown));
+    return unknown;
+  }
+
+  /// Remaps rentals/ledger from legacy SELF Known onto [kUnknownCustomerId].
+  Future<void> _migrateLegacySelfCustomer() async {
+    final CustomerRow? legacy = await (_db.select(_db.customers)
+          ..where((t) => t.id.equals(kLegacySelfCustomerId)))
+        .getSingleOrNull();
+    if (legacy == null) {
+      return;
+    }
+
+    await _db.transaction(() async {
+      CustomerRow? unknown = await (_db.select(_db.customers)
+            ..where((t) => t.id.equals(kUnknownCustomerId)))
+          .getSingleOrNull();
+      if (unknown == null) {
+        final Customer seed = buildUnknownCustomer();
+        await _db.into(_db.customers).insert(
+              _customerCompanion(seed).copyWith(
+                depositBalance: Value<int>(legacy.depositBalance),
+              ),
+            );
+      } else {
+        final int merged = unknown.depositBalance + legacy.depositBalance;
+        await (_db.update(_db.customers)
+              ..where((t) => t.id.equals(kUnknownCustomerId)))
+            .write(CustomersCompanion(depositBalance: Value<int>(merged)));
+      }
+
+      await (_db.update(_db.rentals)
+            ..where((t) => t.customerId.equals(kLegacySelfCustomerId)))
+          .write(
+            const RentalsCompanion(customerId: Value<String>(kUnknownCustomerId)),
+          );
+      await (_db.update(_db.depositLedger)
+            ..where((t) => t.customerId.equals(kLegacySelfCustomerId)))
+          .write(
+            const DepositLedgerCompanion(
+              customerId: Value<String>(kUnknownCustomerId),
+            ),
+          );
+      await (_db.delete(_db.customers)
+            ..where((t) => t.id.equals(kLegacySelfCustomerId)))
+          .go();
+    });
   }
 
   Stream<List<Customer>> watchCustomers() {
@@ -177,11 +224,6 @@ class LocalRepository {
     final String? trimmedNick = nickname?.trim();
     final String? storedNick =
         (trimmedNick != null && trimmedNick.isNotEmpty) ? trimmedNick : null;
-    if (isSelfCustomer(customer) && storedNick == null) {
-      throw ArgumentError(
-        'Nickname is required when issuing to $kSelfCustomerName',
-      );
-    }
     if (storedNick != null && !meetsMinMeaningfulText(storedNick)) {
       throw ArgumentError(
         'Nickname must be at least $kMinMeaningfulTextLength characters',
@@ -682,7 +724,7 @@ class LocalRepository {
     final String newRentalId = await createRental(
       customer: customer,
       lines: <RentalLineInput>[newLine],
-      nickname: isSelfCustomer(customer) ? nick : nickname,
+      nickname: isUnknownCustomer(customer) ? nick : nickname,
       durationUnits: durationUnits,
       customEnd: customEnd,
       billingModeOverride: billingModeOverride,
@@ -1007,34 +1049,55 @@ class LocalRepository {
     required String phone,
     String? fallbackName,
   }) async {
-    if (isSelfCustomerPhone(phone)) {
-      return ensureSelfCustomer();
+    final String normalized = phone.trim();
+    if (normalized.isEmpty) {
+      throw ArgumentError('Phone is required');
     }
-    final Customer? existing = await customerByPhone(phone);
+    if (isUnknownCustomerPhone(normalized)) {
+      throw ArgumentError('Reserved phone cannot create a customer');
+    }
+    final Customer? existing = await customerByPhone(normalized);
     if (existing != null) {
       return existing;
     }
     final String? trimmedName = fallbackName?.trim();
-    if (trimmedName != null &&
-        trimmedName.isNotEmpty &&
+    if (trimmedName == null ||
+        trimmedName.isEmpty ||
         !meetsMinMeaningfulText(trimmedName)) {
       throw ArgumentError(
         'Customer name must be at least $kMinMeaningfulTextLength characters',
       );
     }
     final DateTime now = DateTime.now();
-    final int count = (await _db.select(_db.customers).get()).length;
     final Customer customer = Customer(
       id: 'CUS-${now.millisecondsSinceEpoch}',
-      name: trimmedName != null && trimmedName.isNotEmpty
-          ? trimmedName
-          : 'Customer ${count + 1}',
-      phone: phone.trim(),
+      name: trimmedName,
+      phone: normalized,
       isTrusted: false,
       qrCode: 'customer:${now.millisecondsSinceEpoch}',
     );
     await _db.into(_db.customers).insert(_customerCompanion(customer));
     return customer;
+  }
+
+  /// Typeahead matches by name substring and/or phone digits (min length).
+  /// Excludes the Unknown sentinel so it is only chosen via the no-phone path.
+  Future<List<Customer>> searchCustomersByNameOrPhone(String query) async {
+    final String q = query.trim().toLowerCase();
+    if (q.length < kMinMeaningfulTextLength) {
+      return const <Customer>[];
+    }
+    final List<CustomerRow> rows = await _db.select(_db.customers).get();
+    return rows
+        .map(_mapCustomer)
+        .where((Customer customer) {
+          if (isUnknownCustomer(customer)) {
+            return false;
+          }
+          return customer.name.toLowerCase().contains(q) ||
+              customer.phone.toLowerCase().contains(q);
+        })
+        .toList();
   }
 
   Future<Customer?> customerByPhone(String phone) async {
@@ -1391,7 +1454,7 @@ class LocalRepository {
 AppDataSnapshot buildDemoSnapshot({DateTime? now}) {
   final DateTime clock = now ?? DateTime.now();
   final List<Customer> seedCustomers = <Customer>[
-    buildSelfCustomer(),
+    buildUnknownCustomer(),
     const Customer(
       id: 'CUS-1001',
       name: 'Priya Patel',

@@ -148,13 +148,23 @@
       "phone": {"type": "String"}
     }
   },
-  "customerNameNewLabel": "Customer name (new)",
-  "customerNameNewHint": "Only needed if new customer",
-  "selfKnownQuickPick": "SELF Known",
-  "rentalNicknameLabel": "Nickname for this order",
-  "rentalNicknameHint": "Who is taking the items?",
-  "rentalNicknameRequired": "Enter a nickname for SELF Known orders.",
-  "reviewNickname": "Nickname: {nickname} · {customerName}",
+  "customerNameNewLabel": "Name",
+  "customerNameNewHint": "Customer name",
+  "noPhoneNumberLabel": "No phone number",
+  "noPhoneOptionalNameHint": "Optional display name for this order",
+  "customerTypeaheadEmpty": "No matching customers",
+  "phoneRequiredError": "Enter a 10-digit phone number, or choose No phone number.",
+  "phoneAlreadyUsedError": "This phone is already used by another customer.",
+  "customerSuggestionSubtitle": "{name} · {phone}",
+  "@customerSuggestionSubtitle": {
+    "placeholders": {
+      "name": {"type": "String"},
+      "phone": {"type": "String"}
+    }
+  },
+  "rentalNicknameLabel": "Display name for this order",
+  "rentalNicknameHint": "Optional name shown on this order",
+  "reviewNickname": "Name: {nickname} · {customerName}",
   "@reviewNickname": {
     "placeholders": {
       "nickname": {"type": "String"},
@@ -611,7 +621,7 @@
     }
   },
   "searchTypeMinChars": "Type at least 3 characters",
-  "searchCustomersHint": "Search by name, phone, or nickname",
+  "searchCustomersHint": "Search by name or phone",
   "searchNoResults": "No matches",
   "dueDateOptionalLabel": "Due date optional",
   "dueDateOptionalSubtitle": "Allow issuing without a fixed return date (charge accrues until return).",

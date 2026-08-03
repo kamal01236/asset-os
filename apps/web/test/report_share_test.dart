@@ -4,7 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'package:asset_os/core/config/app_branding.dart';
 import 'package:asset_os/core/models/entities.dart';
-import 'package:asset_os/core/models/self_customer.dart';
+import 'package:asset_os/core/models/unknown_customer.dart';
 import 'package:asset_os/core/reports/report_builder.dart';
 import 'package:asset_os/core/reports/report_models.dart';
 import 'package:asset_os/core/sharing/whatsapp_share.dart';
@@ -194,16 +194,16 @@ void main() {
     });
 
     test('customer-wise prefixes nickname on rental lines', () {
-      final List<Customer> selfCustomers = <Customer>[
-        buildSelfCustomer(),
+      final List<Customer> unknownCustomers = <Customer>[
+        buildUnknownCustomer(),
       ];
-      final List<Rental> selfRentals = <Rental>[
+      final List<Rental> unknownRentals = <Rental>[
         Rental(
-          id: 'REN-SELF-1',
-          customerId: kSelfCustomerId,
+          id: 'REN-UNK-1',
+          customerId: kUnknownCustomerId,
           lines: const <RentalLine>[
             RentalLine(
-              id: 'RLI-REN-SELF-1-INV-1',
+              id: 'RLI-REN-UNK-1-INV-1',
               itemId: 'INV-1',
               catalogName: 'DSLR',
               instanceName: 'Body A',
@@ -213,7 +213,7 @@ void main() {
           startedAt: now.subtract(const Duration(days: 1)),
           dueAt: now.add(const Duration(days: 2)),
           timeline: const <RentalEvent>[],
-          qrCode: 'rental:self1',
+          qrCode: 'rental:unk1',
           nickname: 'Raju',
         ),
       ];
@@ -224,13 +224,13 @@ void main() {
       final String text = builder.build(
         type: ReportType.customerWise,
         range: range,
-        customers: selfCustomers,
+        customers: unknownCustomers,
         inventory: inventory,
-        rentals: selfRentals,
+        rentals: unknownRentals,
         now: now,
       );
-      expect(text, contains('$kSelfCustomerName ($kSelfCustomerPhone)'));
-      expect(text, contains('Raju — REN-SELF-1'));
+      expect(text, contains('$kUnknownCustomerName ($kUnknownCustomerPhone)'));
+      expect(text, contains('Raju — REN-UNK-1'));
     });
 
     test('inventory-wise lists rent counts and availability', () {

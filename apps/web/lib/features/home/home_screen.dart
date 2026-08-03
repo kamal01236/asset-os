@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/l10n_ext.dart';
 import '../../core/models/entities.dart';
-import '../../core/models/self_customer.dart';
+import '../../core/models/unknown_customer.dart';
 import '../../core/pricing/rental_pricing.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/widgets/global_search_typeahead.dart';

@@ -51,7 +51,7 @@ class Rentals extends Table {
   DateTimeColumn get dueAt => dateTime().nullable()();
   DateTimeColumn get returnedAt => dateTime().nullable()();
   TextColumn get qrCode => text()();
-  /// Per-rental display name (required when issuing to SELF Known).
+  /// Optional per-rental display name (e.g. Unknown path nickname).
   TextColumn get nickname => text().nullable()();
   /// Snapshot of billing at issue (`daily`/`weekly`/`monthly`/`fixed`/`custom`).
   TextColumn get billingMode => text().withDefault(const Constant('weekly'))();

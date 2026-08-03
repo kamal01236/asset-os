@@ -647,43 +647,67 @@ abstract class AppLocalizations {
   /// No description provided for @customerNameNewLabel.
   ///
   /// In en, this message translates to:
-  /// **'Customer name (new)'**
+  /// **'Name'**
   String get customerNameNewLabel;
 
   /// No description provided for @customerNameNewHint.
   ///
   /// In en, this message translates to:
-  /// **'Only needed if new customer'**
+  /// **'Customer name'**
   String get customerNameNewHint;
 
-  /// No description provided for @selfKnownQuickPick.
+  /// No description provided for @noPhoneNumberLabel.
   ///
   /// In en, this message translates to:
-  /// **'SELF Known'**
-  String get selfKnownQuickPick;
+  /// **'No phone number'**
+  String get noPhoneNumberLabel;
+
+  /// No description provided for @noPhoneOptionalNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional display name for this order'**
+  String get noPhoneOptionalNameHint;
+
+  /// No description provided for @customerTypeaheadEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching customers'**
+  String get customerTypeaheadEmpty;
+
+  /// No description provided for @phoneRequiredError.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a 10-digit phone number, or choose No phone number.'**
+  String get phoneRequiredError;
+
+  /// No description provided for @phoneAlreadyUsedError.
+  ///
+  /// In en, this message translates to:
+  /// **'This phone is already used by another customer.'**
+  String get phoneAlreadyUsedError;
+
+  /// No description provided for @customerSuggestionSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} · {phone}'**
+  String customerSuggestionSubtitle(String name, String phone);
 
   /// No description provided for @rentalNicknameLabel.
   ///
   /// In en, this message translates to:
-  /// **'Nickname for this order'**
+  /// **'Display name for this order'**
   String get rentalNicknameLabel;
 
   /// No description provided for @rentalNicknameHint.
   ///
   /// In en, this message translates to:
-  /// **'Who is taking the items?'**
+  /// **'Optional name shown on this order'**
   String get rentalNicknameHint;
-
-  /// No description provided for @rentalNicknameRequired.
-  ///
-  /// In en, this message translates to:
-  /// **'Enter a nickname for SELF Known orders.'**
-  String get rentalNicknameRequired;
 
   /// No description provided for @reviewNickname.
   ///
   /// In en, this message translates to:
-  /// **'Nickname: {nickname} · {customerName}'**
+  /// **'Name: {nickname} · {customerName}'**
   String reviewNickname(String nickname, String customerName);
 
   /// No description provided for @rentalNicknameSubtitle.
@@ -1847,7 +1871,7 @@ abstract class AppLocalizations {
   /// No description provided for @searchCustomersHint.
   ///
   /// In en, this message translates to:
-  /// **'Search by name, phone, or nickname'**
+  /// **'Search by name or phone'**
   String get searchCustomersHint;
 
   /// No description provided for @searchNoResults.

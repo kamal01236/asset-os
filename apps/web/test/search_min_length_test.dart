@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:asset_os/core/db/app_database.dart';
 import 'package:asset_os/core/models/entities.dart';
-import 'package:asset_os/core/models/self_customer.dart';
+import 'package:asset_os/core/models/unknown_customer.dart';
 import 'package:asset_os/core/repositories/local_repository.dart';
 import 'package:asset_os/core/search/search_scope.dart';
 import 'package:asset_os/core/validation/text_rules.dart';
@@ -63,14 +63,14 @@ void main() {
       expect(inventoryOnly.inventory, isEmpty);
     });
 
-    test('customers scope surfaces nickname matches', () async {
+    test('customers scope surfaces nickname matches on Unknown', () async {
       final LocalRepository repository = await _bootRepo();
-      final Customer self = await repository.ensureSelfCustomer();
+      final Customer unknown = await repository.ensureUnknownCustomer();
       final InventoryItem item = (await repository.listInventory())
           .firstWhere((InventoryItem i) => i.availableUnits > 0);
 
       await repository.createRental(
-        customer: self,
+        customer: unknown,
         lines: <RentalLineInput>[
           RentalLineInput(
             itemId: item.id,
@@ -85,7 +85,7 @@ void main() {
         'raj',
         scope: SearchScope.customers,
       );
-      expect(found.customers.any((c) => c.id == kSelfCustomerId), isTrue);
+      expect(found.customers.any((c) => c.id == kUnknownCustomerId), isTrue);
       expect(found.inventory, isEmpty);
     });
 

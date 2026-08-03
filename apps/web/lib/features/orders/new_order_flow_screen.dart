@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/l10n_ext.dart';
 import '../../core/models/entities.dart';
-import '../../core/models/self_customer.dart';
+import '../../core/models/unknown_customer.dart';
 import '../../core/pricing/rental_pricing.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/repositories/local_repository.dart';
@@ -53,27 +53,24 @@ class _OrderLineDraft {
 class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _nicknameController = TextEditingController();
   final TextEditingController _depositTopUpController = TextEditingController();
   final List<_OrderLineDraft> _lines = <_OrderLineDraft>[];
 
   Customer? _resolvedCustomer;
+  List<Customer> _suggestions = const <Customer>[];
+  bool _noPhone = false;
   bool _submitting = false;
   bool _prefillApplied = false;
   late _OrderPhase _phase;
 
-  bool get _isSelfSelected =>
-      (widget.initialCustomerId != null &&
-          isSelfCustomerId(widget.initialCustomerId!)) ||
-      (_resolvedCustomer != null && isSelfCustomer(_resolvedCustomer!));
-
-  bool get _skipCustomerStep =>
-      widget.initialCustomerId != null &&
-      !isSelfCustomerId(widget.initialCustomerId!);
-
-  bool get _nicknameOnlyParty =>
-      widget.initialCustomerId != null &&
-      isSelfCustomerId(widget.initialCustomerId!);
+  bool get _skipCustomerStep {
+    final String? id = widget.initialCustomerId;
+    if (id == null) {
+      return false;
+    }
+    // Prefill skips only for normal customers (not Unknown / legacy SELF).
+    return !isUnknownCustomerId(id) && id != kLegacySelfCustomerId;
+  }
 
   @override
   void initState() {
@@ -98,7 +95,6 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
   void dispose() {
     _phoneController.dispose();
     _nameController.dispose();
-    _nicknameController.dispose();
     _depositTopUpController.dispose();
     for (final _OrderLineDraft line in _lines) {
       line.dispose();
@@ -122,46 +118,129 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
     );
     if (matches.isNotEmpty) {
       customer = matches.first;
-    } else if (isSelfCustomerId(widget.initialCustomerId!)) {
-      customer = await repository.ensureSelfCustomer();
+    } else if (isUnknownCustomerId(widget.initialCustomerId!) ||
+        widget.initialCustomerId == kLegacySelfCustomerId) {
+      customer = await repository.ensureUnknownCustomer();
     }
     if (!mounted || customer == null) {
       return;
     }
     setState(() {
       _resolvedCustomer = customer;
-      _phoneController.text = customer!.phone;
-      if (!isSelfCustomer(customer)) {
+      if (isUnknownCustomer(customer!)) {
+        _noPhone = true;
+        _phoneController.clear();
+        _nameController.clear();
+      } else {
+        _noPhone = false;
+        _phoneController.text = customer.phone;
         _nameController.text = customer.name;
       }
     });
   }
 
-  Future<void> _pickSelfCustomer() async {
-    final Customer self =
-        await ref.read(repositoryProvider).ensureSelfCustomer();
-    if (!mounted) {
+  int _lookupGen = 0;
+
+  Future<void> _onCustomerFieldsChanged() async {
+    final int gen = ++_lookupGen;
+    _clearResolvedIfEdited();
+    setState(() {});
+    if (!_noPhone) {
+      final String phone = _phoneController.text.trim();
+      if (phone.length >= 10) {
+        final Customer? matched =
+            await ref.read(repositoryProvider).customerByPhone(phone);
+        if (!mounted || gen != _lookupGen) {
+          return;
+        }
+        if (matched != null && !isUnknownCustomer(matched)) {
+          _resolvedCustomer = matched;
+          if (_nameController.text.trim().isEmpty) {
+            _nameController.text = matched.name;
+          }
+        }
+      }
+    }
+    if (!mounted || gen != _lookupGen) {
       return;
     }
+    await _refreshSuggestions(gen: gen);
+    if (mounted && gen == _lookupGen) {
+      setState(() {});
+    }
+  }
+
+  Future<void> _refreshSuggestions({int? gen}) async {
+    final int expected = gen ?? _lookupGen;
+    if (_noPhone) {
+      if (_suggestions.isNotEmpty && mounted && expected == _lookupGen) {
+        setState(() => _suggestions = const <Customer>[]);
+      }
+      return;
+    }
+    final LocalRepository repository = ref.read(repositoryProvider);
+    final String nameQ = _nameController.text.trim();
+    final String phoneQ = _phoneController.text.trim();
+    final Map<String, Customer> merged = <String, Customer>{};
+    if (nameQ.length >= kMinMeaningfulTextLength) {
+      for (final Customer c
+          in await repository.searchCustomersByNameOrPhone(nameQ)) {
+        merged[c.id] = c;
+      }
+    }
+    if (!mounted || expected != _lookupGen) {
+      return;
+    }
+    if (phoneQ.length >= kMinMeaningfulTextLength) {
+      for (final Customer c
+          in await repository.searchCustomersByNameOrPhone(phoneQ)) {
+        merged[c.id] = c;
+      }
+    }
+    if (!mounted || expected != _lookupGen) {
+      return;
+    }
+    _suggestions = merged.values.toList();
+  }
+
+  void _clearResolvedIfEdited() {
+    final Customer? resolved = _resolvedCustomer;
+    if (resolved == null || isUnknownCustomer(resolved)) {
+      return;
+    }
+    if (_nameController.text.trim() != resolved.name ||
+        _phoneController.text.trim() != resolved.phone) {
+      _resolvedCustomer = null;
+    }
+  }
+
+  void _selectSuggestion(Customer customer) {
     setState(() {
-      _resolvedCustomer = self;
-      _phoneController.text = kSelfCustomerPhone;
-      _nameController.clear();
+      _resolvedCustomer = customer;
+      _nameController.text = customer.name;
+      _phoneController.text = customer.phone;
+      _noPhone = false;
+      _suggestions = const <Customer>[];
     });
   }
 
-  Future<void> _onPhoneChanged(String value) async {
-    final Customer? matched =
-        await ref.read(repositoryProvider).customerByPhone(value);
-    if (!mounted) {
-      return;
-    }
-    setState(() => _resolvedCustomer = matched);
+  void _setNoPhone(bool value) {
+    setState(() {
+      _noPhone = value;
+      _suggestions = const <Customer>[];
+      if (value) {
+        _resolvedCustomer = null;
+        _phoneController.clear();
+      } else {
+        _resolvedCustomer = null;
+      }
+    });
   }
 
   bool get _customerReady {
-    if (_isSelfSelected) {
-      return meetsMinMeaningfulText(_nicknameController.text);
+    if (_noPhone) {
+      final String name = _nameController.text.trim();
+      return name.isEmpty || meetsMinMeaningfulText(name);
     }
     return _phoneController.text.trim().length >= 10 &&
         (_resolvedCustomer != null ||
@@ -447,8 +526,20 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
   }
 
   Future<void> _continueFromCustomer() async {
-    if (_isSelfSelected &&
-        !meetsMinMeaningfulText(_nicknameController.text)) {
+    if (_noPhone) {
+      final String name = _nameController.text.trim();
+      if (name.isNotEmpty && !meetsMinMeaningfulText(name)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              context.l10n.minMeaningfulTextError(kMinMeaningfulTextLength),
+            ),
+          ),
+        );
+        return;
+      }
+    } else if (_resolvedCustomer == null &&
+        !meetsMinMeaningfulText(_nameController.text)) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -457,16 +548,9 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
         ),
       );
       return;
-    }
-    if (!_isSelfSelected &&
-        _resolvedCustomer == null &&
-        !meetsMinMeaningfulText(_nameController.text)) {
+    } else if (_phoneController.text.trim().length < 10) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            context.l10n.minMeaningfulTextError(kMinMeaningfulTextLength),
-          ),
-        ),
+        SnackBar(content: Text(context.l10n.phoneRequiredError)),
       );
       return;
     }
@@ -483,18 +567,27 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
     final LocalRepository repository = ref.read(repositoryProvider);
     final Customer customer;
     final String? nickname;
-    if (_isSelfSelected) {
-      customer = await repository.ensureSelfCustomer();
-      nickname = _nicknameController.text.trim();
-    } else {
-      customer = _resolvedCustomer ??
-          await repository.upsertCustomerByPhone(
-            phone: _phoneController.text.trim(),
-            fallbackName: _nameController.text.trim(),
-          );
-      nickname = null;
-    }
     try {
+      if (_noPhone) {
+        customer = await repository.ensureUnknownCustomer();
+        final String nick = _nameController.text.trim();
+        nickname = nick.isEmpty ? null : nick;
+      } else {
+        Customer? resolved = _resolvedCustomer;
+        if (resolved == null &&
+            widget.initialCustomerId != null &&
+            !isUnknownCustomerId(widget.initialCustomerId!) &&
+            widget.initialCustomerId != kLegacySelfCustomerId) {
+          resolved =
+              await repository.customerById(widget.initialCustomerId!);
+        }
+        customer = resolved ??
+            await repository.upsertCustomerByPhone(
+              phone: _phoneController.text.trim(),
+              fallbackName: _nameController.text.trim(),
+            );
+        nickname = null;
+      }
       await repository.createRental(
         customer: customer,
         lines: _buildLineInputs(available),
@@ -509,10 +602,12 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
           message = l10n.duplicateShortCode(error.shortCode);
         } else if (error is ArgumentError) {
           final String raw = error.message?.toString() ?? '';
-          if (raw.toLowerCase().contains('nickname')) {
-            message = l10n.rentalNicknameRequired;
-          } else if (raw.toLowerCase().contains('instance') ||
-              raw.toLowerCase().contains('short code')) {
+          final String lower = raw.toLowerCase();
+          if (lower.contains('reserved phone') ||
+              lower.contains('phone is required')) {
+            message = l10n.phoneRequiredError;
+          } else if (lower.contains('instance') ||
+              lower.contains('short code')) {
             message = l10n.instanceLabelsRequired;
           } else {
             message = raw.isEmpty ? '$error' : raw;
@@ -601,16 +696,20 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
 
   List<Widget> _buildCustomerStep(AppLocalizations l10n) {
     return <Widget>[
-      if (!_nicknameOnlyParty) ...<Widget>[
-        Align(
-          alignment: Alignment.centerLeft,
-          child: FilterChip(
-            selected: _isSelfSelected,
-            label: Text(l10n.selfKnownQuickPick),
-            onSelected: (_) => _pickSelfCustomer(),
-          ),
+      TextField(
+        controller: _nameController,
+        textCapitalization: TextCapitalization.words,
+        enabled: true,
+        decoration: InputDecoration(
+          labelText: l10n.customerNameNewLabel,
+          hintText: _noPhone
+              ? l10n.noPhoneOptionalNameHint
+              : l10n.customerNameNewHint,
         ),
-        const SizedBox(height: 8),
+        onChanged: (_) => _onCustomerFieldsChanged(),
+      ),
+      const SizedBox(height: 8),
+      if (!_noPhone)
         TextField(
           controller: _phoneController,
           keyboardType: TextInputType.phone,
@@ -618,29 +717,55 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
             labelText: l10n.phoneNumberLabel,
             hintText: l10n.phoneNumberHint,
           ),
-          onChanged: (String value) async {
-            await _onPhoneChanged(value);
-          },
+          onChanged: (_) => _onCustomerFieldsChanged(),
         ),
-        const SizedBox(height: 8),
-      ],
-      if (_isSelfSelected) ...<Widget>[
-        EntityCard(
-          title: kSelfCustomerName,
-          subtitle: l10n.existingCustomerSubtitle(kSelfCustomerPhone),
-          leadingIcon: Icons.verified_user_outlined,
-          status: AssetStatus.available,
-        ),
-        const SizedBox(height: 8),
-        TextField(
-          controller: _nicknameController,
-          decoration: InputDecoration(
-            labelText: l10n.rentalNicknameLabel,
-            hintText: l10n.rentalNicknameHint,
+      if (!_noPhone) const SizedBox(height: 8),
+      CheckboxListTile(
+        contentPadding: EdgeInsets.zero,
+        title: Text(l10n.noPhoneNumberLabel),
+        value: _noPhone,
+        controlAffinity: ListTileControlAffinity.leading,
+        onChanged: (bool? value) => _setNoPhone(value ?? false),
+      ),
+      if (!_noPhone && _suggestions.isNotEmpty) ...<Widget>[
+        const SizedBox(height: 4),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            border: Border.all(color: Theme.of(context).dividerColor),
+            borderRadius: BorderRadius.circular(8),
           ),
-          onChanged: (_) => setState(() {}),
+          child: Column(
+            children: <Widget>[
+              for (final Customer suggestion in _suggestions)
+                ListTile(
+                  dense: true,
+                  leading: const Icon(Icons.person_outline),
+                  title: Text(
+                    l10n.customerSuggestionSubtitle(
+                      suggestion.name,
+                      suggestion.phone,
+                    ),
+                  ),
+                  onTap: () => _selectSuggestion(suggestion),
+                ),
+            ],
+          ),
         ),
-      ] else if (_resolvedCustomer != null)
+      ],
+      if (!_noPhone &&
+          _suggestions.isEmpty &&
+          (_nameController.text.trim().length >= kMinMeaningfulTextLength ||
+              _phoneController.text.trim().length >=
+                  kMinMeaningfulTextLength) &&
+          _resolvedCustomer == null) ...<Widget>[
+        const SizedBox(height: 4),
+        Text(
+          l10n.customerTypeaheadEmpty,
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+      ],
+      if (_resolvedCustomer != null && !_noPhone) ...<Widget>[
+        const SizedBox(height: 8),
         EntityCard(
           title: _resolvedCustomer!.name,
           subtitle: _resolvedCustomer!.depositBalance > 0
@@ -651,16 +776,17 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
               : l10n.existingCustomerSubtitle(_resolvedCustomer!.phone),
           leadingIcon: Icons.verified_user_outlined,
           status: AssetStatus.available,
-        )
-      else if (!_nicknameOnlyParty)
-        TextField(
-          controller: _nameController,
-          decoration: InputDecoration(
-            labelText: l10n.customerNameNewLabel,
-            hintText: l10n.customerNameNewHint,
-          ),
-          onChanged: (_) => setState(() {}),
         ),
+      ],
+      if (_noPhone) ...<Widget>[
+        const SizedBox(height: 8),
+        EntityCard(
+          title: l10n.unknownCustomer,
+          subtitle: l10n.noPhoneNumberLabel,
+          leadingIcon: Icons.help_outline,
+          status: AssetStatus.archived,
+        ),
+      ],
     ];
   }
 
@@ -668,10 +794,18 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
     AppLocalizations l10n,
     List<InventoryItem> availableItems,
   ) {
-    final String customerLabel = _isSelfSelected
-        ? '${_nicknameController.text.trim()} · $kSelfCustomerName'
-        : (_resolvedCustomer?.name ?? _nameController.text.trim());
-    final int depositBalance = _resolvedCustomer?.depositBalance ?? 0;
+    final String customerLabel;
+    if (_noPhone) {
+      final String nick = _nameController.text.trim();
+      customerLabel = nick.isEmpty
+          ? l10n.unknownCustomer
+          : '$nick · ${l10n.unknownCustomer}';
+    } else {
+      customerLabel =
+          _resolvedCustomer?.name ?? _nameController.text.trim();
+    }
+    final int depositBalance =
+        (_noPhone ? 0 : (_resolvedCustomer?.depositBalance ?? 0));
 
     return <Widget>[
       InputChip(

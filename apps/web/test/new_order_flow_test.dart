@@ -9,7 +9,6 @@ import 'package:asset_os/app_shell.dart';
 import 'package:asset_os/core/db/app_database.dart';
 import 'package:asset_os/core/l10n/l10n_ext.dart';
 import 'package:asset_os/core/models/entities.dart';
-import 'package:asset_os/core/models/self_customer.dart';
 import 'package:asset_os/core/providers/app_providers.dart';
 import 'package:asset_os/core/repositories/local_repository.dart';
 import 'package:asset_os/core/theme/app_theme.dart';
@@ -121,7 +120,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 1));
   });
 
-  testWidgets('phone customer then form shows Add line', (
+  testWidgets('name and phone customer then form shows Add line', (
     WidgetTester tester,
   ) async {
     final ProviderContainer container = await _bootTestContainer();
@@ -133,11 +132,23 @@ void main() {
 
     expect(find.widgetWithText(AppBar, 'New Order'), findsOneWidget);
     expect(find.text('Step 1 of 2'), findsOneWidget);
+    expect(find.text('Name'), findsOneWidget);
     expect(find.text('Phone number'), findsOneWidget);
 
-    await tester.enterText(find.byType(TextField).first, '6666666666');
+    final Finder fields = find.byType(TextField);
+    await tester.enterText(fields.at(0), 'Priya Patel');
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 50));
+    await tester.enterText(fields.at(1), '6666666666');
+    await tester.pump();
+    for (int i = 0; i < 15; i++) {
+      await tester.pump(const Duration(milliseconds: 20));
+    }
+
+    final FilledButton continueButton = tester.widget(
+      find.widgetWithText(FilledButton, 'Continue'),
+    );
+    expect(continueButton.onPressed, isNotNull);
+
     await tester.tap(find.widgetWithText(FilledButton, 'Continue'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 50));
@@ -168,31 +179,81 @@ void main() {
     expect(find.widgetWithText(FilledButton, 'Generate Order'), findsOneWidget);
   });
 
-  testWidgets('SELF prefill requires nickname before continue', (
+  testWidgets('typeahead selects existing customer', (WidgetTester tester) async {
+    final ProviderContainer container = await _bootTestContainer();
+    final LocalRepository repo = container.read(repositoryProvider);
+    final List<Customer> matches =
+        await repo.searchCustomersByNameOrPhone('Pri');
+    expect(matches.any((Customer c) => c.name.contains('Priya')), isTrue);
+
+    await _pumpFlow(
+      tester,
+      container: container,
+      home: const NewOrderFlowScreen(),
+    );
+
+    await tester.enterText(find.byType(TextField).first, 'Pri');
+    await tester.pump();
+    for (int i = 0; i < 30; i++) {
+      await tester.pump(const Duration(milliseconds: 20));
+    }
+
+    // Suggestion row uses name · phone; also accept bare name if layout differs.
+    final Finder suggestion = find.textContaining('Priya Patel');
+    expect(suggestion, findsWidgets);
+    await tester.tap(suggestion.last);
+    await tester.pump();
+
+    final FilledButton continueButton = tester.widget(
+      find.widgetWithText(FilledButton, 'Continue'),
+    );
+    expect(continueButton.onPressed, isNotNull);
+  });
+
+  testWidgets('create new customer requires name and phone', (
     WidgetTester tester,
   ) async {
     final ProviderContainer container = await _bootTestContainer();
     await _pumpFlow(
       tester,
       container: container,
-      home: const NewOrderFlowScreen(
-        initialCustomerId: kSelfCustomerId,
-      ),
+      home: const NewOrderFlowScreen(),
     );
 
-    expect(find.text('Step 1 of 2'), findsOneWidget);
+    final Finder fields = find.byType(TextField);
+    await tester.enterText(fields.at(0), 'New Guest');
+    await tester.enterText(fields.at(1), '5555512345');
+    await tester.pump();
+
+    final FilledButton continueButton = tester.widget(
+      find.widgetWithText(FilledButton, 'Continue'),
+    );
+    expect(continueButton.onPressed, isNotNull);
+  });
+
+  testWidgets('no-phone path uses Unknown without requiring name', (
+    WidgetTester tester,
+  ) async {
+    final ProviderContainer container = await _bootTestContainer();
+    await _pumpFlow(
+      tester,
+      container: container,
+      home: const NewOrderFlowScreen(),
+    );
+
+    await tester.tap(find.byType(CheckboxListTile));
+    await tester.pump();
+
+    expect(find.text('Unknown customer'), findsOneWidget);
     expect(find.text('Phone number'), findsNothing);
-    expect(find.text('Nickname for this order'), findsOneWidget);
-    expect(find.text(kSelfCustomerName), findsOneWidget);
 
     FilledButton continueButton = tester.widget(
       find.widgetWithText(FilledButton, 'Continue'),
     );
-    expect(continueButton.onPressed, isNull);
+    expect(continueButton.onPressed, isNotNull);
 
     await tester.enterText(find.byType(TextField).first, 'Raju');
     await tester.pump();
-
     continueButton = tester.widget(
       find.widgetWithText(FilledButton, 'Continue'),
     );
@@ -202,7 +263,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 50));
     expect(find.text('Step 2 of 2'), findsOneWidget);
-    expect(find.text('Line 1'), findsOneWidget);
+    expect(find.textContaining('Raju'), findsWidgets);
   });
 
   testWidgets('Inventory detail Issue CTA opens New Order flow', (

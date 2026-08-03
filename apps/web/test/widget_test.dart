@@ -341,7 +341,7 @@ void main() {
     expect(inventory, hasLength(3));
     expect(rentals, hasLength(2));
     expect(customers.any((c) => c.phone == '6666666666'), isTrue);
-    expect(customers.any((c) => c.id == 'CUS-SELF'), isTrue);
+    expect(customers.any((c) => c.id == 'CUS-UNKNOWN'), isTrue);
   });
 
   test('migrates SharedPreferences snapshot once', () async {
@@ -409,7 +409,7 @@ void main() {
       isTrue,
     );
     expect(
-      (await repo.listCustomers()).any((c) => c.id == 'CUS-SELF'),
+      (await repo.listCustomers()).any((c) => c.id == 'CUS-UNKNOWN'),
       isTrue,
     );
     expect(await repo.listInventory(), hasLength(1));
