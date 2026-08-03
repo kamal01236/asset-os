@@ -1,37 +1,16 @@
 import 'package:drift/drift.dart' show driftRuntimeOptions;
-import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:asset_os/app_shell.dart';
-import 'package:asset_os/core/db/app_database.dart';
 import 'package:asset_os/core/l10n/l10n_ext.dart';
 import 'package:asset_os/core/models/entities.dart';
 import 'package:asset_os/core/providers/app_providers.dart';
 import 'package:asset_os/core/repositories/local_repository.dart';
 import 'package:asset_os/core/theme/app_theme.dart';
 
-Future<ProviderContainer> _bootTestContainer() async {
-  SharedPreferences.setMockInitialValues(const <String, Object>{});
-  final SharedPreferences preferences = await SharedPreferences.getInstance();
-  final AppDatabase db = AppDatabase(NativeDatabase.memory());
-  addTearDown(db.close);
-  final LocalRepository repository = await bootstrapRepository(
-    database: db,
-    preferences: preferences,
-  );
-  final ProviderContainer container = ProviderContainer(
-    overrides: <Override>[
-      sharedPreferencesProvider.overrideWithValue(preferences),
-      databaseProvider.overrideWithValue(db),
-      repositoryProvider.overrideWithValue(repository),
-    ],
-  );
-  addTearDown(container.dispose);
-  return container;
-}
+import 'support/test_harness.dart';
 
 Future<void> _pumpFlow(
   WidgetTester tester, {
@@ -50,10 +29,7 @@ Future<void> _pumpFlow(
       ),
     ),
   );
-  await tester.pump();
-  for (int i = 0; i < 12; i++) {
-    await tester.pump(const Duration(milliseconds: 20));
-  }
+  await pumpFrames(tester);
 }
 
 void main() {
@@ -62,7 +38,7 @@ void main() {
   testWidgets('Generate Order creates rental with two prefilled lines', (
     WidgetTester tester,
   ) async {
-    final ProviderContainer container = await _bootTestContainer();
+    final ProviderContainer container = await bootContainer(seedDemo: true);
     final LocalRepository repo = container.read(repositoryProvider);
 
     await _pumpFlow(
@@ -123,7 +99,7 @@ void main() {
   testWidgets('name and phone customer then form shows Add line', (
     WidgetTester tester,
   ) async {
-    final ProviderContainer container = await _bootTestContainer();
+    final ProviderContainer container = await bootContainer(seedDemo: true);
     await _pumpFlow(
       tester,
       container: container,
@@ -162,7 +138,7 @@ void main() {
   testWidgets('initialCustomerId skips customer and shows form', (
     WidgetTester tester,
   ) async {
-    final ProviderContainer container = await _bootTestContainer();
+    final ProviderContainer container = await bootContainer(seedDemo: true);
     await _pumpFlow(
       tester,
       container: container,
@@ -180,7 +156,7 @@ void main() {
   });
 
   testWidgets('typeahead selects existing customer', (WidgetTester tester) async {
-    final ProviderContainer container = await _bootTestContainer();
+    final ProviderContainer container = await bootContainer(seedDemo: true);
     final LocalRepository repo = container.read(repositoryProvider);
     final List<Customer> matches =
         await repo.searchCustomersByNameOrPhone('Pri');
@@ -213,7 +189,7 @@ void main() {
   testWidgets('create new customer requires name and phone', (
     WidgetTester tester,
   ) async {
-    final ProviderContainer container = await _bootTestContainer();
+    final ProviderContainer container = await bootContainer(seedDemo: true);
     await _pumpFlow(
       tester,
       container: container,
@@ -234,7 +210,7 @@ void main() {
   testWidgets('no-phone path uses Unknown without requiring name', (
     WidgetTester tester,
   ) async {
-    final ProviderContainer container = await _bootTestContainer();
+    final ProviderContainer container = await bootContainer(seedDemo: true);
     await _pumpFlow(
       tester,
       container: container,
@@ -269,7 +245,7 @@ void main() {
   testWidgets('Inventory detail Issue CTA opens New Order flow', (
     WidgetTester tester,
   ) async {
-    final ProviderContainer container = await _bootTestContainer();
+    final ProviderContainer container = await bootContainer(seedDemo: true);
     await _pumpFlow(
       tester,
       container: container,
@@ -288,7 +264,7 @@ void main() {
   testWidgets('Customer detail Issue CTA skips customer step', (
     WidgetTester tester,
   ) async {
-    final ProviderContainer container = await _bootTestContainer();
+    final ProviderContainer container = await bootContainer(seedDemo: true);
     await _pumpFlow(
       tester,
       container: container,

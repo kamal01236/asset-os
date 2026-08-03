@@ -1,4 +1,4 @@
-import 'package:drift/drift.dart' show Value, driftRuntimeOptions;
+import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -7,31 +7,42 @@ import 'package:asset_os/core/db/app_database.dart';
 import 'package:asset_os/core/models/entities.dart';
 import 'package:asset_os/core/repositories/local_repository.dart';
 
-Future<LocalRepository> _bootRepo() async {
-  SharedPreferences.setMockInitialValues(<String, Object>{});
-  final SharedPreferences preferences = await SharedPreferences.getInstance();
-  final AppDatabase db = AppDatabase(NativeDatabase.memory());
-  addTearDown(db.close);
-  final LocalRepository repository = LocalRepository(db, preferences);
-  await repository.initialize();
-  return repository;
+import 'support/test_harness.dart';
+
+Future<InventoryItem> _seedDslr(LocalRepository repository) async {
+  await repository.addInventory(
+    name: 'DSLR',
+    category: 'Camera',
+    units: 3,
+    rateAmount: 150000,
+  );
+  return (await repository.listInventory())
+      .firstWhere((InventoryItem i) => i.name == 'DSLR');
+}
+
+Future<InventoryItem> _seedTripod(LocalRepository repository) async {
+  await repository.addInventory(
+    name: 'Tripod',
+    category: 'Camera',
+    units: 1,
+    rateAmount: 20000,
+  );
+  return (await repository.listInventory())
+      .firstWhere((InventoryItem i) => i.name == 'Tripod');
 }
 
 void main() {
-  driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
-
   group('rental instance labels', () {
     test('createRental stores instance name and short code', () async {
-      final LocalRepository repository = await _bootRepo();
-      final Customer customer = (await repository.customerByPhone('6666666666'))!;
-      final InventoryItem novelType = (await repository.listInventory())
-          .firstWhere((InventoryItem i) => i.id == 'INV-2001');
+      final LocalRepository repository = await bootRepo();
+      final Customer customer = await ensureCustomer(repository);
+      final InventoryItem novelType = await _seedDslr(repository);
 
       await repository.createRental(
         customer: customer,
-        lines: const <RentalLineInput>[
+        lines: <RentalLineInput>[
           RentalLineInput(
-            itemId: 'INV-2001',
+            itemId: novelType.id,
             instanceName: 'Harry Potter',
             shortCode: 'nov-042',
           ),
@@ -50,14 +61,16 @@ void main() {
     });
 
     test('duplicate active short code is rejected', () async {
-      final LocalRepository repository = await _bootRepo();
-      final Customer customer = (await repository.customerByPhone('6666666666'))!;
+      final LocalRepository repository = await bootRepo();
+      final Customer customer = await ensureCustomer(repository);
+      final InventoryItem dslr = await _seedDslr(repository);
+      final InventoryItem tripod = await _seedTripod(repository);
 
       await repository.createRental(
         customer: customer,
-        lines: const <RentalLineInput>[
+        lines: <RentalLineInput>[
           RentalLineInput(
-            itemId: 'INV-2001',
+            itemId: dslr.id,
             instanceName: 'Harry Potter',
             shortCode: 'NOV-042',
           ),
@@ -67,9 +80,9 @@ void main() {
       expect(
         () => repository.createRental(
           customer: customer,
-          lines: const <RentalLineInput>[
+          lines: <RentalLineInput>[
             RentalLineInput(
-              itemId: 'INV-2003',
+              itemId: tripod.id,
               instanceName: 'Another copy',
               shortCode: 'nov-042',
             ),
@@ -80,14 +93,15 @@ void main() {
     });
 
     test('search finds rental by short code and instance name', () async {
-      final LocalRepository repository = await _bootRepo();
-      final Customer customer = (await repository.customerByPhone('6666666666'))!;
+      final LocalRepository repository = await bootRepo();
+      final Customer customer = await ensureCustomer(repository);
+      final InventoryItem dslr = await _seedDslr(repository);
 
       await repository.createRental(
         customer: customer,
-        lines: const <RentalLineInput>[
+        lines: <RentalLineInput>[
           RentalLineInput(
-            itemId: 'INV-2001',
+            itemId: dslr.id,
             instanceName: 'Harry Potter',
             shortCode: 'NOV-042',
           ),
@@ -104,14 +118,15 @@ void main() {
     });
 
     test('return frees short code for reuse', () async {
-      final LocalRepository repository = await _bootRepo();
-      final Customer customer = (await repository.customerByPhone('6666666666'))!;
+      final LocalRepository repository = await bootRepo();
+      final Customer customer = await ensureCustomer(repository);
+      final InventoryItem dslr = await _seedDslr(repository);
 
       await repository.createRental(
         customer: customer,
-        lines: const <RentalLineInput>[
+        lines: <RentalLineInput>[
           RentalLineInput(
-            itemId: 'INV-2001',
+            itemId: dslr.id,
             instanceName: 'Harry Potter',
             shortCode: 'NOV-042',
           ),
@@ -122,9 +137,9 @@ void main() {
 
       await repository.createRental(
         customer: customer,
-        lines: const <RentalLineInput>[
+        lines: <RentalLineInput>[
           RentalLineInput(
-            itemId: 'INV-2001',
+            itemId: dslr.id,
             instanceName: 'Chamber of Secrets',
             shortCode: 'NOV-042',
           ),
@@ -134,7 +149,7 @@ void main() {
       final List<Rental> active = (await repository.listRentals())
           .where((Rental r) => r.isActive)
           .toList();
-      expect(active, hasLength(2)); // demo REN-3001 + new
+      expect(active, hasLength(1));
       expect(
         active.any(
           (Rental r) =>
@@ -238,7 +253,7 @@ void main() {
       final AppDatabase db = AppDatabase(NativeDatabase.memory());
       addTearDown(db.close);
       final LocalRepository repository = LocalRepository(db, preferences);
-      await repository.initialize();
+      await repository.initialize(seedDemo: false);
 
       final List<Rental> rentals = await repository.listRentals();
       expect(rentals, hasLength(1));

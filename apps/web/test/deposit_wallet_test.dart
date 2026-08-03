@@ -1,30 +1,18 @@
-import 'package:drift/drift.dart' show driftRuntimeOptions;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:asset_os/core/db/app_database.dart';
 import 'package:asset_os/core/models/entities.dart';
 import 'package:asset_os/core/repositories/local_repository.dart';
 
-Future<LocalRepository> _bootRepo() async {
-  SharedPreferences.setMockInitialValues(<String, Object>{});
-  final SharedPreferences preferences = await SharedPreferences.getInstance();
-  final AppDatabase db = AppDatabase(NativeDatabase.memory());
-  addTearDown(db.close);
-  final LocalRepository repository = LocalRepository(db, preferences);
-  await repository.initialize();
-  return repository;
-}
+import 'support/test_harness.dart';
 
 void main() {
-  driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
-
   group('customer deposit wallet', () {
     test('topUpDeposit credits balance and ledger', () async {
-      final LocalRepository repository = await _bootRepo();
+      final LocalRepository repository = await bootRepo();
       final Customer customer =
-          (await repository.customerByPhone('6666666666'))!;
+          await ensureCustomer(repository);
 
       final Customer topped = await repository.topUpDeposit(
         customer.id,
@@ -48,9 +36,9 @@ void main() {
     });
 
     test('topUpDeposit rejects non-positive amounts', () async {
-      final LocalRepository repository = await _bootRepo();
+      final LocalRepository repository = await bootRepo();
       final Customer customer =
-          (await repository.customerByPhone('6666666666'))!;
+          await ensureCustomer(repository);
       expect(
         () => repository.topUpDeposit(customer.id, 0),
         throwsA(isA<ArgumentError>()),
@@ -58,9 +46,9 @@ void main() {
     });
 
     test('refundDeposit debits and cannot exceed balance', () async {
-      final LocalRepository repository = await _bootRepo();
+      final LocalRepository repository = await bootRepo();
       final Customer customer =
-          (await repository.customerByPhone('6666666666'))!;
+          await ensureCustomer(repository);
       await repository.topUpDeposit(customer.id, 5000);
 
       final Customer refunded =
@@ -82,9 +70,9 @@ void main() {
     });
 
     test('returnRental applies min(balance, total) and leftover carries', () async {
-      final LocalRepository repository = await _bootRepo();
+      final LocalRepository repository = await bootRepo();
       final Customer customer =
-          (await repository.customerByPhone('6666666666'))!;
+          await ensureCustomer(repository);
       await repository.topUpDeposit(customer.id, 8000);
 
       await repository.addInventory(
@@ -144,9 +132,9 @@ void main() {
     });
 
     test('returnRental leaves remaining due when deposit is short', () async {
-      final LocalRepository repository = await _bootRepo();
+      final LocalRepository repository = await bootRepo();
       final Customer customer =
-          (await repository.customerByPhone('7777777777'))!;
+          await ensureCustomer(repository, phone: '7777777777', name: 'Amit Sharma');
       await repository.topUpDeposit(customer.id, 2000);
 
       await repository.addInventory(
@@ -185,9 +173,9 @@ void main() {
     });
 
     test('leftover deposit remains for next rental issue', () async {
-      final LocalRepository repository = await _bootRepo();
+      final LocalRepository repository = await bootRepo();
       final Customer customer =
-          (await repository.customerByPhone('9999999999'))!;
+          await ensureCustomer(repository, phone: '9999999999', name: 'Ravi Das');
       await repository.topUpDeposit(customer.id, 15000);
 
       await repository.addInventory(
@@ -242,9 +230,9 @@ void main() {
     });
 
     test('return with zero deposit still finalizes charges', () async {
-      final LocalRepository repository = await _bootRepo();
+      final LocalRepository repository = await bootRepo();
       final Customer customer =
-          (await repository.customerByPhone('6666666666'))!;
+          await ensureCustomer(repository);
       expect(customer.depositBalance, 0);
 
       await repository.addInventory(

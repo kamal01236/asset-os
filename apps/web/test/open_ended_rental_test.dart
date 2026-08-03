@@ -1,28 +1,16 @@
-import 'package:drift/drift.dart' show Value, driftRuntimeOptions;
-import 'package:drift/native.dart';
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:asset_os/core/db/app_database.dart';
 import 'package:asset_os/core/models/entities.dart';
 import 'package:asset_os/core/repositories/local_repository.dart';
 
-Future<LocalRepository> _bootRepo() async {
-  SharedPreferences.setMockInitialValues(<String, Object>{});
-  final SharedPreferences preferences = await SharedPreferences.getInstance();
-  final AppDatabase db = AppDatabase(NativeDatabase.memory());
-  addTearDown(db.close);
-  final LocalRepository repository = LocalRepository(db, preferences);
-  await repository.initialize();
-  return repository;
-}
+import 'support/test_harness.dart';
 
 void main() {
-  driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
-
   group('open-ended rentals', () {
     test('createRental openEnded stores null dueAt and zero base', () async {
-      final LocalRepository repository = await _bootRepo();
+      final LocalRepository repository = await bootRepo();
       await repository.addInventory(
         name: 'Tractor',
         category: 'Farm',
@@ -36,7 +24,7 @@ void main() {
       expect(tractor.dueDateOptional, isTrue);
 
       final Customer customer =
-          (await repository.customerByPhone('6666666666'))!;
+          await ensureCustomer(repository);
       await repository.createRental(
         customer: customer,
         lines: <RentalLineInput>[
@@ -60,12 +48,8 @@ void main() {
     });
 
     test('accrual grows and return finalizes base with late=0', () async {
-      SharedPreferences.setMockInitialValues(<String, Object>{});
-      final SharedPreferences preferences = await SharedPreferences.getInstance();
-      final AppDatabase db = AppDatabase(NativeDatabase.memory());
-      addTearDown(db.close);
-      final LocalRepository repository = LocalRepository(db, preferences);
-      await repository.initialize();
+      final LocalRepository repository = await bootRepo();
+      final db = repository.database;
 
       await repository.addInventory(
         name: 'Pump',
@@ -79,7 +63,7 @@ void main() {
       final InventoryItem pump = (await repository.listInventory())
           .firstWhere((InventoryItem i) => i.name == 'Pump');
       final Customer customer =
-          (await repository.customerByPhone('6666666666'))!;
+          await ensureCustomer(repository);
 
       await repository.createRental(
         customer: customer,
@@ -124,7 +108,7 @@ void main() {
     });
 
     test('mixed cart openEnded throws ArgumentError', () async {
-      final LocalRepository repository = await _bootRepo();
+      final LocalRepository repository = await bootRepo();
       await repository.addInventory(
         name: 'Optional Tool',
         category: 'Tools',
@@ -133,8 +117,6 @@ void main() {
         rateAmount: 2000,
         dueDateOptional: true,
       );
-      // Avoid INV-{ms} collision when two inserts share the same clock tick.
-      await Future<void>.delayed(const Duration(milliseconds: 2));
       await repository.addInventory(
         name: 'Required Tool',
         category: 'Tools',
@@ -151,7 +133,7 @@ void main() {
         (InventoryItem i) => i.name == 'Required Tool',
       );
       final Customer customer =
-          (await repository.customerByPhone('6666666666'))!;
+          await ensureCustomer(repository);
 
       expect(
         () => repository.createRental(
@@ -175,7 +157,7 @@ void main() {
     });
 
     test('due-required item still gets dueAt when not openEnded', () async {
-      final LocalRepository repository = await _bootRepo();
+      final LocalRepository repository = await bootRepo();
       await repository.addInventory(
         name: 'Chair Set',
         category: 'Event',
@@ -187,7 +169,7 @@ void main() {
       final InventoryItem chair = (await repository.listInventory())
           .firstWhere((InventoryItem i) => i.name == 'Chair Set');
       final Customer customer =
-          (await repository.customerByPhone('6666666666'))!;
+          await ensureCustomer(repository);
 
       await repository.createRental(
         customer: customer,
@@ -232,7 +214,7 @@ void main() {
     });
 
     test('inventory dueDateOptional persists on add and update', () async {
-      final LocalRepository repository = await _bootRepo();
+      final LocalRepository repository = await bootRepo();
       await repository.addInventory(
         name: 'Harvester',
         category: 'Farm',

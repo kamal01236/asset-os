@@ -1,30 +1,16 @@
-import 'package:drift/drift.dart' show driftRuntimeOptions;
-import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:asset_os/core/db/app_database.dart';
 import 'package:asset_os/core/models/entities.dart';
 import 'package:asset_os/core/repositories/local_repository.dart';
 
-Future<LocalRepository> _bootRepo() async {
-  SharedPreferences.setMockInitialValues(<String, Object>{});
-  final SharedPreferences preferences = await SharedPreferences.getInstance();
-  final AppDatabase db = AppDatabase(NativeDatabase.memory());
-  addTearDown(db.close);
-  final LocalRepository repository = LocalRepository(db, preferences);
-  await repository.initialize();
-  return repository;
-}
+import 'support/test_harness.dart';
 
 void main() {
-  driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
-
   group('partial return and replace', () {
     test('four lines return one-by-one; stock restores; last closes', () async {
-      final LocalRepository repository = await _bootRepo();
+      final LocalRepository repository = await bootRepo();
       final Customer customer =
-          (await repository.customerByPhone('6666666666'))!;
+          await ensureCustomer(repository);
 
       await repository.addInventory(
         name: 'Partial Novel',
@@ -119,9 +105,9 @@ void main() {
     });
 
     test('deposit applies per line across partial returns', () async {
-      final LocalRepository repository = await _bootRepo();
+      final LocalRepository repository = await bootRepo();
       final Customer customer =
-          (await repository.customerByPhone('6666666666'))!;
+          await ensureCustomer(repository);
       await repository.topUpDeposit(customer.id, 1500);
 
       await repository.addInventory(
@@ -173,9 +159,9 @@ void main() {
     });
 
     test('replace returns line and opens new rental with link', () async {
-      final LocalRepository repository = await _bootRepo();
+      final LocalRepository repository = await bootRepo();
       final Customer customer =
-          (await repository.customerByPhone('7777777777'))!;
+          await ensureCustomer(repository, phone: '7777777777', name: 'Amit Sharma');
       await repository.topUpDeposit(customer.id, 5000);
 
       await repository.addInventory(
@@ -238,9 +224,9 @@ void main() {
     });
 
     test('returnRental returns all open lines', () async {
-      final LocalRepository repository = await _bootRepo();
+      final LocalRepository repository = await bootRepo();
       final Customer customer =
-          (await repository.customerByPhone('9999999999'))!;
+          await ensureCustomer(repository, phone: '9999999999', name: 'Ravi Das');
 
       await repository.addInventory(
         name: 'Full Return Pack',
@@ -280,9 +266,9 @@ void main() {
     });
 
     test('search by returned short code does not match active rental', () async {
-      final LocalRepository repository = await _bootRepo();
+      final LocalRepository repository = await bootRepo();
       final Customer customer =
-          (await repository.customerByPhone('6666666666'))!;
+          await ensureCustomer(repository);
 
       await repository.addInventory(
         name: 'Search Novel',

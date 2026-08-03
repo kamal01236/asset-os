@@ -1,28 +1,14 @@
-import 'package:drift/drift.dart' show driftRuntimeOptions;
-import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:asset_os/core/db/app_database.dart';
 import 'package:asset_os/core/models/entities.dart';
 import 'package:asset_os/core/models/unknown_customer.dart';
 import 'package:asset_os/core/repositories/local_repository.dart';
+
+import 'support/test_harness.dart';
 import 'package:asset_os/core/search/search_scope.dart';
 import 'package:asset_os/core/validation/text_rules.dart';
 
-Future<LocalRepository> _bootRepo() async {
-  SharedPreferences.setMockInitialValues(<String, Object>{});
-  final SharedPreferences preferences = await SharedPreferences.getInstance();
-  final AppDatabase db = AppDatabase(NativeDatabase.memory());
-  addTearDown(db.close);
-  final LocalRepository repository = LocalRepository(db, preferences);
-  await repository.initialize();
-  return repository;
-}
-
 void main() {
-  driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
-
   group('min-length text rules', () {
     test('meetsMinMeaningfulText gates empty and short values', () {
       expect(meetsMinMeaningfulText(null), isFalse);
@@ -37,7 +23,7 @@ void main() {
 
   group('scoped search + validation', () {
     test('search below min length returns empty', () async {
-      final LocalRepository repository = await _bootRepo();
+      final LocalRepository repository = await bootRepo();
       final SearchResults results = await repository.search('ab');
       expect(results.customers, isEmpty);
       expect(results.currentRentals, isEmpty);
@@ -46,7 +32,9 @@ void main() {
     });
 
     test('customers scope matches name and ignores inventory-only hits', () async {
-      final LocalRepository repository = await _bootRepo();
+      final LocalRepository repository = await bootRepo();
+      await ensureCustomer(repository);
+      await repository.addInventory(name: 'DSLR', category: 'Camera', units: 1);
       final SearchResults byName = await repository.search(
         'pri',
         scope: SearchScope.customers,
@@ -64,8 +52,9 @@ void main() {
     });
 
     test('customers scope surfaces nickname matches on Unknown', () async {
-      final LocalRepository repository = await _bootRepo();
+      final LocalRepository repository = await bootRepo();
       final Customer unknown = await repository.ensureUnknownCustomer();
+      await repository.addInventory(name: 'Body Cam', category: 'Camera', units: 2);
       final InventoryItem item = (await repository.listInventory())
           .firstWhere((InventoryItem i) => i.availableUnits > 0);
 
@@ -90,7 +79,9 @@ void main() {
     });
 
     test('inventory scope ignores customers', () async {
-      final LocalRepository repository = await _bootRepo();
+      final LocalRepository repository = await bootRepo();
+      await ensureCustomer(repository);
+      await repository.addInventory(name: 'DSLR', category: 'Camera', units: 1);
       final SearchResults results = await repository.search(
         'pri',
         scope: SearchScope.inventory,
@@ -108,7 +99,7 @@ void main() {
     });
 
     test('addInventory rejects short name', () async {
-      final LocalRepository repository = await _bootRepo();
+      final LocalRepository repository = await bootRepo();
       expect(
         () => repository.addInventory(name: 'ab', category: 'Tools', units: 1),
         throwsA(isA<ArgumentError>()),
@@ -116,7 +107,7 @@ void main() {
     });
 
     test('upsertCustomerByPhone rejects short new name', () async {
-      final LocalRepository repository = await _bootRepo();
+      final LocalRepository repository = await bootRepo();
       expect(
         () => repository.upsertCustomerByPhone(
           phone: '9999988888',

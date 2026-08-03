@@ -23,9 +23,11 @@ Use repo-root scripts from WSL (or `.\scripts\wsl.ps1` from Windows):
 ```bash
 ./scripts/setup.sh
 ./scripts/localrun.sh      # Chrome / web-server
-./scripts/test.sh
+./scripts/test.sh          # analyze + flutter test (concurrency 4, compact)
 ./scripts/wsldeploy.sh     # flutter build web
 ```
+
+Unit tests use `test/support/test_harness.dart` with `seedDemo: false` by default (empty DB + Unknown sentinel). Widget/smoke flows that assert seeded demo names pass `seedDemo: true`. Expect a much faster suite than full demo seed per case.
 
 Public preview: push to `main` → GitHub Pages at [https://kamal01236.github.io/asset-os/](https://kamal01236.github.io/asset-os/). See the [repository README](../../README.md) for setup and the full command table.
 

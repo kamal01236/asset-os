@@ -16,28 +16,7 @@ import 'package:asset_os/core/templates/industry_templates.dart';
 import 'package:asset_os/core/theme/app_theme.dart';
 import 'package:asset_os/core/widgets/scoped_search_field.dart';
 
-Future<ProviderContainer> _bootTestContainer({
-  Map<String, Object> prefs = const <String, Object>{},
-  AppDatabase? database,
-}) async {
-  SharedPreferences.setMockInitialValues(prefs);
-  final SharedPreferences preferences = await SharedPreferences.getInstance();
-  final AppDatabase db = database ?? AppDatabase(NativeDatabase.memory());
-  addTearDown(db.close);
-  final LocalRepository repository = await bootstrapRepository(
-    database: db,
-    preferences: preferences,
-  );
-  final ProviderContainer container = ProviderContainer(
-    overrides: <Override>[
-      sharedPreferencesProvider.overrideWithValue(preferences),
-      databaseProvider.overrideWithValue(db),
-      repositoryProvider.overrideWithValue(repository),
-    ],
-  );
-  addTearDown(container.dispose);
-  return container;
-}
+import 'support/test_harness.dart';
 
 Widget _localizedApp({
   required ProviderContainer container,
@@ -66,9 +45,12 @@ Future<ProviderContainer> _pumpAppShell(
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
 
-  final ProviderContainer container = await _bootTestContainer(prefs: prefs);
+  final ProviderContainer container = await bootContainer(
+    seedDemo: true,
+    prefs: prefs,
+  );
   await tester.pumpWidget(_localizedApp(container: container, locale: locale));
-  await tester.pumpAndSettle();
+  await pumpFrames(tester);
   return container;
 }
 
@@ -94,7 +76,7 @@ void main() {
     expect(find.textContaining('Workshop set A'), findsOneWidget);
 
     await tester.tap(find.text('Due Today').first);
-    await tester.pumpAndSettle();
+    await pumpFrames(tester);
 
     expect(container.read(currentTabIndexProvider), kTabIndexRentals);
     expect(
@@ -106,7 +88,7 @@ void main() {
     expect(find.textContaining('Workshop set A'), findsOneWidget);
 
     await tester.tap(find.text('Clear'));
-    await tester.pumpAndSettle();
+    await pumpFrames(tester);
 
     expect(find.text('Showing: Due Today'), findsNothing);
     expect(container.read(rentalsListFilterProvider), isNull);
@@ -118,7 +100,7 @@ void main() {
     final ProviderContainer container = await _pumpAppShell(tester);
 
     await tester.tap(find.text('Available').first);
-    await tester.pumpAndSettle();
+    await pumpFrames(tester);
 
     expect(container.read(currentTabIndexProvider), kTabIndexInventory);
     expect(
@@ -130,7 +112,7 @@ void main() {
     expect(find.text('DSLR'), findsOneWidget);
 
     await tester.tap(find.text('Clear'));
-    await tester.pumpAndSettle();
+    await pumpFrames(tester);
 
     expect(find.text('Showing: Available'), findsNothing);
     expect(container.read(inventoryListFilterProvider), isNull);
@@ -142,7 +124,7 @@ void main() {
     final ProviderContainer container = await _pumpAppShell(tester);
 
     await tester.tap(find.text('Overdue').first);
-    await tester.pumpAndSettle();
+    await pumpFrames(tester);
 
     expect(container.read(currentTabIndexProvider), kTabIndexRentals);
     expect(
@@ -164,7 +146,7 @@ void main() {
     expect(find.text('Needs attention'), findsOneWidget);
     // KPI tap leaves Home; no in-place Showing: banner on Home.
     await tester.tap(find.text('Active').first);
-    await tester.pumpAndSettle();
+    await pumpFrames(tester);
     expect(container.read(currentTabIndexProvider), kTabIndexRentals);
     expect(container.read(homeFilterProvider), isNull);
   });
@@ -180,7 +162,7 @@ void main() {
           HomeModuleId.suggestions,
           true,
         );
-    await tester.pumpAndSettle();
+    await pumpFrames(tester);
 
     expect(find.text('AI suggestions (beta)'), findsOneWidget);
   });
@@ -191,21 +173,21 @@ void main() {
     await _pumpAppShell(tester);
 
     await tester.tap(find.text('Orders'));
-    await tester.pumpAndSettle();
+    await pumpFrames(tester);
     expect(find.text('Drill Kit · Workshop set A (DRL-001)'), findsOneWidget);
 
     await tester.tap(find.text('Inventory'));
-    await tester.pumpAndSettle();
+    await pumpFrames(tester);
     expect(find.text('DSLR'), findsOneWidget);
     expect(find.text('Tripod'), findsOneWidget);
 
     await tester.tap(find.text('Customers'));
-    await tester.pumpAndSettle();
+    await pumpFrames(tester);
     expect(find.text('Priya Patel'), findsWidgets);
     expect(find.textContaining('6666666666'), findsOneWidget);
 
     await tester.tap(find.text('More'));
-    await tester.pumpAndSettle();
+    await pumpFrames(tester);
     expect(find.text('Offline simulation'), findsOneWidget);
     expect(find.text('Language'), findsOneWidget);
     expect(find.text('Customize Home'), findsOneWidget);
@@ -228,7 +210,7 @@ void main() {
     await _pumpAppShell(tester);
 
     await tester.tap(find.text('Actions'));
-    await tester.pumpAndSettle();
+    await pumpFrames(tester);
     await tester.tap(find.text('Search').last);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
@@ -293,10 +275,10 @@ void main() {
     await _pumpAppShell(tester);
 
     await tester.tap(find.text('Actions'));
-    await tester.pumpAndSettle();
+    await pumpFrames(tester);
     // Home Quick Actions also shows "New Order"; prefer the sheet ListTile.
     await tester.tap(find.widgetWithText(ListTile, 'New Order'));
-    await tester.pumpAndSettle();
+    await pumpFrames(tester);
 
     expect(find.widgetWithText(AppBar, 'New Order'), findsOneWidget);
     expect(find.text('Step 1 of 2'), findsOneWidget);
@@ -313,7 +295,7 @@ void main() {
   });
 
   test('localeProvider persists Hindi preference', () async {
-    final ProviderContainer container = await _bootTestContainer();
+    final ProviderContainer container = await bootContainer(seedDemo: true);
     expect(container.read(localeProvider).languageCode, 'en');
 
     await container.read(localeProvider.notifier).setLocale(const Locale('hi'));
@@ -323,14 +305,15 @@ void main() {
       'hi',
     );
 
-    final ProviderContainer reloaded = await _bootTestContainer(
+    final ProviderContainer reloaded = await bootContainer(
+      seedDemo: false,
       prefs: <String, Object>{kLocalePrefsKey: 'hi'},
     );
     expect(reloaded.read(localeProvider).languageCode, 'hi');
   });
 
   test('seeds demo data when DB empty and no snapshot', () async {
-    final ProviderContainer container = await _bootTestContainer();
+    final ProviderContainer container = await bootContainer(seedDemo: true);
 
     final LocalRepository repo = container.read(repositoryProvider);
     final List<Customer> customers = await repo.listCustomers();
@@ -394,7 +377,8 @@ void main() {
       ],
     );
 
-    final ProviderContainer container = await _bootTestContainer(
+    final ProviderContainer container = await bootContainer(
+      seedDemo: false,
       prefs: <String, Object>{
         LocalRepository.snapshotKey: snapshot.encode(),
       },
@@ -476,7 +460,7 @@ void main() {
   });
 
   test('importTemplateInventory merges and skips duplicates', () async {
-    final ProviderContainer container = await _bootTestContainer();
+    final ProviderContainer container = await bootContainer(seedDemo: true);
     final LocalRepository repo = container.read(repositoryProvider);
 
     final TemplateImportResult first = await repo.importTemplateInventory(
@@ -502,7 +486,7 @@ void main() {
   });
 
   test('updateInventory adjusts units without exceeding total', () async {
-    final ProviderContainer container = await _bootTestContainer();
+    final ProviderContainer container = await bootContainer(seedDemo: true);
     final LocalRepository repo = container.read(repositoryProvider);
 
     await repo.updateInventory(

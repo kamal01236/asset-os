@@ -1,33 +1,20 @@
-import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:asset_os/core/db/app_database.dart';
 import 'package:asset_os/core/models/customer_activity.dart';
 import 'package:asset_os/core/models/entities.dart';
 import 'package:asset_os/core/repositories/local_repository.dart';
 
-Future<LocalRepository> _bootRepo() async {
-  SharedPreferences.setMockInitialValues(const <String, Object>{});
-  final SharedPreferences preferences = await SharedPreferences.getInstance();
-  final AppDatabase db = AppDatabase(NativeDatabase.memory());
-  addTearDown(db.close);
-  final LocalRepository repository = LocalRepository(db, preferences);
-  await repository.initialize();
-  return repository;
-}
+import 'support/test_harness.dart';
 
 void main() {
   test('requiresUnitIdentity persists on add and update', () async {
-    final LocalRepository repository = await _bootRepo();
+    final LocalRepository repository = await bootRepo();
     await repository.addInventory(
       name: 'Novels',
       category: 'Library',
       units: 5,
       requiresUnitIdentity: true,
     );
-    // Avoid INV-{ms} collision when two inserts share the same clock tick.
-    await Future<void>.delayed(const Duration(milliseconds: 2));
     await repository.addInventory(
       name: 'Drill Kit Solo',
       category: 'Tools',
@@ -42,6 +29,7 @@ void main() {
         inventory.firstWhere((InventoryItem i) => i.name == 'Drill Kit Solo');
     expect(novels.requiresUnitIdentity, isTrue);
     expect(drill.requiresUnitIdentity, isFalse);
+    expect(novels.id, isNot(equals(drill.id)));
 
     await repository.updateInventory(
       id: novels.id,
@@ -55,8 +43,24 @@ void main() {
     expect(updated.requiresUnitIdentity, isFalse);
   });
 
+  test('rapid addInventory yields unique ids', () async {
+    final LocalRepository repository = await bootRepo();
+    await repository.addInventory(
+      name: 'Alpha Item',
+      category: 'Tools',
+      units: 1,
+    );
+    await repository.addInventory(
+      name: 'Beta Item',
+      category: 'Tools',
+      units: 1,
+    );
+    final List<InventoryItem> inventory = await repository.listInventory();
+    expect(inventory.map((InventoryItem i) => i.id).toSet(), hasLength(2));
+  });
+
   test('parent item issues qty 3 with required labels', () async {
-    final LocalRepository repository = await _bootRepo();
+    final LocalRepository repository = await bootRepo();
     await repository.addInventory(
       name: 'Novels',
       category: 'Library',
@@ -66,9 +70,10 @@ void main() {
     );
     final InventoryItem novels = (await repository.listInventory())
         .firstWhere((InventoryItem i) => i.name == 'Novels');
-    final Customer customer = await repository.upsertCustomerByPhone(
+    final Customer customer = await ensureCustomer(
+      repository,
       phone: '9111111111',
-      fallbackName: 'Reader One',
+      name: 'Reader One',
     );
 
     final String rentalId = await repository.createRental(
@@ -106,7 +111,7 @@ void main() {
   });
 
   test('individual item auto-labels without blocking names', () async {
-    final LocalRepository repository = await _bootRepo();
+    final LocalRepository repository = await bootRepo();
     await repository.addInventory(
       name: 'Tripod Pro',
       category: 'Camera',
@@ -132,9 +137,10 @@ void main() {
     );
     expect(code1, isNot(equals(code2)));
 
-    final Customer customer = await repository.upsertCustomerByPhone(
+    final Customer customer = await ensureCustomer(
+      repository,
       phone: '9222222222',
-      fallbackName: 'Cam User',
+      name: 'Cam User',
     );
     final String rentalId = await repository.createRental(
       customer: customer,
@@ -162,7 +168,7 @@ void main() {
   });
 
   test('partial return updates order status summary counts', () async {
-    final LocalRepository repository = await _bootRepo();
+    final LocalRepository repository = await bootRepo();
     await repository.addInventory(
       name: 'Novels Pack',
       category: 'Library',
@@ -172,9 +178,10 @@ void main() {
     );
     final InventoryItem novels = (await repository.listInventory())
         .firstWhere((InventoryItem i) => i.name == 'Novels Pack');
-    final Customer customer = await repository.upsertCustomerByPhone(
+    final Customer customer = await ensureCustomer(
+      repository,
       phone: '9333333333',
-      fallbackName: 'Returner',
+      name: 'Returner',
     );
     final String rentalId = await repository.createRental(
       customer: customer,

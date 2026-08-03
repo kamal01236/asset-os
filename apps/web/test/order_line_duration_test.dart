@@ -1,28 +1,14 @@
-import 'package:drift/drift.dart' show driftRuntimeOptions;
-import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:asset_os/core/db/app_database.dart';
 import 'package:asset_os/core/models/entities.dart';
 import 'package:asset_os/core/repositories/local_repository.dart';
 
-Future<LocalRepository> _bootRepo() async {
-  SharedPreferences.setMockInitialValues(<String, Object>{});
-  final SharedPreferences preferences = await SharedPreferences.getInstance();
-  final AppDatabase db = AppDatabase(NativeDatabase.memory());
-  addTearDown(db.close);
-  final LocalRepository repository = LocalRepository(db, preferences);
-  await repository.initialize();
-  return repository;
-}
+import 'support/test_harness.dart';
 
 void main() {
-  driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
-
   group('createRental per-line duration', () {
     test('distinct line amounts and earliest parent dueAt', () async {
-      final LocalRepository repository = await _bootRepo();
+      final LocalRepository repository = await bootRepo();
       await repository.addInventory(
         name: 'Daily Cam',
         category: 'Camera',
@@ -47,7 +33,7 @@ void main() {
         (InventoryItem i) => i.name == 'Weekly Lens',
       );
       final Customer customer =
-          (await repository.customerByPhone('6666666666'))!;
+          await ensureCustomer(repository);
 
       final DateTime before = DateTime.now();
       await repository.createRental(
@@ -90,16 +76,24 @@ void main() {
     });
 
     test('depositTopUpPaise credits wallet in same create', () async {
-      final LocalRepository repository = await _bootRepo();
+      final LocalRepository repository = await bootRepo();
       final Customer customer =
-          (await repository.customerByPhone('6666666666'))!;
+          await ensureCustomer(repository);
       expect(customer.depositBalance, 0);
+      await repository.addInventory(
+        name: 'Tripod',
+        category: 'Camera',
+        units: 1,
+        rateAmount: 20000,
+      );
+      final InventoryItem tripod = (await repository.listInventory())
+          .firstWhere((InventoryItem i) => i.name == 'Tripod');
 
       await repository.createRental(
         customer: customer,
         lines: <RentalLineInput>[
           RentalLineInput(
-            itemId: 'INV-2003',
+            itemId: tripod.id,
             instanceName: 'Tripod unit',
             shortCode: 'TRP-99',
             durationUnits: 1,
@@ -109,7 +103,8 @@ void main() {
       );
 
       final Customer updated =
-          (await repository.customerByPhone('6666666666'))!;
+          (await repository.listCustomers())
+              .firstWhere((Customer c) => c.id == customer.id);
       expect(updated.depositBalance, 2500);
       final List<DepositLedgerEntry> ledger =
           await repository.listDepositLedger(updated.id);

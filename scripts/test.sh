@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Analyze and test apps/web (WSL).
+# Suite target: lean harness (seedDemo:false) keeps most cases off full demo seed.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -25,8 +26,8 @@ cd "$WEB"
 echo "==> flutter analyze"
 flutter analyze
 
-echo "==> flutter test"
-flutter test
+echo "==> flutter test (concurrency=${TEST_CONCURRENCY:-4})"
+flutter test --concurrency="${TEST_CONCURRENCY:-4}" --reporter=compact
 
 echo
 echo "All checks passed."

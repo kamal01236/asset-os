@@ -1,28 +1,16 @@
-import 'package:drift/drift.dart' show Value, driftRuntimeOptions;
-import 'package:drift/native.dart';
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:asset_os/core/db/app_database.dart';
 import 'package:asset_os/core/models/entities.dart';
 import 'package:asset_os/core/repositories/local_repository.dart';
 
-Future<LocalRepository> _bootRepo() async {
-  SharedPreferences.setMockInitialValues(<String, Object>{});
-  final SharedPreferences preferences = await SharedPreferences.getInstance();
-  final AppDatabase db = AppDatabase(NativeDatabase.memory());
-  addTearDown(db.close);
-  final LocalRepository repository = LocalRepository(db, preferences);
-  await repository.initialize();
-  return repository;
-}
+import 'support/test_harness.dart';
 
 void main() {
-  driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
-
   group('rental pricing persistence', () {
     test('createRental stores weekly Novel amounts and due +7d', () async {
-      final LocalRepository repository = await _bootRepo();
+      final LocalRepository repository = await bootRepo();
       await repository.addInventory(
         name: 'Novel',
         category: 'Library',
@@ -34,7 +22,7 @@ void main() {
       final InventoryItem novel = (await repository.listInventory())
           .firstWhere((InventoryItem i) => i.name == 'Novel');
       final Customer customer =
-          (await repository.customerByPhone('6666666666'))!;
+          await ensureCustomer(repository);
 
       final DateTime before = DateTime.now();
       await repository.createRental(
@@ -72,15 +60,11 @@ void main() {
     });
 
     test('returnRental finalizes late fee after due', () async {
-      SharedPreferences.setMockInitialValues(<String, Object>{});
-      final SharedPreferences preferences = await SharedPreferences.getInstance();
-      final AppDatabase db = AppDatabase(NativeDatabase.memory());
-      addTearDown(db.close);
-      final LocalRepository repository = LocalRepository(db, preferences);
-      await repository.initialize();
+      final LocalRepository repository = await bootRepo();
+      final db = repository.database;
 
       final Customer customer =
-          (await repository.customerByPhone('6666666666'))!;
+          await ensureCustomer(repository);
       await repository.addInventory(
         name: 'Novel Late',
         category: 'Library',
@@ -123,7 +107,7 @@ void main() {
     });
 
     test('fixed mode charges once', () async {
-      final LocalRepository repository = await _bootRepo();
+      final LocalRepository repository = await bootRepo();
       await repository.addInventory(
         name: 'Chair',
         category: 'Event',
@@ -134,7 +118,7 @@ void main() {
       final InventoryItem chair = (await repository.listInventory())
           .firstWhere((InventoryItem i) => i.name == 'Chair');
       final Customer customer =
-          (await repository.customerByPhone('6666666666'))!;
+          await ensureCustomer(repository);
 
       await repository.createRental(
         customer: customer,

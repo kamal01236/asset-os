@@ -8,22 +8,12 @@ import 'package:asset_os/core/models/entities.dart';
 import 'package:asset_os/core/models/unknown_customer.dart';
 import 'package:asset_os/core/repositories/local_repository.dart';
 
-Future<LocalRepository> _bootRepo() async {
-  SharedPreferences.setMockInitialValues(<String, Object>{});
-  final SharedPreferences preferences = await SharedPreferences.getInstance();
-  final AppDatabase db = AppDatabase(NativeDatabase.memory());
-  addTearDown(db.close);
-  final LocalRepository repository = LocalRepository(db, preferences);
-  await repository.initialize();
-  return repository;
-}
+import 'support/test_harness.dart';
 
 void main() {
-  driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
-
   group('Unknown customer', () {
     test('initialize ensures CUS-UNKNOWN sentinel', () async {
-      final LocalRepository repository = await _bootRepo();
+      final LocalRepository repository = await bootRepo();
       final List<Customer> customers = await repository.listCustomers();
       final Customer unknown =
           customers.firstWhere((c) => c.id == kUnknownCustomerId);
@@ -33,11 +23,15 @@ void main() {
     });
 
     test('createRental to Unknown without nickname succeeds', () async {
-      final LocalRepository repository = await _bootRepo();
+      final LocalRepository repository = await bootRepo();
       final Customer unknown = await repository.ensureUnknownCustomer();
-      final List<InventoryItem> inventory = await repository.listInventory();
-      final InventoryItem item =
-          inventory.firstWhere((i) => i.availableUnits > 0);
+      await repository.addInventory(
+        name: 'Loan Cam',
+        category: 'Camera',
+        units: 2,
+      );
+      final InventoryItem item = (await repository.listInventory())
+          .firstWhere((i) => i.availableUnits > 0);
 
       await repository.createRental(
         customer: unknown,
@@ -60,11 +54,15 @@ void main() {
     });
 
     test('optional nickname on Unknown does not rename customer', () async {
-      final LocalRepository repository = await _bootRepo();
+      final LocalRepository repository = await bootRepo();
       final Customer unknown = await repository.ensureUnknownCustomer();
-      final List<InventoryItem> inventory = await repository.listInventory();
-      final InventoryItem item =
-          inventory.firstWhere((i) => i.availableUnits > 0);
+      await repository.addInventory(
+        name: 'Loan Cam',
+        category: 'Camera',
+        units: 2,
+      );
+      final InventoryItem item = (await repository.listInventory())
+          .firstWhere((i) => i.availableUnits > 0);
 
       await repository.createRental(
         customer: unknown,
@@ -93,9 +91,14 @@ void main() {
     });
 
     test('no-phone path does not create a named Customer row', () async {
-      final LocalRepository repository = await _bootRepo();
+      final LocalRepository repository = await bootRepo();
       final int before = (await repository.listCustomers()).length;
       final Customer unknown = await repository.ensureUnknownCustomer();
+      await repository.addInventory(
+        name: 'Loan Cam',
+        category: 'Camera',
+        units: 2,
+      );
       final InventoryItem item = (await repository.listInventory())
           .firstWhere((InventoryItem i) => i.availableUnits > 0);
 
@@ -117,7 +120,7 @@ void main() {
     });
 
     test('upsert rejects empty and reserved phone', () async {
-      final LocalRepository repository = await _bootRepo();
+      final LocalRepository repository = await bootRepo();
       expect(
         () => repository.upsertCustomerByPhone(
           phone: '',
@@ -135,7 +138,7 @@ void main() {
     });
 
     test('upsert enforces unique phone and keeps original name', () async {
-      final LocalRepository repository = await _bootRepo();
+      final LocalRepository repository = await bootRepo();
       final Customer first = await repository.upsertCustomerByPhone(
         phone: '8888811111',
         fallbackName: 'Original Name',
@@ -202,7 +205,8 @@ void main() {
     });
 
     test('searchCustomersByNameOrPhone excludes Unknown', () async {
-      final LocalRepository repository = await _bootRepo();
+      final LocalRepository repository = await bootRepo();
+      await ensureCustomer(repository);
       final List<Customer> hits =
           await repository.searchCustomersByNameOrPhone('unk');
       expect(hits.any((c) => c.id == kUnknownCustomerId), isFalse);

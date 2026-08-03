@@ -224,10 +224,11 @@ int summaryCount({
 Future<LocalRepository> bootstrapRepository({
   AppDatabase? database,
   SharedPreferences? preferences,
+  bool seedDemo = true,
 }) async {
   final SharedPreferences prefs = preferences ?? await SharedPreferences.getInstance();
   final AppDatabase db = database ?? AppDatabase();
   final LocalRepository repository = LocalRepository(db, prefs);
-  await repository.initialize();
+  await repository.initialize(seedDemo: seedDemo);
   return repository;
 }

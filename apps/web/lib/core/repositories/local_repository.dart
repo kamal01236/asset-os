@@ -52,6 +52,17 @@ class QrInventory extends QrDestination {
   final String itemId;
 }
 
+/// Process-local monotonic stamp so IDs stay unique within the same millisecond.
+int _idSeq = 0;
+
+String _nextStamp() {
+  _idSeq += 1;
+  return '${DateTime.now().millisecondsSinceEpoch}-$_idSeq';
+}
+
+/// Human-readable unique id, e.g. `INV-1710000000000-1`.
+String nextId(String prefix) => '$prefix-${_nextStamp()}';
+
 /// Drift-backed facade preserving the UI call surface from the prefs era.
 class LocalRepository {
   LocalRepository(this._db, this._preferences);
@@ -65,7 +76,10 @@ class LocalRepository {
   AppDatabase get database => _db;
 
   /// Open DB, migrate SharedPreferences snapshot once, or seed demo data.
-  Future<void> initialize() async {
+  ///
+  /// When [seedDemo] is false and the DB is empty with no snapshot, only the
+  /// Unknown sentinel is ensured (lean path for unit tests).
+  Future<void> initialize({bool seedDemo = true}) async {
     final bool alreadyMigrated = await _isMigrationComplete();
     final List<CustomerRow> existingCustomers = await _db.select(_db.customers).get();
 
@@ -87,7 +101,9 @@ class LocalRepository {
       return;
     }
 
-    await _insertSnapshot(buildDemoSnapshot());
+    if (seedDemo) {
+      await _insertSnapshot(buildDemoSnapshot());
+    }
     await _markMigrationComplete();
     await ensureUnknownCustomer();
   }
@@ -265,8 +281,9 @@ class LocalRepository {
     }
 
     final DateTime now = DateTime.now();
-    final String rentalId = 'REN-${now.millisecondsSinceEpoch}';
-    final String qrCode = 'rental:${now.millisecondsSinceEpoch}';
+    final String rentalStamp = _nextStamp();
+    final String rentalId = 'REN-$rentalStamp';
+    final String qrCode = 'rental:$rentalStamp';
     final int parentUnits = durationUnits < 1 ? 1 : durationUnits;
     final String? replacedFrom =
         (replacedFromRentalId != null && replacedFromRentalId.trim().isNotEmpty)
@@ -290,7 +307,7 @@ class LocalRepository {
         );
         await _db.into(_db.depositLedger).insert(
           DepositLedgerCompanion.insert(
-            id: 'DEP-${now.microsecondsSinceEpoch}-topup',
+            id: '${nextId('DEP')}-topup',
             customerId: customer.id,
             type: DepositLedgerType.topUp.storageValue,
             amount: depositTopUpPaise,
@@ -429,8 +446,7 @@ class LocalRepository {
       for (var i = 0; i < normalized.length; i++) {
         final RentalLineInput line = normalized[i];
         final InventoryItemRow row = itemRows[i];
-        final String lineId =
-            'RLI-${now.millisecondsSinceEpoch}-${i.toString().padLeft(2, '0')}';
+        final String lineId = '${nextId('RLI')}-${i.toString().padLeft(2, '0')}';
         await _db.into(_db.rentalItems).insert(
           RentalItemsCompanion.insert(
             id: lineId,
@@ -597,7 +613,7 @@ class LocalRepository {
           );
           await _db.into(_db.depositLedger).insert(
             DepositLedgerCompanion.insert(
-              id: 'DEP-${now.millisecondsSinceEpoch}-${link.id}',
+              id: '${nextId('DEP')}-${link.id}',
               customerId: customer.id,
               rentalId: Value<String?>(rentalId),
               type: DepositLedgerType.apply.storageValue,
@@ -778,7 +794,7 @@ class LocalRepository {
       );
       await _db.into(_db.depositLedger).insert(
         DepositLedgerCompanion.insert(
-          id: 'DEP-${DateTime.now().microsecondsSinceEpoch}-topup',
+          id: '${nextId('DEP')}-topup',
           customerId: customerId,
           type: DepositLedgerType.topUp.storageValue,
           amount: amountPaise,
@@ -820,7 +836,7 @@ class LocalRepository {
       );
       await _db.into(_db.depositLedger).insert(
         DepositLedgerCompanion.insert(
-          id: 'DEP-${DateTime.now().microsecondsSinceEpoch}-refund',
+          id: '${nextId('DEP')}-refund',
           customerId: customerId,
           type: DepositLedgerType.refund.storageValue,
           amount: -amountPaise,
@@ -882,16 +898,16 @@ class LocalRepository {
         'Notes must be at least $kMinMeaningfulTextLength characters when set',
       );
     }
-    final DateTime now = DateTime.now();
+    final String stamp = _nextStamp();
     await _db.into(_db.inventoryItems).insert(
       InventoryItemsCompanion.insert(
-        id: 'INV-${now.millisecondsSinceEpoch}',
+        id: 'INV-$stamp',
         name: trimmedName,
         category: trimmedCategory,
         availableUnits: units,
         totalUnits: units,
         status: AssetStatus.available.name,
-        qrCode: 'inventory:${now.millisecondsSinceEpoch}',
+        qrCode: 'inventory:$stamp',
         notes: Value<String?>(
           (trimmedNotes == null || trimmedNotes.isEmpty) ? null : trimmedNotes,
         ),
@@ -922,8 +938,6 @@ class LocalRepository {
 
     int added = 0;
     int skipped = 0;
-    // Stagger ids when inserting multiple items in one tick.
-    int stamp = DateTime.now().millisecondsSinceEpoch;
 
     for (final TemplateInventoryItem item in selected) {
       final String key = item.name.trim().toLowerCase();
@@ -932,6 +946,7 @@ class LocalRepository {
         continue;
       }
       final int units = item.defaultUnits < 1 ? 1 : item.defaultUnits;
+      final String stamp = _nextStamp();
       await _db.into(_db.inventoryItems).insert(
         InventoryItemsCompanion.insert(
           id: 'INV-$stamp',
@@ -956,7 +971,6 @@ class LocalRepository {
       );
       existingNames.add(key);
       added += 1;
-      stamp += 1;
     }
 
     return TemplateImportResult(added: added, skipped: skipped);
@@ -1068,13 +1082,13 @@ class LocalRepository {
         'Customer name must be at least $kMinMeaningfulTextLength characters',
       );
     }
-    final DateTime now = DateTime.now();
+    final String stamp = _nextStamp();
     final Customer customer = Customer(
-      id: 'CUS-${now.millisecondsSinceEpoch}',
+      id: 'CUS-$stamp',
       name: trimmedName,
       phone: normalized,
       isTrusted: false,
-      qrCode: 'customer:${now.millisecondsSinceEpoch}',
+      qrCode: 'customer:$stamp',
     );
     await _db.into(_db.customers).insert(_customerCompanion(customer));
     return customer;
