@@ -21,7 +21,9 @@ Future<void> _pumpFlow(
     UncontrolledProviderScope(
       container: container,
       child: MaterialApp(
-        theme: AppTheme.build(),
+        theme: AppTheme.light(),
+        darkTheme: AppTheme.dark(),
+        themeMode: container.read(themeModeProvider),
         locale: const Locale('en'),
         supportedLocales: AppLocalizations.supportedLocales,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -41,6 +43,12 @@ void main() {
     final ProviderContainer container = await bootContainer(seedDemo: true);
     final LocalRepository repo = container.read(repositoryProvider);
 
+    // Taller surface so both order lines (with Rent/Sell controls) stay built.
+    tester.view.physicalSize = const Size(800, 1600);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
     await _pumpFlow(
       tester,
       container: container,
@@ -54,6 +62,7 @@ void main() {
     expect(find.text('Line 2'), findsOneWidget);
 
     // requiresUnitIdentity: instance/short/duration per line + optional deposit.
+    // Per line also has Rent/Sell; sale amount field is hidden while Rent is selected.
     final Finder fields = find.byType(TextField);
     expect(fields.evaluate().length >= 6, isTrue);
     await tester.enterText(fields.at(0), 'Body A');

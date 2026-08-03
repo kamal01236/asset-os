@@ -13,4 +13,5 @@ Follow `docs/ux/web-ux-conventions.md` (source of truth). Digest:
 - Thumb-zone primary actions; one dominant choice per step; list/status-first (no chart dashboards in MVP).
 - Status colors: Available green, Rented blue, Due Today orange, Overdue red, Archived grey.
 - Offline: subtle non-blocking banner only. More-tab offline toggle is demo/simulation, not product positioning.
+- Appearance: Dark/Light only; default Dark; More-tab segmented toggle; theme-aware colors via ColorScheme (no light-only hardcodes).
 - Forms: phone-first customer lookup; then mini multi-line order form; minimal required fields first; advanced details collapsed.

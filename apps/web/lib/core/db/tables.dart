@@ -37,6 +37,9 @@ class InventoryItems extends Table {
   /// When true, each issued unit needs instance name + short code (parent catalog).
   BoolColumn get requiresUnitIdentity =>
       boolean().withDefault(const Constant(true))();
+  /// `rental` | `general` — catalog default for New Order Rent/Sell.
+  TextColumn get defaultItemKind =>
+      text().withDefault(const Constant('rental'))();
 
   @override
   Set<Column<Object>> get primaryKey => <Column<Object>>{id};
@@ -91,6 +94,8 @@ class RentalItems extends Table {
   IntColumn get lateAmount => integer().withDefault(const Constant(0))();
   /// Deposit applied from wallet for this line (paise).
   IntColumn get depositApplied => integer().withDefault(const Constant(0))();
+  /// `rent` | `sell` — how this line was issued.
+  TextColumn get fulfillment => text().withDefault(const Constant('rent'))();
 
   @override
   Set<Column<Object>> get primaryKey => <Column<Object>>{id};

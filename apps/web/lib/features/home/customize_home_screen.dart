@@ -21,7 +21,7 @@ class CustomizeHomeScreen extends ConsumerWidget {
           Text(
             l10n.customizeHomeIntro,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Colors.grey.shade700,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: 12),

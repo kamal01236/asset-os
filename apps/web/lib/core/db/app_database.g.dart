@@ -574,6 +574,18 @@ class $InventoryItemsTable extends InventoryItems
     ),
     defaultValue: const Constant(true),
   );
+  static const VerificationMeta _defaultItemKindMeta = const VerificationMeta(
+    'defaultItemKind',
+  );
+  @override
+  late final GeneratedColumn<String> defaultItemKind = GeneratedColumn<String>(
+    'default_item_kind',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('rental'),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -590,6 +602,7 @@ class $InventoryItemsTable extends InventoryItems
     currencyCode,
     dueDateOptional,
     requiresUnitIdentity,
+    defaultItemKind,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -716,6 +729,15 @@ class $InventoryItemsTable extends InventoryItems
         ),
       );
     }
+    if (data.containsKey('default_item_kind')) {
+      context.handle(
+        _defaultItemKindMeta,
+        defaultItemKind.isAcceptableOrUnknown(
+          data['default_item_kind']!,
+          _defaultItemKindMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -781,6 +803,10 @@ class $InventoryItemsTable extends InventoryItems
         DriftSqlType.bool,
         data['${effectivePrefix}requires_unit_identity'],
       )!,
+      defaultItemKind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}default_item_kind'],
+      )!,
     );
   }
 
@@ -816,6 +842,9 @@ class InventoryItemRow extends DataClass
 
   /// When true, each issued unit needs instance name + short code (parent catalog).
   final bool requiresUnitIdentity;
+
+  /// `rental` | `general` — catalog default for New Order Rent/Sell.
+  final String defaultItemKind;
   const InventoryItemRow({
     required this.id,
     required this.name,
@@ -831,6 +860,7 @@ class InventoryItemRow extends DataClass
     required this.currencyCode,
     required this.dueDateOptional,
     required this.requiresUnitIdentity,
+    required this.defaultItemKind,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -851,6 +881,7 @@ class InventoryItemRow extends DataClass
     map['currency_code'] = Variable<String>(currencyCode);
     map['due_date_optional'] = Variable<bool>(dueDateOptional);
     map['requires_unit_identity'] = Variable<bool>(requiresUnitIdentity);
+    map['default_item_kind'] = Variable<String>(defaultItemKind);
     return map;
   }
 
@@ -872,6 +903,7 @@ class InventoryItemRow extends DataClass
       currencyCode: Value(currencyCode),
       dueDateOptional: Value(dueDateOptional),
       requiresUnitIdentity: Value(requiresUnitIdentity),
+      defaultItemKind: Value(defaultItemKind),
     );
   }
 
@@ -897,6 +929,7 @@ class InventoryItemRow extends DataClass
       requiresUnitIdentity: serializer.fromJson<bool>(
         json['requiresUnitIdentity'],
       ),
+      defaultItemKind: serializer.fromJson<String>(json['defaultItemKind']),
     );
   }
   @override
@@ -917,6 +950,7 @@ class InventoryItemRow extends DataClass
       'currencyCode': serializer.toJson<String>(currencyCode),
       'dueDateOptional': serializer.toJson<bool>(dueDateOptional),
       'requiresUnitIdentity': serializer.toJson<bool>(requiresUnitIdentity),
+      'defaultItemKind': serializer.toJson<String>(defaultItemKind),
     };
   }
 
@@ -935,6 +969,7 @@ class InventoryItemRow extends DataClass
     String? currencyCode,
     bool? dueDateOptional,
     bool? requiresUnitIdentity,
+    String? defaultItemKind,
   }) => InventoryItemRow(
     id: id ?? this.id,
     name: name ?? this.name,
@@ -950,6 +985,7 @@ class InventoryItemRow extends DataClass
     currencyCode: currencyCode ?? this.currencyCode,
     dueDateOptional: dueDateOptional ?? this.dueDateOptional,
     requiresUnitIdentity: requiresUnitIdentity ?? this.requiresUnitIdentity,
+    defaultItemKind: defaultItemKind ?? this.defaultItemKind,
   );
   InventoryItemRow copyWithCompanion(InventoryItemsCompanion data) {
     return InventoryItemRow(
@@ -983,6 +1019,9 @@ class InventoryItemRow extends DataClass
       requiresUnitIdentity: data.requiresUnitIdentity.present
           ? data.requiresUnitIdentity.value
           : this.requiresUnitIdentity,
+      defaultItemKind: data.defaultItemKind.present
+          ? data.defaultItemKind.value
+          : this.defaultItemKind,
     );
   }
 
@@ -1002,7 +1041,8 @@ class InventoryItemRow extends DataClass
           ..write('lateFeePerDay: $lateFeePerDay, ')
           ..write('currencyCode: $currencyCode, ')
           ..write('dueDateOptional: $dueDateOptional, ')
-          ..write('requiresUnitIdentity: $requiresUnitIdentity')
+          ..write('requiresUnitIdentity: $requiresUnitIdentity, ')
+          ..write('defaultItemKind: $defaultItemKind')
           ..write(')'))
         .toString();
   }
@@ -1023,6 +1063,7 @@ class InventoryItemRow extends DataClass
     currencyCode,
     dueDateOptional,
     requiresUnitIdentity,
+    defaultItemKind,
   );
   @override
   bool operator ==(Object other) =>
@@ -1041,7 +1082,8 @@ class InventoryItemRow extends DataClass
           other.lateFeePerDay == this.lateFeePerDay &&
           other.currencyCode == this.currencyCode &&
           other.dueDateOptional == this.dueDateOptional &&
-          other.requiresUnitIdentity == this.requiresUnitIdentity);
+          other.requiresUnitIdentity == this.requiresUnitIdentity &&
+          other.defaultItemKind == this.defaultItemKind);
 }
 
 class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
@@ -1059,6 +1101,7 @@ class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
   final Value<String> currencyCode;
   final Value<bool> dueDateOptional;
   final Value<bool> requiresUnitIdentity;
+  final Value<String> defaultItemKind;
   final Value<int> rowid;
   const InventoryItemsCompanion({
     this.id = const Value.absent(),
@@ -1075,6 +1118,7 @@ class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
     this.currencyCode = const Value.absent(),
     this.dueDateOptional = const Value.absent(),
     this.requiresUnitIdentity = const Value.absent(),
+    this.defaultItemKind = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   InventoryItemsCompanion.insert({
@@ -1092,6 +1136,7 @@ class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
     this.currencyCode = const Value.absent(),
     this.dueDateOptional = const Value.absent(),
     this.requiresUnitIdentity = const Value.absent(),
+    this.defaultItemKind = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        name = Value(name),
@@ -1115,6 +1160,7 @@ class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
     Expression<String>? currencyCode,
     Expression<bool>? dueDateOptional,
     Expression<bool>? requiresUnitIdentity,
+    Expression<String>? defaultItemKind,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -1133,6 +1179,7 @@ class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
       if (dueDateOptional != null) 'due_date_optional': dueDateOptional,
       if (requiresUnitIdentity != null)
         'requires_unit_identity': requiresUnitIdentity,
+      if (defaultItemKind != null) 'default_item_kind': defaultItemKind,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -1152,6 +1199,7 @@ class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
     Value<String>? currencyCode,
     Value<bool>? dueDateOptional,
     Value<bool>? requiresUnitIdentity,
+    Value<String>? defaultItemKind,
     Value<int>? rowid,
   }) {
     return InventoryItemsCompanion(
@@ -1169,6 +1217,7 @@ class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
       currencyCode: currencyCode ?? this.currencyCode,
       dueDateOptional: dueDateOptional ?? this.dueDateOptional,
       requiresUnitIdentity: requiresUnitIdentity ?? this.requiresUnitIdentity,
+      defaultItemKind: defaultItemKind ?? this.defaultItemKind,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1220,6 +1269,9 @@ class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
         requiresUnitIdentity.value,
       );
     }
+    if (defaultItemKind.present) {
+      map['default_item_kind'] = Variable<String>(defaultItemKind.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -1243,6 +1295,7 @@ class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
           ..write('currencyCode: $currencyCode, ')
           ..write('dueDateOptional: $dueDateOptional, ')
           ..write('requiresUnitIdentity: $requiresUnitIdentity, ')
+          ..write('defaultItemKind: $defaultItemKind, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -1674,7 +1727,7 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
   final DateTime? returnedAt;
   final String qrCode;
 
-  /// Per-rental display name (required when issuing to SELF Known).
+  /// Optional per-rental display name (e.g. Unknown path nickname).
   final String? nickname;
 
   /// Snapshot of billing at issue (`daily`/`weekly`/`monthly`/`fixed`/`custom`).
@@ -2297,6 +2350,18 @@ class $RentalItemsTable extends RentalItems
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _fulfillmentMeta = const VerificationMeta(
+    'fulfillment',
+  );
+  @override
+  late final GeneratedColumn<String> fulfillment = GeneratedColumn<String>(
+    'fulfillment',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('rent'),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -2308,6 +2373,7 @@ class $RentalItemsTable extends RentalItems
     baseAmount,
     lateAmount,
     depositApplied,
+    fulfillment,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2384,6 +2450,15 @@ class $RentalItemsTable extends RentalItems
         ),
       );
     }
+    if (data.containsKey('fulfillment')) {
+      context.handle(
+        _fulfillmentMeta,
+        fulfillment.isAcceptableOrUnknown(
+          data['fulfillment']!,
+          _fulfillmentMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -2429,6 +2504,10 @@ class $RentalItemsTable extends RentalItems
         DriftSqlType.int,
         data['${effectivePrefix}deposit_applied'],
       )!,
+      fulfillment: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}fulfillment'],
+      )!,
     );
   }
 
@@ -2461,6 +2540,9 @@ class RentalItemRow extends DataClass implements Insertable<RentalItemRow> {
 
   /// Deposit applied from wallet for this line (paise).
   final int depositApplied;
+
+  /// `rent` | `sell` — how this line was issued.
+  final String fulfillment;
   const RentalItemRow({
     required this.id,
     required this.rentalId,
@@ -2471,6 +2553,7 @@ class RentalItemRow extends DataClass implements Insertable<RentalItemRow> {
     required this.baseAmount,
     required this.lateAmount,
     required this.depositApplied,
+    required this.fulfillment,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2486,6 +2569,7 @@ class RentalItemRow extends DataClass implements Insertable<RentalItemRow> {
     map['base_amount'] = Variable<int>(baseAmount);
     map['late_amount'] = Variable<int>(lateAmount);
     map['deposit_applied'] = Variable<int>(depositApplied);
+    map['fulfillment'] = Variable<String>(fulfillment);
     return map;
   }
 
@@ -2502,6 +2586,7 @@ class RentalItemRow extends DataClass implements Insertable<RentalItemRow> {
       baseAmount: Value(baseAmount),
       lateAmount: Value(lateAmount),
       depositApplied: Value(depositApplied),
+      fulfillment: Value(fulfillment),
     );
   }
 
@@ -2520,6 +2605,7 @@ class RentalItemRow extends DataClass implements Insertable<RentalItemRow> {
       baseAmount: serializer.fromJson<int>(json['baseAmount']),
       lateAmount: serializer.fromJson<int>(json['lateAmount']),
       depositApplied: serializer.fromJson<int>(json['depositApplied']),
+      fulfillment: serializer.fromJson<String>(json['fulfillment']),
     );
   }
   @override
@@ -2535,6 +2621,7 @@ class RentalItemRow extends DataClass implements Insertable<RentalItemRow> {
       'baseAmount': serializer.toJson<int>(baseAmount),
       'lateAmount': serializer.toJson<int>(lateAmount),
       'depositApplied': serializer.toJson<int>(depositApplied),
+      'fulfillment': serializer.toJson<String>(fulfillment),
     };
   }
 
@@ -2548,6 +2635,7 @@ class RentalItemRow extends DataClass implements Insertable<RentalItemRow> {
     int? baseAmount,
     int? lateAmount,
     int? depositApplied,
+    String? fulfillment,
   }) => RentalItemRow(
     id: id ?? this.id,
     rentalId: rentalId ?? this.rentalId,
@@ -2558,6 +2646,7 @@ class RentalItemRow extends DataClass implements Insertable<RentalItemRow> {
     baseAmount: baseAmount ?? this.baseAmount,
     lateAmount: lateAmount ?? this.lateAmount,
     depositApplied: depositApplied ?? this.depositApplied,
+    fulfillment: fulfillment ?? this.fulfillment,
   );
   RentalItemRow copyWithCompanion(RentalItemsCompanion data) {
     return RentalItemRow(
@@ -2580,6 +2669,9 @@ class RentalItemRow extends DataClass implements Insertable<RentalItemRow> {
       depositApplied: data.depositApplied.present
           ? data.depositApplied.value
           : this.depositApplied,
+      fulfillment: data.fulfillment.present
+          ? data.fulfillment.value
+          : this.fulfillment,
     );
   }
 
@@ -2594,7 +2686,8 @@ class RentalItemRow extends DataClass implements Insertable<RentalItemRow> {
           ..write('returnedAt: $returnedAt, ')
           ..write('baseAmount: $baseAmount, ')
           ..write('lateAmount: $lateAmount, ')
-          ..write('depositApplied: $depositApplied')
+          ..write('depositApplied: $depositApplied, ')
+          ..write('fulfillment: $fulfillment')
           ..write(')'))
         .toString();
   }
@@ -2610,6 +2703,7 @@ class RentalItemRow extends DataClass implements Insertable<RentalItemRow> {
     baseAmount,
     lateAmount,
     depositApplied,
+    fulfillment,
   );
   @override
   bool operator ==(Object other) =>
@@ -2623,7 +2717,8 @@ class RentalItemRow extends DataClass implements Insertable<RentalItemRow> {
           other.returnedAt == this.returnedAt &&
           other.baseAmount == this.baseAmount &&
           other.lateAmount == this.lateAmount &&
-          other.depositApplied == this.depositApplied);
+          other.depositApplied == this.depositApplied &&
+          other.fulfillment == this.fulfillment);
 }
 
 class RentalItemsCompanion extends UpdateCompanion<RentalItemRow> {
@@ -2636,6 +2731,7 @@ class RentalItemsCompanion extends UpdateCompanion<RentalItemRow> {
   final Value<int> baseAmount;
   final Value<int> lateAmount;
   final Value<int> depositApplied;
+  final Value<String> fulfillment;
   final Value<int> rowid;
   const RentalItemsCompanion({
     this.id = const Value.absent(),
@@ -2647,6 +2743,7 @@ class RentalItemsCompanion extends UpdateCompanion<RentalItemRow> {
     this.baseAmount = const Value.absent(),
     this.lateAmount = const Value.absent(),
     this.depositApplied = const Value.absent(),
+    this.fulfillment = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   RentalItemsCompanion.insert({
@@ -2659,6 +2756,7 @@ class RentalItemsCompanion extends UpdateCompanion<RentalItemRow> {
     this.baseAmount = const Value.absent(),
     this.lateAmount = const Value.absent(),
     this.depositApplied = const Value.absent(),
+    this.fulfillment = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        rentalId = Value(rentalId),
@@ -2673,6 +2771,7 @@ class RentalItemsCompanion extends UpdateCompanion<RentalItemRow> {
     Expression<int>? baseAmount,
     Expression<int>? lateAmount,
     Expression<int>? depositApplied,
+    Expression<String>? fulfillment,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -2685,6 +2784,7 @@ class RentalItemsCompanion extends UpdateCompanion<RentalItemRow> {
       if (baseAmount != null) 'base_amount': baseAmount,
       if (lateAmount != null) 'late_amount': lateAmount,
       if (depositApplied != null) 'deposit_applied': depositApplied,
+      if (fulfillment != null) 'fulfillment': fulfillment,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -2699,6 +2799,7 @@ class RentalItemsCompanion extends UpdateCompanion<RentalItemRow> {
     Value<int>? baseAmount,
     Value<int>? lateAmount,
     Value<int>? depositApplied,
+    Value<String>? fulfillment,
     Value<int>? rowid,
   }) {
     return RentalItemsCompanion(
@@ -2711,6 +2812,7 @@ class RentalItemsCompanion extends UpdateCompanion<RentalItemRow> {
       baseAmount: baseAmount ?? this.baseAmount,
       lateAmount: lateAmount ?? this.lateAmount,
       depositApplied: depositApplied ?? this.depositApplied,
+      fulfillment: fulfillment ?? this.fulfillment,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -2745,6 +2847,9 @@ class RentalItemsCompanion extends UpdateCompanion<RentalItemRow> {
     if (depositApplied.present) {
       map['deposit_applied'] = Variable<int>(depositApplied.value);
     }
+    if (fulfillment.present) {
+      map['fulfillment'] = Variable<String>(fulfillment.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -2763,6 +2868,7 @@ class RentalItemsCompanion extends UpdateCompanion<RentalItemRow> {
           ..write('baseAmount: $baseAmount, ')
           ..write('lateAmount: $lateAmount, ')
           ..write('depositApplied: $depositApplied, ')
+          ..write('fulfillment: $fulfillment, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -4090,6 +4196,7 @@ typedef $$InventoryItemsTableCreateCompanionBuilder =
       Value<String> currencyCode,
       Value<bool> dueDateOptional,
       Value<bool> requiresUnitIdentity,
+      Value<String> defaultItemKind,
       Value<int> rowid,
     });
 typedef $$InventoryItemsTableUpdateCompanionBuilder =
@@ -4108,6 +4215,7 @@ typedef $$InventoryItemsTableUpdateCompanionBuilder =
       Value<String> currencyCode,
       Value<bool> dueDateOptional,
       Value<bool> requiresUnitIdentity,
+      Value<String> defaultItemKind,
       Value<int> rowid,
     });
 
@@ -4187,6 +4295,11 @@ class $$InventoryItemsTableFilterComposer
 
   ColumnFilters<bool> get requiresUnitIdentity => $composableBuilder(
     column: $table.requiresUnitIdentity,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get defaultItemKind => $composableBuilder(
+    column: $table.defaultItemKind,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -4269,6 +4382,11 @@ class $$InventoryItemsTableOrderingComposer
     column: $table.requiresUnitIdentity,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get defaultItemKind => $composableBuilder(
+    column: $table.defaultItemKind,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$InventoryItemsTableAnnotationComposer
@@ -4337,6 +4455,11 @@ class $$InventoryItemsTableAnnotationComposer
     column: $table.requiresUnitIdentity,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get defaultItemKind => $composableBuilder(
+    column: $table.defaultItemKind,
+    builder: (column) => column,
+  );
 }
 
 class $$InventoryItemsTableTableManager
@@ -4390,6 +4513,7 @@ class $$InventoryItemsTableTableManager
                 Value<String> currencyCode = const Value.absent(),
                 Value<bool> dueDateOptional = const Value.absent(),
                 Value<bool> requiresUnitIdentity = const Value.absent(),
+                Value<String> defaultItemKind = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => InventoryItemsCompanion(
                 id: id,
@@ -4406,6 +4530,7 @@ class $$InventoryItemsTableTableManager
                 currencyCode: currencyCode,
                 dueDateOptional: dueDateOptional,
                 requiresUnitIdentity: requiresUnitIdentity,
+                defaultItemKind: defaultItemKind,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -4424,6 +4549,7 @@ class $$InventoryItemsTableTableManager
                 Value<String> currencyCode = const Value.absent(),
                 Value<bool> dueDateOptional = const Value.absent(),
                 Value<bool> requiresUnitIdentity = const Value.absent(),
+                Value<String> defaultItemKind = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => InventoryItemsCompanion.insert(
                 id: id,
@@ -4440,6 +4566,7 @@ class $$InventoryItemsTableTableManager
                 currencyCode: currencyCode,
                 dueDateOptional: dueDateOptional,
                 requiresUnitIdentity: requiresUnitIdentity,
+                defaultItemKind: defaultItemKind,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -4903,6 +5030,7 @@ typedef $$RentalItemsTableCreateCompanionBuilder =
       Value<int> baseAmount,
       Value<int> lateAmount,
       Value<int> depositApplied,
+      Value<String> fulfillment,
       Value<int> rowid,
     });
 typedef $$RentalItemsTableUpdateCompanionBuilder =
@@ -4916,6 +5044,7 @@ typedef $$RentalItemsTableUpdateCompanionBuilder =
       Value<int> baseAmount,
       Value<int> lateAmount,
       Value<int> depositApplied,
+      Value<String> fulfillment,
       Value<int> rowid,
     });
 
@@ -4970,6 +5099,11 @@ class $$RentalItemsTableFilterComposer
 
   ColumnFilters<int> get depositApplied => $composableBuilder(
     column: $table.depositApplied,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get fulfillment => $composableBuilder(
+    column: $table.fulfillment,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -5027,6 +5161,11 @@ class $$RentalItemsTableOrderingComposer
     column: $table.depositApplied,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get fulfillment => $composableBuilder(
+    column: $table.fulfillment,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$RentalItemsTableAnnotationComposer
@@ -5074,6 +5213,11 @@ class $$RentalItemsTableAnnotationComposer
     column: $table.depositApplied,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get fulfillment => $composableBuilder(
+    column: $table.fulfillment,
+    builder: (column) => column,
+  );
 }
 
 class $$RentalItemsTableTableManager
@@ -5116,6 +5260,7 @@ class $$RentalItemsTableTableManager
                 Value<int> baseAmount = const Value.absent(),
                 Value<int> lateAmount = const Value.absent(),
                 Value<int> depositApplied = const Value.absent(),
+                Value<String> fulfillment = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => RentalItemsCompanion(
                 id: id,
@@ -5127,6 +5272,7 @@ class $$RentalItemsTableTableManager
                 baseAmount: baseAmount,
                 lateAmount: lateAmount,
                 depositApplied: depositApplied,
+                fulfillment: fulfillment,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -5140,6 +5286,7 @@ class $$RentalItemsTableTableManager
                 Value<int> baseAmount = const Value.absent(),
                 Value<int> lateAmount = const Value.absent(),
                 Value<int> depositApplied = const Value.absent(),
+                Value<String> fulfillment = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => RentalItemsCompanion.insert(
                 id: id,
@@ -5151,6 +5298,7 @@ class $$RentalItemsTableTableManager
                 baseAmount: baseAmount,
                 lateAmount: lateAmount,
                 depositApplied: depositApplied,
+                fulfillment: fulfillment,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

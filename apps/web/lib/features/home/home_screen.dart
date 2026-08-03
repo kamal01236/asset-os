@@ -467,7 +467,7 @@ class HomeRecentActivitySection extends StatelessWidget {
           Text(
             l10n.recentActivityEmpty,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Colors.grey.shade700,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           )
         else

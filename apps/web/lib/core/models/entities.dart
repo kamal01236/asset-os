@@ -4,6 +4,40 @@ import '../pricing/rental_pricing.dart';
 
 export '../pricing/rental_pricing.dart' show BillingMode;
 
+/// Catalog default for New Order Rent/Sell (`rental` | `general`).
+enum InventoryItemKind {
+  rental,
+  general;
+
+  String get storageValue => name;
+
+  static InventoryItemKind parse(String? raw) {
+    switch (raw) {
+      case 'general':
+        return InventoryItemKind.general;
+      default:
+        return InventoryItemKind.rental;
+    }
+  }
+}
+
+/// How a rental line was issued (`rent` | `sell`).
+enum LineFulfillment {
+  rent,
+  sell;
+
+  String get storageValue => name;
+
+  static LineFulfillment parse(String? raw) {
+    switch (raw) {
+      case 'sell':
+        return LineFulfillment.sell;
+      default:
+        return LineFulfillment.rent;
+    }
+  }
+}
+
 enum AssetStatus {
   available,
   rented,
@@ -96,6 +130,7 @@ class InventoryItem {
     this.currencyCode = 'INR',
     this.dueDateOptional = false,
     this.requiresUnitIdentity = true,
+    this.defaultItemKind = InventoryItemKind.rental,
   });
 
   final String id;
@@ -113,9 +148,14 @@ class InventoryItem {
   final bool dueDateOptional;
   /// Parent catalog (e.g. Novels): each unit needs name/id at issue.
   final bool requiresUnitIdentity;
+  /// Default Rent/Sell mode when adding this item to an order.
+  final InventoryItemKind defaultItemKind;
+
+  bool get isGeneral => defaultItemKind == InventoryItemKind.general;
 
   InventoryItem copyWith({
     int? availableUnits,
+    int? totalUnits,
     AssetStatus? status,
     String? notes,
     BillingMode? billingMode,
@@ -124,12 +164,13 @@ class InventoryItem {
     String? currencyCode,
     bool? dueDateOptional,
     bool? requiresUnitIdentity,
+    InventoryItemKind? defaultItemKind,
   }) => InventoryItem(
     id: id,
     name: name,
     category: category,
     availableUnits: availableUnits ?? this.availableUnits,
-    totalUnits: totalUnits,
+    totalUnits: totalUnits ?? this.totalUnits,
     status: status ?? this.status,
     qrCode: qrCode,
     notes: notes ?? this.notes,
@@ -139,6 +180,7 @@ class InventoryItem {
     currencyCode: currencyCode ?? this.currencyCode,
     dueDateOptional: dueDateOptional ?? this.dueDateOptional,
     requiresUnitIdentity: requiresUnitIdentity ?? this.requiresUnitIdentity,
+    defaultItemKind: defaultItemKind ?? this.defaultItemKind,
   );
 
   Map<String, dynamic> toJson() => <String, dynamic>{
@@ -156,6 +198,7 @@ class InventoryItem {
     'currencyCode': currencyCode,
     'dueDateOptional': dueDateOptional,
     'requiresUnitIdentity': requiresUnitIdentity,
+    'defaultItemKind': defaultItemKind.storageValue,
   };
 
   factory InventoryItem.fromJson(Map<String, dynamic> json) => InventoryItem(
@@ -173,6 +216,7 @@ class InventoryItem {
     currencyCode: (json['currencyCode'] as String?) ?? 'INR',
     dueDateOptional: (json['dueDateOptional'] as bool?) ?? false,
     requiresUnitIdentity: (json['requiresUnitIdentity'] as bool?) ?? true,
+    defaultItemKind: InventoryItemKind.parse(json['defaultItemKind'] as String?),
   );
 }
 
@@ -209,6 +253,8 @@ class RentalLineInput {
     this.durationUnits,
     this.customEnd,
     this.openEnded,
+    this.fulfillment = LineFulfillment.rent,
+    this.manualSaleAmountPaise,
   });
 
   final String itemId;
@@ -223,6 +269,14 @@ class RentalLineInput {
 
   /// When set, overrides parent open-ended flag for this line.
   final bool? openEnded;
+
+  /// Rent (duration) or Sell (manual amount, auto-closed).
+  final LineFulfillment fulfillment;
+
+  /// Required when [fulfillment] is [LineFulfillment.sell] (paise, > 0).
+  final int? manualSaleAmountPaise;
+
+  bool get isSell => fulfillment == LineFulfillment.sell;
 }
 
 /// One issued unit on a rental: catalog type + instance name/code.
@@ -240,6 +294,7 @@ class RentalLine {
     this.lateFeePerDay = 0,
     this.billingMode = BillingMode.weekly,
     this.rateAmount = 0,
+    this.fulfillment = LineFulfillment.rent,
   });
 
   final String id;
@@ -257,8 +312,11 @@ class RentalLine {
   final BillingMode billingMode;
   /// Catalog rate (paise) used for open-ended accrual estimates.
   final int rateAmount;
+  final LineFulfillment fulfillment;
 
   bool get isOpen => returnedAt == null;
+
+  bool get isSell => fulfillment == LineFulfillment.sell;
 
   int get totalAmount => baseAmount + lateAmount;
 
@@ -334,6 +392,7 @@ class RentalLine {
     'lateFeePerDay': lateFeePerDay,
     'billingMode': billingMode.name,
     'rateAmount': rateAmount,
+    'fulfillment': fulfillment.storageValue,
   };
 
   factory RentalLine.fromJson(Map<String, dynamic> json) => RentalLine(
@@ -352,6 +411,7 @@ class RentalLine {
     lateFeePerDay: (json['lateFeePerDay'] as int?) ?? 0,
     billingMode: BillingMode.parse(json['billingMode'] as String?),
     rateAmount: (json['rateAmount'] as int?) ?? 0,
+    fulfillment: LineFulfillment.parse(json['fulfillment'] as String?),
   );
 }
 

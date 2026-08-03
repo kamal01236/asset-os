@@ -37,6 +37,12 @@ UI-first conventions for `apps/web` to keep flows fast, clear, and touch-friendl
 - Favor lightweight confirmations (snackbars, status pills) over modal interruptions.
 - Optional offline simulation (More tab) is for UX checks only — not product positioning.
 
+## Appearance
+- App supports Dark and Light themes only (no system-follow).
+- Default is Dark when no preference is stored; choice persists via SharedPreferences.
+- Theme toggle lives on More (beside Language) as a segmented Dark / Light control.
+- Prefer `ColorScheme` / `textTheme` over hardcoded light greys or white fills so both modes stay readable.
+
 ## Localization
 - All user-visible chrome (nav, actions, forms, empty states, status labels, More) is l10n-backed via Flutter gen-l10n (`en` default, `hi` selectable).
 - Add new chrome strings to ARB files first; do not hardcode UI copy in widgets.

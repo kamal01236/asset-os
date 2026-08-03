@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/inventory/inventory_categories.dart';
 import '../../core/l10n/l10n_ext.dart';
 import '../../core/models/entities.dart';
 import '../../core/models/unknown_customer.dart';
@@ -34,19 +35,25 @@ class _OrderLineDraft {
   _OrderLineDraft({this.itemId})
       : instanceNameController = TextEditingController(),
         shortCodeController = TextEditingController(),
-        durationController = TextEditingController(text: '1');
+        durationController = TextEditingController(text: '1'),
+        saleAmountController = TextEditingController();
 
   String? itemId;
+  LineFulfillment fulfillment = LineFulfillment.rent;
   final TextEditingController instanceNameController;
   final TextEditingController shortCodeController;
   final TextEditingController durationController;
+  final TextEditingController saleAmountController;
   DateTime? customEnd;
   bool leaveOpenEnded = false;
+
+  bool get isSell => fulfillment == LineFulfillment.sell;
 
   void dispose() {
     instanceNameController.dispose();
     shortCodeController.dispose();
     durationController.dispose();
+    saleAmountController.dispose();
   }
 }
 
@@ -277,11 +284,12 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
     int index,
     List<InventoryItem> available,
   ) {
-    return available.where((InventoryItem item) {
+    final List<InventoryItem> filtered = available.where((InventoryItem item) {
       final int used = _usedCount(item.id, exceptIndex: index);
       final bool current = _lines[index].itemId == item.id;
       return item.availableUnits > used || current;
     }).toList();
+    return sortInventoryForOrderPicker(filtered);
   }
 
   void _applyAutoLabels(int index, InventoryItem item) {
@@ -330,6 +338,9 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
         }
         for (final InventoryItem item in available) {
           if (item.id == itemId) {
+            _lines[i].fulfillment = item.isGeneral
+                ? LineFulfillment.sell
+                : LineFulfillment.rent;
             _applyAutoLabels(i, item);
             break;
           }
@@ -348,14 +359,19 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
       draft.itemId = itemId;
       draft.instanceNameController.clear();
       draft.shortCodeController.clear();
+      draft.saleAmountController.clear();
       draft.customEnd = null;
       draft.leaveOpenEnded = false;
       draft.durationController.text = '1';
       if (itemId == null) {
+        draft.fulfillment = LineFulfillment.rent;
         return;
       }
       final InventoryItem item =
           available.firstWhere((InventoryItem i) => i.id == itemId);
+      draft.fulfillment = item.isGeneral
+          ? LineFulfillment.sell
+          : LineFulfillment.rent;
       _applyAutoLabels(index, item);
     });
   }
@@ -416,7 +432,14 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
     );
   }
 
+  int _saleAmountPaise(_OrderLineDraft draft) {
+    return parseRupeesToPaise(draft.saleAmountController.text);
+  }
+
   int _lineAmount(_OrderLineDraft draft, InventoryItem item) {
+    if (draft.isSell) {
+      return _saleAmountPaise(draft);
+    }
     final DateTime? due = _previewDue(draft, item);
     if (due == null) {
       return 0;
@@ -462,6 +485,9 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
     if (!_labelsReady(draft, item)) {
       return false;
     }
+    if (draft.isSell) {
+      return _saleAmountPaise(draft) > 0;
+    }
     if (item.dueDateOptional) {
       return true;
     }
@@ -492,12 +518,25 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
     final List<RentalLineInput> inputs = <RentalLineInput>[];
     for (final _OrderLineDraft draft in _lines) {
       final InventoryItem item = _itemFor(draft, available)!;
+      if (draft.isSell) {
+        inputs.add(
+          RentalLineInput(
+            itemId: item.id,
+            instanceName: draft.instanceNameController.text.trim(),
+            shortCode: draft.shortCodeController.text.trim(),
+            fulfillment: LineFulfillment.sell,
+            manualSaleAmountPaise: _saleAmountPaise(draft),
+          ),
+        );
+        continue;
+      }
       final bool openEnded = _lineIsOpenEnded(draft, item);
       inputs.add(
         RentalLineInput(
           itemId: item.id,
           instanceName: draft.instanceNameController.text.trim(),
           shortCode: draft.shortCodeController.text.trim(),
+          fulfillment: LineFulfillment.rent,
           openEnded: openEnded,
           durationUnits: openEnded
               ? 0
@@ -927,6 +966,31 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
               ),
               if (selected != null) ...<Widget>[
                 const SizedBox(height: 8),
+                SegmentedButton<LineFulfillment>(
+                  segments: <ButtonSegment<LineFulfillment>>[
+                    ButtonSegment<LineFulfillment>(
+                      value: LineFulfillment.rent,
+                      label: Text(l10n.lineFulfillmentRent),
+                    ),
+                    ButtonSegment<LineFulfillment>(
+                      value: LineFulfillment.sell,
+                      label: Text(l10n.lineFulfillmentSell),
+                    ),
+                  ],
+                  selected: <LineFulfillment>{draft.fulfillment},
+                  onSelectionChanged: (Set<LineFulfillment> selection) {
+                    setState(() {
+                      draft.fulfillment = selection.first;
+                      if (draft.isSell) {
+                        draft.leaveOpenEnded = false;
+                        draft.customEnd = null;
+                      } else if (draft.durationController.text.isEmpty) {
+                        draft.durationController.text = '1';
+                      }
+                    });
+                  },
+                ),
+                const SizedBox(height: 8),
                 if (selected.requiresUnitIdentity) ...<Widget>[
                   TextField(
                     controller: draft.instanceNameController,
@@ -952,91 +1016,116 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                 const SizedBox(height: 8),
-                Text(
-                  localizedBillingMode(l10n, selected.billingMode),
-                  style: Theme.of(context).textTheme.labelLarge,
-                ),
-                const SizedBox(height: 8),
-                if (selected.dueDateOptional)
-                  SwitchListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(l10n.openEndedLabel),
-                    subtitle: Text(l10n.openEndedDurationHint),
-                    value: draft.leaveOpenEnded,
-                    onChanged: (bool value) {
-                      setState(() {
-                        draft.leaveOpenEnded = value;
-                        if (value) {
-                          draft.durationController.clear();
-                          draft.customEnd = null;
-                        } else if (draft.durationController.text.isEmpty) {
-                          draft.durationController.text = '1';
-                        }
-                      });
-                    },
+                if (draft.isSell) ...<Widget>[
+                  TextField(
+                    controller: draft.saleAmountController,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    decoration: InputDecoration(
+                      labelText: l10n.saleAmountLabel,
+                      hintText: l10n.saleAmountHint,
+                    ),
+                    onChanged: (_) => setState(() {}),
                   ),
-                if (!draft.leaveOpenEnded) ...<Widget>[
-                  if (selected.billingMode == BillingMode.custom)
-                    ListTile(
+                  if (_saleAmountPaise(draft) > 0) ...<Widget>[
+                    const SizedBox(height: 8),
+                    Text(
+                      l10n.chargeLineAmount(
+                        selected.name,
+                        formatMoney(
+                          _saleAmountPaise(draft),
+                          currencyCode: selected.currencyCode,
+                        ),
+                      ),
+                    ),
+                  ],
+                ] else ...<Widget>[
+                  Text(
+                    localizedBillingMode(l10n, selected.billingMode),
+                    style: Theme.of(context).textTheme.labelLarge,
+                  ),
+                  const SizedBox(height: 8),
+                  if (selected.dueDateOptional)
+                    SwitchListTile(
                       contentPadding: EdgeInsets.zero,
-                      title: Text(l10n.customEndDateLabel),
-                      subtitle: Text(
-                        draft.customEnd == null
-                            ? '—'
-                            : _formatDate(draft.customEnd!),
-                      ),
-                      trailing: const Icon(Icons.calendar_today_outlined),
-                      onTap: () async {
-                        final DateTime now = DateTime.now();
-                        final DateTime? picked = await showDatePicker(
-                          context: context,
-                          initialDate: draft.customEnd ??
-                              now.add(const Duration(days: 1)),
-                          firstDate: DateTime(now.year, now.month, now.day),
-                          lastDate: now.add(const Duration(days: 365 * 2)),
-                        );
-                        if (picked != null) {
-                          setState(() => draft.customEnd = picked);
-                        }
+                      title: Text(l10n.openEndedLabel),
+                      subtitle: Text(l10n.openEndedDurationHint),
+                      value: draft.leaveOpenEnded,
+                      onChanged: (bool value) {
+                        setState(() {
+                          draft.leaveOpenEnded = value;
+                          if (value) {
+                            draft.durationController.clear();
+                            draft.customEnd = null;
+                          } else if (draft.durationController.text.isEmpty) {
+                            draft.durationController.text = '1';
+                          }
+                        });
                       },
-                    )
-                  else
-                    TextField(
-                      controller: draft.durationController,
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                        labelText: switch (selected.billingMode) {
-                          BillingMode.daily => l10n.durationUnitsDaily,
-                          BillingMode.weekly => l10n.durationUnitsWeekly,
-                          BillingMode.monthly => l10n.durationUnitsMonthly,
-                          BillingMode.fixed => l10n.durationUnitsFixed,
-                          BillingMode.custom => l10n.durationUnitsLabel,
+                    ),
+                  if (!draft.leaveOpenEnded) ...<Widget>[
+                    if (selected.billingMode == BillingMode.custom)
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(l10n.customEndDateLabel),
+                        subtitle: Text(
+                          draft.customEnd == null
+                              ? '—'
+                              : _formatDate(draft.customEnd!),
+                        ),
+                        trailing: const Icon(Icons.calendar_today_outlined),
+                        onTap: () async {
+                          final DateTime now = DateTime.now();
+                          final DateTime? picked = await showDatePicker(
+                            context: context,
+                            initialDate: draft.customEnd ??
+                                now.add(const Duration(days: 1)),
+                            firstDate: DateTime(now.year, now.month, now.day),
+                            lastDate: now.add(const Duration(days: 365 * 2)),
+                          );
+                          if (picked != null) {
+                            setState(() => draft.customEnd = picked);
+                          }
                         },
+                      )
+                    else
+                      TextField(
+                        controller: draft.durationController,
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          labelText: switch (selected.billingMode) {
+                            BillingMode.daily => l10n.durationUnitsDaily,
+                            BillingMode.weekly => l10n.durationUnitsWeekly,
+                            BillingMode.monthly => l10n.durationUnitsMonthly,
+                            BillingMode.fixed => l10n.durationUnitsFixed,
+                            BillingMode.custom => l10n.durationUnitsLabel,
+                          },
+                        ),
+                        onChanged: (_) => setState(() {}),
                       ),
-                      onChanged: (_) => setState(() {}),
-                    ),
-                ],
-                if (_durationComplete(draft, selected) &&
-                    !draft.leaveOpenEnded) ...<Widget>[
-                  const SizedBox(height: 8),
-                  Text(
-                    l10n.chargePreviewDue(
-                      _formatDate(_previewDue(draft, selected)!),
-                    ),
-                  ),
-                  Text(
-                    l10n.chargeLineAmount(
-                      selected.name,
-                      formatMoney(
-                        _lineAmount(draft, selected),
-                        currencyCode: selected.currencyCode,
+                  ],
+                  if (_durationComplete(draft, selected) &&
+                      !draft.leaveOpenEnded) ...<Widget>[
+                    const SizedBox(height: 8),
+                    Text(
+                      l10n.chargePreviewDue(
+                        _formatDate(_previewDue(draft, selected)!),
                       ),
                     ),
-                  ),
-                ],
-                if (_lineIsOpenEnded(draft, selected)) ...<Widget>[
-                  const SizedBox(height: 8),
-                  Text(l10n.reviewOpenEndedLabel),
+                    Text(
+                      l10n.chargeLineAmount(
+                        selected.name,
+                        formatMoney(
+                          _lineAmount(draft, selected),
+                          currencyCode: selected.currencyCode,
+                        ),
+                      ),
+                    ),
+                  ],
+                  if (_lineIsOpenEnded(draft, selected)) ...<Widget>[
+                    const SizedBox(height: 8),
+                    Text(l10n.reviewOpenEndedLabel),
+                  ],
                 ],
               ],
             ],

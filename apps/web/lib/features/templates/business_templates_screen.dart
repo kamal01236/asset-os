@@ -22,7 +22,7 @@ class BusinessTemplatesScreen extends ConsumerWidget {
           Text(
             l10n.templatesIntro,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Colors.grey.shade700,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: 14),
@@ -174,7 +174,7 @@ class _TemplateItemPickerScreenState extends ConsumerState<TemplateItemPickerScr
           Text(
             template.description,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Colors.grey.shade700,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: 10),

@@ -268,6 +268,12 @@ class LocalRepository {
       if (!batchCodes.add(shortCode)) {
         throw DuplicateActiveShortCodeException(shortCode);
       }
+      if (line.isSell) {
+        final int saleAmount = line.manualSaleAmountPaise ?? 0;
+        if (saleAmount <= 0) {
+          throw ArgumentError('Sale amount must be greater than zero');
+        }
+      }
       normalized.add(
         RentalLineInput(
           itemId: line.itemId,
@@ -276,6 +282,8 @@ class LocalRepository {
           durationUnits: line.durationUnits,
           customEnd: line.customEnd,
           openEnded: line.openEnded,
+          fulfillment: line.fulfillment,
+          manualSaleAmountPaise: line.manualSaleAmountPaise,
         ),
       );
     }
@@ -347,6 +355,7 @@ class LocalRepository {
         itemRows.add(itemById[line.itemId]!);
       }
 
+      final List<bool> lineIsSell = <bool>[];
       final List<bool> lineOpenEndedFlags = <bool>[];
       final List<DateTime?> lineDues = <DateTime?>[];
       final List<int> lineBaseAmounts = <int>[];
@@ -357,6 +366,19 @@ class LocalRepository {
       for (var i = 0; i < normalized.length; i++) {
         final RentalLineInput line = normalized[i];
         final InventoryItemRow row = itemRows[i];
+        final bool sell = line.isSell;
+        lineIsSell.add(sell);
+
+        if (sell) {
+          final int saleAmount = line.manualSaleAmountPaise!;
+          lineOpenEndedFlags.add(false);
+          lineDues.add(null);
+          lineBaseAmounts.add(saleAmount);
+          lineDurationUnits.add(0);
+          baseAmount += saleAmount;
+          continue;
+        }
+
         final BillingMode lineMode = BillingMode.parse(row.billingMode);
         final bool lineOpenEnded = line.openEnded ?? openEnded;
         lineOpenEndedFlags.add(lineOpenEnded);
@@ -397,7 +419,11 @@ class LocalRepository {
       }
 
       DateTime? dueAt;
-      for (final DateTime? lineDue in lineDues) {
+      for (var i = 0; i < lineDues.length; i++) {
+        if (lineIsSell[i]) {
+          continue;
+        }
+        final DateTime? lineDue = lineDues[i];
         if (lineDue == null) {
           continue;
         }
@@ -406,16 +432,30 @@ class LocalRepository {
         }
       }
 
+      final bool allSold = lineIsSell.every((bool v) => v);
       int snapshotIndex = 0;
       for (var i = 0; i < lineOpenEndedFlags.length; i++) {
+        if (lineIsSell[i]) {
+          continue;
+        }
         if (!lineOpenEndedFlags[i]) {
           snapshotIndex = i;
           break;
         }
+        snapshotIndex = i;
+      }
+      if (allSold) {
+        snapshotIndex = 0;
       }
       final BillingMode mode = billingModeOverride ??
           BillingMode.parse(itemRows[snapshotIndex].billingMode);
-      final int storedDurationUnits = lineOpenEndedFlags.every((bool v) => v)
+      final Iterable<MapEntry<int, bool>> rentOpenFlags = lineOpenEndedFlags
+          .asMap()
+          .entries
+          .where((MapEntry<int, bool> e) => !lineIsSell[e.key]);
+      final int storedDurationUnits = allSold ||
+              (rentOpenFlags.isNotEmpty &&
+                  rentOpenFlags.every((MapEntry<int, bool> e) => e.value))
           ? 0
           : lineDurationUnits[snapshotIndex];
 
@@ -425,6 +465,7 @@ class LocalRepository {
           customerId: customer.id,
           startedAt: now,
           dueAt: Value<DateTime?>(dueAt),
+          returnedAt: Value<DateTime?>(allSold ? now : null),
           qrCode: qrCode,
           nickname: Value<String?>(storedNick),
           billingMode: Value<String>(mode.name),
@@ -438,15 +479,19 @@ class LocalRepository {
         ),
       );
 
-      final Map<String, int> remainingByItem = <String, int>{
+      final Map<String, int> remainingAvailable = <String, int>{
         for (final MapEntry<String, InventoryItemRow> e in itemById.entries)
           e.key: e.value.availableUnits,
+      };
+      final Map<String, int> remainingTotal = <String, int>{
+        for (final MapEntry<String, InventoryItemRow> e in itemById.entries)
+          e.key: e.value.totalUnits,
       };
 
       for (var i = 0; i < normalized.length; i++) {
         final RentalLineInput line = normalized[i];
-        final InventoryItemRow row = itemRows[i];
         final String lineId = '${nextId('RLI')}-${i.toString().padLeft(2, '0')}';
+        final bool sell = lineIsSell[i];
         await _db.into(_db.rentalItems).insert(
           RentalItemsCompanion.insert(
             id: lineId,
@@ -454,33 +499,79 @@ class LocalRepository {
             itemId: line.itemId,
             instanceName: Value<String>(line.instanceName),
             shortCode: Value<String>(line.shortCode),
+            returnedAt: Value<DateTime?>(sell ? now : null),
             baseAmount: Value<int>(lineBaseAmounts[i]),
+            lateAmount: const Value<int>(0),
+            fulfillment: Value<String>(
+              sell
+                  ? LineFulfillment.sell.storageValue
+                  : LineFulfillment.rent.storageValue,
+            ),
           ),
         );
 
         final int nextAvailable =
-            (remainingByItem[line.itemId]! - 1).clamp(0, row.totalUnits);
-        remainingByItem[line.itemId] = nextAvailable;
-        await (_db.update(_db.inventoryItems)..where((t) => t.id.equals(line.itemId)))
-            .write(
-          InventoryItemsCompanion(
-            availableUnits: Value<int>(nextAvailable),
-            status: Value<String>(
-              nextAvailable == 0
-                  ? AssetStatus.rented.name
-                  : AssetStatus.available.name,
+            (remainingAvailable[line.itemId]! - 1).clamp(0, 1 << 30);
+        remainingAvailable[line.itemId] = nextAvailable;
+        if (sell) {
+          final int nextTotal =
+              (remainingTotal[line.itemId]! - 1).clamp(0, 1 << 30);
+          remainingTotal[line.itemId] = nextTotal;
+          final String statusName;
+          if (nextTotal == 0) {
+            statusName = AssetStatus.archived.name;
+          } else if (nextAvailable == 0) {
+            statusName = AssetStatus.rented.name;
+          } else {
+            statusName = AssetStatus.available.name;
+          }
+          await (_db.update(_db.inventoryItems)
+                ..where((t) => t.id.equals(line.itemId)))
+              .write(
+            InventoryItemsCompanion(
+              availableUnits: Value<int>(nextAvailable),
+              totalUnits: Value<int>(nextTotal),
+              status: Value<String>(statusName),
             ),
-          ),
-        );
+          );
+        } else {
+          await (_db.update(_db.inventoryItems)
+                ..where((t) => t.id.equals(line.itemId)))
+              .write(
+            InventoryItemsCompanion(
+              availableUnits: Value<int>(nextAvailable),
+              status: Value<String>(
+                nextAvailable == 0
+                    ? AssetStatus.rented.name
+                    : AssetStatus.available.name,
+              ),
+            ),
+          );
+        }
       }
 
+      final bool hasSell = lineIsSell.any((bool v) => v);
+      final bool hasRent = lineIsSell.any((bool v) => !v);
+      final String eventTitle;
+      final String eventSubtitle;
+      if (replacedFrom != null) {
+        eventTitle = 'Replacement opened';
+        eventSubtitle = 'Replacement for $replacedFrom.';
+      } else if (allSold) {
+        eventTitle = 'Sale completed';
+        eventSubtitle = 'Created from phone-first order flow (sale).';
+      } else if (hasSell && hasRent) {
+        eventTitle = 'Order opened';
+        eventSubtitle = 'Created from phone-first order flow (rent + sale).';
+      } else {
+        eventTitle = 'Order opened';
+        eventSubtitle = 'Created from phone-first order flow.';
+      }
       await _db.into(_db.rentalEvents).insert(
         RentalEventsCompanion.insert(
           rentalId: rentalId,
-          title: replacedFrom != null ? 'Replacement opened' : 'Order opened',
-          subtitle: replacedFrom != null
-              ? 'Replacement for $replacedFrom.'
-              : 'Created from phone-first order flow.',
+          title: eventTitle,
+          subtitle: eventSubtitle,
           at: now,
         ),
       );
@@ -883,6 +974,7 @@ class LocalRepository {
     String currencyCode = 'INR',
     bool dueDateOptional = false,
     bool requiresUnitIdentity = true,
+    InventoryItemKind defaultItemKind = InventoryItemKind.rental,
   }) async {
     final String trimmedName = name.trim();
     final String trimmedCategory = category.trim();
@@ -919,6 +1011,7 @@ class LocalRepository {
         ),
         dueDateOptional: Value<bool>(dueDateOptional),
         requiresUnitIdentity: Value<bool>(requiresUnitIdentity),
+        defaultItemKind: Value<String>(defaultItemKind.storageValue),
       ),
     );
   }
@@ -988,6 +1081,7 @@ class LocalRepository {
     String? currencyCode,
     bool? dueDateOptional,
     bool? requiresUnitIdentity,
+    InventoryItemKind? defaultItemKind,
   }) async {
     final String trimmedName = name.trim();
     final String trimmedCategory = category.trim();
@@ -1055,6 +1149,9 @@ class LocalRepository {
         requiresUnitIdentity: requiresUnitIdentity == null
             ? const Value.absent()
             : Value<bool>(requiresUnitIdentity),
+        defaultItemKind: defaultItemKind == null
+            ? const Value.absent()
+            : Value<String>(defaultItemKind.storageValue),
       ),
     );
   }
@@ -1356,6 +1453,7 @@ class LocalRepository {
       currencyCode: Value<String>(item.currencyCode),
       dueDateOptional: Value<bool>(item.dueDateOptional),
       requiresUnitIdentity: Value<bool>(item.requiresUnitIdentity),
+      defaultItemKind: Value<String>(item.defaultItemKind.storageValue),
     );
   }
 
@@ -1399,6 +1497,7 @@ class LocalRepository {
       currencyCode: row.currencyCode,
       dueDateOptional: row.dueDateOptional,
       requiresUnitIdentity: row.requiresUnitIdentity,
+      defaultItemKind: InventoryItemKind.parse(row.defaultItemKind),
     );
   }
 
@@ -1429,6 +1528,7 @@ class LocalRepository {
           lateFeePerDay: item?.lateFeePerDay ?? 0,
           billingMode: BillingMode.parse(item?.billingMode),
           rateAmount: item?.rateAmount ?? 0,
+          fulfillment: LineFulfillment.parse(link.fulfillment),
         ),
       );
     }

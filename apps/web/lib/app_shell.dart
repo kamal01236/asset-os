@@ -468,7 +468,9 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                     title: item.name,
                     subtitle:
                         '${l10n.inventoryAvailableSubtitle(
-                          item.category,
+                          item.isGeneral
+                              ? '${item.category} · ${l10n.itemKindGeneralBadge}'
+                              : item.category,
                           item.availableUnits,
                           item.totalUnits,
                         )} · ${l10n.inventoryRateSubtitle(
@@ -664,6 +666,7 @@ class MoreScreen extends ConsumerWidget {
     final AppLocalizations l10n = context.l10n;
     final bool offlineMode = ref.watch(offlineModeProvider);
     final Locale locale = ref.watch(localeProvider);
+    final ThemeMode themeMode = ref.watch(themeModeProvider);
     return ListView(
       padding: const EdgeInsets.all(16),
       children: <Widget>[
@@ -706,6 +709,42 @@ class MoreScreen extends ConsumerWidget {
                   onSelectionChanged: (Set<String> selection) {
                     final String code = selection.first;
                     ref.read(localeProvider.notifier).setLocale(Locale(code));
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(l10n.themeTitle),
+                  subtitle: Text(l10n.themeSubtitle),
+                  leading: const Icon(Icons.dark_mode_outlined),
+                ),
+                const SizedBox(height: 4),
+                SegmentedButton<ThemeMode>(
+                  segments: <ButtonSegment<ThemeMode>>[
+                    ButtonSegment<ThemeMode>(
+                      value: ThemeMode.dark,
+                      label: Text(l10n.themeDark),
+                    ),
+                    ButtonSegment<ThemeMode>(
+                      value: ThemeMode.light,
+                      label: Text(l10n.themeLight),
+                    ),
+                  ],
+                  selected: <ThemeMode>{themeMode},
+                  onSelectionChanged: (Set<ThemeMode> selection) {
+                    ref
+                        .read(themeModeProvider.notifier)
+                        .setThemeMode(selection.first);
                   },
                 ),
               ],
@@ -997,7 +1036,8 @@ class _RentalDetailScreenState extends ConsumerState<RentalDetailScreen> {
                       (RentalLine line) => Padding(
                         padding: const EdgeInsets.only(bottom: 4, top: 4),
                         child: Text(
-                          '• ${line.displayLabel} — ${l10n.lineReturnedLabel} · '
+                          '• ${line.displayLabel} — '
+                          '${line.isSell ? l10n.soldLineBadge : l10n.lineReturnedLabel} · '
                           '${formatMoney(line.totalAmount)}'
                           '${line.depositApplied > 0 ? ' · ${l10n.depositAppliedLabel(formatMoney(line.depositApplied))}' : ''}',
                         ),
@@ -1222,6 +1262,7 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
   BillingMode _billingMode = BillingMode.weekly;
   bool _dueDateOptional = false;
   bool _requiresUnitIdentity = true;
+  InventoryItemKind _defaultItemKind = InventoryItemKind.rental;
 
   @override
   void dispose() {
@@ -1254,6 +1295,7 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
     _billingMode = item.billingMode;
     _dueDateOptional = item.dueDateOptional;
     _requiresUnitIdentity = item.requiresUnitIdentity;
+    _defaultItemKind = item.defaultItemKind;
     setState(() => _editing = true);
   }
 
@@ -1297,6 +1339,9 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
       lateFeePerDay: parseRupeesToPaise(_lateFeeController.text),
       dueDateOptional: _dueDateOptional,
       requiresUnitIdentity: _requiresUnitIdentity,
+      defaultItemKind: _selectedCategory == kCategoryGeneral
+          ? InventoryItemKind.general
+          : _defaultItemKind,
     );
     if (!mounted) {
       return;
@@ -1350,14 +1395,46 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
                       selectedValue: _selectedCategory,
                       customController: _customCategoryController,
                       onSelected: (String? value) {
-                        setState(() => _selectedCategory = value);
+                        setState(() {
+                          _selectedCategory = value;
+                          if (value == kCategoryGeneral) {
+                            _defaultItemKind = InventoryItemKind.general;
+                          }
+                        });
                       },
                       categoryLabel: l10n.categoryLabel,
                       otherLabel: l10n.categoryOtherLabel,
+                      generalLabel: l10n.categoryGeneralLabel,
                       customLabel: l10n.categoryCustomLabel,
                       customHint: l10n.categoryCustomHint,
                     ),
                     const SizedBox(height: 8),
+                    if (_selectedCategory != kCategoryGeneral) ...<Widget>[
+                      Text(
+                        l10n.itemKindDefaultLabel,
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      SegmentedButton<InventoryItemKind>(
+                        segments: <ButtonSegment<InventoryItemKind>>[
+                          ButtonSegment<InventoryItemKind>(
+                            value: InventoryItemKind.rental,
+                            label: Text(l10n.itemKindRentalLabel),
+                          ),
+                          ButtonSegment<InventoryItemKind>(
+                            value: InventoryItemKind.general,
+                            label: Text(l10n.itemKindGeneralLabel),
+                          ),
+                        ],
+                        selected: <InventoryItemKind>{_defaultItemKind},
+                        onSelectionChanged: (Set<InventoryItemKind> selection) {
+                          setState(() => _defaultItemKind = selection.first);
+                        },
+                      ),
+                      const SizedBox(height: 8),
+                    ],
                     TextField(
                       controller: _unitsController,
                       keyboardType: TextInputType.number,
@@ -1442,7 +1519,9 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
                     EntityCard(
                       title: item.name,
                       subtitle: l10n.inventoryAvailableSubtitle(
-                        item.category,
+                        item.isGeneral
+                            ? '${item.category} · ${l10n.itemKindGeneralBadge}'
+                            : item.category,
                         item.availableUnits,
                         item.totalUnits,
                       ),
@@ -1614,7 +1693,7 @@ class CustomerDetailScreen extends ConsumerWidget {
                       child: Text(
                         l10n.balanceOpenItemsCount(balance.openItemsCount),
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.grey.shade700,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ),
@@ -2215,6 +2294,7 @@ class _AddInventoryFlowScreenState extends ConsumerState<AddInventoryFlowScreen>
   BillingMode _billingMode = BillingMode.weekly;
   bool _dueDateOptional = false;
   bool _requiresUnitIdentity = true;
+  InventoryItemKind _defaultItemKind = InventoryItemKind.rental;
   bool _submitting = false;
 
   @override
@@ -2266,15 +2346,47 @@ class _AddInventoryFlowScreenState extends ConsumerState<AddInventoryFlowScreen>
             customController: _customCategoryController,
             onSelected: (String? value) {
               if (value != null) {
-                setState(() => _selectedCategory = value);
+                setState(() {
+                  _selectedCategory = value;
+                  if (value == kCategoryGeneral) {
+                    _defaultItemKind = InventoryItemKind.general;
+                  }
+                });
               }
             },
             categoryLabel: l10n.categoryLabel,
             otherLabel: l10n.categoryOtherLabel,
+            generalLabel: l10n.categoryGeneralLabel,
             customLabel: l10n.categoryCustomLabel,
             customHint: l10n.categoryCustomHint,
           ),
           const SizedBox(height: 8),
+          if (selectedCategory != kCategoryGeneral) ...<Widget>[
+            Text(
+              l10n.itemKindDefaultLabel,
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 8),
+            SegmentedButton<InventoryItemKind>(
+              segments: <ButtonSegment<InventoryItemKind>>[
+                ButtonSegment<InventoryItemKind>(
+                  value: InventoryItemKind.rental,
+                  label: Text(l10n.itemKindRentalLabel),
+                ),
+                ButtonSegment<InventoryItemKind>(
+                  value: InventoryItemKind.general,
+                  label: Text(l10n.itemKindGeneralLabel),
+                ),
+              ],
+              selected: <InventoryItemKind>{_defaultItemKind},
+              onSelectionChanged: (Set<InventoryItemKind> selection) {
+                setState(() => _defaultItemKind = selection.first);
+              },
+            ),
+            const SizedBox(height: 8),
+          ],
           TextField(
             controller: _unitsController,
             keyboardType: TextInputType.number,
@@ -2406,6 +2518,9 @@ class _AddInventoryFlowScreenState extends ConsumerState<AddInventoryFlowScreen>
                     lateFeePerDay: parseRupeesToPaise(_lateFeeController.text),
                     dueDateOptional: _dueDateOptional,
                     requiresUnitIdentity: _requiresUnitIdentity,
+                    defaultItemKind: selectedCategory == kCategoryGeneral
+                        ? InventoryItemKind.general
+                        : _defaultItemKind,
                   );
                   if (context.mounted) {
                     Navigator.of(context).pop();

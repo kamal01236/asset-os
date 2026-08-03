@@ -60,6 +60,10 @@
   "languageSubtitle": "ऐप की भाषा चुनें",
   "languageEnglish": "English",
   "languageHindi": "हिन्दी",
+  "themeTitle": "थीम",
+  "themeSubtitle": "डार्क या लाइट रूप चुनें",
+  "themeDark": "डार्क",
+  "themeLight": "लाइट",
   "voiceSearchStubTitle": "वॉइस खोज (स्टब)",
   "voiceSearchStubSubtitle": "इंटेंट-आधारित खोज कमांड के लिए प्लेसहोल्डर।",
   "businessTemplatesTitle": "व्यवसाय टेम्पलेट",
@@ -82,6 +86,7 @@
   "itemNameLabel": "वस्तु का नाम",
   "categoryLabel": "श्रेणी",
   "categoryOtherLabel": "अन्य",
+  "categoryGeneralLabel": "सामान्य",
   "categoryCustomLabel": "श्रेणी दर्ज करें",
   "categoryCustomHint": "कस्टम श्रेणी का नाम",
   "totalUnitsLabel": "कुल इकाइयाँ",
@@ -725,5 +730,15 @@
     }
   },
   "depositTopUpOptionalLabel": "जमा टॉप-अप (वैकल्पिक)",
-  "depositTopUpOptionalHint": "राशि रुपये में"
+  "depositTopUpOptionalHint": "राशि रुपये में",
+  "itemKindDefaultLabel": "डिफ़ॉल्ट ऑर्डर मोड",
+  "itemKindRentalLabel": "किराया",
+  "itemKindGeneralLabel": "सामान्य",
+  "itemKindGeneralBadge": "सामान्य",
+  "lineFulfillmentRent": "किराया",
+  "lineFulfillmentSell": "बेचें",
+  "saleAmountLabel": "बिक्री राशि",
+  "saleAmountHint": "राशि रुपये में",
+  "saleAmountRequiredError": "शून्य से अधिक बिक्री राशि दर्ज करें।",
+  "soldLineBadge": "बेचा गया"
 }

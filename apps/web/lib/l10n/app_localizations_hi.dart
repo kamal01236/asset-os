@@ -142,6 +142,18 @@ class AppLocalizationsHi extends AppLocalizations {
   String get languageHindi => 'हिन्दी';
 
   @override
+  String get themeTitle => 'थीम';
+
+  @override
+  String get themeSubtitle => 'डार्क या लाइट रूप चुनें';
+
+  @override
+  String get themeDark => 'डार्क';
+
+  @override
+  String get themeLight => 'लाइट';
+
+  @override
   String get voiceSearchStubTitle => 'वॉइस खोज (स्टब)';
 
   @override
@@ -195,6 +207,9 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get categoryOtherLabel => 'अन्य';
+
+  @override
+  String get categoryGeneralLabel => 'सामान्य';
 
   @override
   String get categoryCustomLabel => 'श्रेणी दर्ज करें';
@@ -1188,4 +1203,34 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get depositTopUpOptionalHint => 'राशि रुपये में';
+
+  @override
+  String get itemKindDefaultLabel => 'डिफ़ॉल्ट ऑर्डर मोड';
+
+  @override
+  String get itemKindRentalLabel => 'किराया';
+
+  @override
+  String get itemKindGeneralLabel => 'सामान्य';
+
+  @override
+  String get itemKindGeneralBadge => 'सामान्य';
+
+  @override
+  String get lineFulfillmentRent => 'किराया';
+
+  @override
+  String get lineFulfillmentSell => 'बेचें';
+
+  @override
+  String get saleAmountLabel => 'बिक्री राशि';
+
+  @override
+  String get saleAmountHint => 'राशि रुपये में';
+
+  @override
+  String get saleAmountRequiredError => 'शून्य से अधिक बिक्री राशि दर्ज करें।';
+
+  @override
+  String get soldLineBadge => 'बेचा गया';
 }

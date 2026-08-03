@@ -141,6 +141,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get languageHindi => 'हिन्दी';
 
   @override
+  String get themeTitle => 'Theme';
+
+  @override
+  String get themeSubtitle => 'Choose dark or light appearance';
+
+  @override
+  String get themeDark => 'Dark';
+
+  @override
+  String get themeLight => 'Light';
+
+  @override
   String get voiceSearchStubTitle => 'Voice Search (stub)';
 
   @override
@@ -194,6 +206,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get categoryOtherLabel => 'Other';
+
+  @override
+  String get categoryGeneralLabel => 'General';
 
   @override
   String get categoryCustomLabel => 'Enter category';
@@ -1186,4 +1201,35 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get depositTopUpOptionalHint => 'Amount in rupees';
+
+  @override
+  String get itemKindDefaultLabel => 'Default order mode';
+
+  @override
+  String get itemKindRentalLabel => 'Rental';
+
+  @override
+  String get itemKindGeneralLabel => 'General';
+
+  @override
+  String get itemKindGeneralBadge => 'General';
+
+  @override
+  String get lineFulfillmentRent => 'Rent';
+
+  @override
+  String get lineFulfillmentSell => 'Sell';
+
+  @override
+  String get saleAmountLabel => 'Sale amount';
+
+  @override
+  String get saleAmountHint => 'Amount in rupees';
+
+  @override
+  String get saleAmountRequiredError =>
+      'Enter a sale amount greater than zero.';
+
+  @override
+  String get soldLineBadge => 'Sold';
 }

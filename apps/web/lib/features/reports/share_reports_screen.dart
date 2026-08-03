@@ -70,7 +70,7 @@ class _ShareReportsScreenState extends ConsumerState<ShareReportsScreen> {
           Text(
             l10n.shareReportsSubtitle,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Colors.grey.shade700,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: 16),

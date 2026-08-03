@@ -24,14 +24,27 @@ Widget _localizedApp({
 }) {
   return UncontrolledProviderScope(
     container: container,
-    child: MaterialApp(
-      theme: AppTheme.build(),
-      locale: locale ?? container.read(localeProvider),
+    child: _TestMaterialApp(localeOverride: locale),
+  );
+}
+
+class _TestMaterialApp extends ConsumerWidget {
+  const _TestMaterialApp({this.localeOverride});
+
+  final Locale? localeOverride;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return MaterialApp(
+      theme: AppTheme.light(),
+      darkTheme: AppTheme.dark(),
+      themeMode: ref.watch(themeModeProvider),
+      locale: localeOverride ?? ref.watch(localeProvider),
       supportedLocales: AppLocalizations.supportedLocales,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       home: const AppShell(),
-    ),
-  );
+    );
+  }
 }
 
 Future<ProviderContainer> _pumpAppShell(
@@ -310,6 +323,68 @@ void main() {
       prefs: <String, Object>{kLocalePrefsKey: 'hi'},
     );
     expect(reloaded.read(localeProvider).languageCode, 'hi');
+  });
+
+  test('themeModeProvider defaults to dark and persists light', () async {
+    final ProviderContainer container = await bootContainer(seedDemo: true);
+    expect(container.read(themeModeProvider), ThemeMode.dark);
+    expect(
+      container.read(sharedPreferencesProvider).getString(kThemeModePrefsKey),
+      isNull,
+    );
+
+    await container
+        .read(themeModeProvider.notifier)
+        .setThemeMode(ThemeMode.light);
+    expect(container.read(themeModeProvider), ThemeMode.light);
+    expect(
+      container.read(sharedPreferencesProvider).getString(kThemeModePrefsKey),
+      'light',
+    );
+
+    final ProviderContainer reloaded = await bootContainer(
+      seedDemo: false,
+      prefs: <String, Object>{kThemeModePrefsKey: 'light'},
+    );
+    expect(reloaded.read(themeModeProvider), ThemeMode.light);
+
+    final ProviderContainer invalid = await bootContainer(
+      seedDemo: false,
+      prefs: <String, Object>{kThemeModePrefsKey: 'system'},
+    );
+    expect(invalid.read(themeModeProvider), ThemeMode.dark);
+  });
+
+  testWidgets('More theme toggle switches themeMode and brightness', (
+    WidgetTester tester,
+  ) async {
+    final ProviderContainer container = await _pumpAppShell(tester);
+
+    expect(container.read(themeModeProvider), ThemeMode.dark);
+    expect(Theme.of(tester.element(find.byType(Scaffold).first)).brightness,
+        Brightness.dark);
+
+    await tester.tap(find.text('More'));
+    await pumpFrames(tester);
+
+    expect(find.text('Theme'), findsOneWidget);
+    await tester.tap(find.text('Light'));
+    await pumpFrames(tester);
+
+    expect(container.read(themeModeProvider), ThemeMode.light);
+    expect(
+      container.read(sharedPreferencesProvider).getString(kThemeModePrefsKey),
+      'light',
+    );
+    expect(Theme.of(tester.element(find.byType(Scaffold).first)).brightness,
+        Brightness.light);
+
+    await tester.tap(find.text('Dark'));
+    await pumpFrames(tester);
+
+    expect(container.read(themeModeProvider), ThemeMode.dark);
+    expect(Theme.of(tester.element(find.byType(Scaffold).first)).brightness,
+        Brightness.dark);
   });
 
   test('seeds demo data when DB empty and no snapshot', () async {

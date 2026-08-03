@@ -12,6 +12,7 @@ export '../home/home_modules.dart';
 export '../home/home_filter.dart';
 
 const String kLocalePrefsKey = 'asset_os_locale';
+const String kThemeModePrefsKey = 'asset_os_theme_mode';
 const String kOwnerWhatsAppPhoneKey = 'owner_whatsapp_phone';
 const String kOwnerWhatsAppCountryCodeKey = 'owner_whatsapp_country_code';
 const String kDefaultWhatsAppCountryCode = '91';
@@ -85,6 +86,44 @@ class LocaleNotifier extends StateNotifier<Locale> {
     }
     state = Locale(code);
     await _preferences.setString(kLocalePrefsKey, code);
+  }
+}
+
+/// Persisted theme mode. Defaults to dark when missing or unsupported.
+final themeModeProvider =
+    StateNotifierProvider<ThemeModeNotifier, ThemeMode>((ref) {
+  return ThemeModeNotifier(ref.watch(sharedPreferencesProvider));
+});
+
+class ThemeModeNotifier extends StateNotifier<ThemeMode> {
+  ThemeModeNotifier(this._preferences)
+      : super(_themeModeFromPrefs(_preferences));
+
+  final SharedPreferences _preferences;
+
+  static const Set<String> _supported = <String>{'dark', 'light'};
+
+  static ThemeMode _themeModeFromPrefs(SharedPreferences preferences) {
+    final String? raw = preferences.getString(kThemeModePrefsKey);
+    if (raw == 'light') {
+      return ThemeMode.light;
+    }
+    // Missing, invalid, or explicit "dark" → dark (app default).
+    if (raw != null && !_supported.contains(raw)) {
+      return ThemeMode.dark;
+    }
+    return ThemeMode.dark;
+  }
+
+  Future<void> setThemeMode(ThemeMode mode) async {
+    if (mode != ThemeMode.dark && mode != ThemeMode.light) {
+      return;
+    }
+    state = mode;
+    await _preferences.setString(
+      kThemeModePrefsKey,
+      mode == ThemeMode.light ? 'light' : 'dark',
+    );
   }
 }
 

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../inventory/inventory_categories.dart';
 
-/// Category dropdown with an Other option that reveals a custom text field.
+/// Category dropdown with General on top and Other revealing a custom text field.
 class CategoryPickerField extends StatelessWidget {
   const CategoryPickerField({
     required this.options,
@@ -12,6 +12,7 @@ class CategoryPickerField extends StatelessWidget {
     required this.categoryLabel,
     required this.otherLabel,
     required this.customLabel,
+    this.generalLabel,
     this.customHint,
     this.fieldKeyPrefix = 'category',
     super.key,
@@ -24,13 +25,22 @@ class CategoryPickerField extends StatelessWidget {
   final String categoryLabel;
   final String otherLabel;
   final String customLabel;
+  /// Localized label for [kCategoryGeneral]; falls back to the stored value.
+  final String? generalLabel;
   final String? customHint;
   final String fieldKeyPrefix;
 
   bool get _isOther => selectedValue == kCategoryOther;
 
-  String _displayLabel(String value) =>
-      value == kCategoryOther ? otherLabel : value;
+  String _displayLabel(String value) {
+    if (value == kCategoryOther) {
+      return otherLabel;
+    }
+    if (value == kCategoryGeneral && generalLabel != null) {
+      return generalLabel!;
+    }
+    return value;
+  }
 
   @override
   Widget build(BuildContext context) {

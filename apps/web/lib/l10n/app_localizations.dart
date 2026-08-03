@@ -344,6 +344,30 @@ abstract class AppLocalizations {
   /// **'हिन्दी'**
   String get languageHindi;
 
+  /// No description provided for @themeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme'**
+  String get themeTitle;
+
+  /// No description provided for @themeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose dark or light appearance'**
+  String get themeSubtitle;
+
+  /// No description provided for @themeDark.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get themeDark;
+
+  /// No description provided for @themeLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get themeLight;
+
   /// No description provided for @voiceSearchStubTitle.
   ///
   /// In en, this message translates to:
@@ -445,6 +469,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Other'**
   String get categoryOtherLabel;
+
+  /// No description provided for @categoryGeneralLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'General'**
+  String get categoryGeneralLabel;
 
   /// No description provided for @categoryCustomLabel.
   ///
@@ -2101,6 +2131,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Amount in rupees'**
   String get depositTopUpOptionalHint;
+
+  /// No description provided for @itemKindDefaultLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Default order mode'**
+  String get itemKindDefaultLabel;
+
+  /// No description provided for @itemKindRentalLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Rental'**
+  String get itemKindRentalLabel;
+
+  /// No description provided for @itemKindGeneralLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'General'**
+  String get itemKindGeneralLabel;
+
+  /// No description provided for @itemKindGeneralBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'General'**
+  String get itemKindGeneralBadge;
+
+  /// No description provided for @lineFulfillmentRent.
+  ///
+  /// In en, this message translates to:
+  /// **'Rent'**
+  String get lineFulfillmentRent;
+
+  /// No description provided for @lineFulfillmentSell.
+  ///
+  /// In en, this message translates to:
+  /// **'Sell'**
+  String get lineFulfillmentSell;
+
+  /// No description provided for @saleAmountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Sale amount'**
+  String get saleAmountLabel;
+
+  /// No description provided for @saleAmountHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount in rupees'**
+  String get saleAmountHint;
+
+  /// No description provided for @saleAmountRequiredError.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a sale amount greater than zero.'**
+  String get saleAmountRequiredError;
+
+  /// No description provided for @soldLineBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Sold'**
+  String get soldLineBadge;
 }
 
 class _AppLocalizationsDelegate

@@ -80,7 +80,7 @@ class EntityCard extends StatelessWidget {
                     Text(
                       subtitle,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Colors.grey.shade700,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
                     if (status != null) ...<Widget>[
@@ -138,7 +138,7 @@ class EmptyStatePane extends StatelessWidget {
               subtitle,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.grey.shade700,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
             const SizedBox(height: 12),
@@ -174,7 +174,7 @@ class KpiCard extends StatelessWidget {
     final Color color = AppTheme.colorForStatus(status);
     final BorderSide border = selected
         ? BorderSide(color: color, width: 2)
-        : BorderSide(color: Colors.grey.shade300);
+        : BorderSide(color: Theme.of(context).colorScheme.outlineVariant);
     return Card(
       color: selected ? color.withValues(alpha: 0.08) : null,
       shape: RoundedRectangleBorder(
@@ -312,12 +312,12 @@ class OfflineBanner extends StatelessWidget {
     }
     return Container(
       width: double.infinity,
-      color: Colors.amber.shade100,
+      color: Theme.of(context).colorScheme.tertiaryContainer,
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       child: Text(
         context.l10n.offlineBanner,
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-          color: Colors.amber.shade900,
+          color: Theme.of(context).colorScheme.onTertiaryContainer,
           fontWeight: FontWeight.w600,
         ),
       ),

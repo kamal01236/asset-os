@@ -60,6 +60,10 @@
   "languageSubtitle": "Choose app language",
   "languageEnglish": "English",
   "languageHindi": "हिन्दी",
+  "themeTitle": "Theme",
+  "themeSubtitle": "Choose dark or light appearance",
+  "themeDark": "Dark",
+  "themeLight": "Light",
   "voiceSearchStubTitle": "Voice Search (stub)",
   "voiceSearchStubSubtitle": "Placeholder for intent-based search commands.",
   "businessTemplatesTitle": "Business Templates",
@@ -82,6 +86,7 @@
   "itemNameLabel": "Item name",
   "categoryLabel": "Category",
   "categoryOtherLabel": "Other",
+  "categoryGeneralLabel": "General",
   "categoryCustomLabel": "Enter category",
   "categoryCustomHint": "Custom category name",
   "totalUnitsLabel": "Total units",
@@ -725,5 +730,15 @@
     }
   },
   "depositTopUpOptionalLabel": "Deposit top-up (optional)",
-  "depositTopUpOptionalHint": "Amount in rupees"
+  "depositTopUpOptionalHint": "Amount in rupees",
+  "itemKindDefaultLabel": "Default order mode",
+  "itemKindRentalLabel": "Rental",
+  "itemKindGeneralLabel": "General",
+  "itemKindGeneralBadge": "General",
+  "lineFulfillmentRent": "Rent",
+  "lineFulfillmentSell": "Sell",
+  "saleAmountLabel": "Sale amount",
+  "saleAmountHint": "Amount in rupees",
+  "saleAmountRequiredError": "Enter a sale amount greater than zero.",
+  "soldLineBadge": "Sold"
 }

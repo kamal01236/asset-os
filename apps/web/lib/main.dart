@@ -37,10 +37,13 @@ class MainApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final Locale locale = ref.watch(localeProvider);
+    final ThemeMode themeMode = ref.watch(themeModeProvider);
     return MaterialApp(
       title: kAppDisplayName,
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.build(),
+      theme: AppTheme.light(),
+      darkTheme: AppTheme.dark(),
+      themeMode: themeMode,
       locale: locale,
       supportedLocales: AppLocalizations.supportedLocales,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
