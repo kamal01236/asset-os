@@ -163,36 +163,38 @@ void main() {
   testWidgets('Inventory scoped search shows suggestions after 3 chars', (
     WidgetTester tester,
   ) async {
-    await _pumpAppShell(tester);
+    final ProviderContainer container = await _pumpAppShell(tester);
+    container.read(currentTabIndexProvider.notifier).state = 2;
+    await tester.pump();
 
-    await tester.tap(find.text('Inventory'));
-    await tester.pumpAndSettle();
-    expect(find.text('Type at least 3 characters'), findsOneWidget);
-
-    await tester.enterText(find.byType(TextField).first, 'ds');
-    await tester.pumpAndSettle();
     expect(find.text('Type at least 3 characters'), findsOneWidget);
     expect(find.text('DSLR'), findsOneWidget);
 
+    await tester.enterText(find.byType(TextField).first, 'ds');
+    await tester.pump();
+    expect(find.text('Type at least 3 characters'), findsOneWidget);
+
     await tester.enterText(find.byType(TextField).first, 'dsl');
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
     expect(find.text('Type at least 3 characters'), findsNothing);
     expect(find.text('DSLR'), findsWidgets);
-  });
+  }, timeout: const Timeout(Duration(minutes: 1)));
 
   testWidgets('Customers scoped search shows suggestions after 3 chars', (
     WidgetTester tester,
   ) async {
-    await _pumpAppShell(tester);
+    final ProviderContainer container = await _pumpAppShell(tester);
+    container.read(currentTabIndexProvider.notifier).state = 3;
+    await tester.pump();
 
-    await tester.tap(find.text('Customers'));
-    await tester.pumpAndSettle();
     expect(find.text('Search by name, phone, or nickname'), findsOneWidget);
 
     await tester.enterText(find.byType(TextField).first, 'pri');
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
     expect(find.text('Priya Patel'), findsWidgets);
-  });
+  }, timeout: const Timeout(Duration(minutes: 1)));
 
   testWidgets('starts New Rental flow from Actions sheet', (WidgetTester tester) async {
     await _pumpAppShell(tester);

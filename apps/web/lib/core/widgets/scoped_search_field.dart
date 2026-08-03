@@ -56,7 +56,6 @@ class _ScopedSearchFieldState extends State<ScopedSearchField> {
   late final TextEditingController _controller =
       widget.controller ?? TextEditingController();
   late final FocusNode _fieldFocus = widget.focusNode ?? FocusNode();
-  late final FocusNode _listFocus = FocusNode(debugLabel: 'scoped-search-list');
   late final bool _ownsController = widget.controller == null;
   late final bool _ownsFieldFocus = widget.focusNode == null;
   int _highlightedIndex = -1;
@@ -75,7 +74,6 @@ class _ScopedSearchFieldState extends State<ScopedSearchField> {
     if (_ownsFieldFocus) {
       _fieldFocus.dispose();
     }
-    _listFocus.dispose();
     super.dispose();
   }
 
@@ -86,31 +84,30 @@ class _ScopedSearchFieldState extends State<ScopedSearchField> {
     widget.onSelected(widget.suggestions[index]);
   }
 
-  KeyEventResult _onKey(FocusNode node, KeyEvent event) {
+  void _moveHighlight(int delta) {
+    final int count = widget.suggestions.length;
+    if (!_showSuggestions || count == 0) {
+      return;
+    }
+    setState(() {
+      if (_highlightedIndex < 0) {
+        _highlightedIndex = delta > 0 ? 0 : count - 1;
+      } else {
+        _highlightedIndex = (_highlightedIndex + delta).clamp(0, count - 1);
+      }
+    });
+  }
+
+  KeyEventResult _handleKey(FocusNode node, KeyEvent event) {
     if (!_showSuggestions || event is! KeyDownEvent) {
       return KeyEventResult.ignored;
     }
-    final int count = widget.suggestions.length;
     if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
-      if (count == 0) {
-        return KeyEventResult.ignored;
-      }
-      setState(() {
-        _highlightedIndex = (_highlightedIndex + 1).clamp(0, count - 1);
-      });
-      _listFocus.requestFocus();
+      _moveHighlight(1);
       return KeyEventResult.handled;
     }
     if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
-      if (count == 0) {
-        return KeyEventResult.ignored;
-      }
-      setState(() {
-        _highlightedIndex = _highlightedIndex <= 0
-            ? 0
-            : (_highlightedIndex - 1).clamp(0, count - 1);
-      });
-      _listFocus.requestFocus();
+      _moveHighlight(-1);
       return KeyEventResult.handled;
     }
     if (event.logicalKey == LogicalKeyboardKey.enter ||
@@ -122,7 +119,6 @@ class _ScopedSearchFieldState extends State<ScopedSearchField> {
     }
     if (event.logicalKey == LogicalKeyboardKey.escape) {
       setState(() => _highlightedIndex = -1);
-      _fieldFocus.requestFocus();
       return KeyEventResult.handled;
     }
     return KeyEventResult.ignored;
@@ -133,14 +129,14 @@ class _ScopedSearchFieldState extends State<ScopedSearchField> {
     final ThemeData theme = Theme.of(context);
     final String label = widget.semanticLabel ?? widget.hintText;
 
-    return Focus(
-      onKeyEvent: _onKey,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[
-          Semantics(
-            label: label,
-            textField: true,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        Semantics(
+          label: label,
+          textField: true,
+          child: Focus(
+            onKeyEvent: _handleKey,
             child: TextField(
               controller: _controller,
               focusNode: _fieldFocus,
@@ -157,56 +153,58 @@ class _ScopedSearchFieldState extends State<ScopedSearchField> {
               },
             ),
           ),
-          if (_showSuggestions) ...<Widget>[
-            const SizedBox(height: 8),
-            Semantics(
-              label: widget.suggestions.isEmpty
-                  ? widget.noResultsText
-                  : '${widget.suggestions.length} suggestions',
-              child: Material(
-                color: theme.colorScheme.surfaceContainerHighest
-                    .withValues(alpha: 0.45),
-                borderRadius: BorderRadius.circular(12),
-                child: Focus(
-                  focusNode: _listFocus,
-                  child: widget.suggestions.isEmpty
-                      ? Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Text(
-                            widget.noResultsText,
-                            style: theme.textTheme.bodySmall,
+        ),
+        if (_showSuggestions) ...<Widget>[
+          const SizedBox(height: 8),
+          Semantics(
+            label: widget.suggestions.isEmpty
+                ? widget.noResultsText
+                : '${widget.suggestions.length} suggestions',
+            child: Material(
+              color: theme.colorScheme.surfaceContainerHighest
+                  .withValues(alpha: 0.45),
+              borderRadius: BorderRadius.circular(12),
+              child: widget.suggestions.isEmpty
+                  ? Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Text(
+                        widget.noResultsText,
+                        style: theme.textTheme.bodySmall,
+                      ),
+                    )
+                  : Column(
+                      children: <Widget>[
+                        for (int index = 0;
+                            index < widget.suggestions.length;
+                            index++) ...<Widget>[
+                          if (index > 0) const Divider(height: 1),
+                          Builder(
+                            builder: (BuildContext context) {
+                              final SearchSuggestion suggestion =
+                                  widget.suggestions[index];
+                              final bool highlighted =
+                                  index == _highlightedIndex;
+                              return Semantics(
+                                button: true,
+                                label:
+                                    '${suggestion.title}. ${suggestion.subtitle}',
+                                child: ListTile(
+                                  selected: highlighted,
+                                  leading: Icon(suggestion.leadingIcon),
+                                  title: Text(suggestion.title),
+                                  subtitle: Text(suggestion.subtitle),
+                                  onTap: () => _selectIndex(index),
+                                ),
+                              );
+                            },
                           ),
-                        )
-                      : ListView.separated(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: widget.suggestions.length,
-                          separatorBuilder: (_, _) => const Divider(height: 1),
-                          itemBuilder: (BuildContext context, int index) {
-                            final SearchSuggestion suggestion =
-                                widget.suggestions[index];
-                            final bool highlighted =
-                                index == _highlightedIndex;
-                            return Semantics(
-                              button: true,
-                              label:
-                                  '${suggestion.title}. ${suggestion.subtitle}',
-                              child: ListTile(
-                                selected: highlighted,
-                                leading: Icon(suggestion.leadingIcon),
-                                title: Text(suggestion.title),
-                                subtitle: Text(suggestion.subtitle),
-                                onTap: () => _selectIndex(index),
-                              ),
-                            );
-                          },
-                        ),
-                ),
-              ),
+                        ],
+                      ],
+                    ),
             ),
-          ],
+          ),
         ],
-      ),
+      ],
     );
   }
 }
