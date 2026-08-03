@@ -30,6 +30,15 @@ class AppLocalizationsHi extends AppLocalizations {
   String get actionNewRental => 'नया किराया';
 
   @override
+  String get issueItemAction => 'जारी करें';
+
+  @override
+  String get issueToCustomerAction => 'जारी करें';
+
+  @override
+  String get searchInventoryHint => 'नाम या श्रेणी से खोजें';
+
+  @override
   String get actionReturn => 'वापसी';
 
   @override

@@ -140,6 +140,24 @@ abstract class AppLocalizations {
   /// **'New Rental'**
   String get actionNewRental;
 
+  /// No description provided for @issueItemAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Issue'**
+  String get issueItemAction;
+
+  /// No description provided for @issueToCustomerAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Issue'**
+  String get issueToCustomerAction;
+
+  /// No description provided for @searchInventoryHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by name or category'**
+  String get searchInventoryHint;
+
   /// No description provided for @actionReturn.
   ///
   /// In en, this message translates to:

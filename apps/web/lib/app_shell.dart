@@ -93,10 +93,17 @@ class AppShell extends ConsumerWidget {
     );
   }
 
-  Future<void> _openNewRentalFlow(BuildContext context) {
+  Future<void> _openNewRentalFlow(
+    BuildContext context, {
+    String? customerId,
+    List<String> itemIds = const <String>[],
+  }) {
     return Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => const NewRentalFlowScreen(),
+        builder: (_) => NewRentalFlowScreen(
+          initialCustomerId: customerId,
+          initialInventoryItemIds: itemIds,
+        ),
       ),
     );
   }
@@ -1093,7 +1100,23 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
                     ],
                   ),
                 )
-              : null,
+              : item.availableUnits > 0
+                  ? SafeArea(
+                      minimum: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                      child: FilledButton(
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => NewRentalFlowScreen(
+                                initialInventoryItemIds: <String>[item.id],
+                              ),
+                            ),
+                          );
+                        },
+                        child: Text(l10n.issueItemAction),
+                      ),
+                    )
+                  : null,
         );
       },
     );
@@ -1278,6 +1301,21 @@ class CustomerDetailScreen extends ConsumerWidget {
           ),
         ],
       ),
+      bottomNavigationBar: SafeArea(
+        minimum: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        child: FilledButton(
+          onPressed: () {
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => NewRentalFlowScreen(
+                  initialCustomerId: customer.id,
+                ),
+              ),
+            );
+          },
+          child: Text(l10n.issueToCustomerAction),
+        ),
+      ),
     );
   }
 }
@@ -1460,19 +1498,29 @@ class _SearchSection<T> extends StatelessWidget {
   }
 }
 
+enum _RentalFlowStep { party, items, labels, duration, review }
+
 class NewRentalFlowScreen extends ConsumerStatefulWidget {
-  const NewRentalFlowScreen({super.key});
+  const NewRentalFlowScreen({
+    super.key,
+    this.initialCustomerId,
+    this.initialInventoryItemIds = const <String>[],
+  });
+
+  final String? initialCustomerId;
+  final List<String> initialInventoryItemIds;
 
   @override
   ConsumerState<NewRentalFlowScreen> createState() => _NewRentalFlowScreenState();
 }
 
 class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
-  int _step = 0;
+  int _stepIndex = 0;
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _nicknameController = TextEditingController();
   final TextEditingController _durationController = TextEditingController(text: '1');
+  final TextEditingController _inventorySearchController = TextEditingController();
   final Set<String> _selectedInventoryIds = <String>{};
   final Map<String, TextEditingController> _instanceNameControllers =
       <String, TextEditingController>{};
@@ -1481,11 +1529,51 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
   Customer? _resolvedCustomer;
   DateTime? _customEnd;
   bool _submitting = false;
-
-  static const int _lastStep = 4;
+  bool _prefillApplied = false;
+  String _inventoryQuery = '';
 
   bool get _isSelfSelected =>
-      _resolvedCustomer != null && isSelfCustomer(_resolvedCustomer!);
+      (widget.initialCustomerId != null &&
+          isSelfCustomerId(widget.initialCustomerId!)) ||
+      (_resolvedCustomer != null && isSelfCustomer(_resolvedCustomer!));
+
+  bool get _skipPartyStep =>
+      widget.initialCustomerId != null &&
+      !isSelfCustomerId(widget.initialCustomerId!);
+
+  bool get _nicknameOnlyParty =>
+      widget.initialCustomerId != null &&
+      isSelfCustomerId(widget.initialCustomerId!);
+
+  bool get _showInventorySearch => widget.initialCustomerId != null;
+
+  List<_RentalFlowStep> get _steps {
+    final List<_RentalFlowStep> steps = <_RentalFlowStep>[];
+    if (!_skipPartyStep) {
+      steps.add(_RentalFlowStep.party);
+    }
+    steps.addAll(const <_RentalFlowStep>[
+      _RentalFlowStep.items,
+      _RentalFlowStep.labels,
+      _RentalFlowStep.duration,
+      _RentalFlowStep.review,
+    ]);
+    return steps;
+  }
+
+  _RentalFlowStep get _currentStep => _steps[_stepIndex];
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialInventoryItemIds.isNotEmpty) {
+      _selectedInventoryIds.addAll(widget.initialInventoryItemIds);
+      _syncLabelControllers(_selectedInventoryIds);
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _applyPrefill();
+    });
+  }
 
   @override
   void dispose() {
@@ -1493,6 +1581,7 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
     _nameController.dispose();
     _nicknameController.dispose();
     _durationController.dispose();
+    _inventorySearchController.dispose();
     for (final TextEditingController c in _instanceNameControllers.values) {
       c.dispose();
     }
@@ -1500,6 +1589,60 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
       c.dispose();
     }
     super.dispose();
+  }
+
+  Future<void> _applyPrefill() async {
+    if (_prefillApplied || !mounted) {
+      return;
+    }
+    _prefillApplied = true;
+    if (widget.initialCustomerId == null) {
+      return;
+    }
+    final LocalRepository repository = ref.read(repositoryProvider);
+    Customer? customer;
+    final List<Customer> customers = await repository.listCustomers();
+    final Iterable<Customer> matches = customers.where(
+      (Customer c) => c.id == widget.initialCustomerId,
+    );
+    if (matches.isNotEmpty) {
+      customer = matches.first;
+    } else if (isSelfCustomerId(widget.initialCustomerId!)) {
+      customer = await repository.ensureSelfCustomer();
+    }
+    if (!mounted || customer == null) {
+      return;
+    }
+    setState(() {
+      _resolvedCustomer = customer;
+      _phoneController.text = customer!.phone;
+      if (!isSelfCustomer(customer)) {
+        _nameController.text = customer.name;
+      }
+    });
+  }
+
+  void _pruneUnavailableSelection(List<InventoryItem> availableItems) {
+    if (_selectedInventoryIds.isEmpty) {
+      return;
+    }
+    final Set<String> availableIds =
+        availableItems.map((InventoryItem item) => item.id).toSet();
+    final List<String> stale = _selectedInventoryIds
+        .where((String id) => !availableIds.contains(id))
+        .toList();
+    if (stale.isEmpty) {
+      return;
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _selectedInventoryIds.removeAll(stale);
+        _syncLabelControllers(_selectedInventoryIds);
+      });
+    });
   }
 
   BillingMode _primaryMode(List<InventoryItem> selectedItems) {
@@ -1627,25 +1770,51 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
     setState(() => _resolvedCustomer = matched);
   }
 
+  List<InventoryItem> _filteredAvailable(List<InventoryItem> availableItems) {
+    final String query = _inventoryQuery.trim().toLowerCase();
+    if (query.isEmpty) {
+      return availableItems;
+    }
+    return availableItems
+        .where(
+          (InventoryItem item) =>
+              item.name.toLowerCase().contains(query) ||
+              item.category.toLowerCase().contains(query),
+        )
+        .toList();
+  }
+
+  bool _canContinue(List<InventoryItem> selectedItems) {
+    return switch (_currentStep) {
+      _RentalFlowStep.party => _isSelfSelected
+          ? _nicknameController.text.trim().isNotEmpty
+          : _phoneController.text.trim().length >= 10,
+      _RentalFlowStep.items => _selectedInventoryIds.isNotEmpty,
+      _RentalFlowStep.labels => _labelsComplete(selectedItems),
+      _RentalFlowStep.duration => _durationComplete(selectedItems),
+      _RentalFlowStep.review => true,
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
     final AppLocalizations l10n = context.l10n;
+    final AsyncValue<List<InventoryItem>> inventoryAsync =
+        ref.watch(inventoryProvider);
     final List<InventoryItem> inventory =
-        ref.watch(inventoryProvider).valueOrNull ?? const <InventoryItem>[];
+        inventoryAsync.valueOrNull ?? const <InventoryItem>[];
     final List<InventoryItem> availableItems =
         inventory.where((item) => item.availableUnits > 0).toList();
+    if (inventoryAsync.hasValue) {
+      _pruneUnavailableSelection(availableItems);
+    }
     final List<InventoryItem> selectedItems = availableItems
         .where((item) => _selectedInventoryIds.contains(item.id))
         .toList();
-    final bool canContinue = switch (_step) {
-      0 => _isSelfSelected
-          ? _nicknameController.text.trim().isNotEmpty
-          : _phoneController.text.trim().length >= 10,
-      1 => _selectedInventoryIds.isNotEmpty,
-      2 => _labelsComplete(selectedItems),
-      3 => _durationComplete(selectedItems),
-      _ => true,
-    };
+    final List<InventoryItem> visibleItems = _filteredAvailable(availableItems);
+    final List<_RentalFlowStep> steps = _steps;
+    final bool canContinue = _canContinue(selectedItems);
+    final bool isLastStep = _stepIndex >= steps.length - 1;
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.actionNewRental)),
@@ -1653,32 +1822,34 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
         padding: const EdgeInsets.all(16),
         children: <Widget>[
           Text(
-            l10n.stepOf(_step + 1, _lastStep + 1),
+            l10n.stepOf(_stepIndex + 1, steps.length),
             style: Theme.of(context).textTheme.labelLarge,
           ),
           const SizedBox(height: 8),
-          if (_step == 0) ...<Widget>[
-            Align(
-              alignment: Alignment.centerLeft,
-              child: FilterChip(
-                selected: _isSelfSelected,
-                label: Text(l10n.selfKnownQuickPick),
-                onSelected: (_) => _pickSelfCustomer(),
+          if (_currentStep == _RentalFlowStep.party) ...<Widget>[
+            if (!_nicknameOnlyParty) ...<Widget>[
+              Align(
+                alignment: Alignment.centerLeft,
+                child: FilterChip(
+                  selected: _isSelfSelected,
+                  label: Text(l10n.selfKnownQuickPick),
+                  onSelected: (_) => _pickSelfCustomer(),
+                ),
               ),
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _phoneController,
-              keyboardType: TextInputType.phone,
-              decoration: InputDecoration(
-                labelText: l10n.phoneNumberLabel,
-                hintText: l10n.phoneNumberHint,
+              const SizedBox(height: 8),
+              TextField(
+                controller: _phoneController,
+                keyboardType: TextInputType.phone,
+                decoration: InputDecoration(
+                  labelText: l10n.phoneNumberLabel,
+                  hintText: l10n.phoneNumberHint,
+                ),
+                onChanged: (value) async {
+                  await _onPhoneChanged(value);
+                },
               ),
-              onChanged: (value) async {
-                await _onPhoneChanged(value);
-              },
-            ),
-            const SizedBox(height: 8),
+              const SizedBox(height: 8),
+            ],
             if (_isSelfSelected) ...<Widget>[
               EntityCard(
                 title: kSelfCustomerName,
@@ -1707,7 +1878,7 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
                 leadingIcon: Icons.verified_user_outlined,
                 status: AssetStatus.available,
               )
-            else
+            else if (!_nicknameOnlyParty)
               TextField(
                 controller: _nameController,
                 decoration: InputDecoration(
@@ -1716,15 +1887,29 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
                 ),
               ),
           ],
-          if (_step == 1) ...<Widget>[
+          if (_currentStep == _RentalFlowStep.items) ...<Widget>[
             Text(
               l10n.selectItems,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w700,
               ),
             ),
+            if (_showInventorySearch) ...<Widget>[
+              const SizedBox(height: 8),
+              TextField(
+                controller: _inventorySearchController,
+                decoration: InputDecoration(
+                  labelText: l10n.actionSearch,
+                  hintText: l10n.searchInventoryHint,
+                  prefixIcon: const Icon(Icons.search),
+                ),
+                onChanged: (String value) {
+                  setState(() => _inventoryQuery = value);
+                },
+              ),
+            ],
             const SizedBox(height: 8),
-            ...availableItems.map(
+            ...visibleItems.map(
               (item) => CheckboxListTile(
                 value: _selectedInventoryIds.contains(item.id),
                 title: Text(item.name),
@@ -1748,7 +1933,7 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
               ),
             ),
           ],
-          if (_step == 2) ...<Widget>[
+          if (_currentStep == _RentalFlowStep.labels) ...<Widget>[
             Text(
               l10n.labelInstancesHeading,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -1797,7 +1982,7 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
               );
             }),
           ],
-          if (_step == 3) ...<Widget>[
+          if (_currentStep == _RentalFlowStep.duration) ...<Widget>[
             Text(
               l10n.durationHeading,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -1878,7 +2063,7 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
               ),
             ],
           ],
-          if (_step == 4) ...<Widget>[
+          if (_currentStep == _RentalFlowStep.review) ...<Widget>[
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(14),
@@ -1950,24 +2135,24 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
         minimum: const EdgeInsets.fromLTRB(16, 0, 16, 12),
         child: Row(
           children: <Widget>[
-            if (_step > 0)
+            if (_stepIndex > 0)
               Expanded(
                 child: OutlinedButton(
                   onPressed: _submitting
                       ? null
                       : () => setState(() {
-                          _step -= 1;
+                          _stepIndex -= 1;
                         }),
                   child: Text(l10n.back),
                 ),
               ),
-            if (_step > 0) const SizedBox(width: 8),
+            if (_stepIndex > 0) const SizedBox(width: 8),
             Expanded(
               child: FilledButton(
                 onPressed: (!canContinue || _submitting)
                     ? null
                     : () async {
-                        if (_step == 0 &&
+                        if (_currentStep == _RentalFlowStep.party &&
                             _isSelfSelected &&
                             _nicknameController.text.trim().isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(
@@ -1975,16 +2160,18 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
                           );
                           return;
                         }
-                        if (_step == 1) {
+                        if (_currentStep == _RentalFlowStep.items) {
                           _syncLabelControllers(_selectedInventoryIds);
                         }
-                        if (_step == 2 && !_labelsComplete(selectedItems)) {
+                        if (_currentStep == _RentalFlowStep.labels &&
+                            !_labelsComplete(selectedItems)) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text(l10n.instanceLabelsRequired)),
                           );
                           return;
                         }
-                        if (_step == 3 && !_durationComplete(selectedItems)) {
+                        if (_currentStep == _RentalFlowStep.duration &&
+                            !_durationComplete(selectedItems)) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(
@@ -1996,9 +2183,9 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
                           );
                           return;
                         }
-                        if (_step < _lastStep) {
+                        if (!isLastStep) {
                           setState(() {
-                            _step += 1;
+                            _stepIndex += 1;
                           });
                           return;
                         }
@@ -2062,7 +2249,7 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
                         }
                       },
                 child: Text(
-                  _step < _lastStep ? l10n.continueAction : l10n.confirmRental,
+                  isLastStep ? l10n.confirmRental : l10n.continueAction,
                 ),
               ),
             ),

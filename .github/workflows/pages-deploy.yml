@@ -1,10 +1,9 @@
 # Deploy Flutter web to GitHub Pages on pushes to main.
 # Site: https://kamal01236.github.io/asset-os/
+# (Not Fly.io — fly-deploy.yml / Dockerfile were removed; asset-os-web.fly.dev is unrelated.)
 #
 # Prerequisites (both required or deploy-pages returns 404):
-# 1. GitHub Pages must be available for this repo:
-#    - Public repos: available on Free plan
-#    - Private repos: GitHub Pro (or Team/Enterprise) required
+# 1. GitHub Pages available: public repo (Free) or private + GitHub Pro/Team/Enterprise
 # 2. Settings → Pages → Build and deployment → Source = GitHub Actions
 #    https://github.com/kamal01236/asset-os/settings/pages
 name: Deploy GitHub Pages

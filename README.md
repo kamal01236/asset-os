@@ -52,14 +52,16 @@ From Windows PowerShell:
 
 ### Customer feedback (GitHub Pages)
 
-Public preview URL: [https://kamal01236.github.io/asset-os/](https://kamal01236.github.io/asset-os/)
+**Public preview URL (use this):** [https://kamal01236.github.io/asset-os/](https://kamal01236.github.io/asset-os/)
 
 1. Local preview: `./scripts/localrun.sh` — open the printed URL.
 2. Public preview: push to `main` (or run **Actions → Deploy GitHub Pages → Run workflow**). CI builds Flutter web with `--base-href /asset-os/` and publishes via [`.github/workflows/pages-deploy.yml`](.github/workflows/pages-deploy.yml).
 
-**One-time GitHub Pages setup:**
+**Do not use** `https://asset-os-web.fly.dev` — that hostname is not this app. Fly.io deploy was removed after every CI deploy failed (empty/invalid `FLY_API_TOKEN`). Hosting is GitHub Pages only.
 
-1. Repo is currently **private**. GitHub Pages for private repos needs **GitHub Pro** (or make the repo **public**).
-2. Open the repo on GitHub → **Settings → Pages → Build and deployment → Source**: select **GitHub Actions**.
-3. After the first successful workflow run, open the Pages URL above.
-4. Optionally remove obsolete **Production** environment secrets (`FLY_API_TOKEN`, optional `FLY_APP` / `FLY_ORG`) if they remain from the old Fly.io deploy.
+**One-time GitHub Pages setup** (already done for this public repo if the site loads):
+
+1. Repo must be **public** (Free plan) or have GitHub Pro/Team for private Pages.
+2. **Settings → Pages → Build and deployment → Source** = **GitHub Actions**.
+3. After a successful **Deploy GitHub Pages** workflow, open the Pages URL above.
+4. Optional cleanup: delete the obsolete **Production** environment and its `FLY_API_TOKEN` / `FLY_APP` / `FLY_ORG` secrets/vars from the old Fly.io attempt.

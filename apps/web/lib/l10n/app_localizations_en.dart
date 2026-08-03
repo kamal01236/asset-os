@@ -30,6 +30,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get actionNewRental => 'New Rental';
 
   @override
+  String get issueItemAction => 'Issue';
+
+  @override
+  String get issueToCustomerAction => 'Issue';
+
+  @override
+  String get searchInventoryHint => 'Search by name or category';
+
+  @override
   String get actionReturn => 'Return';
 
   @override
