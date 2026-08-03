@@ -119,7 +119,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.widgetWithText(AppBar, 'New Rental'), findsOneWidget);
-    expect(find.text('Step 1 of 4'), findsOneWidget);
+    expect(find.text('Step 1 of 5'), findsOneWidget);
     expect(find.text('Phone number'), findsOneWidget);
   });
 

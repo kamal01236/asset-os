@@ -22,6 +22,13 @@ class InventoryItems extends Table {
   TextColumn get status => text()();
   TextColumn get qrCode => text()();
   TextColumn get notes => text().nullable()();
+  /// `daily` | `weekly` | `monthly` | `fixed` | `custom`
+  TextColumn get billingMode => text().withDefault(const Constant('weekly'))();
+  /// Rate in paise (minor units).
+  IntColumn get rateAmount => integer().withDefault(const Constant(0))();
+  /// Optional overdue fee per day in paise.
+  IntColumn get lateFeePerDay => integer().withDefault(const Constant(0))();
+  TextColumn get currencyCode => text().withDefault(const Constant('INR'))();
 
   @override
   Set<Column<Object>> get primaryKey => <Column<Object>>{id};
@@ -37,6 +44,17 @@ class Rentals extends Table {
   TextColumn get qrCode => text()();
   /// Per-rental display name (required when issuing to SELF Known).
   TextColumn get nickname => text().nullable()();
+  /// Snapshot of billing at issue (`daily`/`weekly`/`monthly`/`fixed`/`custom`).
+  TextColumn get billingMode => text().withDefault(const Constant('weekly'))();
+  /// Snapshot rate in paise (primary/first line).
+  IntColumn get rateAmount => integer().withDefault(const Constant(0))();
+  /// Snapshot late fee per day in paise (sum of lines).
+  IntColumn get lateFeePerDay => integer().withDefault(const Constant(0))();
+  IntColumn get baseAmount => integer().withDefault(const Constant(0))();
+  IntColumn get lateAmount => integer().withDefault(const Constant(0))();
+  IntColumn get totalAmount => integer().withDefault(const Constant(0))();
+  /// Chosen duration (e.g. 1 week → 1; fixed due-days still stored here).
+  IntColumn get durationUnits => integer().withDefault(const Constant(1))();
 
   @override
   Set<Column<Object>> get primaryKey => <Column<Object>>{id};

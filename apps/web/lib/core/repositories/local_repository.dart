@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../db/app_database.dart';
 import '../models/entities.dart';
 import '../models/self_customer.dart';
+import '../pricing/rental_pricing.dart';
 import '../templates/industry_templates.dart';
 
 class TemplateImportResult {
@@ -144,6 +145,9 @@ class LocalRepository {
     required Customer customer,
     required List<RentalLineInput> lines,
     String? nickname,
+    int durationUnits = 1,
+    DateTime? customEnd,
+    BillingMode? billingModeOverride,
   }) async {
     final String? trimmedNick = nickname?.trim();
     final String? storedNick =
@@ -180,10 +184,45 @@ class LocalRepository {
     final DateTime now = DateTime.now();
     final String rentalId = 'REN-${now.millisecondsSinceEpoch}';
     final String qrCode = 'rental:${now.millisecondsSinceEpoch}';
+    final int units = durationUnits < 1 ? 1 : durationUnits;
 
     await _db.transaction(() async {
       for (final RentalLineInput line in normalized) {
         await _assertShortCodeAvailable(line.shortCode);
+      }
+
+      final List<InventoryItemRow> itemRows = <InventoryItemRow>[];
+      for (final RentalLineInput line in normalized) {
+        final InventoryItemRow? row = await (_db.select(_db.inventoryItems)
+              ..where((t) => t.id.equals(line.itemId)))
+            .getSingleOrNull();
+        if (row == null) {
+          throw ArgumentError('Inventory item not found: ${line.itemId}');
+        }
+        itemRows.add(row);
+      }
+
+      // v1: duration UI follows primary (first) item mode; charges are per-line.
+      final BillingMode mode = billingModeOverride ??
+          BillingMode.parse(itemRows.first.billingMode);
+      final DateTime dueAt = computeDueAt(
+        start: now,
+        mode: mode,
+        durationUnits: units,
+        customEnd: customEnd,
+      );
+
+      int baseAmount = 0;
+      int lateFeePerDay = 0;
+      for (final InventoryItemRow row in itemRows) {
+        final BillingMode lineMode = BillingMode.parse(row.billingMode);
+        baseAmount += computeBaseAmount(
+          mode: lineMode,
+          rateAmount: row.rateAmount,
+          start: now,
+          due: dueAt,
+        );
+        lateFeePerDay += row.lateFeePerDay;
       }
 
       await _db.into(_db.rentals).insert(
@@ -191,13 +230,22 @@ class LocalRepository {
           id: rentalId,
           customerId: customer.id,
           startedAt: now,
-          dueAt: now.add(const Duration(days: 3)),
+          dueAt: dueAt,
           qrCode: qrCode,
           nickname: Value<String?>(storedNick),
+          billingMode: Value<String>(mode.name),
+          rateAmount: Value<int>(itemRows.first.rateAmount),
+          lateFeePerDay: Value<int>(lateFeePerDay),
+          baseAmount: Value<int>(baseAmount),
+          lateAmount: const Value<int>(0),
+          totalAmount: Value<int>(baseAmount),
+          durationUnits: Value<int>(units),
         ),
       );
 
-      for (final RentalLineInput line in normalized) {
+      for (var i = 0; i < normalized.length; i++) {
+        final RentalLineInput line = normalized[i];
+        final InventoryItemRow row = itemRows[i];
         await _db.into(_db.rentalItems).insert(
           RentalItemsCompanion.insert(
             rentalId: rentalId,
@@ -207,18 +255,16 @@ class LocalRepository {
           ),
         );
 
-        final InventoryItemRow? row = await (_db.select(_db.inventoryItems)
-              ..where((t) => t.id.equals(line.itemId)))
-            .getSingleOrNull();
-        if (row == null) {
-          continue;
-        }
-        final int nextAvailable = (row.availableUnits - 1).clamp(0, row.totalUnits);
-        await (_db.update(_db.inventoryItems)..where((t) => t.id.equals(line.itemId))).write(
+        final int nextAvailable =
+            (row.availableUnits - 1).clamp(0, row.totalUnits);
+        await (_db.update(_db.inventoryItems)..where((t) => t.id.equals(line.itemId)))
+            .write(
           InventoryItemsCompanion(
             availableUnits: Value<int>(nextAvailable),
             status: Value<String>(
-              nextAvailable == 0 ? AssetStatus.rented.name : AssetStatus.available.name,
+              nextAvailable == 0
+                  ? AssetStatus.rented.name
+                  : AssetStatus.available.name,
             ),
           ),
         );
@@ -260,15 +306,31 @@ class LocalRepository {
         return;
       }
 
+      final int lateAmount = computeLateAmount(
+        due: rental.dueAt,
+        asOf: now,
+        lateFeePerDay: rental.lateFeePerDay,
+      );
+      final int totalAmount = computeTotalAmount(
+        baseAmount: rental.baseAmount,
+        lateAmount: lateAmount,
+      );
+
       await (_db.update(_db.rentals)..where((t) => t.id.equals(rentalId))).write(
-        RentalsCompanion(returnedAt: Value<DateTime?>(now)),
+        RentalsCompanion(
+          returnedAt: Value<DateTime?>(now),
+          lateAmount: Value<int>(lateAmount),
+          totalAmount: Value<int>(totalAmount),
+        ),
       );
 
       await _db.into(_db.rentalEvents).insert(
         RentalEventsCompanion.insert(
           rentalId: rentalId,
           title: 'Returned',
-          subtitle: 'Marked as returned by staff.',
+          subtitle: lateAmount > 0
+              ? 'Marked as returned by staff. Late fee applied.'
+              : 'Marked as returned by staff.',
           at: now,
         ),
       );
@@ -299,6 +361,10 @@ class LocalRepository {
     required String category,
     required int units,
     String? notes,
+    BillingMode billingMode = BillingMode.weekly,
+    int rateAmount = 0,
+    int lateFeePerDay = 0,
+    String currencyCode = 'INR',
   }) async {
     final DateTime now = DateTime.now();
     await _db.into(_db.inventoryItems).insert(
@@ -311,6 +377,12 @@ class LocalRepository {
         status: AssetStatus.available.name,
         qrCode: 'inventory:${now.millisecondsSinceEpoch}',
         notes: Value<String?>(notes?.isEmpty == true ? null : notes),
+        billingMode: Value<String>(billingMode.name),
+        rateAmount: Value<int>(rateAmount < 0 ? 0 : rateAmount),
+        lateFeePerDay: Value<int>(lateFeePerDay < 0 ? 0 : lateFeePerDay),
+        currencyCode: Value<String>(
+          currencyCode.trim().isEmpty ? 'INR' : currencyCode.trim().toUpperCase(),
+        ),
       ),
     );
   }
@@ -350,6 +422,16 @@ class LocalRepository {
           status: AssetStatus.available.name,
           qrCode: 'inventory:$stamp',
           notes: Value<String?>(item.notes?.isEmpty == true ? null : item.notes),
+          billingMode: Value<String>(item.billingMode.name),
+          rateAmount: Value<int>(item.rateAmount < 0 ? 0 : item.rateAmount),
+          lateFeePerDay: Value<int>(
+            item.lateFeePerDay < 0 ? 0 : item.lateFeePerDay,
+          ),
+          currencyCode: Value<String>(
+            item.currencyCode.trim().isEmpty
+                ? 'INR'
+                : item.currencyCode.trim().toUpperCase(),
+          ),
         ),
       );
       existingNames.add(key);
@@ -366,6 +448,10 @@ class LocalRepository {
     required String category,
     required int units,
     String? notes,
+    BillingMode? billingMode,
+    int? rateAmount,
+    int? lateFeePerDay,
+    String? currencyCode,
   }) async {
     final InventoryItemRow? row = await (_db.select(_db.inventoryItems)
           ..where((t) => t.id.equals(id)))
@@ -395,6 +481,22 @@ class LocalRepository {
           nextAvailable > 0 ? AssetStatus.available.name : AssetStatus.rented.name,
         ),
         notes: Value<String?>(notes?.isEmpty == true ? null : notes),
+        billingMode: billingMode == null
+            ? const Value.absent()
+            : Value<String>(billingMode.name),
+        rateAmount: rateAmount == null
+            ? const Value.absent()
+            : Value<int>(rateAmount < 0 ? 0 : rateAmount),
+        lateFeePerDay: lateFeePerDay == null
+            ? const Value.absent()
+            : Value<int>(lateFeePerDay < 0 ? 0 : lateFeePerDay),
+        currencyCode: currencyCode == null
+            ? const Value.absent()
+            : Value<String>(
+                currencyCode.trim().isEmpty
+                    ? 'INR'
+                    : currencyCode.trim().toUpperCase(),
+              ),
       ),
     );
   }
@@ -550,6 +652,13 @@ class LocalRepository {
             returnedAt: Value<DateTime?>(rental.returnedAt),
             qrCode: rental.qrCode,
             nickname: Value<String?>(rental.nickname),
+            billingMode: Value<String>(rental.billingMode.name),
+            rateAmount: Value<int>(rental.rateAmount),
+            lateFeePerDay: Value<int>(rental.lateFeePerDay),
+            baseAmount: Value<int>(rental.baseAmount),
+            lateAmount: Value<int>(rental.lateAmount),
+            totalAmount: Value<int>(rental.totalAmount),
+            durationUnits: Value<int>(rental.durationUnits),
           ),
         );
         for (final RentalLine line in rental.lines) {
@@ -602,6 +711,10 @@ class LocalRepository {
       status: item.status.name,
       qrCode: item.qrCode,
       notes: Value<String?>(item.notes),
+      billingMode: Value<String>(item.billingMode.name),
+      rateAmount: Value<int>(item.rateAmount),
+      lateFeePerDay: Value<int>(item.lateFeePerDay),
+      currencyCode: Value<String>(item.currencyCode),
     );
   }
 
@@ -625,6 +738,10 @@ class LocalRepository {
       status: AssetStatus.values.byName(row.status),
       qrCode: row.qrCode,
       notes: row.notes,
+      billingMode: BillingMode.parse(row.billingMode),
+      rateAmount: row.rateAmount,
+      lateFeePerDay: row.lateFeePerDay,
+      currencyCode: row.currencyCode,
     );
   }
 
@@ -660,6 +777,13 @@ class LocalRepository {
       returnedAt: row.returnedAt,
       qrCode: row.qrCode,
       nickname: row.nickname,
+      billingMode: BillingMode.parse(row.billingMode),
+      rateAmount: row.rateAmount,
+      lateFeePerDay: row.lateFeePerDay,
+      baseAmount: row.baseAmount,
+      lateAmount: row.lateAmount,
+      totalAmount: row.totalAmount,
+      durationUnits: row.durationUnits,
       timeline: events
           .map(
             (event) => RentalEvent(
@@ -711,6 +835,9 @@ AppDataSnapshot buildDemoSnapshot({DateTime? now}) {
       totalUnits: 3,
       status: AssetStatus.available,
       qrCode: 'inventory:2001',
+      billingMode: BillingMode.daily,
+      rateAmount: 150000,
+      lateFeePerDay: 20000,
     ),
     const InventoryItem(
       id: 'INV-2002',
@@ -720,6 +847,9 @@ AppDataSnapshot buildDemoSnapshot({DateTime? now}) {
       totalUnits: 2,
       status: AssetStatus.rented,
       qrCode: 'inventory:2002',
+      billingMode: BillingMode.daily,
+      rateAmount: 25000,
+      lateFeePerDay: 5000,
     ),
     const InventoryItem(
       id: 'INV-2003',
@@ -729,6 +859,8 @@ AppDataSnapshot buildDemoSnapshot({DateTime? now}) {
       totalUnits: 1,
       status: AssetStatus.available,
       qrCode: 'inventory:2003',
+      billingMode: BillingMode.daily,
+      rateAmount: 20000,
     ),
   ];
 
@@ -746,6 +878,13 @@ AppDataSnapshot buildDemoSnapshot({DateTime? now}) {
       ],
       startedAt: clock.subtract(const Duration(days: 2)),
       dueAt: clock,
+      billingMode: BillingMode.daily,
+      rateAmount: 25000,
+      lateFeePerDay: 5000,
+      baseAmount: 50000,
+      lateAmount: 0,
+      totalAmount: 50000,
+      durationUnits: 2,
       timeline: <RentalEvent>[
         RentalEvent(
           title: 'Due today',
@@ -773,6 +912,13 @@ AppDataSnapshot buildDemoSnapshot({DateTime? now}) {
       ],
       startedAt: clock.subtract(const Duration(days: 5)),
       dueAt: clock.subtract(const Duration(days: 1)),
+      billingMode: BillingMode.daily,
+      rateAmount: 150000,
+      lateFeePerDay: 20000,
+      baseAmount: 600000,
+      lateAmount: 0,
+      totalAmount: 600000,
+      durationUnits: 4,
       timeline: <RentalEvent>[
         RentalEvent(
           title: 'Returned',

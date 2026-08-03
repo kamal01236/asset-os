@@ -23,3 +23,18 @@ String localizedStatusLabel(AppLocalizations l10n, AssetStatus status) {
       return l10n.statusArchived;
   }
 }
+
+String localizedBillingMode(AppLocalizations l10n, BillingMode mode) {
+  switch (mode) {
+    case BillingMode.daily:
+      return l10n.billingModeDaily;
+    case BillingMode.weekly:
+      return l10n.billingModeWeekly;
+    case BillingMode.monthly:
+      return l10n.billingModeMonthly;
+    case BillingMode.fixed:
+      return l10n.billingModeFixed;
+    case BillingMode.custom:
+      return l10n.billingModeCustom;
+  }
+}

@@ -5,6 +5,7 @@ import 'core/config/app_branding.dart';
 import 'core/l10n/l10n_ext.dart';
 import 'core/models/entities.dart';
 import 'core/models/self_customer.dart';
+import 'core/pricing/rental_pricing.dart';
 import 'core/providers/app_providers.dart';
 import 'core/repositories/local_repository.dart';
 import 'core/widgets/rental_timeline.dart';
@@ -345,10 +346,11 @@ class RentalsScreen extends ConsumerWidget {
               title: rental.lines.isNotEmpty
                   ? rental.lines.map((RentalLine line) => line.displayLabel).join(', ')
                   : rental.id,
-              subtitle: l10n.rentalDueSubtitle(
-                rentalPartyLabel(customer, rental),
-                _date(rental.dueAt),
-              ),
+              subtitle:
+                  '${rentalPartyLabel(customer, rental)} · ${l10n.rentalAmountSubtitle(
+                    _date(rental.dueAt),
+                    formatMoney(rental.totalAmountAsOf(now)),
+                  )}',
               leadingIcon: Icons.assignment_outlined,
               status: rental.statusFor(now),
               trailing: const Icon(Icons.chevron_right),
@@ -387,11 +389,15 @@ class InventoryScreen extends ConsumerWidget {
                 item.availableUnits > 0 ? AssetStatus.available : AssetStatus.rented;
             return EntityCard(
               title: item.name,
-              subtitle: l10n.inventoryAvailableSubtitle(
-                item.category,
-                item.availableUnits,
-                item.totalUnits,
-              ),
+              subtitle:
+                  '${l10n.inventoryAvailableSubtitle(
+                    item.category,
+                    item.availableUnits,
+                    item.totalUnits,
+                  )} · ${l10n.inventoryRateSubtitle(
+                    localizedBillingMode(l10n, item.billingMode),
+                    formatMoney(item.rateAmount, currencyCode: item.currencyCode),
+                  )}',
               leadingIcon: Icons.inventory_2_outlined,
               status: status,
               trailing: const Icon(Icons.chevron_right),
@@ -648,6 +654,9 @@ class RentalDetailScreen extends ConsumerWidget {
 
     final Rental rental = rentals.firstWhere((item) => item.id == rentalId);
     final Customer customer = customers.firstWhere((item) => item.id == rental.customerId);
+    final DateTime now = DateTime.now();
+    final int lateShown = rental.lateAmountAsOf(now);
+    final int totalShown = rental.totalAmountAsOf(now);
 
     return Scaffold(
       appBar: AppBar(title: Text(rental.id)),
@@ -660,7 +669,7 @@ class RentalDetailScreen extends ConsumerWidget {
                 ? l10n.rentalNicknameSubtitle(customer.name, customer.phone)
                 : l10n.phoneLabel(customer.phone),
             leadingIcon: Icons.person_outline,
-            status: rental.statusFor(DateTime.now()),
+            status: rental.statusFor(now),
           ),
           const SizedBox(height: 10),
           Card(
@@ -675,6 +684,35 @@ class RentalDetailScreen extends ConsumerWidget {
                     padding: const EdgeInsets.only(bottom: 4),
                     child: Text('• ${line.displayLabel}'),
                   )),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(l10n.chargesHeading, style: Theme.of(context).textTheme.titleSmall),
+                  const SizedBox(height: 6),
+                  Text(l10n.reviewDueLabel(_date(rental.dueAt))),
+                  Text(
+                    l10n.inventoryRateSubtitle(
+                      localizedBillingMode(l10n, rental.billingMode),
+                      formatMoney(rental.rateAmount),
+                    ),
+                  ),
+                  Text(l10n.chargeBaseLabel(formatMoney(rental.baseAmount))),
+                  if (lateShown > 0)
+                    Text(l10n.chargeLateLabel(formatMoney(lateShown))),
+                  Text(
+                    l10n.chargeTotalLabel(formatMoney(totalShown)),
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -760,6 +798,9 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
   final TextEditingController _categoryController = TextEditingController();
   final TextEditingController _unitsController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
+  final TextEditingController _rateController = TextEditingController();
+  final TextEditingController _lateFeeController = TextEditingController();
+  BillingMode _billingMode = BillingMode.weekly;
 
   @override
   void dispose() {
@@ -767,6 +808,8 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
     _categoryController.dispose();
     _unitsController.dispose();
     _notesController.dispose();
+    _rateController.dispose();
+    _lateFeeController.dispose();
     super.dispose();
   }
 
@@ -775,6 +818,9 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
     _categoryController.text = item.category;
     _unitsController.text = '${item.totalUnits}';
     _notesController.text = item.notes ?? '';
+    _rateController.text = paiseToRupeesField(item.rateAmount);
+    _lateFeeController.text = paiseToRupeesField(item.lateFeePerDay);
+    _billingMode = item.billingMode;
     setState(() => _editing = true);
   }
 
@@ -799,6 +845,9 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
       category: category,
       units: units < 1 ? 1 : units,
       notes: _notesController.text.trim(),
+      billingMode: _billingMode,
+      rateAmount: parseRupeesToPaise(_rateController.text),
+      lateFeePerDay: parseRupeesToPaise(_lateFeeController.text),
     );
     if (!mounted) {
       return;
@@ -859,6 +908,50 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
                       ),
                     ),
                     const SizedBox(height: 8),
+                    Text(
+                      l10n.pricingSectionTitle,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    DropdownButtonFormField<BillingMode>(
+                      key: ValueKey<String>('edit-billing-$_billingMode'),
+                      initialValue: _billingMode,
+                      decoration: InputDecoration(labelText: l10n.billingModeLabel),
+                      items: BillingMode.values
+                          .map(
+                            (BillingMode mode) => DropdownMenuItem<BillingMode>(
+                              value: mode,
+                              child: Text(localizedBillingMode(l10n, mode)),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (BillingMode? mode) {
+                        if (mode != null) {
+                          setState(() => _billingMode = mode);
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: _rateController,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      decoration: InputDecoration(
+                        labelText: l10n.rateAmountLabel,
+                        hintText: l10n.rateAmountHint,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: _lateFeeController,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      decoration: InputDecoration(
+                        labelText: l10n.lateFeePerDayLabel,
+                        hintText: l10n.lateFeePerDayHint,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
                     TextField(
                       controller: _notesController,
                       decoration: InputDecoration(
@@ -877,6 +970,18 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
                       ),
                       leadingIcon: Icons.inventory_2_outlined,
                       status: status,
+                    ),
+                    const SizedBox(height: 10),
+                    Card(
+                      child: ListTile(
+                        leading: const Icon(Icons.payments_outlined),
+                        title: Text(l10n.pricingSectionTitle),
+                        subtitle: Text(
+                          '${localizedBillingMode(l10n, item.billingMode)} · '
+                          '${formatMoney(item.rateAmount, currencyCode: item.currencyCode)}'
+                          '${item.lateFeePerDay > 0 ? ' · ${formatMoney(item.lateFeePerDay)}/day late' : ''}',
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 10),
                     Card(
@@ -1010,12 +1115,10 @@ class CustomerDetailScreen extends ConsumerWidget {
                 title: rental.lines.isNotEmpty
                     ? rental.lines.map((RentalLine line) => line.displayLabel).join(', ')
                     : rental.id,
-                subtitle: rental.nickname?.trim().isNotEmpty == true
-                    ? l10n.rentalNicknameDueSubtitle(
-                        rental.nickname!.trim(),
-                        _date(rental.dueAt),
-                      )
-                    : l10n.dueDate(_date(rental.dueAt)),
+                subtitle: l10n.rentalAmountSubtitle(
+                  _date(rental.dueAt),
+                  formatMoney(rental.totalAmountAsOf(DateTime.now())),
+                ),
                 leadingIcon: Icons.assignment_outlined,
                 status: rental.statusFor(DateTime.now()),
                 onTap: () {
@@ -1105,7 +1208,10 @@ class _UniversalSearchScreenState extends ConsumerState<UniversalSearchScreen> {
               title: rental.lines.isNotEmpty
                   ? rental.lines.map((RentalLine line) => line.displayLabel).join(', ')
                   : rental.id,
-              subtitle: l10n.dueDate(_date(rental.dueAt)),
+              subtitle: l10n.rentalAmountSubtitle(
+                _date(rental.dueAt),
+                formatMoney(rental.totalAmountAsOf(DateTime.now())),
+              ),
               leadingIcon: Icons.assignment_outlined,
               status: rental.statusFor(DateTime.now()),
               onTap: () {
@@ -1220,15 +1326,17 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _nicknameController = TextEditingController();
+  final TextEditingController _durationController = TextEditingController(text: '1');
   final Set<String> _selectedInventoryIds = <String>{};
   final Map<String, TextEditingController> _instanceNameControllers =
       <String, TextEditingController>{};
   final Map<String, TextEditingController> _shortCodeControllers =
       <String, TextEditingController>{};
   Customer? _resolvedCustomer;
+  DateTime? _customEnd;
   bool _submitting = false;
 
-  static const int _lastStep = 3;
+  static const int _lastStep = 4;
 
   bool get _isSelfSelected =>
       _resolvedCustomer != null && isSelfCustomer(_resolvedCustomer!);
@@ -1238,6 +1346,7 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
     _phoneController.dispose();
     _nameController.dispose();
     _nicknameController.dispose();
+    _durationController.dispose();
     for (final TextEditingController c in _instanceNameControllers.values) {
       c.dispose();
     }
@@ -1245,6 +1354,62 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
       c.dispose();
     }
     super.dispose();
+  }
+
+  BillingMode _primaryMode(List<InventoryItem> selectedItems) {
+    if (selectedItems.isEmpty) {
+      return BillingMode.weekly;
+    }
+    return selectedItems.first.billingMode;
+  }
+
+  int _durationUnitsValue() {
+    final int parsed = int.tryParse(_durationController.text.trim()) ?? 0;
+    return parsed < 1 ? 0 : parsed;
+  }
+
+  bool _durationComplete(List<InventoryItem> selectedItems) {
+    final BillingMode mode = _primaryMode(selectedItems);
+    if (mode == BillingMode.custom) {
+      if (_customEnd == null) {
+        return false;
+      }
+      final DateTime today = DateTime.now();
+      final DateTime startDay = DateTime(today.year, today.month, today.day);
+      final DateTime endDay =
+          DateTime(_customEnd!.year, _customEnd!.month, _customEnd!.day);
+      return !endDay.isBefore(startDay);
+    }
+    return _durationUnitsValue() >= 1;
+  }
+
+  DateTime _previewDue(List<InventoryItem> selectedItems) {
+    final DateTime now = DateTime.now();
+    final BillingMode mode = _primaryMode(selectedItems);
+    return computeDueAt(
+      start: now,
+      mode: mode,
+      durationUnits: _durationUnitsValue() < 1 ? 1 : _durationUnitsValue(),
+      customEnd: _customEnd,
+    );
+  }
+
+  int _lineCharge(InventoryItem item, DateTime due) {
+    return computeBaseAmount(
+      mode: item.billingMode,
+      rateAmount: item.rateAmount,
+      start: DateTime.now(),
+      due: due,
+    );
+  }
+
+  int _previewBaseTotal(List<InventoryItem> selectedItems) {
+    final DateTime due = _previewDue(selectedItems);
+    int total = 0;
+    for (final InventoryItem item in selectedItems) {
+      total += _lineCharge(item, due);
+    }
+    return total;
   }
 
   void _syncLabelControllers(Iterable<String> selectedIds) {
@@ -1332,6 +1497,7 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
           : _phoneController.text.trim().length >= 10,
       1 => _selectedInventoryIds.isNotEmpty,
       2 => _labelsComplete(selectedItems),
+      3 => _durationComplete(selectedItems),
       _ => true,
     };
 
@@ -1412,7 +1578,11 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
                 value: _selectedInventoryIds.contains(item.id),
                 title: Text(item.name),
                 subtitle: Text(
-                  l10n.itemAvailableCount(item.category, item.availableUnits),
+                  '${l10n.itemAvailableCount(item.category, item.availableUnits)} · '
+                  '${l10n.inventoryRateSubtitle(
+                    localizedBillingMode(l10n, item.billingMode),
+                    formatMoney(item.rateAmount, currencyCode: item.currencyCode),
+                  )}',
                 ),
                 onChanged: (checked) {
                   setState(() {
@@ -1477,6 +1647,87 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
             }),
           ],
           if (_step == 3) ...<Widget>[
+            Text(
+              l10n.durationHeading,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              l10n.durationHint,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              localizedBillingMode(l10n, _primaryMode(selectedItems)),
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 12),
+            if (_primaryMode(selectedItems) == BillingMode.custom) ...<Widget>[
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(l10n.customEndDateLabel),
+                subtitle: Text(
+                  _customEnd == null ? '—' : _date(_customEnd!),
+                ),
+                trailing: const Icon(Icons.calendar_today_outlined),
+                onTap: () async {
+                  final DateTime now = DateTime.now();
+                  final DateTime? picked = await showDatePicker(
+                    context: context,
+                    initialDate: _customEnd ?? now.add(const Duration(days: 1)),
+                    firstDate: DateTime(now.year, now.month, now.day),
+                    lastDate: now.add(const Duration(days: 365 * 2)),
+                  );
+                  if (picked != null) {
+                    setState(() => _customEnd = picked);
+                  }
+                },
+              ),
+            ] else
+              TextField(
+                controller: _durationController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: switch (_primaryMode(selectedItems)) {
+                    BillingMode.daily => l10n.durationUnitsDaily,
+                    BillingMode.weekly => l10n.durationUnitsWeekly,
+                    BillingMode.monthly => l10n.durationUnitsMonthly,
+                    BillingMode.fixed => l10n.durationUnitsFixed,
+                    BillingMode.custom => l10n.durationUnitsLabel,
+                  },
+                ),
+                onChanged: (_) => setState(() {}),
+              ),
+            if (_durationComplete(selectedItems)) ...<Widget>[
+              const SizedBox(height: 12),
+              Text(l10n.chargePreviewDue(_date(_previewDue(selectedItems)))),
+              const SizedBox(height: 6),
+              ...selectedItems.map((InventoryItem item) {
+                final int amount =
+                    _lineCharge(item, _previewDue(selectedItems));
+                return Text(
+                  l10n.chargeLineAmount(
+                    item.name,
+                    formatMoney(amount, currencyCode: item.currencyCode),
+                  ),
+                );
+              }),
+              const SizedBox(height: 6),
+              Text(
+                l10n.chargeTotalLabel(
+                  formatMoney(_previewBaseTotal(selectedItems)),
+                ),
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ],
+          if (_step == 4) ...<Widget>[
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(14),
@@ -1507,6 +1758,8 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
                       ),
                     ],
                     const SizedBox(height: 6),
+                    Text(l10n.reviewDueLabel(_date(_previewDue(selectedItems)))),
+                    const SizedBox(height: 6),
                     Text(l10n.reviewItemsLabel),
                     ...selectedItems.map((InventoryItem item) {
                       final String name =
@@ -1514,15 +1767,27 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
                       final String code = LocalRepository.normalizeShortCode(
                         _shortCodeControllers[item.id]?.text ?? '',
                       );
+                      final int amount =
+                          _lineCharge(item, _previewDue(selectedItems));
                       return Text(
                         '• ${RentalLine(
                           itemId: item.id,
                           catalogName: item.name,
                           instanceName: name,
                           shortCode: code,
-                        ).displayLabel}',
+                        ).displayLabel} — ${formatMoney(amount, currencyCode: item.currencyCode)}',
                       );
                     }),
+                    const SizedBox(height: 6),
+                    Text(l10n.reviewChargesLabel),
+                    Text(
+                      l10n.chargeTotalLabel(
+                        formatMoney(_previewBaseTotal(selectedItems)),
+                      ),
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -1568,6 +1833,18 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
                           );
                           return;
                         }
+                        if (_step == 3 && !_durationComplete(selectedItems)) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                _primaryMode(selectedItems) == BillingMode.custom
+                                    ? l10n.customEndRequired
+                                    : l10n.durationRequired,
+                              ),
+                            ),
+                          );
+                          return;
+                        }
                         if (_step < _lastStep) {
                           setState(() {
                             _step += 1;
@@ -1594,6 +1871,15 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
                             customer: customer,
                             lines: _buildLineInputs(selectedItems),
                             nickname: nickname,
+                            durationUnits: _primaryMode(selectedItems) ==
+                                    BillingMode.custom
+                                ? 1
+                                : _durationUnitsValue(),
+                            customEnd: _primaryMode(selectedItems) ==
+                                    BillingMode.custom
+                                ? _customEnd
+                                : null,
+                            billingModeOverride: _primaryMode(selectedItems),
                           );
                         } catch (error) {
                           if (context.mounted) {
@@ -1662,15 +1948,19 @@ class ReturnFlowScreen extends ConsumerWidget {
                 : ListView.separated(
                     itemBuilder: (BuildContext context, int index) {
                       final Rental rental = active[index];
+                      final DateTime now = DateTime.now();
                       return EntityCard(
                         title: rental.lines.isNotEmpty
                             ? rental.lines
                                 .map((RentalLine line) => line.displayLabel)
                                 .join(', ')
                             : rental.id,
-                        subtitle: l10n.dueDate(_date(rental.dueAt)),
+                        subtitle: l10n.rentalAmountSubtitle(
+                          _date(rental.dueAt),
+                          formatMoney(rental.totalAmountAsOf(now)),
+                        ),
                         leadingIcon: Icons.assignment_return_outlined,
-                        status: rental.statusFor(DateTime.now()),
+                        status: rental.statusFor(now),
                         trailing: FilledButton(
                           onPressed: () async {
                             await ref.read(repositoryProvider).returnRental(rental.id);
@@ -1706,6 +1996,9 @@ class _AddInventoryFlowScreenState extends ConsumerState<AddInventoryFlowScreen>
   final TextEditingController _categoryController = TextEditingController();
   final TextEditingController _unitsController = TextEditingController(text: '1');
   final TextEditingController _notesController = TextEditingController();
+  final TextEditingController _rateController = TextEditingController(text: '0');
+  final TextEditingController _lateFeeController = TextEditingController(text: '0');
+  BillingMode _billingMode = BillingMode.weekly;
   bool _submitting = false;
 
   @override
@@ -1714,6 +2007,8 @@ class _AddInventoryFlowScreenState extends ConsumerState<AddInventoryFlowScreen>
     _categoryController.dispose();
     _unitsController.dispose();
     _notesController.dispose();
+    _rateController.dispose();
+    _lateFeeController.dispose();
     super.dispose();
   }
 
@@ -1741,6 +2036,50 @@ class _AddInventoryFlowScreenState extends ConsumerState<AddInventoryFlowScreen>
             controller: _unitsController,
             keyboardType: TextInputType.number,
             decoration: InputDecoration(labelText: l10n.unitsLabel),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            l10n.pricingSectionTitle,
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 8),
+          DropdownButtonFormField<BillingMode>(
+            key: ValueKey<String>('add-billing-$_billingMode'),
+            initialValue: _billingMode,
+            decoration: InputDecoration(labelText: l10n.billingModeLabel),
+            items: BillingMode.values
+                .map(
+                  (BillingMode mode) => DropdownMenuItem<BillingMode>(
+                    value: mode,
+                    child: Text(localizedBillingMode(l10n, mode)),
+                  ),
+                )
+                .toList(),
+            onChanged: (BillingMode? mode) {
+              if (mode != null) {
+                setState(() => _billingMode = mode);
+              }
+            },
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            controller: _rateController,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            decoration: InputDecoration(
+              labelText: l10n.rateAmountLabel,
+              hintText: l10n.rateAmountHint,
+            ),
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            controller: _lateFeeController,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            decoration: InputDecoration(
+              labelText: l10n.lateFeePerDayLabel,
+              hintText: l10n.lateFeePerDayHint,
+            ),
           ),
           const SizedBox(height: 8),
           ExpansionTile(
@@ -1779,6 +2118,9 @@ class _AddInventoryFlowScreenState extends ConsumerState<AddInventoryFlowScreen>
                     category: _categoryController.text.trim(),
                     units: units < 1 ? 1 : units,
                     notes: _notesController.text.trim(),
+                    billingMode: _billingMode,
+                    rateAmount: parseRupeesToPaise(_rateController.text),
+                    lateFeePerDay: parseRupeesToPaise(_lateFeeController.text),
                   );
                   if (context.mounted) {
                     Navigator.of(context).pop();

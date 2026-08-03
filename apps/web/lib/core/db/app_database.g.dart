@@ -438,6 +438,54 @@ class $InventoryItemsTable extends InventoryItems
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _billingModeMeta = const VerificationMeta(
+    'billingMode',
+  );
+  @override
+  late final GeneratedColumn<String> billingMode = GeneratedColumn<String>(
+    'billing_mode',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('weekly'),
+  );
+  static const VerificationMeta _rateAmountMeta = const VerificationMeta(
+    'rateAmount',
+  );
+  @override
+  late final GeneratedColumn<int> rateAmount = GeneratedColumn<int>(
+    'rate_amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _lateFeePerDayMeta = const VerificationMeta(
+    'lateFeePerDay',
+  );
+  @override
+  late final GeneratedColumn<int> lateFeePerDay = GeneratedColumn<int>(
+    'late_fee_per_day',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _currencyCodeMeta = const VerificationMeta(
+    'currencyCode',
+  );
+  @override
+  late final GeneratedColumn<String> currencyCode = GeneratedColumn<String>(
+    'currency_code',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('INR'),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -448,6 +496,10 @@ class $InventoryItemsTable extends InventoryItems
     status,
     qrCode,
     notes,
+    billingMode,
+    rateAmount,
+    lateFeePerDay,
+    currencyCode,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -523,6 +575,39 @@ class $InventoryItemsTable extends InventoryItems
         notes.isAcceptableOrUnknown(data['notes']!, _notesMeta),
       );
     }
+    if (data.containsKey('billing_mode')) {
+      context.handle(
+        _billingModeMeta,
+        billingMode.isAcceptableOrUnknown(
+          data['billing_mode']!,
+          _billingModeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('rate_amount')) {
+      context.handle(
+        _rateAmountMeta,
+        rateAmount.isAcceptableOrUnknown(data['rate_amount']!, _rateAmountMeta),
+      );
+    }
+    if (data.containsKey('late_fee_per_day')) {
+      context.handle(
+        _lateFeePerDayMeta,
+        lateFeePerDay.isAcceptableOrUnknown(
+          data['late_fee_per_day']!,
+          _lateFeePerDayMeta,
+        ),
+      );
+    }
+    if (data.containsKey('currency_code')) {
+      context.handle(
+        _currencyCodeMeta,
+        currencyCode.isAcceptableOrUnknown(
+          data['currency_code']!,
+          _currencyCodeMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -564,6 +649,22 @@ class $InventoryItemsTable extends InventoryItems
         DriftSqlType.string,
         data['${effectivePrefix}notes'],
       ),
+      billingMode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}billing_mode'],
+      )!,
+      rateAmount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}rate_amount'],
+      )!,
+      lateFeePerDay: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}late_fee_per_day'],
+      )!,
+      currencyCode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}currency_code'],
+      )!,
     );
   }
 
@@ -583,6 +684,16 @@ class InventoryItemRow extends DataClass
   final String status;
   final String qrCode;
   final String? notes;
+
+  /// `daily` | `weekly` | `monthly` | `fixed` | `custom`
+  final String billingMode;
+
+  /// Rate in paise (minor units).
+  final int rateAmount;
+
+  /// Optional overdue fee per day in paise.
+  final int lateFeePerDay;
+  final String currencyCode;
   const InventoryItemRow({
     required this.id,
     required this.name,
@@ -592,6 +703,10 @@ class InventoryItemRow extends DataClass
     required this.status,
     required this.qrCode,
     this.notes,
+    required this.billingMode,
+    required this.rateAmount,
+    required this.lateFeePerDay,
+    required this.currencyCode,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -606,6 +721,10 @@ class InventoryItemRow extends DataClass
     if (!nullToAbsent || notes != null) {
       map['notes'] = Variable<String>(notes);
     }
+    map['billing_mode'] = Variable<String>(billingMode);
+    map['rate_amount'] = Variable<int>(rateAmount);
+    map['late_fee_per_day'] = Variable<int>(lateFeePerDay);
+    map['currency_code'] = Variable<String>(currencyCode);
     return map;
   }
 
@@ -621,6 +740,10 @@ class InventoryItemRow extends DataClass
       notes: notes == null && nullToAbsent
           ? const Value.absent()
           : Value(notes),
+      billingMode: Value(billingMode),
+      rateAmount: Value(rateAmount),
+      lateFeePerDay: Value(lateFeePerDay),
+      currencyCode: Value(currencyCode),
     );
   }
 
@@ -638,6 +761,10 @@ class InventoryItemRow extends DataClass
       status: serializer.fromJson<String>(json['status']),
       qrCode: serializer.fromJson<String>(json['qrCode']),
       notes: serializer.fromJson<String?>(json['notes']),
+      billingMode: serializer.fromJson<String>(json['billingMode']),
+      rateAmount: serializer.fromJson<int>(json['rateAmount']),
+      lateFeePerDay: serializer.fromJson<int>(json['lateFeePerDay']),
+      currencyCode: serializer.fromJson<String>(json['currencyCode']),
     );
   }
   @override
@@ -652,6 +779,10 @@ class InventoryItemRow extends DataClass
       'status': serializer.toJson<String>(status),
       'qrCode': serializer.toJson<String>(qrCode),
       'notes': serializer.toJson<String?>(notes),
+      'billingMode': serializer.toJson<String>(billingMode),
+      'rateAmount': serializer.toJson<int>(rateAmount),
+      'lateFeePerDay': serializer.toJson<int>(lateFeePerDay),
+      'currencyCode': serializer.toJson<String>(currencyCode),
     };
   }
 
@@ -664,6 +795,10 @@ class InventoryItemRow extends DataClass
     String? status,
     String? qrCode,
     Value<String?> notes = const Value.absent(),
+    String? billingMode,
+    int? rateAmount,
+    int? lateFeePerDay,
+    String? currencyCode,
   }) => InventoryItemRow(
     id: id ?? this.id,
     name: name ?? this.name,
@@ -673,6 +808,10 @@ class InventoryItemRow extends DataClass
     status: status ?? this.status,
     qrCode: qrCode ?? this.qrCode,
     notes: notes.present ? notes.value : this.notes,
+    billingMode: billingMode ?? this.billingMode,
+    rateAmount: rateAmount ?? this.rateAmount,
+    lateFeePerDay: lateFeePerDay ?? this.lateFeePerDay,
+    currencyCode: currencyCode ?? this.currencyCode,
   );
   InventoryItemRow copyWithCompanion(InventoryItemsCompanion data) {
     return InventoryItemRow(
@@ -688,6 +827,18 @@ class InventoryItemRow extends DataClass
       status: data.status.present ? data.status.value : this.status,
       qrCode: data.qrCode.present ? data.qrCode.value : this.qrCode,
       notes: data.notes.present ? data.notes.value : this.notes,
+      billingMode: data.billingMode.present
+          ? data.billingMode.value
+          : this.billingMode,
+      rateAmount: data.rateAmount.present
+          ? data.rateAmount.value
+          : this.rateAmount,
+      lateFeePerDay: data.lateFeePerDay.present
+          ? data.lateFeePerDay.value
+          : this.lateFeePerDay,
+      currencyCode: data.currencyCode.present
+          ? data.currencyCode.value
+          : this.currencyCode,
     );
   }
 
@@ -701,7 +852,11 @@ class InventoryItemRow extends DataClass
           ..write('totalUnits: $totalUnits, ')
           ..write('status: $status, ')
           ..write('qrCode: $qrCode, ')
-          ..write('notes: $notes')
+          ..write('notes: $notes, ')
+          ..write('billingMode: $billingMode, ')
+          ..write('rateAmount: $rateAmount, ')
+          ..write('lateFeePerDay: $lateFeePerDay, ')
+          ..write('currencyCode: $currencyCode')
           ..write(')'))
         .toString();
   }
@@ -716,6 +871,10 @@ class InventoryItemRow extends DataClass
     status,
     qrCode,
     notes,
+    billingMode,
+    rateAmount,
+    lateFeePerDay,
+    currencyCode,
   );
   @override
   bool operator ==(Object other) =>
@@ -728,7 +887,11 @@ class InventoryItemRow extends DataClass
           other.totalUnits == this.totalUnits &&
           other.status == this.status &&
           other.qrCode == this.qrCode &&
-          other.notes == this.notes);
+          other.notes == this.notes &&
+          other.billingMode == this.billingMode &&
+          other.rateAmount == this.rateAmount &&
+          other.lateFeePerDay == this.lateFeePerDay &&
+          other.currencyCode == this.currencyCode);
 }
 
 class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
@@ -740,6 +903,10 @@ class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
   final Value<String> status;
   final Value<String> qrCode;
   final Value<String?> notes;
+  final Value<String> billingMode;
+  final Value<int> rateAmount;
+  final Value<int> lateFeePerDay;
+  final Value<String> currencyCode;
   final Value<int> rowid;
   const InventoryItemsCompanion({
     this.id = const Value.absent(),
@@ -750,6 +917,10 @@ class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
     this.status = const Value.absent(),
     this.qrCode = const Value.absent(),
     this.notes = const Value.absent(),
+    this.billingMode = const Value.absent(),
+    this.rateAmount = const Value.absent(),
+    this.lateFeePerDay = const Value.absent(),
+    this.currencyCode = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   InventoryItemsCompanion.insert({
@@ -761,6 +932,10 @@ class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
     required String status,
     required String qrCode,
     this.notes = const Value.absent(),
+    this.billingMode = const Value.absent(),
+    this.rateAmount = const Value.absent(),
+    this.lateFeePerDay = const Value.absent(),
+    this.currencyCode = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        name = Value(name),
@@ -778,6 +953,10 @@ class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
     Expression<String>? status,
     Expression<String>? qrCode,
     Expression<String>? notes,
+    Expression<String>? billingMode,
+    Expression<int>? rateAmount,
+    Expression<int>? lateFeePerDay,
+    Expression<String>? currencyCode,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -789,6 +968,10 @@ class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
       if (status != null) 'status': status,
       if (qrCode != null) 'qr_code': qrCode,
       if (notes != null) 'notes': notes,
+      if (billingMode != null) 'billing_mode': billingMode,
+      if (rateAmount != null) 'rate_amount': rateAmount,
+      if (lateFeePerDay != null) 'late_fee_per_day': lateFeePerDay,
+      if (currencyCode != null) 'currency_code': currencyCode,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -802,6 +985,10 @@ class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
     Value<String>? status,
     Value<String>? qrCode,
     Value<String?>? notes,
+    Value<String>? billingMode,
+    Value<int>? rateAmount,
+    Value<int>? lateFeePerDay,
+    Value<String>? currencyCode,
     Value<int>? rowid,
   }) {
     return InventoryItemsCompanion(
@@ -813,6 +1000,10 @@ class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
       status: status ?? this.status,
       qrCode: qrCode ?? this.qrCode,
       notes: notes ?? this.notes,
+      billingMode: billingMode ?? this.billingMode,
+      rateAmount: rateAmount ?? this.rateAmount,
+      lateFeePerDay: lateFeePerDay ?? this.lateFeePerDay,
+      currencyCode: currencyCode ?? this.currencyCode,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -844,6 +1035,18 @@ class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
     if (notes.present) {
       map['notes'] = Variable<String>(notes.value);
     }
+    if (billingMode.present) {
+      map['billing_mode'] = Variable<String>(billingMode.value);
+    }
+    if (rateAmount.present) {
+      map['rate_amount'] = Variable<int>(rateAmount.value);
+    }
+    if (lateFeePerDay.present) {
+      map['late_fee_per_day'] = Variable<int>(lateFeePerDay.value);
+    }
+    if (currencyCode.present) {
+      map['currency_code'] = Variable<String>(currencyCode.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -861,6 +1064,10 @@ class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
           ..write('status: $status, ')
           ..write('qrCode: $qrCode, ')
           ..write('notes: $notes, ')
+          ..write('billingMode: $billingMode, ')
+          ..write('rateAmount: $rateAmount, ')
+          ..write('lateFeePerDay: $lateFeePerDay, ')
+          ..write('currencyCode: $currencyCode, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -943,6 +1150,90 @@ class $RentalsTable extends Rentals with TableInfo<$RentalsTable, RentalRow> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _billingModeMeta = const VerificationMeta(
+    'billingMode',
+  );
+  @override
+  late final GeneratedColumn<String> billingMode = GeneratedColumn<String>(
+    'billing_mode',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('weekly'),
+  );
+  static const VerificationMeta _rateAmountMeta = const VerificationMeta(
+    'rateAmount',
+  );
+  @override
+  late final GeneratedColumn<int> rateAmount = GeneratedColumn<int>(
+    'rate_amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _lateFeePerDayMeta = const VerificationMeta(
+    'lateFeePerDay',
+  );
+  @override
+  late final GeneratedColumn<int> lateFeePerDay = GeneratedColumn<int>(
+    'late_fee_per_day',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _baseAmountMeta = const VerificationMeta(
+    'baseAmount',
+  );
+  @override
+  late final GeneratedColumn<int> baseAmount = GeneratedColumn<int>(
+    'base_amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _lateAmountMeta = const VerificationMeta(
+    'lateAmount',
+  );
+  @override
+  late final GeneratedColumn<int> lateAmount = GeneratedColumn<int>(
+    'late_amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _totalAmountMeta = const VerificationMeta(
+    'totalAmount',
+  );
+  @override
+  late final GeneratedColumn<int> totalAmount = GeneratedColumn<int>(
+    'total_amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _durationUnitsMeta = const VerificationMeta(
+    'durationUnits',
+  );
+  @override
+  late final GeneratedColumn<int> durationUnits = GeneratedColumn<int>(
+    'duration_units',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -952,6 +1243,13 @@ class $RentalsTable extends Rentals with TableInfo<$RentalsTable, RentalRow> {
     returnedAt,
     qrCode,
     nickname,
+    billingMode,
+    rateAmount,
+    lateFeePerDay,
+    baseAmount,
+    lateAmount,
+    totalAmount,
+    durationUnits,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1014,6 +1312,60 @@ class $RentalsTable extends Rentals with TableInfo<$RentalsTable, RentalRow> {
         nickname.isAcceptableOrUnknown(data['nickname']!, _nicknameMeta),
       );
     }
+    if (data.containsKey('billing_mode')) {
+      context.handle(
+        _billingModeMeta,
+        billingMode.isAcceptableOrUnknown(
+          data['billing_mode']!,
+          _billingModeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('rate_amount')) {
+      context.handle(
+        _rateAmountMeta,
+        rateAmount.isAcceptableOrUnknown(data['rate_amount']!, _rateAmountMeta),
+      );
+    }
+    if (data.containsKey('late_fee_per_day')) {
+      context.handle(
+        _lateFeePerDayMeta,
+        lateFeePerDay.isAcceptableOrUnknown(
+          data['late_fee_per_day']!,
+          _lateFeePerDayMeta,
+        ),
+      );
+    }
+    if (data.containsKey('base_amount')) {
+      context.handle(
+        _baseAmountMeta,
+        baseAmount.isAcceptableOrUnknown(data['base_amount']!, _baseAmountMeta),
+      );
+    }
+    if (data.containsKey('late_amount')) {
+      context.handle(
+        _lateAmountMeta,
+        lateAmount.isAcceptableOrUnknown(data['late_amount']!, _lateAmountMeta),
+      );
+    }
+    if (data.containsKey('total_amount')) {
+      context.handle(
+        _totalAmountMeta,
+        totalAmount.isAcceptableOrUnknown(
+          data['total_amount']!,
+          _totalAmountMeta,
+        ),
+      );
+    }
+    if (data.containsKey('duration_units')) {
+      context.handle(
+        _durationUnitsMeta,
+        durationUnits.isAcceptableOrUnknown(
+          data['duration_units']!,
+          _durationUnitsMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -1051,6 +1403,34 @@ class $RentalsTable extends Rentals with TableInfo<$RentalsTable, RentalRow> {
         DriftSqlType.string,
         data['${effectivePrefix}nickname'],
       ),
+      billingMode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}billing_mode'],
+      )!,
+      rateAmount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}rate_amount'],
+      )!,
+      lateFeePerDay: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}late_fee_per_day'],
+      )!,
+      baseAmount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}base_amount'],
+      )!,
+      lateAmount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}late_amount'],
+      )!,
+      totalAmount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}total_amount'],
+      )!,
+      durationUnits: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}duration_units'],
+      )!,
     );
   }
 
@@ -1070,6 +1450,21 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
 
   /// Per-rental display name (required when issuing to SELF Known).
   final String? nickname;
+
+  /// Snapshot of billing at issue (`daily`/`weekly`/`monthly`/`fixed`/`custom`).
+  final String billingMode;
+
+  /// Snapshot rate in paise (primary/first line).
+  final int rateAmount;
+
+  /// Snapshot late fee per day in paise (sum of lines).
+  final int lateFeePerDay;
+  final int baseAmount;
+  final int lateAmount;
+  final int totalAmount;
+
+  /// Chosen duration (e.g. 1 week → 1; fixed due-days still stored here).
+  final int durationUnits;
   const RentalRow({
     required this.id,
     required this.customerId,
@@ -1078,6 +1473,13 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
     this.returnedAt,
     required this.qrCode,
     this.nickname,
+    required this.billingMode,
+    required this.rateAmount,
+    required this.lateFeePerDay,
+    required this.baseAmount,
+    required this.lateAmount,
+    required this.totalAmount,
+    required this.durationUnits,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1093,6 +1495,13 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
     if (!nullToAbsent || nickname != null) {
       map['nickname'] = Variable<String>(nickname);
     }
+    map['billing_mode'] = Variable<String>(billingMode);
+    map['rate_amount'] = Variable<int>(rateAmount);
+    map['late_fee_per_day'] = Variable<int>(lateFeePerDay);
+    map['base_amount'] = Variable<int>(baseAmount);
+    map['late_amount'] = Variable<int>(lateAmount);
+    map['total_amount'] = Variable<int>(totalAmount);
+    map['duration_units'] = Variable<int>(durationUnits);
     return map;
   }
 
@@ -1109,6 +1518,13 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
       nickname: nickname == null && nullToAbsent
           ? const Value.absent()
           : Value(nickname),
+      billingMode: Value(billingMode),
+      rateAmount: Value(rateAmount),
+      lateFeePerDay: Value(lateFeePerDay),
+      baseAmount: Value(baseAmount),
+      lateAmount: Value(lateAmount),
+      totalAmount: Value(totalAmount),
+      durationUnits: Value(durationUnits),
     );
   }
 
@@ -1125,6 +1541,13 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
       returnedAt: serializer.fromJson<DateTime?>(json['returnedAt']),
       qrCode: serializer.fromJson<String>(json['qrCode']),
       nickname: serializer.fromJson<String?>(json['nickname']),
+      billingMode: serializer.fromJson<String>(json['billingMode']),
+      rateAmount: serializer.fromJson<int>(json['rateAmount']),
+      lateFeePerDay: serializer.fromJson<int>(json['lateFeePerDay']),
+      baseAmount: serializer.fromJson<int>(json['baseAmount']),
+      lateAmount: serializer.fromJson<int>(json['lateAmount']),
+      totalAmount: serializer.fromJson<int>(json['totalAmount']),
+      durationUnits: serializer.fromJson<int>(json['durationUnits']),
     );
   }
   @override
@@ -1138,6 +1561,13 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
       'returnedAt': serializer.toJson<DateTime?>(returnedAt),
       'qrCode': serializer.toJson<String>(qrCode),
       'nickname': serializer.toJson<String?>(nickname),
+      'billingMode': serializer.toJson<String>(billingMode),
+      'rateAmount': serializer.toJson<int>(rateAmount),
+      'lateFeePerDay': serializer.toJson<int>(lateFeePerDay),
+      'baseAmount': serializer.toJson<int>(baseAmount),
+      'lateAmount': serializer.toJson<int>(lateAmount),
+      'totalAmount': serializer.toJson<int>(totalAmount),
+      'durationUnits': serializer.toJson<int>(durationUnits),
     };
   }
 
@@ -1149,6 +1579,13 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
     Value<DateTime?> returnedAt = const Value.absent(),
     String? qrCode,
     Value<String?> nickname = const Value.absent(),
+    String? billingMode,
+    int? rateAmount,
+    int? lateFeePerDay,
+    int? baseAmount,
+    int? lateAmount,
+    int? totalAmount,
+    int? durationUnits,
   }) => RentalRow(
     id: id ?? this.id,
     customerId: customerId ?? this.customerId,
@@ -1157,6 +1594,13 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
     returnedAt: returnedAt.present ? returnedAt.value : this.returnedAt,
     qrCode: qrCode ?? this.qrCode,
     nickname: nickname.present ? nickname.value : this.nickname,
+    billingMode: billingMode ?? this.billingMode,
+    rateAmount: rateAmount ?? this.rateAmount,
+    lateFeePerDay: lateFeePerDay ?? this.lateFeePerDay,
+    baseAmount: baseAmount ?? this.baseAmount,
+    lateAmount: lateAmount ?? this.lateAmount,
+    totalAmount: totalAmount ?? this.totalAmount,
+    durationUnits: durationUnits ?? this.durationUnits,
   );
   RentalRow copyWithCompanion(RentalsCompanion data) {
     return RentalRow(
@@ -1171,6 +1615,27 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
           : this.returnedAt,
       qrCode: data.qrCode.present ? data.qrCode.value : this.qrCode,
       nickname: data.nickname.present ? data.nickname.value : this.nickname,
+      billingMode: data.billingMode.present
+          ? data.billingMode.value
+          : this.billingMode,
+      rateAmount: data.rateAmount.present
+          ? data.rateAmount.value
+          : this.rateAmount,
+      lateFeePerDay: data.lateFeePerDay.present
+          ? data.lateFeePerDay.value
+          : this.lateFeePerDay,
+      baseAmount: data.baseAmount.present
+          ? data.baseAmount.value
+          : this.baseAmount,
+      lateAmount: data.lateAmount.present
+          ? data.lateAmount.value
+          : this.lateAmount,
+      totalAmount: data.totalAmount.present
+          ? data.totalAmount.value
+          : this.totalAmount,
+      durationUnits: data.durationUnits.present
+          ? data.durationUnits.value
+          : this.durationUnits,
     );
   }
 
@@ -1183,7 +1648,14 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
           ..write('dueAt: $dueAt, ')
           ..write('returnedAt: $returnedAt, ')
           ..write('qrCode: $qrCode, ')
-          ..write('nickname: $nickname')
+          ..write('nickname: $nickname, ')
+          ..write('billingMode: $billingMode, ')
+          ..write('rateAmount: $rateAmount, ')
+          ..write('lateFeePerDay: $lateFeePerDay, ')
+          ..write('baseAmount: $baseAmount, ')
+          ..write('lateAmount: $lateAmount, ')
+          ..write('totalAmount: $totalAmount, ')
+          ..write('durationUnits: $durationUnits')
           ..write(')'))
         .toString();
   }
@@ -1197,6 +1669,13 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
     returnedAt,
     qrCode,
     nickname,
+    billingMode,
+    rateAmount,
+    lateFeePerDay,
+    baseAmount,
+    lateAmount,
+    totalAmount,
+    durationUnits,
   );
   @override
   bool operator ==(Object other) =>
@@ -1208,7 +1687,14 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
           other.dueAt == this.dueAt &&
           other.returnedAt == this.returnedAt &&
           other.qrCode == this.qrCode &&
-          other.nickname == this.nickname);
+          other.nickname == this.nickname &&
+          other.billingMode == this.billingMode &&
+          other.rateAmount == this.rateAmount &&
+          other.lateFeePerDay == this.lateFeePerDay &&
+          other.baseAmount == this.baseAmount &&
+          other.lateAmount == this.lateAmount &&
+          other.totalAmount == this.totalAmount &&
+          other.durationUnits == this.durationUnits);
 }
 
 class RentalsCompanion extends UpdateCompanion<RentalRow> {
@@ -1219,6 +1705,13 @@ class RentalsCompanion extends UpdateCompanion<RentalRow> {
   final Value<DateTime?> returnedAt;
   final Value<String> qrCode;
   final Value<String?> nickname;
+  final Value<String> billingMode;
+  final Value<int> rateAmount;
+  final Value<int> lateFeePerDay;
+  final Value<int> baseAmount;
+  final Value<int> lateAmount;
+  final Value<int> totalAmount;
+  final Value<int> durationUnits;
   final Value<int> rowid;
   const RentalsCompanion({
     this.id = const Value.absent(),
@@ -1228,6 +1721,13 @@ class RentalsCompanion extends UpdateCompanion<RentalRow> {
     this.returnedAt = const Value.absent(),
     this.qrCode = const Value.absent(),
     this.nickname = const Value.absent(),
+    this.billingMode = const Value.absent(),
+    this.rateAmount = const Value.absent(),
+    this.lateFeePerDay = const Value.absent(),
+    this.baseAmount = const Value.absent(),
+    this.lateAmount = const Value.absent(),
+    this.totalAmount = const Value.absent(),
+    this.durationUnits = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   RentalsCompanion.insert({
@@ -1238,6 +1738,13 @@ class RentalsCompanion extends UpdateCompanion<RentalRow> {
     this.returnedAt = const Value.absent(),
     required String qrCode,
     this.nickname = const Value.absent(),
+    this.billingMode = const Value.absent(),
+    this.rateAmount = const Value.absent(),
+    this.lateFeePerDay = const Value.absent(),
+    this.baseAmount = const Value.absent(),
+    this.lateAmount = const Value.absent(),
+    this.totalAmount = const Value.absent(),
+    this.durationUnits = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        customerId = Value(customerId),
@@ -1252,6 +1759,13 @@ class RentalsCompanion extends UpdateCompanion<RentalRow> {
     Expression<DateTime>? returnedAt,
     Expression<String>? qrCode,
     Expression<String>? nickname,
+    Expression<String>? billingMode,
+    Expression<int>? rateAmount,
+    Expression<int>? lateFeePerDay,
+    Expression<int>? baseAmount,
+    Expression<int>? lateAmount,
+    Expression<int>? totalAmount,
+    Expression<int>? durationUnits,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -1262,6 +1776,13 @@ class RentalsCompanion extends UpdateCompanion<RentalRow> {
       if (returnedAt != null) 'returned_at': returnedAt,
       if (qrCode != null) 'qr_code': qrCode,
       if (nickname != null) 'nickname': nickname,
+      if (billingMode != null) 'billing_mode': billingMode,
+      if (rateAmount != null) 'rate_amount': rateAmount,
+      if (lateFeePerDay != null) 'late_fee_per_day': lateFeePerDay,
+      if (baseAmount != null) 'base_amount': baseAmount,
+      if (lateAmount != null) 'late_amount': lateAmount,
+      if (totalAmount != null) 'total_amount': totalAmount,
+      if (durationUnits != null) 'duration_units': durationUnits,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -1274,6 +1795,13 @@ class RentalsCompanion extends UpdateCompanion<RentalRow> {
     Value<DateTime?>? returnedAt,
     Value<String>? qrCode,
     Value<String?>? nickname,
+    Value<String>? billingMode,
+    Value<int>? rateAmount,
+    Value<int>? lateFeePerDay,
+    Value<int>? baseAmount,
+    Value<int>? lateAmount,
+    Value<int>? totalAmount,
+    Value<int>? durationUnits,
     Value<int>? rowid,
   }) {
     return RentalsCompanion(
@@ -1284,6 +1812,13 @@ class RentalsCompanion extends UpdateCompanion<RentalRow> {
       returnedAt: returnedAt ?? this.returnedAt,
       qrCode: qrCode ?? this.qrCode,
       nickname: nickname ?? this.nickname,
+      billingMode: billingMode ?? this.billingMode,
+      rateAmount: rateAmount ?? this.rateAmount,
+      lateFeePerDay: lateFeePerDay ?? this.lateFeePerDay,
+      baseAmount: baseAmount ?? this.baseAmount,
+      lateAmount: lateAmount ?? this.lateAmount,
+      totalAmount: totalAmount ?? this.totalAmount,
+      durationUnits: durationUnits ?? this.durationUnits,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1312,6 +1847,27 @@ class RentalsCompanion extends UpdateCompanion<RentalRow> {
     if (nickname.present) {
       map['nickname'] = Variable<String>(nickname.value);
     }
+    if (billingMode.present) {
+      map['billing_mode'] = Variable<String>(billingMode.value);
+    }
+    if (rateAmount.present) {
+      map['rate_amount'] = Variable<int>(rateAmount.value);
+    }
+    if (lateFeePerDay.present) {
+      map['late_fee_per_day'] = Variable<int>(lateFeePerDay.value);
+    }
+    if (baseAmount.present) {
+      map['base_amount'] = Variable<int>(baseAmount.value);
+    }
+    if (lateAmount.present) {
+      map['late_amount'] = Variable<int>(lateAmount.value);
+    }
+    if (totalAmount.present) {
+      map['total_amount'] = Variable<int>(totalAmount.value);
+    }
+    if (durationUnits.present) {
+      map['duration_units'] = Variable<int>(durationUnits.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -1328,6 +1884,13 @@ class RentalsCompanion extends UpdateCompanion<RentalRow> {
           ..write('returnedAt: $returnedAt, ')
           ..write('qrCode: $qrCode, ')
           ..write('nickname: $nickname, ')
+          ..write('billingMode: $billingMode, ')
+          ..write('rateAmount: $rateAmount, ')
+          ..write('lateFeePerDay: $lateFeePerDay, ')
+          ..write('baseAmount: $baseAmount, ')
+          ..write('lateAmount: $lateAmount, ')
+          ..write('totalAmount: $totalAmount, ')
+          ..write('durationUnits: $durationUnits, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -2436,6 +2999,10 @@ typedef $$InventoryItemsTableCreateCompanionBuilder =
       required String status,
       required String qrCode,
       Value<String?> notes,
+      Value<String> billingMode,
+      Value<int> rateAmount,
+      Value<int> lateFeePerDay,
+      Value<String> currencyCode,
       Value<int> rowid,
     });
 typedef $$InventoryItemsTableUpdateCompanionBuilder =
@@ -2448,6 +3015,10 @@ typedef $$InventoryItemsTableUpdateCompanionBuilder =
       Value<String> status,
       Value<String> qrCode,
       Value<String?> notes,
+      Value<String> billingMode,
+      Value<int> rateAmount,
+      Value<int> lateFeePerDay,
+      Value<String> currencyCode,
       Value<int> rowid,
     });
 
@@ -2497,6 +3068,26 @@ class $$InventoryItemsTableFilterComposer
 
   ColumnFilters<String> get notes => $composableBuilder(
     column: $table.notes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get billingMode => $composableBuilder(
+    column: $table.billingMode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get rateAmount => $composableBuilder(
+    column: $table.rateAmount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get lateFeePerDay => $composableBuilder(
+    column: $table.lateFeePerDay,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get currencyCode => $composableBuilder(
+    column: $table.currencyCode,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -2549,6 +3140,26 @@ class $$InventoryItemsTableOrderingComposer
     column: $table.notes,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get billingMode => $composableBuilder(
+    column: $table.billingMode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get rateAmount => $composableBuilder(
+    column: $table.rateAmount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get lateFeePerDay => $composableBuilder(
+    column: $table.lateFeePerDay,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get currencyCode => $composableBuilder(
+    column: $table.currencyCode,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$InventoryItemsTableAnnotationComposer
@@ -2587,6 +3198,26 @@ class $$InventoryItemsTableAnnotationComposer
 
   GeneratedColumn<String> get notes =>
       $composableBuilder(column: $table.notes, builder: (column) => column);
+
+  GeneratedColumn<String> get billingMode => $composableBuilder(
+    column: $table.billingMode,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get rateAmount => $composableBuilder(
+    column: $table.rateAmount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get lateFeePerDay => $composableBuilder(
+    column: $table.lateFeePerDay,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get currencyCode => $composableBuilder(
+    column: $table.currencyCode,
+    builder: (column) => column,
+  );
 }
 
 class $$InventoryItemsTableTableManager
@@ -2634,6 +3265,10 @@ class $$InventoryItemsTableTableManager
                 Value<String> status = const Value.absent(),
                 Value<String> qrCode = const Value.absent(),
                 Value<String?> notes = const Value.absent(),
+                Value<String> billingMode = const Value.absent(),
+                Value<int> rateAmount = const Value.absent(),
+                Value<int> lateFeePerDay = const Value.absent(),
+                Value<String> currencyCode = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => InventoryItemsCompanion(
                 id: id,
@@ -2644,6 +3279,10 @@ class $$InventoryItemsTableTableManager
                 status: status,
                 qrCode: qrCode,
                 notes: notes,
+                billingMode: billingMode,
+                rateAmount: rateAmount,
+                lateFeePerDay: lateFeePerDay,
+                currencyCode: currencyCode,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -2656,6 +3295,10 @@ class $$InventoryItemsTableTableManager
                 required String status,
                 required String qrCode,
                 Value<String?> notes = const Value.absent(),
+                Value<String> billingMode = const Value.absent(),
+                Value<int> rateAmount = const Value.absent(),
+                Value<int> lateFeePerDay = const Value.absent(),
+                Value<String> currencyCode = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => InventoryItemsCompanion.insert(
                 id: id,
@@ -2666,6 +3309,10 @@ class $$InventoryItemsTableTableManager
                 status: status,
                 qrCode: qrCode,
                 notes: notes,
+                billingMode: billingMode,
+                rateAmount: rateAmount,
+                lateFeePerDay: lateFeePerDay,
+                currencyCode: currencyCode,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -2702,6 +3349,13 @@ typedef $$RentalsTableCreateCompanionBuilder =
       Value<DateTime?> returnedAt,
       required String qrCode,
       Value<String?> nickname,
+      Value<String> billingMode,
+      Value<int> rateAmount,
+      Value<int> lateFeePerDay,
+      Value<int> baseAmount,
+      Value<int> lateAmount,
+      Value<int> totalAmount,
+      Value<int> durationUnits,
       Value<int> rowid,
     });
 typedef $$RentalsTableUpdateCompanionBuilder =
@@ -2713,6 +3367,13 @@ typedef $$RentalsTableUpdateCompanionBuilder =
       Value<DateTime?> returnedAt,
       Value<String> qrCode,
       Value<String?> nickname,
+      Value<String> billingMode,
+      Value<int> rateAmount,
+      Value<int> lateFeePerDay,
+      Value<int> baseAmount,
+      Value<int> lateAmount,
+      Value<int> totalAmount,
+      Value<int> durationUnits,
       Value<int> rowid,
     });
 
@@ -2757,6 +3418,41 @@ class $$RentalsTableFilterComposer
 
   ColumnFilters<String> get nickname => $composableBuilder(
     column: $table.nickname,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get billingMode => $composableBuilder(
+    column: $table.billingMode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get rateAmount => $composableBuilder(
+    column: $table.rateAmount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get lateFeePerDay => $composableBuilder(
+    column: $table.lateFeePerDay,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get baseAmount => $composableBuilder(
+    column: $table.baseAmount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get lateAmount => $composableBuilder(
+    column: $table.lateAmount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get totalAmount => $composableBuilder(
+    column: $table.totalAmount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get durationUnits => $composableBuilder(
+    column: $table.durationUnits,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -2804,6 +3500,41 @@ class $$RentalsTableOrderingComposer
     column: $table.nickname,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get billingMode => $composableBuilder(
+    column: $table.billingMode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get rateAmount => $composableBuilder(
+    column: $table.rateAmount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get lateFeePerDay => $composableBuilder(
+    column: $table.lateFeePerDay,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get baseAmount => $composableBuilder(
+    column: $table.baseAmount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get lateAmount => $composableBuilder(
+    column: $table.lateAmount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get totalAmount => $composableBuilder(
+    column: $table.totalAmount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get durationUnits => $composableBuilder(
+    column: $table.durationUnits,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$RentalsTableAnnotationComposer
@@ -2839,6 +3570,41 @@ class $$RentalsTableAnnotationComposer
 
   GeneratedColumn<String> get nickname =>
       $composableBuilder(column: $table.nickname, builder: (column) => column);
+
+  GeneratedColumn<String> get billingMode => $composableBuilder(
+    column: $table.billingMode,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get rateAmount => $composableBuilder(
+    column: $table.rateAmount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get lateFeePerDay => $composableBuilder(
+    column: $table.lateFeePerDay,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get baseAmount => $composableBuilder(
+    column: $table.baseAmount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get lateAmount => $composableBuilder(
+    column: $table.lateAmount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get totalAmount => $composableBuilder(
+    column: $table.totalAmount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get durationUnits => $composableBuilder(
+    column: $table.durationUnits,
+    builder: (column) => column,
+  );
 }
 
 class $$RentalsTableTableManager
@@ -2876,6 +3642,13 @@ class $$RentalsTableTableManager
                 Value<DateTime?> returnedAt = const Value.absent(),
                 Value<String> qrCode = const Value.absent(),
                 Value<String?> nickname = const Value.absent(),
+                Value<String> billingMode = const Value.absent(),
+                Value<int> rateAmount = const Value.absent(),
+                Value<int> lateFeePerDay = const Value.absent(),
+                Value<int> baseAmount = const Value.absent(),
+                Value<int> lateAmount = const Value.absent(),
+                Value<int> totalAmount = const Value.absent(),
+                Value<int> durationUnits = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => RentalsCompanion(
                 id: id,
@@ -2885,6 +3658,13 @@ class $$RentalsTableTableManager
                 returnedAt: returnedAt,
                 qrCode: qrCode,
                 nickname: nickname,
+                billingMode: billingMode,
+                rateAmount: rateAmount,
+                lateFeePerDay: lateFeePerDay,
+                baseAmount: baseAmount,
+                lateAmount: lateAmount,
+                totalAmount: totalAmount,
+                durationUnits: durationUnits,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -2896,6 +3676,13 @@ class $$RentalsTableTableManager
                 Value<DateTime?> returnedAt = const Value.absent(),
                 required String qrCode,
                 Value<String?> nickname = const Value.absent(),
+                Value<String> billingMode = const Value.absent(),
+                Value<int> rateAmount = const Value.absent(),
+                Value<int> lateFeePerDay = const Value.absent(),
+                Value<int> baseAmount = const Value.absent(),
+                Value<int> lateAmount = const Value.absent(),
+                Value<int> totalAmount = const Value.absent(),
+                Value<int> durationUnits = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => RentalsCompanion.insert(
                 id: id,
@@ -2905,6 +3692,13 @@ class $$RentalsTableTableManager
                 returnedAt: returnedAt,
                 qrCode: qrCode,
                 nickname: nickname,
+                billingMode: billingMode,
+                rateAmount: rateAmount,
+                lateFeePerDay: lateFeePerDay,
+                baseAmount: baseAmount,
+                lateAmount: lateAmount,
+                totalAmount: totalAmount,
+                durationUnits: durationUnits,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

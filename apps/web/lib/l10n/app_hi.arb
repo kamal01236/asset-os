@@ -305,5 +305,79 @@
   "reportWhatsAppFallback": "WhatsApp नहीं खुल सका। रिपोर्ट कॉपी कर दी गई।",
   "reportMissingPhone": "पहले More में मेरा WhatsApp नंबर सेट करें।",
   "setWhatsAppAction": "नंबर सेट करें",
-  "saveAction": "सहेजें"
+  "saveAction": "सहेजें",
+  "billingModeLabel": "बिलिंग मोड",
+  "billingModeDaily": "दैनिक",
+  "billingModeWeekly": "साप्ताहिक",
+  "billingModeMonthly": "मासिक",
+  "billingModeFixed": "निश्चित",
+  "billingModeCustom": "कस्टम",
+  "rateAmountLabel": "दर (₹)",
+  "rateAmountHint": "जैसे 50",
+  "lateFeePerDayLabel": "प्रतिदिन विलंब शुल्क (₹)",
+  "lateFeePerDayHint": "वैकल्पिक, जैसे 5",
+  "pricingSectionTitle": "किराया मूल्य",
+  "durationHeading": "किराए की अवधि",
+  "durationHint": "पहले चुनी गई वस्तु के बिलिंग मोड पर आधारित।",
+  "durationUnitsLabel": "अवधि",
+  "durationUnitsDaily": "दिनों की संख्या",
+  "durationUnitsWeekly": "सप्ताहों की संख्या",
+  "durationUnitsMonthly": "महीनों की संख्या",
+  "durationUnitsFixed": "देय दिनों में",
+  "customEndDateLabel": "वापसी तक",
+  "chargePreviewDue": "देय {date}",
+  "@chargePreviewDue": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "chargeLineAmount": "{item} — {amount}",
+  "@chargeLineAmount": {
+    "placeholders": {
+      "item": {"type": "String"},
+      "amount": {"type": "String"}
+    }
+  },
+  "chargeBaseLabel": "आधार: {amount}",
+  "@chargeBaseLabel": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "chargeLateLabel": "विलंब शुल्क: {amount}",
+  "@chargeLateLabel": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "chargeTotalLabel": "कुल: {amount}",
+  "@chargeTotalLabel": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "reviewChargesLabel": "शुल्क:",
+  "reviewDueLabel": "देय: {date}",
+  "@reviewDueLabel": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "rentalAmountSubtitle": "देय {date} · {amount}",
+  "@rentalAmountSubtitle": {
+    "placeholders": {
+      "date": {"type": "String"},
+      "amount": {"type": "String"}
+    }
+  },
+  "inventoryRateSubtitle": "{mode} · {rate}",
+  "@inventoryRateSubtitle": {
+    "placeholders": {
+      "mode": {"type": "String"},
+      "rate": {"type": "String"}
+    }
+  },
+  "chargesHeading": "शुल्क",
+  "durationRequired": "मान्य अवधि दर्ज करें (कम से कम 1)।",
+  "customEndRequired": "आज या उसके बाद की वापसी तिथि चुनें।"
 }

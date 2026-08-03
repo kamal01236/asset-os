@@ -1,5 +1,6 @@
 import '../config/app_branding.dart';
 import '../models/entities.dart';
+import '../pricing/rental_pricing.dart';
 import 'report_models.dart';
 
 /// Soft cap for WhatsApp URL length; longer text is truncated with a note.
@@ -58,7 +59,29 @@ class ReportBuilder {
       'Opened: $opened',
       'Returned: $returned',
       'Overdue: $overdue',
+      'Charges (opened in range): ${formatMoney(_sumOpenedCharges(rentals, range))}',
+      'Charges (returned in range): ${formatMoney(_sumReturnedCharges(rentals, range))}',
     ].join('\n');
+  }
+
+  int _sumOpenedCharges(List<Rental> rentals, ReportDateRange range) {
+    int total = 0;
+    for (final Rental r in rentals) {
+      if (_inRange(r.startedAt, range)) {
+        total += r.baseAmount;
+      }
+    }
+    return total;
+  }
+
+  int _sumReturnedCharges(List<Rental> rentals, ReportDateRange range) {
+    int total = 0;
+    for (final Rental r in rentals) {
+      if (r.returnedAt != null && _inRange(r.returnedAt!, range)) {
+        total += r.totalAmount;
+      }
+    }
+    return total;
   }
 
   String _buildCustomerWise(
@@ -125,8 +148,11 @@ class ReportBuilder {
         final AssetStatus status = rental.statusFor(clock);
         final String nick = rental.nickname?.trim() ?? '';
         final String prefix = nick.isNotEmpty ? '$nick — ' : '';
+        final int amount = rental.isActive
+            ? rental.totalAmountAsOf(clock)
+            : rental.totalAmount;
         lines.add(
-          '  • $prefix${rental.id}: $itemNames | due ${_formatDate(rental.dueAt)} | ${status.label}',
+          '  • $prefix${rental.id}: $itemNames | due ${_formatDate(rental.dueAt)} | ${status.label} | ${formatMoney(amount)}',
         );
       }
     }
@@ -178,7 +204,7 @@ class ReportBuilder {
       final int rented = rentCount[item.id] ?? 0;
       final int out = unitsOut[item.id] ?? 0;
       lines.add(
-        '• ${item.name}: rented $rented× | out $out | avail ${item.availableUnits}/${item.totalUnits}',
+        '• ${item.name}: rented $rented× | out $out | avail ${item.availableUnits}/${item.totalUnits} | ${item.billingMode.name} ${formatMoney(item.rateAmount, currencyCode: item.currencyCode)}',
       );
       final List<String> labels = activeLabels[item.id] ?? const <String>[];
       for (final String label in labels) {

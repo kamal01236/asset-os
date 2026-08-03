@@ -305,5 +305,79 @@
   "reportWhatsAppFallback": "Could not open WhatsApp. Report copied instead.",
   "reportMissingPhone": "Set My WhatsApp number in More first.",
   "setWhatsAppAction": "Set number",
-  "saveAction": "Save"
+  "saveAction": "Save",
+  "billingModeLabel": "Billing mode",
+  "billingModeDaily": "Daily",
+  "billingModeWeekly": "Weekly",
+  "billingModeMonthly": "Monthly",
+  "billingModeFixed": "Fixed",
+  "billingModeCustom": "Custom",
+  "rateAmountLabel": "Rate (₹)",
+  "rateAmountHint": "e.g. 50",
+  "lateFeePerDayLabel": "Late fee per day (₹)",
+  "lateFeePerDayHint": "Optional, e.g. 5",
+  "pricingSectionTitle": "Rental pricing",
+  "durationHeading": "Rental duration",
+  "durationHint": "Based on the first selected item’s billing mode.",
+  "durationUnitsLabel": "Duration",
+  "durationUnitsDaily": "Number of days",
+  "durationUnitsWeekly": "Number of weeks",
+  "durationUnitsMonthly": "Number of months",
+  "durationUnitsFixed": "Due in (days)",
+  "customEndDateLabel": "Return by",
+  "chargePreviewDue": "Due {date}",
+  "@chargePreviewDue": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "chargeLineAmount": "{item} — {amount}",
+  "@chargeLineAmount": {
+    "placeholders": {
+      "item": {"type": "String"},
+      "amount": {"type": "String"}
+    }
+  },
+  "chargeBaseLabel": "Base: {amount}",
+  "@chargeBaseLabel": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "chargeLateLabel": "Late fee: {amount}",
+  "@chargeLateLabel": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "chargeTotalLabel": "Total: {amount}",
+  "@chargeTotalLabel": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "reviewChargesLabel": "Charges:",
+  "reviewDueLabel": "Due: {date}",
+  "@reviewDueLabel": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "rentalAmountSubtitle": "Due {date} · {amount}",
+  "@rentalAmountSubtitle": {
+    "placeholders": {
+      "date": {"type": "String"},
+      "amount": {"type": "String"}
+    }
+  },
+  "inventoryRateSubtitle": "{mode} · {rate}",
+  "@inventoryRateSubtitle": {
+    "placeholders": {
+      "mode": {"type": "String"},
+      "rate": {"type": "String"}
+    }
+  },
+  "chargesHeading": "Charges",
+  "durationRequired": "Enter a valid duration (at least 1).",
+  "customEndRequired": "Pick a return-by date on or after today."
 }

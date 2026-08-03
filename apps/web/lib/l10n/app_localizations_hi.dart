@@ -576,4 +576,113 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get saveAction => 'सहेजें';
+
+  @override
+  String get billingModeLabel => 'बिलिंग मोड';
+
+  @override
+  String get billingModeDaily => 'दैनिक';
+
+  @override
+  String get billingModeWeekly => 'साप्ताहिक';
+
+  @override
+  String get billingModeMonthly => 'मासिक';
+
+  @override
+  String get billingModeFixed => 'निश्चित';
+
+  @override
+  String get billingModeCustom => 'कस्टम';
+
+  @override
+  String get rateAmountLabel => 'दर (₹)';
+
+  @override
+  String get rateAmountHint => 'जैसे 50';
+
+  @override
+  String get lateFeePerDayLabel => 'प्रतिदिन विलंब शुल्क (₹)';
+
+  @override
+  String get lateFeePerDayHint => 'वैकल्पिक, जैसे 5';
+
+  @override
+  String get pricingSectionTitle => 'किराया मूल्य';
+
+  @override
+  String get durationHeading => 'किराए की अवधि';
+
+  @override
+  String get durationHint => 'पहले चुनी गई वस्तु के बिलिंग मोड पर आधारित।';
+
+  @override
+  String get durationUnitsLabel => 'अवधि';
+
+  @override
+  String get durationUnitsDaily => 'दिनों की संख्या';
+
+  @override
+  String get durationUnitsWeekly => 'सप्ताहों की संख्या';
+
+  @override
+  String get durationUnitsMonthly => 'महीनों की संख्या';
+
+  @override
+  String get durationUnitsFixed => 'देय दिनों में';
+
+  @override
+  String get customEndDateLabel => 'वापसी तक';
+
+  @override
+  String chargePreviewDue(String date) {
+    return 'देय $date';
+  }
+
+  @override
+  String chargeLineAmount(String item, String amount) {
+    return '$item — $amount';
+  }
+
+  @override
+  String chargeBaseLabel(String amount) {
+    return 'आधार: $amount';
+  }
+
+  @override
+  String chargeLateLabel(String amount) {
+    return 'विलंब शुल्क: $amount';
+  }
+
+  @override
+  String chargeTotalLabel(String amount) {
+    return 'कुल: $amount';
+  }
+
+  @override
+  String get reviewChargesLabel => 'शुल्क:';
+
+  @override
+  String reviewDueLabel(String date) {
+    return 'देय: $date';
+  }
+
+  @override
+  String rentalAmountSubtitle(String date, String amount) {
+    return 'देय $date · $amount';
+  }
+
+  @override
+  String inventoryRateSubtitle(String mode, String rate) {
+    return '$mode · $rate';
+  }
+
+  @override
+  String get chargesHeading => 'शुल्क';
+
+  @override
+  String get durationRequired => 'मान्य अवधि दर्ज करें (कम से कम 1)।';
+
+  @override
+  String get customEndRequired => 'आज या उसके बाद की वापसी तिथि चुनें।';
 }

@@ -1099,6 +1099,192 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Save'**
   String get saveAction;
+
+  /// No description provided for @billingModeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Billing mode'**
+  String get billingModeLabel;
+
+  /// No description provided for @billingModeDaily.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily'**
+  String get billingModeDaily;
+
+  /// No description provided for @billingModeWeekly.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly'**
+  String get billingModeWeekly;
+
+  /// No description provided for @billingModeMonthly.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly'**
+  String get billingModeMonthly;
+
+  /// No description provided for @billingModeFixed.
+  ///
+  /// In en, this message translates to:
+  /// **'Fixed'**
+  String get billingModeFixed;
+
+  /// No description provided for @billingModeCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get billingModeCustom;
+
+  /// No description provided for @rateAmountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate (₹)'**
+  String get rateAmountLabel;
+
+  /// No description provided for @rateAmountHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. 50'**
+  String get rateAmountHint;
+
+  /// No description provided for @lateFeePerDayLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Late fee per day (₹)'**
+  String get lateFeePerDayLabel;
+
+  /// No description provided for @lateFeePerDayHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional, e.g. 5'**
+  String get lateFeePerDayHint;
+
+  /// No description provided for @pricingSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rental pricing'**
+  String get pricingSectionTitle;
+
+  /// No description provided for @durationHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Rental duration'**
+  String get durationHeading;
+
+  /// No description provided for @durationHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Based on the first selected item’s billing mode.'**
+  String get durationHint;
+
+  /// No description provided for @durationUnitsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get durationUnitsLabel;
+
+  /// No description provided for @durationUnitsDaily.
+  ///
+  /// In en, this message translates to:
+  /// **'Number of days'**
+  String get durationUnitsDaily;
+
+  /// No description provided for @durationUnitsWeekly.
+  ///
+  /// In en, this message translates to:
+  /// **'Number of weeks'**
+  String get durationUnitsWeekly;
+
+  /// No description provided for @durationUnitsMonthly.
+  ///
+  /// In en, this message translates to:
+  /// **'Number of months'**
+  String get durationUnitsMonthly;
+
+  /// No description provided for @durationUnitsFixed.
+  ///
+  /// In en, this message translates to:
+  /// **'Due in (days)'**
+  String get durationUnitsFixed;
+
+  /// No description provided for @customEndDateLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Return by'**
+  String get customEndDateLabel;
+
+  /// No description provided for @chargePreviewDue.
+  ///
+  /// In en, this message translates to:
+  /// **'Due {date}'**
+  String chargePreviewDue(String date);
+
+  /// No description provided for @chargeLineAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'{item} — {amount}'**
+  String chargeLineAmount(String item, String amount);
+
+  /// No description provided for @chargeBaseLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Base: {amount}'**
+  String chargeBaseLabel(String amount);
+
+  /// No description provided for @chargeLateLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Late fee: {amount}'**
+  String chargeLateLabel(String amount);
+
+  /// No description provided for @chargeTotalLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Total: {amount}'**
+  String chargeTotalLabel(String amount);
+
+  /// No description provided for @reviewChargesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Charges:'**
+  String get reviewChargesLabel;
+
+  /// No description provided for @reviewDueLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Due: {date}'**
+  String reviewDueLabel(String date);
+
+  /// No description provided for @rentalAmountSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Due {date} · {amount}'**
+  String rentalAmountSubtitle(String date, String amount);
+
+  /// No description provided for @inventoryRateSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{mode} · {rate}'**
+  String inventoryRateSubtitle(String mode, String rate);
+
+  /// No description provided for @chargesHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Charges'**
+  String get chargesHeading;
+
+  /// No description provided for @durationRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid duration (at least 1).'**
+  String get durationRequired;
+
+  /// No description provided for @customEndRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a return-by date on or after today.'**
+  String get customEndRequired;
 }
 
 class _AppLocalizationsDelegate

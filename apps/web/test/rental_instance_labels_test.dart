@@ -144,10 +144,10 @@ void main() {
       );
     });
 
-    test('schema v3 migration backfills rental item labels', () async {
+    test('schema v4 tables include pricing defaults', () async {
       final AppDatabase db = AppDatabase(NativeDatabase.memory());
       addTearDown(db.close);
-      expect(db.schemaVersion, 3);
+      expect(db.schemaVersion, 4);
 
       await db.into(db.customers).insert(
         CustomersCompanion.insert(

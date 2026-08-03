@@ -20,7 +20,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -33,7 +33,7 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(rentalItems, rentalItems.shortCode);
         // Backfill instance name from catalog; unique legacy short codes.
         await customStatement('''
-UPDATE UPDATE rental_items
+          UPDATE rental_items
           SET instance_name = COALESCE(
             (SELECT name FROM inventory_items
              WHERE inventory_items.id = rental_items.item_id),
@@ -47,6 +47,36 @@ UPDATE UPDATE rental_items
           WHERE short_code IS NULL
              OR short_code = ''
              OR upper(short_code) = 'LEGACY'
+        ''');
+      }
+      if (from < 4) {
+        await m.addColumn(inventoryItems, inventoryItems.billingMode);
+        await m.addColumn(inventoryItems, inventoryItems.rateAmount);
+        await m.addColumn(inventoryItems, inventoryItems.lateFeePerDay);
+        await m.addColumn(inventoryItems, inventoryItems.currencyCode);
+        await m.addColumn(rentals, rentals.billingMode);
+        await m.addColumn(rentals, rentals.rateAmount);
+        await m.addColumn(rentals, rentals.lateFeePerDay);
+        await m.addColumn(rentals, rentals.baseAmount);
+        await m.addColumn(rentals, rentals.lateAmount);
+        await m.addColumn(rentals, rentals.totalAmount);
+        await m.addColumn(rentals, rentals.durationUnits);
+        await customStatement('''
+          UPDATE inventory_items
+          SET billing_mode = COALESCE(billing_mode, 'weekly'),
+              rate_amount = COALESCE(rate_amount, 0),
+              late_fee_per_day = COALESCE(late_fee_per_day, 0),
+              currency_code = COALESCE(currency_code, 'INR')
+        ''');
+        await customStatement('''
+          UPDATE rentals
+          SET billing_mode = COALESCE(billing_mode, 'weekly'),
+              rate_amount = COALESCE(rate_amount, 0),
+              late_fee_per_day = COALESCE(late_fee_per_day, 0),
+              base_amount = COALESCE(base_amount, 0),
+              late_amount = COALESCE(late_amount, 0),
+              total_amount = COALESCE(total_amount, 0),
+              duration_units = COALESCE(duration_units, 1)
         ''');
       }
     },

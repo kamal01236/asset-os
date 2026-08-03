@@ -574,4 +574,113 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get saveAction => 'Save';
+
+  @override
+  String get billingModeLabel => 'Billing mode';
+
+  @override
+  String get billingModeDaily => 'Daily';
+
+  @override
+  String get billingModeWeekly => 'Weekly';
+
+  @override
+  String get billingModeMonthly => 'Monthly';
+
+  @override
+  String get billingModeFixed => 'Fixed';
+
+  @override
+  String get billingModeCustom => 'Custom';
+
+  @override
+  String get rateAmountLabel => 'Rate (₹)';
+
+  @override
+  String get rateAmountHint => 'e.g. 50';
+
+  @override
+  String get lateFeePerDayLabel => 'Late fee per day (₹)';
+
+  @override
+  String get lateFeePerDayHint => 'Optional, e.g. 5';
+
+  @override
+  String get pricingSectionTitle => 'Rental pricing';
+
+  @override
+  String get durationHeading => 'Rental duration';
+
+  @override
+  String get durationHint => 'Based on the first selected item’s billing mode.';
+
+  @override
+  String get durationUnitsLabel => 'Duration';
+
+  @override
+  String get durationUnitsDaily => 'Number of days';
+
+  @override
+  String get durationUnitsWeekly => 'Number of weeks';
+
+  @override
+  String get durationUnitsMonthly => 'Number of months';
+
+  @override
+  String get durationUnitsFixed => 'Due in (days)';
+
+  @override
+  String get customEndDateLabel => 'Return by';
+
+  @override
+  String chargePreviewDue(String date) {
+    return 'Due $date';
+  }
+
+  @override
+  String chargeLineAmount(String item, String amount) {
+    return '$item — $amount';
+  }
+
+  @override
+  String chargeBaseLabel(String amount) {
+    return 'Base: $amount';
+  }
+
+  @override
+  String chargeLateLabel(String amount) {
+    return 'Late fee: $amount';
+  }
+
+  @override
+  String chargeTotalLabel(String amount) {
+    return 'Total: $amount';
+  }
+
+  @override
+  String get reviewChargesLabel => 'Charges:';
+
+  @override
+  String reviewDueLabel(String date) {
+    return 'Due: $date';
+  }
+
+  @override
+  String rentalAmountSubtitle(String date, String amount) {
+    return 'Due $date · $amount';
+  }
+
+  @override
+  String inventoryRateSubtitle(String mode, String rate) {
+    return '$mode · $rate';
+  }
+
+  @override
+  String get chargesHeading => 'Charges';
+
+  @override
+  String get durationRequired => 'Enter a valid duration (at least 1).';
+
+  @override
+  String get customEndRequired => 'Pick a return-by date on or after today.';
 }

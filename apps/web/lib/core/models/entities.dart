@@ -1,5 +1,9 @@
 import 'dart:convert';
 
+import '../pricing/rental_pricing.dart';
+
+export '../pricing/rental_pricing.dart' show BillingMode;
+
 enum AssetStatus {
   available,
   rented,
@@ -67,6 +71,10 @@ class InventoryItem {
     required this.status,
     required this.qrCode,
     this.notes,
+    this.billingMode = BillingMode.weekly,
+    this.rateAmount = 0,
+    this.lateFeePerDay = 0,
+    this.currencyCode = 'INR',
   });
 
   final String id;
@@ -77,11 +85,19 @@ class InventoryItem {
   final AssetStatus status;
   final String qrCode;
   final String? notes;
+  final BillingMode billingMode;
+  final int rateAmount;
+  final int lateFeePerDay;
+  final String currencyCode;
 
   InventoryItem copyWith({
     int? availableUnits,
     AssetStatus? status,
     String? notes,
+    BillingMode? billingMode,
+    int? rateAmount,
+    int? lateFeePerDay,
+    String? currencyCode,
   }) => InventoryItem(
     id: id,
     name: name,
@@ -91,6 +107,10 @@ class InventoryItem {
     status: status ?? this.status,
     qrCode: qrCode,
     notes: notes ?? this.notes,
+    billingMode: billingMode ?? this.billingMode,
+    rateAmount: rateAmount ?? this.rateAmount,
+    lateFeePerDay: lateFeePerDay ?? this.lateFeePerDay,
+    currencyCode: currencyCode ?? this.currencyCode,
   );
 
   Map<String, dynamic> toJson() => <String, dynamic>{
@@ -102,6 +122,10 @@ class InventoryItem {
     'status': status.name,
     'qrCode': qrCode,
     'notes': notes,
+    'billingMode': billingMode.name,
+    'rateAmount': rateAmount,
+    'lateFeePerDay': lateFeePerDay,
+    'currencyCode': currencyCode,
   };
 
   factory InventoryItem.fromJson(Map<String, dynamic> json) => InventoryItem(
@@ -113,6 +137,10 @@ class InventoryItem {
     status: AssetStatus.values.byName(json['status'] as String),
     qrCode: json['qrCode'] as String,
     notes: json['notes'] as String?,
+    billingMode: BillingMode.parse(json['billingMode'] as String?),
+    rateAmount: (json['rateAmount'] as int?) ?? 0,
+    lateFeePerDay: (json['lateFeePerDay'] as int?) ?? 0,
+    currencyCode: (json['currencyCode'] as String?) ?? 'INR',
   );
 }
 
@@ -220,6 +248,13 @@ class Rental {
     required this.qrCode,
     this.returnedAt,
     this.nickname,
+    this.billingMode = BillingMode.weekly,
+    this.rateAmount = 0,
+    this.lateFeePerDay = 0,
+    this.baseAmount = 0,
+    this.lateAmount = 0,
+    this.totalAmount = 0,
+    this.durationUnits = 1,
   });
 
   final String id;
@@ -232,11 +267,40 @@ class Rental {
   final String qrCode;
   /// Per-rental nickname (used for SELF Known issues; not stored on customer).
   final String? nickname;
+  final BillingMode billingMode;
+  final int rateAmount;
+  final int lateFeePerDay;
+  final int baseAmount;
+  final int lateAmount;
+  final int totalAmount;
+  final int durationUnits;
 
   List<String> get itemIds =>
       lines.map((RentalLine line) => line.itemId).toList(growable: false);
 
   bool get isActive => returnedAt == null;
+
+  /// Running late fee estimate for active rentals; finalized [lateAmount] when returned.
+  int lateAmountAsOf(DateTime asOf) {
+    if (!isActive) {
+      return lateAmount;
+    }
+    return computeLateAmount(
+      due: dueAt,
+      asOf: asOf,
+      lateFeePerDay: lateFeePerDay,
+    );
+  }
+
+  int totalAmountAsOf(DateTime asOf) {
+    if (!isActive) {
+      return totalAmount;
+    }
+    return computeTotalAmount(
+      baseAmount: baseAmount,
+      lateAmount: lateAmountAsOf(asOf),
+    );
+  }
 
   AssetStatus statusFor(DateTime now) {
     if (!isActive) {
@@ -258,16 +322,31 @@ class Rental {
     List<RentalEvent>? timeline,
     String? nickname,
     List<RentalLine>? lines,
+    BillingMode? billingMode,
+    int? rateAmount,
+    int? lateFeePerDay,
+    int? baseAmount,
+    int? lateAmount,
+    int? totalAmount,
+    int? durationUnits,
+    DateTime? dueAt,
   }) => Rental(
     id: id,
     customerId: customerId,
     lines: lines ?? this.lines,
     startedAt: startedAt,
-    dueAt: dueAt,
+    dueAt: dueAt ?? this.dueAt,
     returnedAt: returnedAt ?? this.returnedAt,
     timeline: timeline ?? this.timeline,
     qrCode: qrCode,
     nickname: nickname ?? this.nickname,
+    billingMode: billingMode ?? this.billingMode,
+    rateAmount: rateAmount ?? this.rateAmount,
+    lateFeePerDay: lateFeePerDay ?? this.lateFeePerDay,
+    baseAmount: baseAmount ?? this.baseAmount,
+    lateAmount: lateAmount ?? this.lateAmount,
+    totalAmount: totalAmount ?? this.totalAmount,
+    durationUnits: durationUnits ?? this.durationUnits,
   );
 
   Map<String, dynamic> toJson() => <String, dynamic>{
@@ -281,6 +360,13 @@ class Rental {
     'timeline': timeline.map((event) => event.toJson()).toList(),
     'qrCode': qrCode,
     'nickname': nickname,
+    'billingMode': billingMode.name,
+    'rateAmount': rateAmount,
+    'lateFeePerDay': lateFeePerDay,
+    'baseAmount': baseAmount,
+    'lateAmount': lateAmount,
+    'totalAmount': totalAmount,
+    'durationUnits': durationUnits,
   };
 
   factory Rental.fromJson(Map<String, dynamic> json) {
@@ -318,6 +404,13 @@ class Rental {
           .toList(),
       qrCode: json['qrCode'] as String,
       nickname: json['nickname'] as String?,
+      billingMode: BillingMode.parse(json['billingMode'] as String?),
+      rateAmount: (json['rateAmount'] as int?) ?? 0,
+      lateFeePerDay: (json['lateFeePerDay'] as int?) ?? 0,
+      baseAmount: (json['baseAmount'] as int?) ?? 0,
+      lateAmount: (json['lateAmount'] as int?) ?? 0,
+      totalAmount: (json['totalAmount'] as int?) ?? 0,
+      durationUnits: (json['durationUnits'] as int?) ?? 1,
     );
   }
 }
