@@ -898,4 +898,114 @@ class AppLocalizationsHi extends AppLocalizations {
   String lineChargePreview(String label, String amount) {
     return '$label: $amount';
   }
+
+  @override
+  String get clearFilter => 'साफ़ करें';
+
+  @override
+  String showingFilter(String label) {
+    return 'दिखा रहा है: $label';
+  }
+
+  @override
+  String get needsAttentionTitle => 'ध्यान दें';
+
+  @override
+  String get needsAttentionEmptyTitle => 'कुछ ध्यान देने योग्य नहीं';
+
+  @override
+  String get needsAttentionEmptySubtitle =>
+      'आज देय और अतिदेय किराए यहाँ दिखेंगे।';
+
+  @override
+  String get recentActivityTitle => 'हाल की गतिविधि';
+
+  @override
+  String get recentActivityEmpty => 'अभी कोई हालिया किराया या वापसी नहीं।';
+
+  @override
+  String get homeFilterEmptyTitle => 'कोई मिलान नहीं';
+
+  @override
+  String homeFilterEmptyRentalsSubtitle(String label) {
+    return 'अभी कोई किराया $label से मेल नहीं खाता।';
+  }
+
+  @override
+  String get homeFilterEmptyInventorySubtitle =>
+      'अभी कोई इन्वेंटरी उपलब्ध इकाइयों के साथ नहीं।';
+
+  @override
+  String get customizeHomeTitle => 'होम अनुकूलित करें';
+
+  @override
+  String get customizeHomeSubtitle => 'होम मॉड्यूल दिखाएँ या छिपाएँ।';
+
+  @override
+  String get customizeHomeIntro =>
+      'खोज हमेशा चालू रहती है। होम को फोकस्ड रखने के लिए अन्य मॉड्यूल टॉगल करें।';
+
+  @override
+  String get moduleSearch => 'खोज';
+
+  @override
+  String get moduleSearchLocked => 'हमेशा चालू';
+
+  @override
+  String get moduleKpis => 'स्थिति कार्ड';
+
+  @override
+  String get moduleKpisSubtitle => 'सक्रिय, आज देय, अतिदेय, उपलब्ध';
+
+  @override
+  String get moduleFilterResults => 'फ़िल्टर परिणाम';
+
+  @override
+  String get moduleFilterResultsSubtitle =>
+      'फ़िल्टर चुनने पर स्थिति कार्ड के नीचे सूची';
+
+  @override
+  String get moduleNeedsAttention => 'ध्यान दें';
+
+  @override
+  String get moduleNeedsAttentionSubtitle => 'आज देय और अतिदेय किराए';
+
+  @override
+  String get moduleQuickActions => 'त्वरित कार्रवाई';
+
+  @override
+  String get moduleQuickActionsSubtitle =>
+      'नया किराया, वापसी, इन्वेंटरी जोड़ें';
+
+  @override
+  String get moduleRecentActivity => 'हाल की गतिविधि';
+
+  @override
+  String get moduleRecentActivitySubtitle => 'नवीनतम किराए और वापसी';
+
+  @override
+  String get moduleSuggestions => 'AI सुझाव';
+
+  @override
+  String get moduleSuggestionsSubtitle => 'वैकल्पिक बीटा सुझाव';
+
+  @override
+  String get applyHomeLayoutTitle => 'होम लेआउट लागू करें?';
+
+  @override
+  String get applyHomeLayoutBody =>
+      'इस टेम्पलेट के अनुशंसित होम मॉड्यूल उपयोग करें।';
+
+  @override
+  String get applyHomeLayoutCustomizedBody =>
+      'आपने होम पहले अनुकूलित किया है। इसे इस टेम्पलेट के लेआउट से बदलें?';
+
+  @override
+  String get applyHomeLayoutSkip => 'वर्तमान रखें';
+
+  @override
+  String get applyHomeLayoutConfirm => 'लेआउट लागू करें';
+
+  @override
+  String get applyHomeLayoutDone => 'होम लेआउट अपडेट हो गया।';
 }

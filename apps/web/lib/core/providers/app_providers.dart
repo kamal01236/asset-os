@@ -3,9 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../db/app_database.dart';
+import '../home/home_modules.dart';
 import '../models/entities.dart';
 import '../repositories/local_repository.dart';
 import '../sharing/whatsapp_share.dart';
+
+export '../home/home_modules.dart';
+export '../home/home_filter.dart';
 
 const String kLocalePrefsKey = 'asset_os_locale';
 const String kOwnerWhatsAppPhoneKey = 'owner_whatsapp_phone';
@@ -75,6 +79,54 @@ class LocaleNotifier extends StateNotifier<Locale> {
     state = Locale(code);
     await _preferences.setString(kLocalePrefsKey, code);
   }
+}
+
+final homeModulesProvider =
+    StateNotifierProvider<HomeModulesNotifier, List<HomeModuleId>>((ref) {
+  return HomeModulesNotifier(ref.watch(sharedPreferencesProvider));
+});
+
+class HomeModulesNotifier extends StateNotifier<List<HomeModuleId>> {
+  HomeModulesNotifier(this._preferences)
+      : super(parseHomeModules(_preferences.getString(kHomeModulesPrefsKey)));
+
+  final SharedPreferences _preferences;
+
+  bool get isCustomized =>
+      _preferences.getBool(kHomeModulesCustomizedKey) ?? false;
+
+  Future<void> setModules(
+    List<HomeModuleId> modules, {
+    bool markCustomized = true,
+  }) async {
+    state = parseHomeModules(encodeHomeModules(modules));
+    await _preferences.setString(kHomeModulesPrefsKey, encodeHomeModules(state));
+    if (markCustomized) {
+      await _preferences.setBool(kHomeModulesCustomizedKey, true);
+    }
+  }
+
+  Future<void> setEnabled(HomeModuleId id, bool enabled) async {
+    if (id == HomeModuleId.search) {
+      return;
+    }
+    final List<HomeModuleId> next = List<HomeModuleId>.from(state);
+    if (enabled) {
+      if (!next.contains(id)) {
+        next.add(id);
+      }
+    } else {
+      next.remove(id);
+    }
+    await setModules(next);
+  }
+
+  Future<void> applyTemplateDefaults(List<HomeModuleId> defaults) async {
+    await setModules(defaults, markCustomized: false);
+    await _preferences.setBool(kHomeModulesCustomizedKey, false);
+  }
+
+  bool isEnabled(HomeModuleId id) => state.contains(id);
 }
 
 /// Owner WhatsApp number for share-to-self reports (digits + country code).

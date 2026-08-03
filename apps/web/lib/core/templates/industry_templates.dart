@@ -1,3 +1,4 @@
+import '../home/home_modules.dart';
 import '../pricing/rental_pricing.dart';
 
 /// Static industry inventory packs for Business Templates (merge-into inventory).
@@ -30,12 +31,16 @@ class IndustryTemplate {
     required this.name,
     required this.description,
     required this.items,
+    this.defaultHomeModules = kDefaultHomeModules,
   });
 
   final String id;
   final String name;
   final String description;
   final List<TemplateInventoryItem> items;
+
+  /// Home layout defaults applied when the user accepts the template layout.
+  final List<HomeModuleId> defaultHomeModules;
 }
 
 const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
@@ -43,6 +48,7 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
     id: 'library',
     name: 'Library',
     description: 'Books and study materials for lending counters.',
+    defaultHomeModules: kLibraryHomeModules,
     items: <TemplateInventoryItem>[
       TemplateInventoryItem(
         name: 'Novel',

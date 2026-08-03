@@ -896,4 +896,113 @@ class AppLocalizationsEn extends AppLocalizations {
   String lineChargePreview(String label, String amount) {
     return '$label: $amount';
   }
+
+  @override
+  String get clearFilter => 'Clear';
+
+  @override
+  String showingFilter(String label) {
+    return 'Showing: $label';
+  }
+
+  @override
+  String get needsAttentionTitle => 'Needs attention';
+
+  @override
+  String get needsAttentionEmptyTitle => 'Nothing needs attention';
+
+  @override
+  String get needsAttentionEmptySubtitle =>
+      'Due today and overdue rentals will show up here.';
+
+  @override
+  String get recentActivityTitle => 'Recent activity';
+
+  @override
+  String get recentActivityEmpty => 'No recent rentals or returns yet.';
+
+  @override
+  String get homeFilterEmptyTitle => 'No matches';
+
+  @override
+  String homeFilterEmptyRentalsSubtitle(String label) {
+    return 'No rentals match $label right now.';
+  }
+
+  @override
+  String get homeFilterEmptyInventorySubtitle =>
+      'No inventory with remaining units right now.';
+
+  @override
+  String get customizeHomeTitle => 'Customize Home';
+
+  @override
+  String get customizeHomeSubtitle => 'Show or hide Home modules.';
+
+  @override
+  String get customizeHomeIntro =>
+      'Search stays on. Toggle other modules to keep Home focused.';
+
+  @override
+  String get moduleSearch => 'Search';
+
+  @override
+  String get moduleSearchLocked => 'Always on';
+
+  @override
+  String get moduleKpis => 'Status cards';
+
+  @override
+  String get moduleKpisSubtitle => 'Active, Due Today, Overdue, Available';
+
+  @override
+  String get moduleFilterResults => 'Filter results';
+
+  @override
+  String get moduleFilterResultsSubtitle =>
+      'List under status cards when a filter is selected';
+
+  @override
+  String get moduleNeedsAttention => 'Needs attention';
+
+  @override
+  String get moduleNeedsAttentionSubtitle => 'Due today and overdue rentals';
+
+  @override
+  String get moduleQuickActions => 'Quick actions';
+
+  @override
+  String get moduleQuickActionsSubtitle => 'New Rental, Return, Add Inventory';
+
+  @override
+  String get moduleRecentActivity => 'Recent activity';
+
+  @override
+  String get moduleRecentActivitySubtitle => 'Latest rentals and returns';
+
+  @override
+  String get moduleSuggestions => 'AI suggestions';
+
+  @override
+  String get moduleSuggestionsSubtitle => 'Optional beta tips';
+
+  @override
+  String get applyHomeLayoutTitle => 'Apply Home layout?';
+
+  @override
+  String get applyHomeLayoutBody =>
+      'Use this template’s recommended Home modules.';
+
+  @override
+  String get applyHomeLayoutCustomizedBody =>
+      'You customized Home earlier. Replace it with this template’s layout?';
+
+  @override
+  String get applyHomeLayoutSkip => 'Keep current';
+
+  @override
+  String get applyHomeLayoutConfirm => 'Apply layout';
+
+  @override
+  String get applyHomeLayoutDone => 'Home layout updated.';
 }

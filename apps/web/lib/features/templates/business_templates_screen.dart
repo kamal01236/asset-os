@@ -112,9 +112,53 @@ class _TemplateItemPickerScreenState extends ConsumerState<TemplateItemPickerScr
         ),
       ),
     );
+    if (result.added > 0 || result.skipped > 0) {
+      await _offerHomeLayout(l10n);
+    }
+    if (!mounted) {
+      return;
+    }
     if (result.added > 0) {
       ref.read(currentTabIndexProvider.notifier).state = 2; // Inventory
       Navigator.of(context).popUntil((Route<void> route) => route.isFirst);
+    }
+  }
+
+  Future<void> _offerHomeLayout(AppLocalizations l10n) async {
+    final HomeModulesNotifier modules =
+        ref.read(homeModulesProvider.notifier);
+    final bool customized = modules.isCustomized;
+    final bool? apply = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(l10n.applyHomeLayoutTitle),
+          content: Text(
+            customized
+                ? l10n.applyHomeLayoutCustomizedBody
+                : l10n.applyHomeLayoutBody,
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text(l10n.applyHomeLayoutSkip),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text(l10n.applyHomeLayoutConfirm),
+            ),
+          ],
+        );
+      },
+    );
+    if (apply == true) {
+      await modules.applyTemplateDefaults(widget.template.defaultHomeModules);
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.applyHomeLayoutDone)),
+      );
     }
   }
 

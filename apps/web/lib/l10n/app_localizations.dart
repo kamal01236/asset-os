@@ -1615,6 +1615,204 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{label}: {amount}'**
   String lineChargePreview(String label, String amount);
+
+  /// No description provided for @clearFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get clearFilter;
+
+  /// No description provided for @showingFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing: {label}'**
+  String showingFilter(String label);
+
+  /// No description provided for @needsAttentionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs attention'**
+  String get needsAttentionTitle;
+
+  /// No description provided for @needsAttentionEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing needs attention'**
+  String get needsAttentionEmptyTitle;
+
+  /// No description provided for @needsAttentionEmptySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Due today and overdue rentals will show up here.'**
+  String get needsAttentionEmptySubtitle;
+
+  /// No description provided for @recentActivityTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent activity'**
+  String get recentActivityTitle;
+
+  /// No description provided for @recentActivityEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No recent rentals or returns yet.'**
+  String get recentActivityEmpty;
+
+  /// No description provided for @homeFilterEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No matches'**
+  String get homeFilterEmptyTitle;
+
+  /// No description provided for @homeFilterEmptyRentalsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No rentals match {label} right now.'**
+  String homeFilterEmptyRentalsSubtitle(String label);
+
+  /// No description provided for @homeFilterEmptyInventorySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No inventory with remaining units right now.'**
+  String get homeFilterEmptyInventorySubtitle;
+
+  /// No description provided for @customizeHomeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Customize Home'**
+  String get customizeHomeTitle;
+
+  /// No description provided for @customizeHomeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Show or hide Home modules.'**
+  String get customizeHomeSubtitle;
+
+  /// No description provided for @customizeHomeIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Search stays on. Toggle other modules to keep Home focused.'**
+  String get customizeHomeIntro;
+
+  /// No description provided for @moduleSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get moduleSearch;
+
+  /// No description provided for @moduleSearchLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Always on'**
+  String get moduleSearchLocked;
+
+  /// No description provided for @moduleKpis.
+  ///
+  /// In en, this message translates to:
+  /// **'Status cards'**
+  String get moduleKpis;
+
+  /// No description provided for @moduleKpisSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Active, Due Today, Overdue, Available'**
+  String get moduleKpisSubtitle;
+
+  /// No description provided for @moduleFilterResults.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter results'**
+  String get moduleFilterResults;
+
+  /// No description provided for @moduleFilterResultsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'List under status cards when a filter is selected'**
+  String get moduleFilterResultsSubtitle;
+
+  /// No description provided for @moduleNeedsAttention.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs attention'**
+  String get moduleNeedsAttention;
+
+  /// No description provided for @moduleNeedsAttentionSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Due today and overdue rentals'**
+  String get moduleNeedsAttentionSubtitle;
+
+  /// No description provided for @moduleQuickActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick actions'**
+  String get moduleQuickActions;
+
+  /// No description provided for @moduleQuickActionsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New Rental, Return, Add Inventory'**
+  String get moduleQuickActionsSubtitle;
+
+  /// No description provided for @moduleRecentActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent activity'**
+  String get moduleRecentActivity;
+
+  /// No description provided for @moduleRecentActivitySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Latest rentals and returns'**
+  String get moduleRecentActivitySubtitle;
+
+  /// No description provided for @moduleSuggestions.
+  ///
+  /// In en, this message translates to:
+  /// **'AI suggestions'**
+  String get moduleSuggestions;
+
+  /// No description provided for @moduleSuggestionsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional beta tips'**
+  String get moduleSuggestionsSubtitle;
+
+  /// No description provided for @applyHomeLayoutTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply Home layout?'**
+  String get applyHomeLayoutTitle;
+
+  /// No description provided for @applyHomeLayoutBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Use this template’s recommended Home modules.'**
+  String get applyHomeLayoutBody;
+
+  /// No description provided for @applyHomeLayoutCustomizedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You customized Home earlier. Replace it with this template’s layout?'**
+  String get applyHomeLayoutCustomizedBody;
+
+  /// No description provided for @applyHomeLayoutSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep current'**
+  String get applyHomeLayoutSkip;
+
+  /// No description provided for @applyHomeLayoutConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply layout'**
+  String get applyHomeLayoutConfirm;
+
+  /// No description provided for @applyHomeLayoutDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Home layout updated.'**
+  String get applyHomeLayoutDone;
 }
 
 class _AppLocalizationsDelegate

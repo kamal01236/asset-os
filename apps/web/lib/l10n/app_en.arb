@@ -557,5 +557,48 @@
       "label": {"type": "String"},
       "amount": {"type": "String"}
     }
-  }
+  },
+  "clearFilter": "Clear",
+  "showingFilter": "Showing: {label}",
+  "@showingFilter": {
+    "placeholders": {
+      "label": {"type": "String"}
+    }
+  },
+  "needsAttentionTitle": "Needs attention",
+  "needsAttentionEmptyTitle": "Nothing needs attention",
+  "needsAttentionEmptySubtitle": "Due today and overdue rentals will show up here.",
+  "recentActivityTitle": "Recent activity",
+  "recentActivityEmpty": "No recent rentals or returns yet.",
+  "homeFilterEmptyTitle": "No matches",
+  "homeFilterEmptyRentalsSubtitle": "No rentals match {label} right now.",
+  "@homeFilterEmptyRentalsSubtitle": {
+    "placeholders": {
+      "label": {"type": "String"}
+    }
+  },
+  "homeFilterEmptyInventorySubtitle": "No inventory with remaining units right now.",
+  "customizeHomeTitle": "Customize Home",
+  "customizeHomeSubtitle": "Show or hide Home modules.",
+  "customizeHomeIntro": "Search stays on. Toggle other modules to keep Home focused.",
+  "moduleSearch": "Search",
+  "moduleSearchLocked": "Always on",
+  "moduleKpis": "Status cards",
+  "moduleKpisSubtitle": "Active, Due Today, Overdue, Available",
+  "moduleFilterResults": "Filter results",
+  "moduleFilterResultsSubtitle": "List under status cards when a filter is selected",
+  "moduleNeedsAttention": "Needs attention",
+  "moduleNeedsAttentionSubtitle": "Due today and overdue rentals",
+  "moduleQuickActions": "Quick actions",
+  "moduleQuickActionsSubtitle": "New Rental, Return, Add Inventory",
+  "moduleRecentActivity": "Recent activity",
+  "moduleRecentActivitySubtitle": "Latest rentals and returns",
+  "moduleSuggestions": "AI suggestions",
+  "moduleSuggestionsSubtitle": "Optional beta tips",
+  "applyHomeLayoutTitle": "Apply Home layout?",
+  "applyHomeLayoutBody": "Use this template’s recommended Home modules.",
+  "applyHomeLayoutCustomizedBody": "You customized Home earlier. Replace it with this template’s layout?",
+  "applyHomeLayoutSkip": "Keep current",
+  "applyHomeLayoutConfirm": "Apply layout",
+  "applyHomeLayoutDone": "Home layout updated."
 }

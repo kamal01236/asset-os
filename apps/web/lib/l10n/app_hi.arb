@@ -557,5 +557,48 @@
       "label": {"type": "String"},
       "amount": {"type": "String"}
     }
-  }
+  },
+  "clearFilter": "साफ़ करें",
+  "showingFilter": "दिखा रहा है: {label}",
+  "@showingFilter": {
+    "placeholders": {
+      "label": {"type": "String"}
+    }
+  },
+  "needsAttentionTitle": "ध्यान दें",
+  "needsAttentionEmptyTitle": "कुछ ध्यान देने योग्य नहीं",
+  "needsAttentionEmptySubtitle": "आज देय और अतिदेय किराए यहाँ दिखेंगे।",
+  "recentActivityTitle": "हाल की गतिविधि",
+  "recentActivityEmpty": "अभी कोई हालिया किराया या वापसी नहीं।",
+  "homeFilterEmptyTitle": "कोई मिलान नहीं",
+  "homeFilterEmptyRentalsSubtitle": "अभी कोई किराया {label} से मेल नहीं खाता।",
+  "@homeFilterEmptyRentalsSubtitle": {
+    "placeholders": {
+      "label": {"type": "String"}
+    }
+  },
+  "homeFilterEmptyInventorySubtitle": "अभी कोई इन्वेंटरी उपलब्ध इकाइयों के साथ नहीं।",
+  "customizeHomeTitle": "होम अनुकूलित करें",
+  "customizeHomeSubtitle": "होम मॉड्यूल दिखाएँ या छिपाएँ।",
+  "customizeHomeIntro": "खोज हमेशा चालू रहती है। होम को फोकस्ड रखने के लिए अन्य मॉड्यूल टॉगल करें।",
+  "moduleSearch": "खोज",
+  "moduleSearchLocked": "हमेशा चालू",
+  "moduleKpis": "स्थिति कार्ड",
+  "moduleKpisSubtitle": "सक्रिय, आज देय, अतिदेय, उपलब्ध",
+  "moduleFilterResults": "फ़िल्टर परिणाम",
+  "moduleFilterResultsSubtitle": "फ़िल्टर चुनने पर स्थिति कार्ड के नीचे सूची",
+  "moduleNeedsAttention": "ध्यान दें",
+  "moduleNeedsAttentionSubtitle": "आज देय और अतिदेय किराए",
+  "moduleQuickActions": "त्वरित कार्रवाई",
+  "moduleQuickActionsSubtitle": "नया किराया, वापसी, इन्वेंटरी जोड़ें",
+  "moduleRecentActivity": "हाल की गतिविधि",
+  "moduleRecentActivitySubtitle": "नवीनतम किराए और वापसी",
+  "moduleSuggestions": "AI सुझाव",
+  "moduleSuggestionsSubtitle": "वैकल्पिक बीटा सुझाव",
+  "applyHomeLayoutTitle": "होम लेआउट लागू करें?",
+  "applyHomeLayoutBody": "इस टेम्पलेट के अनुशंसित होम मॉड्यूल उपयोग करें।",
+  "applyHomeLayoutCustomizedBody": "आपने होम पहले अनुकूलित किया है। इसे इस टेम्पलेट के लेआउट से बदलें?",
+  "applyHomeLayoutSkip": "वर्तमान रखें",
+  "applyHomeLayoutConfirm": "लेआउट लागू करें",
+  "applyHomeLayoutDone": "होम लेआउट अपडेट हो गया।"
 }

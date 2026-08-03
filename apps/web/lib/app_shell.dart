@@ -10,8 +10,12 @@ import 'core/providers/app_providers.dart';
 import 'core/repositories/local_repository.dart';
 import 'core/widgets/rental_timeline.dart';
 import 'core/widgets/ui_primitives.dart';
+import 'features/home/customize_home_screen.dart';
+import 'features/home/home_screen.dart';
 import 'features/reports/share_reports_screen.dart';
 import 'features/templates/business_templates_screen.dart';
+
+export 'features/home/home_screen.dart' show HomeScreen;
 
 class AppShell extends ConsumerWidget {
   const AppShell({super.key});
@@ -27,6 +31,9 @@ class AppShell extends ConsumerWidget {
         onNewRental: () => _openNewRentalFlow(context),
         onReturnItem: () => _openReturnFlow(context),
         onAddInventory: () => _openAddInventoryFlow(context),
+        onOpenRental: (Rental rental) => _openRentalDetail(context, rental),
+        onOpenInventory: (InventoryItem item) =>
+            _openInventoryDetail(context, item),
       ),
       RentalsScreen(
         onOpenRental: (Rental rental) => _openRentalDetail(context, rental),
@@ -153,147 +160,6 @@ class AppShell extends ConsumerWidget {
       MaterialPageRoute<void>(
         builder: (_) => const ScanEntryScreen(),
       ),
-    );
-  }
-}
-
-class HomeScreen extends ConsumerWidget {
-  const HomeScreen({
-    required this.onOpenSearch,
-    required this.onNewRental,
-    required this.onReturnItem,
-    required this.onAddInventory,
-    super.key,
-  });
-
-  final VoidCallback onOpenSearch;
-  final VoidCallback onNewRental;
-  final VoidCallback onReturnItem;
-  final VoidCallback onAddInventory;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final AppLocalizations l10n = context.l10n;
-    final AsyncValue<List<InventoryItem>> inventoryAsync = ref.watch(inventoryProvider);
-    final AsyncValue<List<Rental>> rentalsAsync = ref.watch(rentalsProvider);
-
-    if (inventoryAsync.isLoading || rentalsAsync.isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    final List<InventoryItem> inventory = inventoryAsync.valueOrNull ?? const <InventoryItem>[];
-    final List<Rental> rentals = rentalsAsync.valueOrNull ?? const <Rental>[];
-
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: <Widget>[
-        LargeSearchBar(onTap: onOpenSearch, hintText: l10n.searchAnything),
-        const SizedBox(height: 14),
-        Text(
-          l10n.todayAtAGlance,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        const SizedBox(height: 8),
-        GridView.count(
-          crossAxisCount: 2,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisSpacing: 10,
-          mainAxisSpacing: 10,
-          childAspectRatio: 1.8,
-          children: <Widget>[
-            KpiCard(
-              label: l10n.kpiActive,
-              value: summaryCount(
-                status: AssetStatus.rented,
-                inventory: inventory,
-                rentals: rentals,
-              ),
-              status: AssetStatus.rented,
-            ),
-            KpiCard(
-              label: l10n.statusDueToday,
-              value: summaryCount(
-                status: AssetStatus.dueToday,
-                inventory: inventory,
-                rentals: rentals,
-              ),
-              status: AssetStatus.dueToday,
-            ),
-            KpiCard(
-              label: l10n.statusOverdue,
-              value: summaryCount(
-                status: AssetStatus.overdue,
-                inventory: inventory,
-                rentals: rentals,
-              ),
-              status: AssetStatus.overdue,
-            ),
-            KpiCard(
-              label: l10n.statusAvailable,
-              value: summaryCount(
-                status: AssetStatus.available,
-                inventory: inventory,
-                rentals: rentals,
-              ),
-              status: AssetStatus.available,
-            ),
-          ],
-        ),
-        const SizedBox(height: 14),
-        Text(
-          l10n.quickActions,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: <Widget>[
-            FilledButton.icon(
-              onPressed: onNewRental,
-              icon: const Icon(Icons.playlist_add_circle_outlined),
-              label: Text(l10n.actionNewRental),
-            ),
-            FilledButton.tonalIcon(
-              onPressed: onReturnItem,
-              icon: const Icon(Icons.assignment_return_outlined),
-              label: Text(l10n.actionReturnItem),
-            ),
-            FilledButton.tonalIcon(
-              onPressed: onAddInventory,
-              icon: const Icon(Icons.add_box_outlined),
-              label: Text(l10n.actionAddInventory),
-            ),
-          ],
-        ),
-        const SizedBox(height: 14),
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(
-                  l10n.aiSuggestionsTitle,
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  l10n.aiSuggestionsBody,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
     );
   }
 }
@@ -526,6 +392,20 @@ class MoreScreen extends ConsumerWidget {
           onTap: () {
             Navigator.of(context).push(
               MaterialPageRoute<void>(builder: (_) => const ShareReportsScreen()),
+            );
+          },
+        ),
+        const SizedBox(height: 10),
+        EntityCard(
+          title: l10n.customizeHomeTitle,
+          subtitle: l10n.customizeHomeSubtitle,
+          leadingIcon: Icons.view_quilt_outlined,
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const CustomizeHomeScreen(),
+              ),
             );
           },
         ),

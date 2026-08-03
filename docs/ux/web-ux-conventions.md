@@ -16,6 +16,11 @@ UI-first conventions for `apps/web` to keep flows fast, clear, and touch-friendl
 - Overdue = red
 - Archived = grey
 
+## Home (attention-first)
+- Home KPI status cards are tappable filters: tap stays on Home and shows matching rentals/inventory in a Results section; tap again or Clear clears the filter.
+- Home is modular (`search`, `kpis`, `filterResults`, `needsAttention`, `quickActions`, `recentActivity`, `suggestions`). Business templates set default module sets; More → Customize Home lets users show/hide removable modules. Search is always on.
+- Prefer overdue/due lists and status filters over chart dashboards.
+
 ## Universal navigation contract
 - Bottom navigation has 5 stable tabs: Home, Rentals, Inventory, Customers, More.
 - Global action entry points always include Search, New Rental, Return, Add Inventory, Scan.

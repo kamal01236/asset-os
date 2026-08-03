@@ -202,35 +202,51 @@ class KpiCard extends StatelessWidget {
     required this.label,
     required this.value,
     required this.status,
+    this.onTap,
+    this.selected = false,
     super.key,
   });
 
   final String label;
   final int value;
   final AssetStatus status;
+  final VoidCallback? onTap;
+  final bool selected;
 
   @override
   Widget build(BuildContext context) {
     final Color color = AppTheme.colorForStatus(status);
+    final BorderSide border = selected
+        ? BorderSide(color: color, width: 2)
+        : BorderSide(color: Colors.grey.shade300);
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Text(
-              label,
-              style: Theme.of(context).textTheme.labelLarge,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              '$value',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                color: color,
-                fontWeight: FontWeight.w800,
+      color: selected ? color.withValues(alpha: 0.08) : null,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: border,
+      ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Text(
+                label,
+                style: Theme.of(context).textTheme.labelLarge,
               ),
-            ),
-          ],
+              const SizedBox(height: 8),
+              Text(
+                '$value',
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  color: color,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

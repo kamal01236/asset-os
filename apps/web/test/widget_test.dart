@@ -59,6 +59,12 @@ Future<ProviderContainer> _pumpAppShell(
   Map<String, Object> prefs = const <String, Object>{},
   Locale? locale,
 }) async {
+  // Tall surface so Home modules below the KPI grid are built (ListView lazy).
+  tester.view.physicalSize = const Size(400, 1600);
+  tester.view.devicePixelRatio = 1.0;
+  addTearDown(tester.view.resetPhysicalSize);
+  addTearDown(tester.view.resetDevicePixelRatio);
+
   final ProviderContainer container = await _bootTestContainer(prefs: prefs);
   await tester.pumpWidget(_localizedApp(container: container, locale: locale));
   await tester.pumpAndSettle();
@@ -74,6 +80,48 @@ void main() {
     expect(find.text(kAppDisplayName), findsOneWidget);
     expect(find.text('Search Anything'), findsOneWidget);
     expect(find.text('Today at a glance'), findsOneWidget);
+    expect(find.text('Needs attention'), findsOneWidget);
+    expect(find.text('AI suggestions (beta)'), findsNothing);
+  });
+
+  testWidgets('Home Due Today KPI filters rentals and Clear restores attention', (
+    WidgetTester tester,
+  ) async {
+    await _pumpAppShell(tester);
+
+    expect(find.text('Needs attention'), findsOneWidget);
+    expect(find.textContaining('Workshop set A'), findsOneWidget);
+
+    await tester.tap(find.text('Due Today').first);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Showing: Due Today'), findsOneWidget);
+    expect(find.text('Clear'), findsOneWidget);
+    expect(find.textContaining('Workshop set A'), findsOneWidget);
+    expect(find.text('Needs attention'), findsNothing);
+
+    await tester.tap(find.text('Clear'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Showing: Due Today'), findsNothing);
+    expect(find.text('Needs attention'), findsOneWidget);
+    expect(find.textContaining('Workshop set A'), findsOneWidget);
+  });
+
+  testWidgets('disabled Home module stays hidden until enabled via provider', (
+    WidgetTester tester,
+  ) async {
+    final ProviderContainer container = await _pumpAppShell(tester);
+
+    expect(find.text('AI suggestions (beta)'), findsNothing);
+
+    await container.read(homeModulesProvider.notifier).setEnabled(
+          HomeModuleId.suggestions,
+          true,
+        );
+    await tester.pumpAndSettle();
+
+    expect(find.text('AI suggestions (beta)'), findsOneWidget);
   });
 
   testWidgets('primary tabs show seeded rentals, inventory, and customers', (
@@ -99,6 +147,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Offline simulation'), findsOneWidget);
     expect(find.text('Language'), findsOneWidget);
+    expect(find.text('Customize Home'), findsOneWidget);
   });
 
   testWidgets('opens Search from home search bar', (WidgetTester tester) async {
@@ -115,7 +164,8 @@ void main() {
 
     await tester.tap(find.text('Actions'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('New Rental'));
+    // Home Quick Actions also shows "New Rental"; prefer the sheet ListTile.
+    await tester.tap(find.widgetWithText(ListTile, 'New Rental'));
     await tester.pumpAndSettle();
 
     expect(find.widgetWithText(AppBar, 'New Rental'), findsOneWidget);
