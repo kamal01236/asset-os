@@ -46,6 +46,10 @@ class Rentals extends Table {
 class RentalItems extends Table {
   TextColumn get rentalId => text().references(Rentals, #id)();
   TextColumn get itemId => text().references(InventoryItems, #id)();
+  /// Copy/title for this issue (e.g. novel title); not inventory master.
+  TextColumn get instanceName => text().withDefault(const Constant(''))();
+  /// Short tracking code unique among active rental lines (case-insensitive).
+  TextColumn get shortCode => text().withDefault(const Constant('LEGACY'))();
 
   @override
   Set<Column<Object>> get primaryKey => <Column<Object>>{rentalId, itemId};

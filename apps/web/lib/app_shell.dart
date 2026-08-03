@@ -342,7 +342,9 @@ class RentalsScreen extends ConsumerWidget {
               ),
             );
             return EntityCard(
-              title: rental.id,
+              title: rental.lines.isNotEmpty
+                  ? rental.lines.map((RentalLine line) => line.displayLabel).join(', ')
+                  : rental.id,
               subtitle: l10n.rentalDueSubtitle(
                 rentalPartyLabel(customer, rental),
                 _date(rental.dueAt),
@@ -636,20 +638,16 @@ class RentalDetailScreen extends ConsumerWidget {
     final AppLocalizations l10n = context.l10n;
     final AsyncValue<List<Rental>> rentalsAsync = ref.watch(rentalsProvider);
     final AsyncValue<List<Customer>> customersAsync = ref.watch(customersProvider);
-    final AsyncValue<List<InventoryItem>> inventoryAsync = ref.watch(inventoryProvider);
 
-    if (rentalsAsync.isLoading || customersAsync.isLoading || inventoryAsync.isLoading) {
+    if (rentalsAsync.isLoading || customersAsync.isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     final List<Rental> rentals = rentalsAsync.valueOrNull ?? const <Rental>[];
     final List<Customer> customers = customersAsync.valueOrNull ?? const <Customer>[];
-    final List<InventoryItem> inventory = inventoryAsync.valueOrNull ?? const <InventoryItem>[];
 
     final Rental rental = rentals.firstWhere((item) => item.id == rentalId);
     final Customer customer = customers.firstWhere((item) => item.id == rental.customerId);
-    final List<InventoryItem> items =
-        inventory.where((item) => rental.itemIds.contains(item.id)).toList();
 
     return Scaffold(
       appBar: AppBar(title: Text(rental.id)),
@@ -673,9 +671,9 @@ class RentalDetailScreen extends ConsumerWidget {
                 children: <Widget>[
                   Text(l10n.itemsHeading, style: Theme.of(context).textTheme.titleSmall),
                   const SizedBox(height: 6),
-                  ...items.map((item) => Padding(
+                  ...rental.lines.map((RentalLine line) => Padding(
                     padding: const EdgeInsets.only(bottom: 4),
-                    child: Text('• ${item.name}'),
+                    child: Text('• ${line.displayLabel}'),
                   )),
                 ],
               ),
@@ -883,6 +881,13 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
                     const SizedBox(height: 10),
                     Card(
                       child: ListTile(
+                        leading: const Icon(Icons.label_outline),
+                        title: Text(l10n.inventoryInstancesNote),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Card(
+                      child: ListTile(
                         leading: const Icon(Icons.qr_code_2_outlined),
                         title: Text(l10n.qrCodeLabel),
                         subtitle: Text(item.qrCode),
@@ -1002,7 +1007,9 @@ class CustomerDetailScreen extends ConsumerWidget {
             (rental) => Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: EntityCard(
-                title: rental.id,
+                title: rental.lines.isNotEmpty
+                    ? rental.lines.map((RentalLine line) => line.displayLabel).join(', ')
+                    : rental.id,
                 subtitle: rental.nickname?.trim().isNotEmpty == true
                     ? l10n.rentalNicknameDueSubtitle(
                         rental.nickname!.trim(),
@@ -1095,7 +1102,9 @@ class _UniversalSearchScreenState extends ConsumerState<UniversalSearchScreen> {
             title: l10n.searchSectionCurrentRentals,
             items: _results.currentRentals,
             itemBuilder: (rental) => EntityCard(
-              title: rental.id,
+              title: rental.lines.isNotEmpty
+                  ? rental.lines.map((RentalLine line) => line.displayLabel).join(', ')
+                  : rental.id,
               subtitle: l10n.dueDate(_date(rental.dueAt)),
               leadingIcon: Icons.assignment_outlined,
               status: rental.statusFor(DateTime.now()),
@@ -1112,7 +1121,9 @@ class _UniversalSearchScreenState extends ConsumerState<UniversalSearchScreen> {
             title: l10n.searchSectionPreviousRentals,
             items: _results.previousRentals,
             itemBuilder: (rental) => EntityCard(
-              title: rental.id,
+              title: rental.lines.isNotEmpty
+                  ? rental.lines.map((RentalLine line) => line.displayLabel).join(', ')
+                  : rental.id,
               subtitle: l10n.returnedDate(_date(rental.returnedAt ?? rental.dueAt)),
               leadingIcon: Icons.history,
               status: AssetStatus.archived,
@@ -1210,8 +1221,14 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _nicknameController = TextEditingController();
   final Set<String> _selectedInventoryIds = <String>{};
+  final Map<String, TextEditingController> _instanceNameControllers =
+      <String, TextEditingController>{};
+  final Map<String, TextEditingController> _shortCodeControllers =
+      <String, TextEditingController>{};
   Customer? _resolvedCustomer;
   bool _submitting = false;
+
+  static const int _lastStep = 3;
 
   bool get _isSelfSelected =>
       _resolvedCustomer != null && isSelfCustomer(_resolvedCustomer!);
@@ -1221,7 +1238,61 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
     _phoneController.dispose();
     _nameController.dispose();
     _nicknameController.dispose();
+    for (final TextEditingController c in _instanceNameControllers.values) {
+      c.dispose();
+    }
+    for (final TextEditingController c in _shortCodeControllers.values) {
+      c.dispose();
+    }
     super.dispose();
+  }
+
+  void _syncLabelControllers(Iterable<String> selectedIds) {
+    final Set<String> ids = selectedIds.toSet();
+    for (final String id in ids) {
+      _instanceNameControllers.putIfAbsent(id, TextEditingController.new);
+      _shortCodeControllers.putIfAbsent(id, TextEditingController.new);
+    }
+    final List<String> stale = _instanceNameControllers.keys
+        .where((String id) => !ids.contains(id))
+        .toList();
+    for (final String id in stale) {
+      _instanceNameControllers.remove(id)?.dispose();
+      _shortCodeControllers.remove(id)?.dispose();
+    }
+  }
+
+  bool _labelsComplete(List<InventoryItem> selectedItems) {
+    if (selectedItems.isEmpty) {
+      return false;
+    }
+    final Set<String> codes = <String>{};
+    for (final InventoryItem item in selectedItems) {
+      final String name =
+          _instanceNameControllers[item.id]?.text.trim() ?? '';
+      final String code = LocalRepository.normalizeShortCode(
+        _shortCodeControllers[item.id]?.text ?? '',
+      );
+      if (name.isEmpty || code.isEmpty) {
+        return false;
+      }
+      if (!codes.add(code)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  List<RentalLineInput> _buildLineInputs(List<InventoryItem> selectedItems) {
+    return selectedItems
+        .map(
+          (InventoryItem item) => RentalLineInput(
+            itemId: item.id,
+            instanceName: _instanceNameControllers[item.id]!.text.trim(),
+            shortCode: _shortCodeControllers[item.id]!.text.trim(),
+          ),
+        )
+        .toList();
   }
 
   Future<void> _pickSelfCustomer() async {
@@ -1260,6 +1331,7 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
           ? _nicknameController.text.trim().isNotEmpty
           : _phoneController.text.trim().length >= 10,
       1 => _selectedInventoryIds.isNotEmpty,
+      2 => _labelsComplete(selectedItems),
       _ => true,
     };
 
@@ -1269,7 +1341,7 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
         padding: const EdgeInsets.all(16),
         children: <Widget>[
           Text(
-            l10n.stepOf(_step + 1, 3),
+            l10n.stepOf(_step + 1, _lastStep + 1),
             style: Theme.of(context).textTheme.labelLarge,
           ),
           const SizedBox(height: 8),
@@ -1349,12 +1421,62 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
                     } else {
                       _selectedInventoryIds.remove(item.id);
                     }
+                    _syncLabelControllers(_selectedInventoryIds);
                   });
                 },
               ),
             ),
           ],
           if (_step == 2) ...<Widget>[
+            Text(
+              l10n.labelInstancesHeading,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              l10n.labelInstancesHint,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            const SizedBox(height: 12),
+            ...selectedItems.map((InventoryItem item) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      item.name,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: _instanceNameControllers[item.id],
+                      decoration: InputDecoration(
+                        labelText: l10n.instanceNameLabel,
+                        hintText: l10n.instanceNameHint,
+                      ),
+                      onChanged: (_) => setState(() {}),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: _shortCodeControllers[item.id],
+                      textCapitalization: TextCapitalization.characters,
+                      decoration: InputDecoration(
+                        labelText: l10n.shortCodeLabel,
+                        hintText: l10n.shortCodeHint,
+                      ),
+                      onChanged: (_) => setState(() {}),
+                    ),
+                  ],
+                ),
+              );
+            }),
+          ],
+          if (_step == 3) ...<Widget>[
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(14),
@@ -1386,7 +1508,21 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
                     ],
                     const SizedBox(height: 6),
                     Text(l10n.reviewItemsLabel),
-                    ...selectedItems.map((item) => Text('• ${item.name}')),
+                    ...selectedItems.map((InventoryItem item) {
+                      final String name =
+                          _instanceNameControllers[item.id]?.text.trim() ?? '';
+                      final String code = LocalRepository.normalizeShortCode(
+                        _shortCodeControllers[item.id]?.text ?? '',
+                      );
+                      return Text(
+                        '• ${RentalLine(
+                          itemId: item.id,
+                          catalogName: item.name,
+                          instanceName: name,
+                          shortCode: code,
+                        ).displayLabel}',
+                      );
+                    }),
                   ],
                 ),
               ),
@@ -1423,7 +1559,16 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
                           );
                           return;
                         }
-                        if (_step < 2) {
+                        if (_step == 1) {
+                          _syncLabelControllers(_selectedInventoryIds);
+                        }
+                        if (_step == 2 && !_labelsComplete(selectedItems)) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(l10n.instanceLabelsRequired)),
+                          );
+                          return;
+                        }
+                        if (_step < _lastStep) {
                           setState(() {
                             _step += 1;
                           });
@@ -1447,20 +1592,30 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
                         try {
                           await repository.createRental(
                             customer: customer,
-                            selectedItems: selectedItems,
+                            lines: _buildLineInputs(selectedItems),
                             nickname: nickname,
                           );
                         } catch (error) {
                           if (context.mounted) {
                             setState(() => _submitting = false);
+                            final String message;
+                            if (error is DuplicateActiveShortCodeException) {
+                              message = l10n.duplicateShortCode(error.shortCode);
+                            } else if (error is ArgumentError) {
+                              final String raw = error.message?.toString() ?? '';
+                              if (raw.toLowerCase().contains('nickname')) {
+                                message = l10n.rentalNicknameRequired;
+                              } else if (raw.toLowerCase().contains('instance') ||
+                                  raw.toLowerCase().contains('short code')) {
+                                message = l10n.instanceLabelsRequired;
+                              } else {
+                                message = raw.isEmpty ? '$error' : raw;
+                              }
+                            } else {
+                              message = '$error';
+                            }
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  error is ArgumentError
-                                      ? l10n.rentalNicknameRequired
-                                      : '$error',
-                                ),
-                              ),
+                              SnackBar(content: Text(message)),
                             );
                           }
                           return;
@@ -1469,7 +1624,9 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
                           Navigator.of(context).pop();
                         }
                       },
-                child: Text(_step < 2 ? l10n.continueAction : l10n.confirmRental),
+                child: Text(
+                  _step < _lastStep ? l10n.continueAction : l10n.confirmRental,
+                ),
               ),
             ),
           ],
@@ -1506,7 +1663,11 @@ class ReturnFlowScreen extends ConsumerWidget {
                     itemBuilder: (BuildContext context, int index) {
                       final Rental rental = active[index];
                       return EntityCard(
-                        title: rental.id,
+                        title: rental.lines.isNotEmpty
+                            ? rental.lines
+                                .map((RentalLine line) => line.displayLabel)
+                                .join(', ')
+                            : rental.id,
                         subtitle: l10n.dueDate(_date(rental.dueAt)),
                         leadingIcon: Icons.assignment_return_outlined,
                         status: rental.statusFor(DateTime.now()),

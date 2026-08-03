@@ -107,8 +107,20 @@ class ReportBuilder {
       lines.add('');
       lines.add(phone.isEmpty ? name : '$name ($phone)');
       for (final Rental rental in byCustomer[customerId]!) {
-        final String itemNames = rental.itemIds
-            .map((String id) => itemsById[id]?.name ?? id)
+        final String itemNames = rental.lines
+            .map((RentalLine line) {
+              if (line.catalogName.trim().isEmpty) {
+                final String fallback =
+                    itemsById[line.itemId]?.name ?? line.itemId;
+                return RentalLine(
+                  itemId: line.itemId,
+                  catalogName: fallback,
+                  instanceName: line.instanceName,
+                  shortCode: line.shortCode,
+                ).displayLabel;
+              }
+              return line.displayLabel;
+            })
             .join(', ');
         final AssetStatus status = rental.statusFor(clock);
         final String nick = rental.nickname?.trim() ?? '';
@@ -131,21 +143,27 @@ class ReportBuilder {
 
     final Map<String, int> rentCount = <String, int>{};
     final Map<String, int> unitsOut = <String, int>{};
+    final Map<String, List<String>> activeLabels = <String, List<String>>{};
 
     for (final InventoryItem item in inventory) {
       rentCount[item.id] = 0;
       unitsOut[item.id] = 0;
+      activeLabels[item.id] = <String>[];
     }
 
     for (final Rental rental in openedInRange) {
-      for (final String itemId in rental.itemIds) {
-        rentCount[itemId] = (rentCount[itemId] ?? 0) + 1;
+      for (final RentalLine line in rental.lines) {
+        rentCount[line.itemId] = (rentCount[line.itemId] ?? 0) + 1;
       }
     }
 
     for (final Rental rental in rentals.where((Rental r) => r.isActive)) {
-      for (final String itemId in rental.itemIds) {
-        unitsOut[itemId] = (unitsOut[itemId] ?? 0) + 1;
+      for (final RentalLine line in rental.lines) {
+        unitsOut[line.itemId] = (unitsOut[line.itemId] ?? 0) + 1;
+        final String label = line.instanceName.trim().isEmpty
+            ? line.shortCode
+            : '${line.instanceName} (${line.shortCode})';
+        activeLabels.putIfAbsent(line.itemId, () => <String>[]).add(label);
       }
     }
 
@@ -162,6 +180,10 @@ class ReportBuilder {
       lines.add(
         '• ${item.name}: rented $rented× | out $out | avail ${item.availableUnits}/${item.totalUnits}',
       );
+      final List<String> labels = activeLabels[item.id] ?? const <String>[];
+      for (final String label in labels) {
+        lines.add('  - $label');
+      }
     }
     return lines.join('\n');
   }

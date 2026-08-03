@@ -83,7 +83,7 @@ void main() {
 
     await tester.tap(find.text('Rentals'));
     await tester.pumpAndSettle();
-    expect(find.text('REN-3001'), findsOneWidget);
+    expect(find.text('Drill Kit · Workshop set A (DRL-001)'), findsOneWidget);
 
     await tester.tap(find.text('Inventory'));
     await tester.pumpAndSettle();
@@ -119,7 +119,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.widgetWithText(AppBar, 'New Rental'), findsOneWidget);
-    expect(find.text('Step 1 of 3'), findsOneWidget);
+    expect(find.text('Step 1 of 4'), findsOneWidget);
     expect(find.text('Phone number'), findsOneWidget);
   });
 
@@ -191,7 +191,14 @@ void main() {
         Rental(
           id: 'REN-M1',
           customerId: 'CUS-M1',
-          itemIds: <String>['INV-M1'],
+          lines: const <RentalLine>[
+            RentalLine(
+              itemId: 'INV-M1',
+              catalogName: 'Migrated Camera',
+              instanceName: 'Migrated Camera',
+              shortCode: 'MIG-001',
+            ),
+          ],
           startedAt: now.subtract(const Duration(days: 1)),
           dueAt: now.add(const Duration(days: 2)),
           timeline: <RentalEvent>[
@@ -248,7 +255,16 @@ void main() {
         .firstWhere((item) => item.id == 'INV-2001');
     expect(camera.availableUnits, 2);
 
-    await repo.createRental(customer: existing, selectedItems: <InventoryItem>[camera]);
+    await repo.createRental(
+      customer: existing,
+      lines: <RentalLineInput>[
+        RentalLineInput(
+          itemId: camera.id,
+          instanceName: 'Body unit 2',
+          shortCode: 'CAM-002',
+        ),
+      ],
+    );
     final List<Rental> afterCreate = await repo.listRentals();
     expect(afterCreate.length, greaterThanOrEqualTo(3));
     final Rental created = afterCreate.first;

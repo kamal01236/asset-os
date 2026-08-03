@@ -332,6 +332,38 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get labelInstancesHeading => 'Name each item';
+
+  @override
+  String get labelInstancesHint =>
+      'For novels/tools: enter this copy’s name and a short code.';
+
+  @override
+  String get instanceNameLabel => 'Instance name';
+
+  @override
+  String get instanceNameHint => 'e.g. Harry Potter';
+
+  @override
+  String get shortCodeLabel => 'Short code';
+
+  @override
+  String get shortCodeHint => 'e.g. NOV-042';
+
+  @override
+  String get instanceLabelsRequired =>
+      'Enter an instance name and short code for each item.';
+
+  @override
+  String duplicateShortCode(String code) {
+    return 'Short code $code is already in use on an active rental.';
+  }
+
+  @override
+  String get inventoryInstancesNote =>
+      'Individual copies are named with a short code when you issue a rental.';
+
+  @override
   String get reviewHeading => 'Review';
 
   @override

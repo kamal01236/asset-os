@@ -54,7 +54,14 @@ void main() {
     Rental(
       id: 'REN-1',
       customerId: 'CUS-1',
-      itemIds: <String>['INV-2'],
+      lines: const <RentalLine>[
+        RentalLine(
+          itemId: 'INV-2',
+          catalogName: 'Tripod',
+          instanceName: 'Floor stand',
+          shortCode: 'TRP-001',
+        ),
+      ],
       startedAt: now.subtract(const Duration(days: 2)),
       dueAt: now,
       timeline: const <RentalEvent>[],
@@ -63,7 +70,14 @@ void main() {
     Rental(
       id: 'REN-2',
       customerId: 'CUS-2',
-      itemIds: <String>['INV-1'],
+      lines: const <RentalLine>[
+        RentalLine(
+          itemId: 'INV-1',
+          catalogName: 'DSLR',
+          instanceName: 'Body A',
+          shortCode: 'CAM-100',
+        ),
+      ],
       startedAt: now.subtract(const Duration(days: 5)),
       dueAt: now.subtract(const Duration(days: 1)),
       timeline: const <RentalEvent>[],
@@ -72,7 +86,14 @@ void main() {
     Rental(
       id: 'REN-3',
       customerId: 'CUS-1',
-      itemIds: <String>['INV-1'],
+      lines: const <RentalLine>[
+        RentalLine(
+          itemId: 'INV-1',
+          catalogName: 'DSLR',
+          instanceName: 'Body B',
+          shortCode: 'CAM-101',
+        ),
+      ],
       startedAt: now.subtract(const Duration(days: 10)),
       dueAt: now.subtract(const Duration(days: 8)),
       returnedAt: now.subtract(const Duration(days: 7)),
@@ -161,7 +182,7 @@ void main() {
       );
       expect(text, contains('Customer-wise'));
       expect(text, contains('Priya Patel'));
-      expect(text, contains('Tripod'));
+      expect(text, contains('Tripod · Floor stand (TRP-001)'));
       expect(text, contains('Amit Shah'));
     });
 
@@ -173,7 +194,14 @@ void main() {
         Rental(
           id: 'REN-SELF-1',
           customerId: kSelfCustomerId,
-          itemIds: <String>['INV-1'],
+          lines: const <RentalLine>[
+            RentalLine(
+              itemId: 'INV-1',
+              catalogName: 'DSLR',
+              instanceName: 'Body A',
+              shortCode: 'CAM-100',
+            ),
+          ],
           startedAt: now.subtract(const Duration(days: 1)),
           dueAt: now.add(const Duration(days: 2)),
           timeline: const <RentalEvent>[],
@@ -213,6 +241,7 @@ void main() {
       expect(text, contains('Inventory-wise'));
       expect(text, contains('DSLR'));
       expect(text, contains('Tripod'));
+      expect(text, contains('Floor stand (TRP-001)'));
       expect(text, contains('avail'));
     });
 

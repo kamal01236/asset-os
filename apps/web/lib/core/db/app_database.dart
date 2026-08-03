@@ -20,13 +20,34 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onUpgrade: (Migrator m, int from, int to) async {
       if (from < 2) {
         await m.addColumn(rentals, rentals.nickname);
+      }
+      if (from < 3) {
+        await m.addColumn(rentalItems, rentalItems.instanceName);
+        await m.addColumn(rentalItems, rentalItems.shortCode);
+        // Backfill instance name from catalog; unique legacy short codes.
+        await customStatement('''
+UPDATE UPDATE rental_items
+          SET instance_name = COALESCE(
+            (SELECT name FROM inventory_items
+             WHERE inventory_items.id = rental_items.item_id),
+            ''
+          )
+          WHERE instance_name IS NULL OR instance_name = ''
+        ''');
+        await customStatement('''
+          UPDATE rental_items
+          SET short_code = upper('LEGACY-' || rental_id || '-' || item_id)
+          WHERE short_code IS NULL
+             OR short_code = ''
+             OR upper(short_code) = 'LEGACY'
+        ''');
       }
     },
   );

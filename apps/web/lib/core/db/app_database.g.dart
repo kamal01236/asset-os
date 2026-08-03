@@ -1360,8 +1360,37 @@ class $RentalItemsTable extends RentalItems
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _instanceNameMeta = const VerificationMeta(
+    'instanceName',
+  );
   @override
-  List<GeneratedColumn> get $columns => [rentalId, itemId];
+  late final GeneratedColumn<String> instanceName = GeneratedColumn<String>(
+    'instance_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _shortCodeMeta = const VerificationMeta(
+    'shortCode',
+  );
+  @override
+  late final GeneratedColumn<String> shortCode = GeneratedColumn<String>(
+    'short_code',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('LEGACY'),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    rentalId,
+    itemId,
+    instanceName,
+    shortCode,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -1390,6 +1419,21 @@ class $RentalItemsTable extends RentalItems
     } else if (isInserting) {
       context.missing(_itemIdMeta);
     }
+    if (data.containsKey('instance_name')) {
+      context.handle(
+        _instanceNameMeta,
+        instanceName.isAcceptableOrUnknown(
+          data['instance_name']!,
+          _instanceNameMeta,
+        ),
+      );
+    }
+    if (data.containsKey('short_code')) {
+      context.handle(
+        _shortCodeMeta,
+        shortCode.isAcceptableOrUnknown(data['short_code']!, _shortCodeMeta),
+      );
+    }
     return context;
   }
 
@@ -1407,6 +1451,14 @@ class $RentalItemsTable extends RentalItems
         DriftSqlType.string,
         data['${effectivePrefix}item_id'],
       )!,
+      instanceName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}instance_name'],
+      )!,
+      shortCode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}short_code'],
+      )!,
     );
   }
 
@@ -1419,12 +1471,25 @@ class $RentalItemsTable extends RentalItems
 class RentalItemRow extends DataClass implements Insertable<RentalItemRow> {
   final String rentalId;
   final String itemId;
-  const RentalItemRow({required this.rentalId, required this.itemId});
+
+  /// Copy/title for this issue (e.g. novel title); not inventory master.
+  final String instanceName;
+
+  /// Short tracking code unique among active rental lines (case-insensitive).
+  final String shortCode;
+  const RentalItemRow({
+    required this.rentalId,
+    required this.itemId,
+    required this.instanceName,
+    required this.shortCode,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['rental_id'] = Variable<String>(rentalId);
     map['item_id'] = Variable<String>(itemId);
+    map['instance_name'] = Variable<String>(instanceName);
+    map['short_code'] = Variable<String>(shortCode);
     return map;
   }
 
@@ -1432,6 +1497,8 @@ class RentalItemRow extends DataClass implements Insertable<RentalItemRow> {
     return RentalItemsCompanion(
       rentalId: Value(rentalId),
       itemId: Value(itemId),
+      instanceName: Value(instanceName),
+      shortCode: Value(shortCode),
     );
   }
 
@@ -1443,6 +1510,8 @@ class RentalItemRow extends DataClass implements Insertable<RentalItemRow> {
     return RentalItemRow(
       rentalId: serializer.fromJson<String>(json['rentalId']),
       itemId: serializer.fromJson<String>(json['itemId']),
+      instanceName: serializer.fromJson<String>(json['instanceName']),
+      shortCode: serializer.fromJson<String>(json['shortCode']),
     );
   }
   @override
@@ -1451,17 +1520,30 @@ class RentalItemRow extends DataClass implements Insertable<RentalItemRow> {
     return <String, dynamic>{
       'rentalId': serializer.toJson<String>(rentalId),
       'itemId': serializer.toJson<String>(itemId),
+      'instanceName': serializer.toJson<String>(instanceName),
+      'shortCode': serializer.toJson<String>(shortCode),
     };
   }
 
-  RentalItemRow copyWith({String? rentalId, String? itemId}) => RentalItemRow(
+  RentalItemRow copyWith({
+    String? rentalId,
+    String? itemId,
+    String? instanceName,
+    String? shortCode,
+  }) => RentalItemRow(
     rentalId: rentalId ?? this.rentalId,
     itemId: itemId ?? this.itemId,
+    instanceName: instanceName ?? this.instanceName,
+    shortCode: shortCode ?? this.shortCode,
   );
   RentalItemRow copyWithCompanion(RentalItemsCompanion data) {
     return RentalItemRow(
       rentalId: data.rentalId.present ? data.rentalId.value : this.rentalId,
       itemId: data.itemId.present ? data.itemId.value : this.itemId,
+      instanceName: data.instanceName.present
+          ? data.instanceName.value
+          : this.instanceName,
+      shortCode: data.shortCode.present ? data.shortCode.value : this.shortCode,
     );
   }
 
@@ -1469,44 +1551,58 @@ class RentalItemRow extends DataClass implements Insertable<RentalItemRow> {
   String toString() {
     return (StringBuffer('RentalItemRow(')
           ..write('rentalId: $rentalId, ')
-          ..write('itemId: $itemId')
+          ..write('itemId: $itemId, ')
+          ..write('instanceName: $instanceName, ')
+          ..write('shortCode: $shortCode')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(rentalId, itemId);
+  int get hashCode => Object.hash(rentalId, itemId, instanceName, shortCode);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is RentalItemRow &&
           other.rentalId == this.rentalId &&
-          other.itemId == this.itemId);
+          other.itemId == this.itemId &&
+          other.instanceName == this.instanceName &&
+          other.shortCode == this.shortCode);
 }
 
 class RentalItemsCompanion extends UpdateCompanion<RentalItemRow> {
   final Value<String> rentalId;
   final Value<String> itemId;
+  final Value<String> instanceName;
+  final Value<String> shortCode;
   final Value<int> rowid;
   const RentalItemsCompanion({
     this.rentalId = const Value.absent(),
     this.itemId = const Value.absent(),
+    this.instanceName = const Value.absent(),
+    this.shortCode = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   RentalItemsCompanion.insert({
     required String rentalId,
     required String itemId,
+    this.instanceName = const Value.absent(),
+    this.shortCode = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : rentalId = Value(rentalId),
        itemId = Value(itemId);
   static Insertable<RentalItemRow> custom({
     Expression<String>? rentalId,
     Expression<String>? itemId,
+    Expression<String>? instanceName,
+    Expression<String>? shortCode,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (rentalId != null) 'rental_id': rentalId,
       if (itemId != null) 'item_id': itemId,
+      if (instanceName != null) 'instance_name': instanceName,
+      if (shortCode != null) 'short_code': shortCode,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -1514,11 +1610,15 @@ class RentalItemsCompanion extends UpdateCompanion<RentalItemRow> {
   RentalItemsCompanion copyWith({
     Value<String>? rentalId,
     Value<String>? itemId,
+    Value<String>? instanceName,
+    Value<String>? shortCode,
     Value<int>? rowid,
   }) {
     return RentalItemsCompanion(
       rentalId: rentalId ?? this.rentalId,
       itemId: itemId ?? this.itemId,
+      instanceName: instanceName ?? this.instanceName,
+      shortCode: shortCode ?? this.shortCode,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1532,6 +1632,12 @@ class RentalItemsCompanion extends UpdateCompanion<RentalItemRow> {
     if (itemId.present) {
       map['item_id'] = Variable<String>(itemId.value);
     }
+    if (instanceName.present) {
+      map['instance_name'] = Variable<String>(instanceName.value);
+    }
+    if (shortCode.present) {
+      map['short_code'] = Variable<String>(shortCode.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -1543,6 +1649,8 @@ class RentalItemsCompanion extends UpdateCompanion<RentalItemRow> {
     return (StringBuffer('RentalItemsCompanion(')
           ..write('rentalId: $rentalId, ')
           ..write('itemId: $itemId, ')
+          ..write('instanceName: $instanceName, ')
+          ..write('shortCode: $shortCode, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -2825,12 +2933,16 @@ typedef $$RentalItemsTableCreateCompanionBuilder =
     RentalItemsCompanion Function({
       required String rentalId,
       required String itemId,
+      Value<String> instanceName,
+      Value<String> shortCode,
       Value<int> rowid,
     });
 typedef $$RentalItemsTableUpdateCompanionBuilder =
     RentalItemsCompanion Function({
       Value<String> rentalId,
       Value<String> itemId,
+      Value<String> instanceName,
+      Value<String> shortCode,
       Value<int> rowid,
     });
 
@@ -2850,6 +2962,16 @@ class $$RentalItemsTableFilterComposer
 
   ColumnFilters<String> get itemId => $composableBuilder(
     column: $table.itemId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get instanceName => $composableBuilder(
+    column: $table.instanceName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get shortCode => $composableBuilder(
+    column: $table.shortCode,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -2872,6 +2994,16 @@ class $$RentalItemsTableOrderingComposer
     column: $table.itemId,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get instanceName => $composableBuilder(
+    column: $table.instanceName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get shortCode => $composableBuilder(
+    column: $table.shortCode,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$RentalItemsTableAnnotationComposer
@@ -2888,6 +3020,14 @@ class $$RentalItemsTableAnnotationComposer
 
   GeneratedColumn<String> get itemId =>
       $composableBuilder(column: $table.itemId, builder: (column) => column);
+
+  GeneratedColumn<String> get instanceName => $composableBuilder(
+    column: $table.instanceName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get shortCode =>
+      $composableBuilder(column: $table.shortCode, builder: (column) => column);
 }
 
 class $$RentalItemsTableTableManager
@@ -2923,20 +3063,28 @@ class $$RentalItemsTableTableManager
               ({
                 Value<String> rentalId = const Value.absent(),
                 Value<String> itemId = const Value.absent(),
+                Value<String> instanceName = const Value.absent(),
+                Value<String> shortCode = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => RentalItemsCompanion(
                 rentalId: rentalId,
                 itemId: itemId,
+                instanceName: instanceName,
+                shortCode: shortCode,
                 rowid: rowid,
               ),
           createCompanionCallback:
               ({
                 required String rentalId,
                 required String itemId,
+                Value<String> instanceName = const Value.absent(),
+                Value<String> shortCode = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => RentalItemsCompanion.insert(
                 rentalId: rentalId,
                 itemId: itemId,
+                instanceName: instanceName,
+                shortCode: shortCode,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

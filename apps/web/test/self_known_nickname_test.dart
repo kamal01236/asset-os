@@ -39,7 +39,13 @@ void main() {
       expect(
         () => repository.createRental(
           customer: self,
-          selectedItems: <InventoryItem>[item],
+          lines: <RentalLineInput>[
+            RentalLineInput(
+              itemId: item.id,
+              instanceName: item.name,
+              shortCode: 'SELF-TEST',
+            ),
+          ],
         ),
         throwsA(isA<ArgumentError>()),
       );
@@ -53,7 +59,13 @@ void main() {
 
       await repository.createRental(
         customer: self,
-        selectedItems: <InventoryItem>[item],
+        lines: <RentalLineInput>[
+          RentalLineInput(
+            itemId: item.id,
+            instanceName: item.name,
+            shortCode: 'SELF-RAJU',
+          ),
+        ],
         nickname: 'Raju',
       );
 

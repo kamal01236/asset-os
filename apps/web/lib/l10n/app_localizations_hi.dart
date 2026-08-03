@@ -333,6 +333,38 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
+  String get labelInstancesHeading => 'प्रत्येक वस्तु का नाम दें';
+
+  @override
+  String get labelInstancesHint =>
+      'उपन्यास/उपकरणों के लिए: इस प्रति का नाम और छोटा कोड दर्ज करें।';
+
+  @override
+  String get instanceNameLabel => 'उदाहरण नाम';
+
+  @override
+  String get instanceNameHint => 'जैसे हैरी पॉटर';
+
+  @override
+  String get shortCodeLabel => 'छोटा कोड';
+
+  @override
+  String get shortCodeHint => 'जैसे NOV-042';
+
+  @override
+  String get instanceLabelsRequired =>
+      'प्रत्येक वस्तु के लिए उदाहरण नाम और छोटा कोड दर्ज करें।';
+
+  @override
+  String duplicateShortCode(String code) {
+    return 'छोटा कोड $code पहले से किसी सक्रिय किराए पर उपयोग में है।';
+  }
+
+  @override
+  String get inventoryInstancesNote =>
+      'किराया जारी करते समय व्यक्तिगत प्रतियों का नाम और छोटा कोड दर्ज किया जाता है।';
+
+  @override
   String get reviewHeading => 'समीक्षा';
 
   @override

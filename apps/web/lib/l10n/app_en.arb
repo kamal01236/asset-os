@@ -177,6 +177,20 @@
       "available": {"type": "int"}
     }
   },
+  "labelInstancesHeading": "Name each item",
+  "labelInstancesHint": "For novels/tools: enter this copy’s name and a short code.",
+  "instanceNameLabel": "Instance name",
+  "instanceNameHint": "e.g. Harry Potter",
+  "shortCodeLabel": "Short code",
+  "shortCodeHint": "e.g. NOV-042",
+  "instanceLabelsRequired": "Enter an instance name and short code for each item.",
+  "duplicateShortCode": "Short code {code} is already in use on an active rental.",
+  "@duplicateShortCode": {
+    "placeholders": {
+      "code": {"type": "String"}
+    }
+  },
+  "inventoryInstancesNote": "Individual copies are named with a short code when you issue a rental.",
   "reviewHeading": "Review",
   "reviewPhone": "Phone: {phone}",
   "@reviewPhone": {

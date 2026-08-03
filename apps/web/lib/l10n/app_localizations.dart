@@ -674,6 +674,60 @@ abstract class AppLocalizations {
   /// **'{category} • {available} available'**
   String itemAvailableCount(String category, int available);
 
+  /// No description provided for @labelInstancesHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Name each item'**
+  String get labelInstancesHeading;
+
+  /// No description provided for @labelInstancesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'For novels/tools: enter this copy’s name and a short code.'**
+  String get labelInstancesHint;
+
+  /// No description provided for @instanceNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Instance name'**
+  String get instanceNameLabel;
+
+  /// No description provided for @instanceNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Harry Potter'**
+  String get instanceNameHint;
+
+  /// No description provided for @shortCodeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Short code'**
+  String get shortCodeLabel;
+
+  /// No description provided for @shortCodeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. NOV-042'**
+  String get shortCodeHint;
+
+  /// No description provided for @instanceLabelsRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter an instance name and short code for each item.'**
+  String get instanceLabelsRequired;
+
+  /// No description provided for @duplicateShortCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Short code {code} is already in use on an active rental.'**
+  String duplicateShortCode(String code);
+
+  /// No description provided for @inventoryInstancesNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Individual copies are named with a short code when you issue a rental.'**
+  String get inventoryInstancesNote;
+
   /// No description provided for @reviewHeading.
   ///
   /// In en, this message translates to:

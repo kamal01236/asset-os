@@ -1,7 +1,12 @@
 # Deploy Flutter web to GitHub Pages on pushes to main.
 # Site: https://kamal01236.github.io/asset-os/
-# Prerequisite: Settings → Pages → Source = GitHub Actions.
-# Private repos need GitHub Pro (or make the repo public).
+#
+# Prerequisites (both required or deploy-pages returns 404):
+# 1. GitHub Pages must be available for this repo:
+#    - Public repos: available on Free plan
+#    - Private repos: GitHub Pro (or Team/Enterprise) required
+# 2. Settings → Pages → Build and deployment → Source = GitHub Actions
+#    https://github.com/kamal01236/asset-os/settings/pages
 name: Deploy GitHub Pages
 
 on:
@@ -42,7 +47,7 @@ jobs:
           cp build/web/index.html build/web/404.html
 
       - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: apps/web/build/web
 
@@ -56,4 +61,4 @@ jobs:
     steps:
       - name: Deploy
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5

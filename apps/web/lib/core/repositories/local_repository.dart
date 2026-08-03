@@ -137,9 +137,12 @@ class LocalRepository {
   Future<List<InventoryItem>> listInventory() => watchInventory().first;
   Future<List<Rental>> listRentals() => watchRentals().first;
 
+  /// Normalize short codes for storage and uniqueness checks.
+  static String normalizeShortCode(String value) => value.trim().toUpperCase();
+
   Future<void> createRental({
     required Customer customer,
-    required List<InventoryItem> selectedItems,
+    required List<RentalLineInput> lines,
     String? nickname,
   }) async {
     final String? trimmedNick = nickname?.trim();
@@ -150,12 +153,39 @@ class LocalRepository {
         'Nickname is required when issuing to $kSelfCustomerName',
       );
     }
+    if (lines.isEmpty) {
+      throw ArgumentError('At least one rental line is required');
+    }
+
+    final List<RentalLineInput> normalized = <RentalLineInput>[];
+    final Set<String> batchCodes = <String>{};
+    for (final RentalLineInput line in lines) {
+      final String instanceName = line.instanceName.trim();
+      final String shortCode = normalizeShortCode(line.shortCode);
+      if (instanceName.isEmpty || shortCode.isEmpty) {
+        throw ArgumentError('Instance name and short code are required');
+      }
+      if (!batchCodes.add(shortCode)) {
+        throw DuplicateActiveShortCodeException(shortCode);
+      }
+      normalized.add(
+        RentalLineInput(
+          itemId: line.itemId,
+          instanceName: instanceName,
+          shortCode: shortCode,
+        ),
+      );
+    }
 
     final DateTime now = DateTime.now();
     final String rentalId = 'REN-${now.millisecondsSinceEpoch}';
     final String qrCode = 'rental:${now.millisecondsSinceEpoch}';
 
     await _db.transaction(() async {
+      for (final RentalLineInput line in normalized) {
+        await _assertShortCodeAvailable(line.shortCode);
+      }
+
       await _db.into(_db.rentals).insert(
         RentalsCompanion.insert(
           id: rentalId,
@@ -167,19 +197,24 @@ class LocalRepository {
         ),
       );
 
-      for (final InventoryItem item in selectedItems) {
+      for (final RentalLineInput line in normalized) {
         await _db.into(_db.rentalItems).insert(
-          RentalItemsCompanion.insert(rentalId: rentalId, itemId: item.id),
+          RentalItemsCompanion.insert(
+            rentalId: rentalId,
+            itemId: line.itemId,
+            instanceName: Value<String>(line.instanceName),
+            shortCode: Value<String>(line.shortCode),
+          ),
         );
 
         final InventoryItemRow? row = await (_db.select(_db.inventoryItems)
-              ..where((t) => t.id.equals(item.id)))
+              ..where((t) => t.id.equals(line.itemId)))
             .getSingleOrNull();
         if (row == null) {
           continue;
         }
         final int nextAvailable = (row.availableUnits - 1).clamp(0, row.totalUnits);
-        await (_db.update(_db.inventoryItems)..where((t) => t.id.equals(item.id))).write(
+        await (_db.update(_db.inventoryItems)..where((t) => t.id.equals(line.itemId))).write(
           InventoryItemsCompanion(
             availableUnits: Value<int>(nextAvailable),
             status: Value<String>(
@@ -198,6 +233,21 @@ class LocalRepository {
         ),
       );
     });
+  }
+
+  Future<void> _assertShortCodeAvailable(String normalizedCode) async {
+    final List<RentalItemRow> links = await _db.select(_db.rentalItems).get();
+    for (final RentalItemRow link in links) {
+      if (normalizeShortCode(link.shortCode) != normalizedCode) {
+        continue;
+      }
+      final RentalRow? rental = await (_db.select(_db.rentals)
+            ..where((t) => t.id.equals(link.rentalId)))
+          .getSingleOrNull();
+      if (rental != null && rental.returnedAt == null) {
+        throw DuplicateActiveShortCodeException(normalizedCode);
+      }
+    }
   }
 
   Future<void> returnRental(String rentalId) async {
@@ -405,9 +455,20 @@ class LocalRepository {
 
     final List<Rental> rentals = await listRentals();
     bool rentalMatches(Rental rental) {
-      return rental.id.toLowerCase().contains(q) ||
+      if (rental.id.toLowerCase().contains(q) ||
           rental.qrCode.toLowerCase().contains(q) ||
-          (rental.nickname?.toLowerCase().contains(q) ?? false);
+          (rental.nickname?.toLowerCase().contains(q) ?? false)) {
+        return true;
+      }
+      for (final RentalLine line in rental.lines) {
+        if (line.instanceName.toLowerCase().contains(q) ||
+            line.shortCode.toLowerCase().contains(q) ||
+            line.catalogName.toLowerCase().contains(q) ||
+            line.displayLabel.toLowerCase().contains(q)) {
+          return true;
+        }
+      }
+      return false;
     }
 
     final List<Rental> currentRentals =
@@ -491,9 +552,20 @@ class LocalRepository {
             nickname: Value<String?>(rental.nickname),
           ),
         );
-        for (final String itemId in rental.itemIds) {
+        for (final RentalLine line in rental.lines) {
+          final String instanceName = line.instanceName.trim().isEmpty
+              ? line.catalogName.trim()
+              : line.instanceName.trim();
+          final String shortCode = LocalRepository.normalizeShortCode(
+            line.shortCode.trim().isEmpty ? 'LEGACY' : line.shortCode,
+          );
           await _db.into(_db.rentalItems).insertOnConflictUpdate(
-            RentalItemsCompanion.insert(rentalId: rental.id, itemId: itemId),
+            RentalItemsCompanion.insert(
+              rentalId: rental.id,
+              itemId: line.itemId,
+              instanceName: Value<String>(instanceName),
+              shortCode: Value<String>(shortCode),
+            ),
           );
         }
         for (final RentalEvent event in rental.timeline) {
@@ -564,10 +636,25 @@ class LocalRepository {
     final List<RentalEventRow> events = await eventQuery.get();
     events.sort((a, b) => b.at.compareTo(a.at));
 
+    final List<RentalLine> lines = <RentalLine>[];
+    for (final RentalItemRow link in links) {
+      final InventoryItemRow? item = await (_db.select(_db.inventoryItems)
+            ..where((t) => t.id.equals(link.itemId)))
+          .getSingleOrNull();
+      lines.add(
+        RentalLine(
+          itemId: link.itemId,
+          catalogName: item?.name ?? link.itemId,
+          instanceName: link.instanceName,
+          shortCode: link.shortCode,
+        ),
+      );
+    }
+
     return Rental(
       id: row.id,
       customerId: row.customerId,
-      itemIds: links.map((link) => link.itemId).toList(),
+      lines: lines,
       startedAt: row.startedAt,
       dueAt: row.dueAt,
       returnedAt: row.returnedAt,
@@ -649,7 +736,14 @@ AppDataSnapshot buildDemoSnapshot({DateTime? now}) {
     Rental(
       id: 'REN-3001',
       customerId: seedCustomers[1].id,
-      itemIds: <String>['INV-2002'],
+      lines: const <RentalLine>[
+        RentalLine(
+          itemId: 'INV-2002',
+          catalogName: 'Drill Kit',
+          instanceName: 'Workshop set A',
+          shortCode: 'DRL-001',
+        ),
+      ],
       startedAt: clock.subtract(const Duration(days: 2)),
       dueAt: clock,
       timeline: <RentalEvent>[
@@ -669,7 +763,14 @@ AppDataSnapshot buildDemoSnapshot({DateTime? now}) {
     Rental(
       id: 'REN-3002',
       customerId: seedCustomers[2].id,
-      itemIds: <String>['INV-2001'],
+      lines: const <RentalLine>[
+        RentalLine(
+          itemId: 'INV-2001',
+          catalogName: 'DSLR',
+          instanceName: 'Body unit 1',
+          shortCode: 'CAM-001',
+        ),
+      ],
       startedAt: clock.subtract(const Duration(days: 5)),
       dueAt: clock.subtract(const Duration(days: 1)),
       timeline: <RentalEvent>[

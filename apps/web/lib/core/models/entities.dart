@@ -140,11 +140,80 @@ class RentalEvent {
   );
 }
 
+/// Input for issuing one catalog unit with instance labels.
+class RentalLineInput {
+  const RentalLineInput({
+    required this.itemId,
+    required this.instanceName,
+    required this.shortCode,
+  });
+
+  final String itemId;
+  final String instanceName;
+  final String shortCode;
+}
+
+/// One issued unit on a rental: catalog type + instance name/code.
+class RentalLine {
+  const RentalLine({
+    required this.itemId,
+    required this.catalogName,
+    required this.instanceName,
+    required this.shortCode,
+  });
+
+  final String itemId;
+  final String catalogName;
+  final String instanceName;
+  final String shortCode;
+
+  /// e.g. `Novel · Harry Potter (NOV-042)`.
+  String get displayLabel {
+    final String catalog = catalogName.trim().isEmpty ? itemId : catalogName.trim();
+    final String name = instanceName.trim();
+    final String code = shortCode.trim();
+    if (name.isEmpty && code.isEmpty) {
+      return catalog;
+    }
+    if (name.isEmpty) {
+      return '$catalog ($code)';
+    }
+    if (code.isEmpty) {
+      return '$catalog · $name';
+    }
+    return '$catalog · $name ($code)';
+  }
+
+  Map<String, dynamic> toJson() => <String, dynamic>{
+    'itemId': itemId,
+    'catalogName': catalogName,
+    'instanceName': instanceName,
+    'shortCode': shortCode,
+  };
+
+  factory RentalLine.fromJson(Map<String, dynamic> json) => RentalLine(
+    itemId: json['itemId'] as String,
+    catalogName: (json['catalogName'] as String?) ?? '',
+    instanceName: (json['instanceName'] as String?) ?? '',
+    shortCode: (json['shortCode'] as String?) ?? 'LEGACY',
+  );
+}
+
+/// Thrown when an active rental already uses the same short code.
+class DuplicateActiveShortCodeException implements Exception {
+  DuplicateActiveShortCodeException(this.shortCode);
+
+  final String shortCode;
+
+  @override
+  String toString() => 'Duplicate active short code: $shortCode';
+}
+
 class Rental {
   const Rental({
     required this.id,
     required this.customerId,
-    required this.itemIds,
+    required this.lines,
     required this.startedAt,
     required this.dueAt,
     required this.timeline,
@@ -155,7 +224,7 @@ class Rental {
 
   final String id;
   final String customerId;
-  final List<String> itemIds;
+  final List<RentalLine> lines;
   final DateTime startedAt;
   final DateTime dueAt;
   final DateTime? returnedAt;
@@ -163,6 +232,9 @@ class Rental {
   final String qrCode;
   /// Per-rental nickname (used for SELF Known issues; not stored on customer).
   final String? nickname;
+
+  List<String> get itemIds =>
+      lines.map((RentalLine line) => line.itemId).toList(growable: false);
 
   bool get isActive => returnedAt == null;
 
@@ -185,10 +257,11 @@ class Rental {
     DateTime? returnedAt,
     List<RentalEvent>? timeline,
     String? nickname,
+    List<RentalLine>? lines,
   }) => Rental(
     id: id,
     customerId: customerId,
-    itemIds: itemIds,
+    lines: lines ?? this.lines,
     startedAt: startedAt,
     dueAt: dueAt,
     returnedAt: returnedAt ?? this.returnedAt,
@@ -201,6 +274,7 @@ class Rental {
     'id': id,
     'customerId': customerId,
     'itemIds': itemIds,
+    'lines': lines.map((RentalLine line) => line.toJson()).toList(),
     'startedAt': startedAt.toIso8601String(),
     'dueAt': dueAt.toIso8601String(),
     'returnedAt': returnedAt?.toIso8601String(),
@@ -209,21 +283,43 @@ class Rental {
     'nickname': nickname,
   };
 
-  factory Rental.fromJson(Map<String, dynamic> json) => Rental(
-    id: json['id'] as String,
-    customerId: json['customerId'] as String,
-    itemIds: (json['itemIds'] as List<dynamic>).cast<String>(),
-    startedAt: DateTime.parse(json['startedAt'] as String),
-    dueAt: DateTime.parse(json['dueAt'] as String),
-    returnedAt: json['returnedAt'] == null
-        ? null
-        : DateTime.parse(json['returnedAt'] as String),
-    timeline: (json['timeline'] as List<dynamic>)
-        .map((entry) => RentalEvent.fromJson(entry as Map<String, dynamic>))
-        .toList(),
-    qrCode: json['qrCode'] as String,
-    nickname: json['nickname'] as String?,
-  );
+  factory Rental.fromJson(Map<String, dynamic> json) {
+    final List<RentalLine> lines;
+    final Object? rawLines = json['lines'];
+    if (rawLines is List<dynamic> && rawLines.isNotEmpty) {
+      lines = rawLines
+          .map((entry) => RentalLine.fromJson(entry as Map<String, dynamic>))
+          .toList();
+    } else {
+      final List<String> ids =
+          (json['itemIds'] as List<dynamic>? ?? const <dynamic>[]).cast<String>();
+      lines = ids
+          .map(
+            (String id) => RentalLine(
+              itemId: id,
+              catalogName: '',
+              instanceName: '',
+              shortCode: 'LEGACY',
+            ),
+          )
+          .toList();
+    }
+    return Rental(
+      id: json['id'] as String,
+      customerId: json['customerId'] as String,
+      lines: lines,
+      startedAt: DateTime.parse(json['startedAt'] as String),
+      dueAt: DateTime.parse(json['dueAt'] as String),
+      returnedAt: json['returnedAt'] == null
+          ? null
+          : DateTime.parse(json['returnedAt'] as String),
+      timeline: (json['timeline'] as List<dynamic>)
+          .map((entry) => RentalEvent.fromJson(entry as Map<String, dynamic>))
+          .toList(),
+      qrCode: json['qrCode'] as String,
+      nickname: json['nickname'] as String?,
+    );
+  }
 }
 
 class AppDataSnapshot {
