@@ -81,6 +81,9 @@
   "editTooltip": "संपादित करें",
   "itemNameLabel": "वस्तु का नाम",
   "categoryLabel": "श्रेणी",
+  "categoryOtherLabel": "अन्य",
+  "categoryCustomLabel": "श्रेणी दर्ज करें",
+  "categoryCustomHint": "कस्टम श्रेणी का नाम",
   "totalUnitsLabel": "कुल इकाइयाँ",
   "totalUnitsHelper": "उपलब्ध कुल के साथ समायोजित होता है; कुल से अधिक नहीं हो सकता।",
   "notesLabel": "नोट्स",
@@ -642,5 +645,57 @@
       "pending": {"type": "String"},
       "due": {"type": "String"}
     }
-  }
+  },
+  "requiresUnitIdentityLabel": "यूनिट नाम/आईडी आवश्यक",
+  "requiresUnitIdentitySubtitle": "मूल श्रेणी (जैसे उपन्यास) के लिए चालू। व्यक्तिगत वस्तुओं के लिए बंद जिनका एक कैटलॉग नाम साझा है।",
+  "quantityLabel": "मात्रा",
+  "labelUnitHeading": "{name} #{index}",
+  "@labelUnitHeading": {
+    "placeholders": {
+      "name": {"type": "String"},
+      "index": {"type": "int"}
+    }
+  },
+  "labelsAutoAssignedHint": "व्यक्तिगत वस्तुओं को कैटलॉग नाम और स्वतः छोटा कोड मिलता है।",
+  "orderStatusHeading": "ऑर्डर स्थिति",
+  "orderIssuedSummary": "मूल रूप से जारी: {count}",
+  "@orderIssuedSummary": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "orderPendingSummary": "अभी बाहर: {count}",
+  "@orderPendingSummary": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "orderReturnedSummary": "पहले से वापस: {count}",
+  "@orderReturnedSummary": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "rentalOrderStatusChips": "जारी {issued} · लंबित {pending} · वापस {returned}",
+  "@rentalOrderStatusChips": {
+    "placeholders": {
+      "issued": {"type": "int"},
+      "pending": {"type": "int"},
+      "returned": {"type": "int"}
+    }
+  },
+  "activityTimelineHeading": "गतिविधि",
+  "activityIssued": "जारी: {labels}",
+  "@activityIssued": {
+    "placeholders": {
+      "labels": {"type": "String"}
+    }
+  },
+  "activityReturned": "वापस: {label}",
+  "@activityReturned": {
+    "placeholders": {
+      "label": {"type": "String"}
+    }
+  },
+  "activityEmpty": "अभी कोई गतिविधि नहीं।"
 }

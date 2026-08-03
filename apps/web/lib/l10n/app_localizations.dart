@@ -440,6 +440,24 @@ abstract class AppLocalizations {
   /// **'Category'**
   String get categoryLabel;
 
+  /// No description provided for @categoryOtherLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get categoryOtherLabel;
+
+  /// No description provided for @categoryCustomLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter category'**
+  String get categoryCustomLabel;
+
+  /// No description provided for @categoryCustomHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom category name'**
+  String get categoryCustomHint;
+
   /// No description provided for @totalUnitsLabel.
   ///
   /// In en, this message translates to:
@@ -1709,13 +1727,13 @@ abstract class AppLocalizations {
   /// No description provided for @moduleKpis.
   ///
   /// In en, this message translates to:
-  /// **'Status cards'**
+  /// **'Status chips'**
   String get moduleKpis;
 
   /// No description provided for @moduleKpisSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Active, Due Today, Overdue, Available'**
+  /// **'Compact chips; tap opens Rentals or Inventory filtered'**
   String get moduleKpisSubtitle;
 
   /// No description provided for @moduleFilterResults.
@@ -1727,7 +1745,7 @@ abstract class AppLocalizations {
   /// No description provided for @moduleFilterResultsSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'List under status cards when a filter is selected'**
+  /// **'Optional in-place list under chips when a Home filter is set'**
   String get moduleFilterResultsSubtitle;
 
   /// No description provided for @moduleNeedsAttention.
@@ -1927,6 +1945,90 @@ abstract class AppLocalizations {
     String pending,
     String due,
   );
+
+  /// No description provided for @requiresUnitIdentityLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Requires unit name/id'**
+  String get requiresUnitIdentityLabel;
+
+  /// No description provided for @requiresUnitIdentitySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'On for parent categories (e.g. Novels). Off for individual items that share one catalog name.'**
+  String get requiresUnitIdentitySubtitle;
+
+  /// No description provided for @quantityLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Quantity'**
+  String get quantityLabel;
+
+  /// No description provided for @labelUnitHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} #{index}'**
+  String labelUnitHeading(String name, int index);
+
+  /// No description provided for @labelsAutoAssignedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Individual items get catalog name and an auto short code.'**
+  String get labelsAutoAssignedHint;
+
+  /// No description provided for @orderStatusHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Order status'**
+  String get orderStatusHeading;
+
+  /// No description provided for @orderIssuedSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Originally issued: {count}'**
+  String orderIssuedSummary(int count);
+
+  /// No description provided for @orderPendingSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Still out: {count}'**
+  String orderPendingSummary(int count);
+
+  /// No description provided for @orderReturnedSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Already returned: {count}'**
+  String orderReturnedSummary(int count);
+
+  /// No description provided for @rentalOrderStatusChips.
+  ///
+  /// In en, this message translates to:
+  /// **'Issued {issued} · Pending {pending} · Returned {returned}'**
+  String rentalOrderStatusChips(int issued, int pending, int returned);
+
+  /// No description provided for @activityTimelineHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity'**
+  String get activityTimelineHeading;
+
+  /// No description provided for @activityIssued.
+  ///
+  /// In en, this message translates to:
+  /// **'Issued: {labels}'**
+  String activityIssued(String labels);
+
+  /// No description provided for @activityReturned.
+  ///
+  /// In en, this message translates to:
+  /// **'Returned: {label}'**
+  String activityReturned(String label);
+
+  /// No description provided for @activityEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No activity yet.'**
+  String get activityEmpty;
 }
 
 class _AppLocalizationsDelegate

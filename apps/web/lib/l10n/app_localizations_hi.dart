@@ -194,6 +194,15 @@ class AppLocalizationsHi extends AppLocalizations {
   String get categoryLabel => 'श्रेणी';
 
   @override
+  String get categoryOtherLabel => 'अन्य';
+
+  @override
+  String get categoryCustomLabel => 'श्रेणी दर्ज करें';
+
+  @override
+  String get categoryCustomHint => 'कस्टम श्रेणी का नाम';
+
+  @override
   String get totalUnitsLabel => 'कुल इकाइयाँ';
 
   @override
@@ -1079,4 +1088,62 @@ class AppLocalizationsHi extends AppLocalizations {
   ) {
     return '$phone • $tier • अग्रिम $advance · लंबित $pending · देय $due';
   }
+
+  @override
+  String get requiresUnitIdentityLabel => 'यूनिट नाम/आईडी आवश्यक';
+
+  @override
+  String get requiresUnitIdentitySubtitle =>
+      'मूल श्रेणी (जैसे उपन्यास) के लिए चालू। व्यक्तिगत वस्तुओं के लिए बंद जिनका एक कैटलॉग नाम साझा है।';
+
+  @override
+  String get quantityLabel => 'मात्रा';
+
+  @override
+  String labelUnitHeading(String name, int index) {
+    return '$name #$index';
+  }
+
+  @override
+  String get labelsAutoAssignedHint =>
+      'व्यक्तिगत वस्तुओं को कैटलॉग नाम और स्वतः छोटा कोड मिलता है।';
+
+  @override
+  String get orderStatusHeading => 'ऑर्डर स्थिति';
+
+  @override
+  String orderIssuedSummary(int count) {
+    return 'मूल रूप से जारी: $count';
+  }
+
+  @override
+  String orderPendingSummary(int count) {
+    return 'अभी बाहर: $count';
+  }
+
+  @override
+  String orderReturnedSummary(int count) {
+    return 'पहले से वापस: $count';
+  }
+
+  @override
+  String rentalOrderStatusChips(int issued, int pending, int returned) {
+    return 'जारी $issued · लंबित $pending · वापस $returned';
+  }
+
+  @override
+  String get activityTimelineHeading => 'गतिविधि';
+
+  @override
+  String activityIssued(String labels) {
+    return 'जारी: $labels';
+  }
+
+  @override
+  String activityReturned(String label) {
+    return 'वापस: $label';
+  }
+
+  @override
+  String get activityEmpty => 'अभी कोई गतिविधि नहीं।';
 }

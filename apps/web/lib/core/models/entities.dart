@@ -95,6 +95,7 @@ class InventoryItem {
     this.lateFeePerDay = 0,
     this.currencyCode = 'INR',
     this.dueDateOptional = false,
+    this.requiresUnitIdentity = true,
   });
 
   final String id;
@@ -110,6 +111,8 @@ class InventoryItem {
   final int lateFeePerDay;
   final String currencyCode;
   final bool dueDateOptional;
+  /// Parent catalog (e.g. Novels): each unit needs name/id at issue.
+  final bool requiresUnitIdentity;
 
   InventoryItem copyWith({
     int? availableUnits,
@@ -120,6 +123,7 @@ class InventoryItem {
     int? lateFeePerDay,
     String? currencyCode,
     bool? dueDateOptional,
+    bool? requiresUnitIdentity,
   }) => InventoryItem(
     id: id,
     name: name,
@@ -134,6 +138,7 @@ class InventoryItem {
     lateFeePerDay: lateFeePerDay ?? this.lateFeePerDay,
     currencyCode: currencyCode ?? this.currencyCode,
     dueDateOptional: dueDateOptional ?? this.dueDateOptional,
+    requiresUnitIdentity: requiresUnitIdentity ?? this.requiresUnitIdentity,
   );
 
   Map<String, dynamic> toJson() => <String, dynamic>{
@@ -150,6 +155,7 @@ class InventoryItem {
     'lateFeePerDay': lateFeePerDay,
     'currencyCode': currencyCode,
     'dueDateOptional': dueDateOptional,
+    'requiresUnitIdentity': requiresUnitIdentity,
   };
 
   factory InventoryItem.fromJson(Map<String, dynamic> json) => InventoryItem(
@@ -166,6 +172,7 @@ class InventoryItem {
     lateFeePerDay: (json['lateFeePerDay'] as int?) ?? 0,
     currencyCode: (json['currencyCode'] as String?) ?? 'INR',
     dueDateOptional: (json['dueDateOptional'] as bool?) ?? false,
+    requiresUnitIdentity: (json['requiresUnitIdentity'] as bool?) ?? true,
   );
 }
 

@@ -21,7 +21,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -229,6 +229,13 @@ class AppDatabase extends _$AppDatabase {
         ''');
         await customStatement('DROP TABLE rentals');
         await customStatement('ALTER TABLE rentals_new RENAME TO rentals');
+      }
+      if (from < 8) {
+        await m.addColumn(inventoryItems, inventoryItems.requiresUnitIdentity);
+        await customStatement('''
+          UPDATE inventory_items
+          SET requires_unit_identity = COALESCE(requires_unit_identity, 1)
+        ''');
       }
     },
   );

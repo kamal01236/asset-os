@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/config/app_branding.dart';
+import 'core/inventory/inventory_categories.dart';
 import 'core/l10n/l10n_ext.dart';
+import 'core/models/customer_activity.dart';
 import 'core/models/customer_balance.dart';
 import 'core/models/entities.dart';
 import 'core/models/self_customer.dart';
@@ -12,6 +14,7 @@ import 'core/repositories/local_repository.dart';
 import 'core/search/search_scope.dart';
 import 'core/theme/app_theme.dart';
 import 'core/validation/text_rules.dart';
+import 'core/widgets/category_picker_field.dart';
 import 'core/widgets/rental_timeline.dart';
 import 'core/widgets/scoped_search_field.dart';
 import 'core/widgets/ui_primitives.dart';
@@ -887,6 +890,31 @@ class _RentalDetailScreenState extends ConsumerState<RentalDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
+                  Text(
+                    l10n.orderStatusHeading,
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    l10n.orderIssuedSummary(rental.lines.length),
+                  ),
+                  Text(
+                    l10n.orderPendingSummary(openLines.length),
+                  ),
+                  Text(
+                    l10n.orderReturnedSummary(closedLines.length),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
                   Text(l10n.itemsHeading, style: Theme.of(context).textTheme.titleSmall),
                   if (rental.isActive && openLines.isNotEmpty) ...<Widget>[
                     const SizedBox(height: 4),
@@ -1158,18 +1186,20 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
   bool _editing = false;
   bool _saving = false;
   final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _categoryController = TextEditingController();
+  final TextEditingController _customCategoryController = TextEditingController();
   final TextEditingController _unitsController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
   final TextEditingController _rateController = TextEditingController();
   final TextEditingController _lateFeeController = TextEditingController();
+  String? _selectedCategory;
   BillingMode _billingMode = BillingMode.weekly;
   bool _dueDateOptional = false;
+  bool _requiresUnitIdentity = true;
 
   @override
   void dispose() {
     _nameController.dispose();
-    _categoryController.dispose();
+    _customCategoryController.dispose();
     _unitsController.dispose();
     _notesController.dispose();
     _rateController.dispose();
@@ -1177,15 +1207,26 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
     super.dispose();
   }
 
-  void _beginEdit(InventoryItem item) {
+  void _beginEdit(InventoryItem item, List<String> categoryOptions) {
     _nameController.text = item.name;
-    _categoryController.text = item.category;
+    final String existing = item.category.trim();
+    if (existing.isNotEmpty && categoryOptions.contains(existing)) {
+      _selectedCategory = existing;
+      _customCategoryController.clear();
+    } else if (existing.isEmpty) {
+      _selectedCategory = kCategoryOther;
+      _customCategoryController.clear();
+    } else {
+      _selectedCategory = existing;
+      _customCategoryController.clear();
+    }
     _unitsController.text = '${item.totalUnits}';
     _notesController.text = item.notes ?? '';
     _rateController.text = paiseToRupeesField(item.rateAmount);
     _lateFeeController.text = paiseToRupeesField(item.lateFeePerDay);
     _billingMode = item.billingMode;
     _dueDateOptional = item.dueDateOptional;
+    _requiresUnitIdentity = item.requiresUnitIdentity;
     setState(() => _editing = true);
   }
 
@@ -1195,7 +1236,10 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
     }
     final AppLocalizations l10n = context.l10n;
     final String name = _nameController.text.trim();
-    final String category = _categoryController.text.trim();
+    final String category = resolveSelectedCategory(
+      selected: _selectedCategory,
+      customText: _customCategoryController.text,
+    );
     final String notes = _notesController.text.trim();
     if (!meetsMinMeaningfulText(name) || !meetsMinMeaningfulText(category)) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1225,6 +1269,7 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
       rateAmount: parseRupeesToPaise(_rateController.text),
       lateFeePerDay: parseRupeesToPaise(_lateFeeController.text),
       dueDateOptional: _dueDateOptional,
+      requiresUnitIdentity: _requiresUnitIdentity,
     );
     if (!mounted) {
       return;
@@ -1248,6 +1293,7 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
       data: (List<InventoryItem> inventory) {
         final InventoryItem item =
             inventory.firstWhere((entry) => entry.id == widget.itemId);
+        final List<String> categoryOptions = buildCategoryOptions(inventory);
         final AssetStatus status =
             item.availableUnits > 0 ? AssetStatus.available : AssetStatus.rented;
         return Scaffold(
@@ -1258,7 +1304,7 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
                 IconButton(
                   tooltip: l10n.editTooltip,
                   icon: const Icon(Icons.edit_outlined),
-                  onPressed: () => _beginEdit(item),
+                  onPressed: () => _beginEdit(item, categoryOptions),
                 ),
             ],
           ),
@@ -1271,9 +1317,18 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
                       decoration: InputDecoration(labelText: l10n.itemNameLabel),
                     ),
                     const SizedBox(height: 8),
-                    TextField(
-                      controller: _categoryController,
-                      decoration: InputDecoration(labelText: l10n.categoryLabel),
+                    CategoryPickerField(
+                      fieldKeyPrefix: 'edit-category',
+                      options: categoryOptions,
+                      selectedValue: _selectedCategory,
+                      customController: _customCategoryController,
+                      onSelected: (String? value) {
+                        setState(() => _selectedCategory = value);
+                      },
+                      categoryLabel: l10n.categoryLabel,
+                      otherLabel: l10n.categoryOtherLabel,
+                      customLabel: l10n.categoryCustomLabel,
+                      customHint: l10n.categoryCustomHint,
                     ),
                     const SizedBox(height: 8),
                     TextField(
@@ -1338,6 +1393,15 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
                         setState(() => _dueDateOptional = value);
                       },
                     ),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      value: _requiresUnitIdentity,
+                      title: Text(l10n.requiresUnitIdentityLabel),
+                      subtitle: Text(l10n.requiresUnitIdentitySubtitle),
+                      onChanged: (bool value) {
+                        setState(() => _requiresUnitIdentity = value);
+                      },
+                    ),
                     const SizedBox(height: 8),
                     TextField(
                       controller: _notesController,
@@ -1375,7 +1439,14 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
                     Card(
                       child: ListTile(
                         leading: const Icon(Icons.label_outline),
-                        title: Text(l10n.inventoryInstancesNote),
+                        title: Text(
+                          item.requiresUnitIdentity
+                              ? l10n.requiresUnitIdentityLabel
+                              : l10n.labelsAutoAssignedHint,
+                        ),
+                        subtitle: item.requiresUnitIdentity
+                            ? Text(l10n.inventoryInstancesNote)
+                            : null,
                       ),
                     ),
                     const SizedBox(height: 10),
@@ -1645,28 +1716,15 @@ class CustomerDetailScreen extends ConsumerWidget {
             ),
           const SizedBox(height: 10),
           Text(
-            l10n.recentRentals,
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(height: 8),
-          ...customerRentals.map(
-            (rental) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: EntityCard(
-                title: _rentalLinesLabel(rental),
-                subtitle: _rentalAmountSubtitle(l10n, rental),
-                leadingIcon: Icons.assignment_outlined,
-                status: rental.statusFor(DateTime.now()),
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => RentalDetailScreen(rentalId: rental.id),
-                    ),
-                  );
-                },
-              ),
+            l10n.activityTimelineHeading,
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w700,
             ),
           ),
+          const SizedBox(height: 8),
+          if (customerRentals.isEmpty)
+            Text(l10n.activityEmpty)
+          else ..._customerActivitySection(context, l10n, customerRentals),
         ],
       ),
       bottomNavigationBar: SafeArea(
@@ -1685,6 +1743,90 @@ class CustomerDetailScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  List<Widget> _customerActivitySection(
+    BuildContext context,
+    AppLocalizations l10n,
+    List<Rental> customerRentals,
+  ) {
+    final List<Rental> ordered = List<Rental>.from(customerRentals)
+      ..sort((Rental a, Rental b) => b.startedAt.compareTo(a.startedAt));
+    final List<CustomerActivityEntry> activity =
+        buildCustomerActivity(customerRentals);
+    return <Widget>[
+      ...ordered.map((Rental rental) {
+        final RentalOrderStatusSummary summary =
+            RentalOrderStatusSummary.fromRental(rental);
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: EntityCard(
+            title: _rentalLinesLabel(rental),
+            subtitle: l10n.rentalOrderStatusChips(
+              summary.issued,
+              summary.pending,
+              summary.returned,
+            ),
+            leadingIcon: Icons.assignment_outlined,
+            status: rental.statusFor(DateTime.now()),
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => RentalDetailScreen(rentalId: rental.id),
+                ),
+              );
+            },
+          ),
+        );
+      }),
+      const SizedBox(height: 4),
+      if (activity.isEmpty)
+        Text(l10n.activityEmpty)
+      else
+        ...activity.map((CustomerActivityEntry entry) {
+          final String title = switch (entry.kind) {
+            CustomerActivityKind.issued => l10n.activityIssued(entry.subtitle),
+            CustomerActivityKind.returned =>
+              l10n.activityReturned(entry.subtitle),
+            CustomerActivityKind.event => entry.title,
+          };
+          final String? subtitle = entry.kind == CustomerActivityKind.event
+              ? entry.subtitle
+              : entry.rentalId;
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Card(
+              child: ListTile(
+                leading: Icon(
+                  switch (entry.kind) {
+                    CustomerActivityKind.issued => Icons.output_outlined,
+                    CustomerActivityKind.returned => Icons.input_outlined,
+                    CustomerActivityKind.event => Icons.history,
+                  },
+                ),
+                title: Text(title),
+                subtitle: Text(
+                  <String>[
+                    if (subtitle != null && subtitle.isNotEmpty) subtitle,
+                    _date(entry.at),
+                  ].join(' · '),
+                ),
+                onTap: entry.rentalId == null
+                    ? null
+                    : () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => RentalDetailScreen(
+                              rentalId: entry.rentalId!,
+                            ),
+                          ),
+                        );
+                      },
+              ),
+            ),
+          );
+        }),
+    ];
   }
 }
 
@@ -1912,7 +2054,7 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
   final TextEditingController _nicknameController = TextEditingController();
   final TextEditingController _durationController = TextEditingController(text: '1');
   final TextEditingController _inventorySearchController = TextEditingController();
-  final Set<String> _selectedInventoryIds = <String>{};
+  final Map<String, int> _selectedQuantities = <String, int>{};
   final Map<String, TextEditingController> _instanceNameControllers =
       <String, TextEditingController>{};
   final Map<String, TextEditingController> _shortCodeControllers =
@@ -1954,12 +2096,15 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
 
   _RentalFlowStep get _currentStep => _steps[_stepIndex];
 
+  String _labelKey(String itemId, int unitIndex) => '$itemId#$unitIndex';
+
   @override
   void initState() {
     super.initState();
     if (widget.initialInventoryItemIds.isNotEmpty) {
-      _selectedInventoryIds.addAll(widget.initialInventoryItemIds);
-      _syncLabelControllers(_selectedInventoryIds);
+      for (final String id in widget.initialInventoryItemIds) {
+        _selectedQuantities[id] = 1;
+      }
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _applyPrefill();
@@ -2014,15 +2159,29 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
   }
 
   void _pruneUnavailableSelection(List<InventoryItem> availableItems) {
-    if (_selectedInventoryIds.isEmpty) {
+    if (_selectedQuantities.isEmpty) {
       return;
     }
-    final Set<String> availableIds =
-        availableItems.map((InventoryItem item) => item.id).toSet();
-    final List<String> stale = _selectedInventoryIds
-        .where((String id) => !availableIds.contains(id))
+    final Map<String, InventoryItem> byId = <String, InventoryItem>{
+      for (final InventoryItem item in availableItems) item.id: item,
+    };
+    final List<String> stale = _selectedQuantities.keys
+        .where((String id) => !byId.containsKey(id))
         .toList();
-    if (stale.isEmpty) {
+    bool changed = stale.isNotEmpty;
+    for (final String id in stale) {
+      _selectedQuantities.remove(id);
+    }
+    for (final MapEntry<String, int> entry
+        in _selectedQuantities.entries.toList()) {
+      final InventoryItem item = byId[entry.key]!;
+      final int maxQty = item.availableUnits < 1 ? 1 : item.availableUnits;
+      if (entry.value > maxQty) {
+        _selectedQuantities[entry.key] = maxQty;
+        changed = true;
+      }
+    }
+    if (!changed) {
       return;
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -2030,8 +2189,7 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
         return;
       }
       setState(() {
-        _selectedInventoryIds.removeAll(stale);
-        _syncLabelControllers(_selectedInventoryIds);
+        _syncLabelControllers(availableItems);
       });
     });
   }
@@ -2100,23 +2258,61 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
     );
   }
 
+  int _qtyFor(String itemId) => _selectedQuantities[itemId] ?? 0;
+
   int _previewBaseTotal(List<InventoryItem> selectedItems) {
     final DateTime due = _previewDue(selectedItems);
     int total = 0;
     for (final InventoryItem item in selectedItems) {
-      total += _lineCharge(item, due);
+      total += _lineCharge(item, due) * _qtyFor(item.id);
     }
     return total;
   }
 
-  void _syncLabelControllers(Iterable<String> selectedIds) {
-    final Set<String> ids = selectedIds.toSet();
-    for (final String id in ids) {
-      _instanceNameControllers.putIfAbsent(id, TextEditingController.new);
-      _shortCodeControllers.putIfAbsent(id, TextEditingController.new);
+  void _syncLabelControllers(List<InventoryItem> availableOrSelected) {
+    final Map<String, InventoryItem> byId = <String, InventoryItem>{
+      for (final InventoryItem item in availableOrSelected) item.id: item,
+    };
+    final Set<String> needed = <String>{};
+    final Set<String> usedCodes = <String>{};
+
+    for (final MapEntry<String, TextEditingController> entry
+        in _shortCodeControllers.entries) {
+      final String code = LocalRepository.normalizeShortCode(entry.value.text);
+      if (code.isNotEmpty) {
+        usedCodes.add(code);
+      }
     }
+
+    for (final MapEntry<String, int> qtyEntry in _selectedQuantities.entries) {
+      final InventoryItem? item = byId[qtyEntry.key];
+      if (item == null) {
+        continue;
+      }
+      for (int i = 0; i < qtyEntry.value; i++) {
+        final String key = _labelKey(qtyEntry.key, i);
+        needed.add(key);
+        _instanceNameControllers.putIfAbsent(key, TextEditingController.new);
+        _shortCodeControllers.putIfAbsent(key, TextEditingController.new);
+        if (!item.requiresUnitIdentity) {
+          if (_instanceNameControllers[key]!.text.trim().isEmpty) {
+            _instanceNameControllers[key]!.text = item.name;
+          }
+          if (_shortCodeControllers[key]!.text.trim().isEmpty) {
+            final String code = LocalRepository.generateAutoShortCode(
+              catalogName: item.name,
+              index: i + 1,
+              usedCodes: usedCodes,
+            );
+            _shortCodeControllers[key]!.text = code;
+            usedCodes.add(code);
+          }
+        }
+      }
+    }
+
     final List<String> stale = _instanceNameControllers.keys
-        .where((String id) => !ids.contains(id))
+        .where((String id) => !needed.contains(id))
         .toList();
     for (final String id in stale) {
       _instanceNameControllers.remove(id)?.dispose();
@@ -2125,39 +2321,56 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
   }
 
   bool _labelsComplete(List<InventoryItem> selectedItems) {
-    if (selectedItems.isEmpty) {
+    if (selectedItems.isEmpty || _selectedQuantities.isEmpty) {
       return false;
     }
     final Set<String> codes = <String>{};
     for (final InventoryItem item in selectedItems) {
-      final String name =
-          _instanceNameControllers[item.id]?.text.trim() ?? '';
-      final String code = LocalRepository.normalizeShortCode(
-        _shortCodeControllers[item.id]?.text ?? '',
-      );
-      if (name.isEmpty || code.isEmpty) {
+      final int qty = _qtyFor(item.id);
+      if (qty < 1) {
         return false;
       }
-      if (!meetsMinMeaningfulText(name)) {
-        return false;
-      }
-      if (!codes.add(code)) {
-        return false;
+      for (int i = 0; i < qty; i++) {
+        final String key = _labelKey(item.id, i);
+        final String name =
+            _instanceNameControllers[key]?.text.trim() ?? '';
+        final String code = LocalRepository.normalizeShortCode(
+          _shortCodeControllers[key]?.text ?? '',
+        );
+        if (item.requiresUnitIdentity) {
+          if (name.isEmpty || code.isEmpty) {
+            return false;
+          }
+          if (!meetsMinMeaningfulText(name)) {
+            return false;
+          }
+        } else if (name.isEmpty || code.isEmpty) {
+          return false;
+        }
+        if (!codes.add(code)) {
+          return false;
+        }
       }
     }
     return true;
   }
 
   List<RentalLineInput> _buildLineInputs(List<InventoryItem> selectedItems) {
-    return selectedItems
-        .map(
-          (InventoryItem item) => RentalLineInput(
+    final List<RentalLineInput> lines = <RentalLineInput>[];
+    for (final InventoryItem item in selectedItems) {
+      final int qty = _qtyFor(item.id);
+      for (int i = 0; i < qty; i++) {
+        final String key = _labelKey(item.id, i);
+        lines.add(
+          RentalLineInput(
             itemId: item.id,
-            instanceName: _instanceNameControllers[item.id]!.text.trim(),
-            shortCode: _shortCodeControllers[item.id]!.text.trim(),
+            instanceName: _instanceNameControllers[key]!.text.trim(),
+            shortCode: _shortCodeControllers[key]!.text.trim(),
           ),
-        )
-        .toList();
+        );
+      }
+    }
+    return lines;
   }
 
   Future<void> _pickSelfCustomer() async {
@@ -2202,7 +2415,7 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
           : _phoneController.text.trim().length >= 10 &&
               (_resolvedCustomer != null ||
                   meetsMinMeaningfulText(_nameController.text)),
-      _RentalFlowStep.items => _selectedInventoryIds.isNotEmpty,
+      _RentalFlowStep.items => _selectedQuantities.isNotEmpty,
       _RentalFlowStep.labels => _labelsComplete(selectedItems),
       _RentalFlowStep.duration => _durationStepReady(selectedItems),
       _RentalFlowStep.review => true,
@@ -2222,7 +2435,7 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
       _pruneUnavailableSelection(availableItems);
     }
     final List<InventoryItem> selectedItems = availableItems
-        .where((item) => _selectedInventoryIds.contains(item.id))
+        .where((item) => _selectedQuantities.containsKey(item.id))
         .toList();
     final List<InventoryItem> visibleItems = _filteredAvailable(availableItems);
     final List<_RentalFlowStep> steps = _steps;
@@ -2326,29 +2539,69 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
               ),
             ],
             const SizedBox(height: 8),
-            ...visibleItems.map(
-              (item) => CheckboxListTile(
-                value: _selectedInventoryIds.contains(item.id),
-                title: Text(item.name),
-                subtitle: Text(
-                  '${l10n.itemAvailableCount(item.category, item.availableUnits)} · '
-                  '${l10n.inventoryRateSubtitle(
-                    localizedBillingMode(l10n, item.billingMode),
-                    formatMoney(item.rateAmount, currencyCode: item.currencyCode),
-                  )}',
-                ),
-                onChanged: (checked) {
-                  setState(() {
-                    if (checked == true) {
-                      _selectedInventoryIds.add(item.id);
-                    } else {
-                      _selectedInventoryIds.remove(item.id);
-                    }
-                    _syncLabelControllers(_selectedInventoryIds);
-                  });
-                },
-              ),
-            ),
+            ...visibleItems.map((InventoryItem item) {
+              final bool selected = _selectedQuantities.containsKey(item.id);
+              final int qty = _qtyFor(item.id);
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  CheckboxListTile(
+                    value: selected,
+                    title: Text(item.name),
+                    subtitle: Text(
+                      '${l10n.itemAvailableCount(item.category, item.availableUnits)} · '
+                      '${l10n.inventoryRateSubtitle(
+                        localizedBillingMode(l10n, item.billingMode),
+                        formatMoney(item.rateAmount, currencyCode: item.currencyCode),
+                      )}',
+                    ),
+                    onChanged: (bool? checked) {
+                      setState(() {
+                        if (checked == true) {
+                          _selectedQuantities[item.id] = 1;
+                        } else {
+                          _selectedQuantities.remove(item.id);
+                        }
+                        _syncLabelControllers(availableItems);
+                      });
+                    },
+                  ),
+                  if (selected)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 16, right: 8, bottom: 8),
+                      child: Row(
+                        children: <Widget>[
+                          Text(l10n.quantityLabel),
+                          const Spacer(),
+                          IconButton(
+                            onPressed: qty <= 1
+                                ? null
+                                : () {
+                                    setState(() {
+                                      _selectedQuantities[item.id] = qty - 1;
+                                      _syncLabelControllers(availableItems);
+                                    });
+                                  },
+                            icon: const Icon(Icons.remove_circle_outline),
+                          ),
+                          Text('$qty'),
+                          IconButton(
+                            onPressed: qty >= item.availableUnits
+                                ? null
+                                : () {
+                                    setState(() {
+                                      _selectedQuantities[item.id] = qty + 1;
+                                      _syncLabelControllers(availableItems);
+                                    });
+                                  },
+                            icon: const Icon(Icons.add_circle_outline),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              );
+            }),
           ],
           if (_currentStep == _RentalFlowStep.labels) ...<Widget>[
             Text(
@@ -2362,41 +2615,69 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
               l10n.labelInstancesHint,
               style: Theme.of(context).textTheme.bodySmall,
             ),
+            if (selectedItems.any((InventoryItem i) => !i.requiresUnitIdentity)) ...<Widget>[
+              const SizedBox(height: 4),
+              Text(
+                l10n.labelsAutoAssignedHint,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
             const SizedBox(height: 12),
-            ...selectedItems.map((InventoryItem item) {
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      item.name,
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
+            ...selectedItems.expand((InventoryItem item) {
+              final int qty = _qtyFor(item.id);
+              final List<Widget> blocks = <Widget>[];
+              for (int i = 0; i < qty; i++) {
+                final String key = _labelKey(item.id, i);
+                if (!item.requiresUnitIdentity) {
+                  blocks.add(
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Text(
+                        '• ${l10n.labelUnitHeading(item.name, i + 1)} — '
+                        '${_instanceNameControllers[key]?.text.trim() ?? item.name} '
+                        '(${LocalRepository.normalizeShortCode(_shortCodeControllers[key]?.text ?? '')})',
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: _instanceNameControllers[item.id],
-                      decoration: InputDecoration(
-                        labelText: l10n.instanceNameLabel,
-                        hintText: l10n.instanceNameHint,
-                      ),
-                      onChanged: (_) => setState(() {}),
+                  );
+                  continue;
+                }
+                blocks.add(
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(
+                          l10n.labelUnitHeading(item.name, i + 1),
+                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: _instanceNameControllers[key],
+                          decoration: InputDecoration(
+                            labelText: l10n.instanceNameLabel,
+                            hintText: l10n.instanceNameHint,
+                          ),
+                          onChanged: (_) => setState(() {}),
+                        ),
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: _shortCodeControllers[key],
+                          textCapitalization: TextCapitalization.characters,
+                          decoration: InputDecoration(
+                            labelText: l10n.shortCodeLabel,
+                            hintText: l10n.shortCodeHint,
+                          ),
+                          onChanged: (_) => setState(() {}),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: _shortCodeControllers[item.id],
-                      textCapitalization: TextCapitalization.characters,
-                      decoration: InputDecoration(
-                        labelText: l10n.shortCodeLabel,
-                        hintText: l10n.shortCodeHint,
-                      ),
-                      onChanged: (_) => setState(() {}),
-                    ),
-                  ],
-                ),
-              );
+                  ),
+                );
+              }
+              return blocks;
             }),
           ],
           if (_currentStep == _RentalFlowStep.duration) ...<Widget>[
@@ -2462,11 +2743,12 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
               Text(l10n.chargePreviewDue(_date(_previewDue(selectedItems)))),
               const SizedBox(height: 6),
               ...selectedItems.map((InventoryItem item) {
+                final int qty = _qtyFor(item.id);
                 final int amount =
-                    _lineCharge(item, _previewDue(selectedItems));
+                    _lineCharge(item, _previewDue(selectedItems)) * qty;
                 return Text(
                   l10n.chargeLineAmount(
-                    item.name,
+                    qty > 1 ? '${item.name} × $qty' : item.name,
                     formatMoney(amount, currencyCode: item.currencyCode),
                   ),
                 );
@@ -2522,24 +2804,32 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
                     ),
                     const SizedBox(height: 6),
                     Text(l10n.reviewItemsLabel),
-                    ...selectedItems.map((InventoryItem item) {
-                      final String name =
-                          _instanceNameControllers[item.id]?.text.trim() ?? '';
-                      final String code = LocalRepository.normalizeShortCode(
-                        _shortCodeControllers[item.id]?.text ?? '',
-                      );
-                      final int amount = _issuingOpenEnded(selectedItems)
-                          ? 0
-                          : _lineCharge(item, _previewDue(selectedItems));
-                      return Text(
-                        '• ${RentalLine(
-                          id: 'preview-${item.id}',
-                          itemId: item.id,
-                          catalogName: item.name,
-                          instanceName: name,
-                          shortCode: code,
-                        ).displayLabel} — ${formatMoney(amount, currencyCode: item.currencyCode)}',
-                      );
+                    ...selectedItems.expand((InventoryItem item) {
+                      final int qty = _qtyFor(item.id);
+                      final List<Widget> rows = <Widget>[];
+                      for (int i = 0; i < qty; i++) {
+                        final String key = _labelKey(item.id, i);
+                        final String name =
+                            _instanceNameControllers[key]?.text.trim() ?? '';
+                        final String code = LocalRepository.normalizeShortCode(
+                          _shortCodeControllers[key]?.text ?? '',
+                        );
+                        final int amount = _issuingOpenEnded(selectedItems)
+                            ? 0
+                            : _lineCharge(item, _previewDue(selectedItems));
+                        rows.add(
+                          Text(
+                            '• ${RentalLine(
+                              id: 'preview-$key',
+                              itemId: item.id,
+                              catalogName: item.name,
+                              instanceName: name,
+                              shortCode: code,
+                            ).displayLabel} — ${formatMoney(amount, currencyCode: item.currencyCode)}',
+                          ),
+                        );
+                      }
+                      return rows;
                     }),
                     const SizedBox(height: 6),
                     Text(l10n.reviewChargesLabel),
@@ -2613,7 +2903,7 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
                           return;
                         }
                         if (_currentStep == _RentalFlowStep.items) {
-                          _syncLabelControllers(_selectedInventoryIds);
+                          _syncLabelControllers(availableItems);
                         }
                         if (_currentStep == _RentalFlowStep.labels &&
                             !_labelsComplete(selectedItems)) {
@@ -3077,19 +3367,29 @@ class AddInventoryFlowScreen extends ConsumerStatefulWidget {
 
 class _AddInventoryFlowScreenState extends ConsumerState<AddInventoryFlowScreen> {
   final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _categoryController = TextEditingController();
+  final TextEditingController _customCategoryController = TextEditingController();
   final TextEditingController _unitsController = TextEditingController(text: '1');
   final TextEditingController _notesController = TextEditingController();
   final TextEditingController _rateController = TextEditingController(text: '0');
   final TextEditingController _lateFeeController = TextEditingController(text: '0');
+  late String _selectedCategory;
   BillingMode _billingMode = BillingMode.weekly;
   bool _dueDateOptional = false;
+  bool _requiresUnitIdentity = true;
   bool _submitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedCategory = kPresetInventoryCategories.isNotEmpty
+        ? kPresetInventoryCategories.first
+        : kCategoryOther;
+  }
 
   @override
   void dispose() {
     _nameController.dispose();
-    _categoryController.dispose();
+    _customCategoryController.dispose();
     _unitsController.dispose();
     _notesController.dispose();
     _rateController.dispose();
@@ -3100,6 +3400,14 @@ class _AddInventoryFlowScreenState extends ConsumerState<AddInventoryFlowScreen>
   @override
   Widget build(BuildContext context) {
     final AppLocalizations l10n = context.l10n;
+    final List<InventoryItem> inventory =
+        ref.watch(inventoryProvider).asData?.value ?? const <InventoryItem>[];
+    final List<String> categoryOptions = buildCategoryOptions(inventory);
+    final String selectedCategory = categoryOptions.contains(_selectedCategory)
+        ? _selectedCategory
+        : (categoryOptions.isNotEmpty
+            ? categoryOptions.first
+            : kCategoryOther);
     return Scaffold(
       appBar: AppBar(title: Text(l10n.actionAddInventory)),
       body: ListView(
@@ -3112,9 +3420,20 @@ class _AddInventoryFlowScreenState extends ConsumerState<AddInventoryFlowScreen>
             decoration: InputDecoration(labelText: l10n.itemNameLabel),
           ),
           const SizedBox(height: 8),
-          TextField(
-            controller: _categoryController,
-            decoration: InputDecoration(labelText: l10n.categoryLabel),
+          CategoryPickerField(
+            fieldKeyPrefix: 'add-category',
+            options: categoryOptions,
+            selectedValue: selectedCategory,
+            customController: _customCategoryController,
+            onSelected: (String? value) {
+              if (value != null) {
+                setState(() => _selectedCategory = value);
+              }
+            },
+            categoryLabel: l10n.categoryLabel,
+            otherLabel: l10n.categoryOtherLabel,
+            customLabel: l10n.categoryCustomLabel,
+            customHint: l10n.categoryCustomHint,
           ),
           const SizedBox(height: 8),
           TextField(
@@ -3176,6 +3495,15 @@ class _AddInventoryFlowScreenState extends ConsumerState<AddInventoryFlowScreen>
               setState(() => _dueDateOptional = value);
             },
           ),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            value: _requiresUnitIdentity,
+            title: Text(l10n.requiresUnitIdentityLabel),
+            subtitle: Text(l10n.requiresUnitIdentitySubtitle),
+            onChanged: (bool value) {
+              setState(() => _requiresUnitIdentity = value);
+            },
+          ),
           const SizedBox(height: 8),
           ExpansionTile(
             tilePadding: EdgeInsets.zero,
@@ -3199,8 +3527,12 @@ class _AddInventoryFlowScreenState extends ConsumerState<AddInventoryFlowScreen>
           onPressed: _submitting
               ? null
               : () async {
+                  final String category = resolveSelectedCategory(
+                    selected: selectedCategory,
+                    customText: _customCategoryController.text,
+                  );
                   if (!meetsMinMeaningfulText(_nameController.text) ||
-                      !meetsMinMeaningfulText(_categoryController.text)) {
+                      !meetsMinMeaningfulText(category)) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
@@ -3227,13 +3559,14 @@ class _AddInventoryFlowScreenState extends ConsumerState<AddInventoryFlowScreen>
                   setState(() => _submitting = true);
                   await ref.read(repositoryProvider).addInventory(
                     name: _nameController.text.trim(),
-                    category: _categoryController.text.trim(),
+                    category: category,
                     units: units < 1 ? 1 : units,
                     notes: _notesController.text.trim(),
                     billingMode: _billingMode,
                     rateAmount: parseRupeesToPaise(_rateController.text),
                     lateFeePerDay: parseRupeesToPaise(_lateFeeController.text),
                     dueDateOptional: _dueDateOptional,
+                    requiresUnitIdentity: _requiresUnitIdentity,
                   );
                   if (context.mounted) {
                     Navigator.of(context).pop();

@@ -560,6 +560,20 @@ class $InventoryItemsTable extends InventoryItems
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _requiresUnitIdentityMeta =
+      const VerificationMeta('requiresUnitIdentity');
+  @override
+  late final GeneratedColumn<bool> requiresUnitIdentity = GeneratedColumn<bool>(
+    'requires_unit_identity',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("requires_unit_identity" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -575,6 +589,7 @@ class $InventoryItemsTable extends InventoryItems
     lateFeePerDay,
     currencyCode,
     dueDateOptional,
+    requiresUnitIdentity,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -692,6 +707,15 @@ class $InventoryItemsTable extends InventoryItems
         ),
       );
     }
+    if (data.containsKey('requires_unit_identity')) {
+      context.handle(
+        _requiresUnitIdentityMeta,
+        requiresUnitIdentity.isAcceptableOrUnknown(
+          data['requires_unit_identity']!,
+          _requiresUnitIdentityMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -753,6 +777,10 @@ class $InventoryItemsTable extends InventoryItems
         DriftSqlType.bool,
         data['${effectivePrefix}due_date_optional'],
       )!,
+      requiresUnitIdentity: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}requires_unit_identity'],
+      )!,
     );
   }
 
@@ -785,6 +813,9 @@ class InventoryItemRow extends DataClass
 
   /// When true, rentals may omit a due date (open-ended accrual until return).
   final bool dueDateOptional;
+
+  /// When true, each issued unit needs instance name + short code (parent catalog).
+  final bool requiresUnitIdentity;
   const InventoryItemRow({
     required this.id,
     required this.name,
@@ -799,6 +830,7 @@ class InventoryItemRow extends DataClass
     required this.lateFeePerDay,
     required this.currencyCode,
     required this.dueDateOptional,
+    required this.requiresUnitIdentity,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -818,6 +850,7 @@ class InventoryItemRow extends DataClass
     map['late_fee_per_day'] = Variable<int>(lateFeePerDay);
     map['currency_code'] = Variable<String>(currencyCode);
     map['due_date_optional'] = Variable<bool>(dueDateOptional);
+    map['requires_unit_identity'] = Variable<bool>(requiresUnitIdentity);
     return map;
   }
 
@@ -838,6 +871,7 @@ class InventoryItemRow extends DataClass
       lateFeePerDay: Value(lateFeePerDay),
       currencyCode: Value(currencyCode),
       dueDateOptional: Value(dueDateOptional),
+      requiresUnitIdentity: Value(requiresUnitIdentity),
     );
   }
 
@@ -860,6 +894,9 @@ class InventoryItemRow extends DataClass
       lateFeePerDay: serializer.fromJson<int>(json['lateFeePerDay']),
       currencyCode: serializer.fromJson<String>(json['currencyCode']),
       dueDateOptional: serializer.fromJson<bool>(json['dueDateOptional']),
+      requiresUnitIdentity: serializer.fromJson<bool>(
+        json['requiresUnitIdentity'],
+      ),
     );
   }
   @override
@@ -879,6 +916,7 @@ class InventoryItemRow extends DataClass
       'lateFeePerDay': serializer.toJson<int>(lateFeePerDay),
       'currencyCode': serializer.toJson<String>(currencyCode),
       'dueDateOptional': serializer.toJson<bool>(dueDateOptional),
+      'requiresUnitIdentity': serializer.toJson<bool>(requiresUnitIdentity),
     };
   }
 
@@ -896,6 +934,7 @@ class InventoryItemRow extends DataClass
     int? lateFeePerDay,
     String? currencyCode,
     bool? dueDateOptional,
+    bool? requiresUnitIdentity,
   }) => InventoryItemRow(
     id: id ?? this.id,
     name: name ?? this.name,
@@ -910,6 +949,7 @@ class InventoryItemRow extends DataClass
     lateFeePerDay: lateFeePerDay ?? this.lateFeePerDay,
     currencyCode: currencyCode ?? this.currencyCode,
     dueDateOptional: dueDateOptional ?? this.dueDateOptional,
+    requiresUnitIdentity: requiresUnitIdentity ?? this.requiresUnitIdentity,
   );
   InventoryItemRow copyWithCompanion(InventoryItemsCompanion data) {
     return InventoryItemRow(
@@ -940,6 +980,9 @@ class InventoryItemRow extends DataClass
       dueDateOptional: data.dueDateOptional.present
           ? data.dueDateOptional.value
           : this.dueDateOptional,
+      requiresUnitIdentity: data.requiresUnitIdentity.present
+          ? data.requiresUnitIdentity.value
+          : this.requiresUnitIdentity,
     );
   }
 
@@ -958,7 +1001,8 @@ class InventoryItemRow extends DataClass
           ..write('rateAmount: $rateAmount, ')
           ..write('lateFeePerDay: $lateFeePerDay, ')
           ..write('currencyCode: $currencyCode, ')
-          ..write('dueDateOptional: $dueDateOptional')
+          ..write('dueDateOptional: $dueDateOptional, ')
+          ..write('requiresUnitIdentity: $requiresUnitIdentity')
           ..write(')'))
         .toString();
   }
@@ -978,6 +1022,7 @@ class InventoryItemRow extends DataClass
     lateFeePerDay,
     currencyCode,
     dueDateOptional,
+    requiresUnitIdentity,
   );
   @override
   bool operator ==(Object other) =>
@@ -995,7 +1040,8 @@ class InventoryItemRow extends DataClass
           other.rateAmount == this.rateAmount &&
           other.lateFeePerDay == this.lateFeePerDay &&
           other.currencyCode == this.currencyCode &&
-          other.dueDateOptional == this.dueDateOptional);
+          other.dueDateOptional == this.dueDateOptional &&
+          other.requiresUnitIdentity == this.requiresUnitIdentity);
 }
 
 class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
@@ -1012,6 +1058,7 @@ class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
   final Value<int> lateFeePerDay;
   final Value<String> currencyCode;
   final Value<bool> dueDateOptional;
+  final Value<bool> requiresUnitIdentity;
   final Value<int> rowid;
   const InventoryItemsCompanion({
     this.id = const Value.absent(),
@@ -1027,6 +1074,7 @@ class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
     this.lateFeePerDay = const Value.absent(),
     this.currencyCode = const Value.absent(),
     this.dueDateOptional = const Value.absent(),
+    this.requiresUnitIdentity = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   InventoryItemsCompanion.insert({
@@ -1043,6 +1091,7 @@ class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
     this.lateFeePerDay = const Value.absent(),
     this.currencyCode = const Value.absent(),
     this.dueDateOptional = const Value.absent(),
+    this.requiresUnitIdentity = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        name = Value(name),
@@ -1065,6 +1114,7 @@ class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
     Expression<int>? lateFeePerDay,
     Expression<String>? currencyCode,
     Expression<bool>? dueDateOptional,
+    Expression<bool>? requiresUnitIdentity,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -1081,6 +1131,8 @@ class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
       if (lateFeePerDay != null) 'late_fee_per_day': lateFeePerDay,
       if (currencyCode != null) 'currency_code': currencyCode,
       if (dueDateOptional != null) 'due_date_optional': dueDateOptional,
+      if (requiresUnitIdentity != null)
+        'requires_unit_identity': requiresUnitIdentity,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -1099,6 +1151,7 @@ class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
     Value<int>? lateFeePerDay,
     Value<String>? currencyCode,
     Value<bool>? dueDateOptional,
+    Value<bool>? requiresUnitIdentity,
     Value<int>? rowid,
   }) {
     return InventoryItemsCompanion(
@@ -1115,6 +1168,7 @@ class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
       lateFeePerDay: lateFeePerDay ?? this.lateFeePerDay,
       currencyCode: currencyCode ?? this.currencyCode,
       dueDateOptional: dueDateOptional ?? this.dueDateOptional,
+      requiresUnitIdentity: requiresUnitIdentity ?? this.requiresUnitIdentity,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1161,6 +1215,11 @@ class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
     if (dueDateOptional.present) {
       map['due_date_optional'] = Variable<bool>(dueDateOptional.value);
     }
+    if (requiresUnitIdentity.present) {
+      map['requires_unit_identity'] = Variable<bool>(
+        requiresUnitIdentity.value,
+      );
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -1183,6 +1242,7 @@ class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
           ..write('lateFeePerDay: $lateFeePerDay, ')
           ..write('currencyCode: $currencyCode, ')
           ..write('dueDateOptional: $dueDateOptional, ')
+          ..write('requiresUnitIdentity: $requiresUnitIdentity, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -4029,6 +4089,7 @@ typedef $$InventoryItemsTableCreateCompanionBuilder =
       Value<int> lateFeePerDay,
       Value<String> currencyCode,
       Value<bool> dueDateOptional,
+      Value<bool> requiresUnitIdentity,
       Value<int> rowid,
     });
 typedef $$InventoryItemsTableUpdateCompanionBuilder =
@@ -4046,6 +4107,7 @@ typedef $$InventoryItemsTableUpdateCompanionBuilder =
       Value<int> lateFeePerDay,
       Value<String> currencyCode,
       Value<bool> dueDateOptional,
+      Value<bool> requiresUnitIdentity,
       Value<int> rowid,
     });
 
@@ -4120,6 +4182,11 @@ class $$InventoryItemsTableFilterComposer
 
   ColumnFilters<bool> get dueDateOptional => $composableBuilder(
     column: $table.dueDateOptional,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get requiresUnitIdentity => $composableBuilder(
+    column: $table.requiresUnitIdentity,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -4197,6 +4264,11 @@ class $$InventoryItemsTableOrderingComposer
     column: $table.dueDateOptional,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<bool> get requiresUnitIdentity => $composableBuilder(
+    column: $table.requiresUnitIdentity,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$InventoryItemsTableAnnotationComposer
@@ -4260,6 +4332,11 @@ class $$InventoryItemsTableAnnotationComposer
     column: $table.dueDateOptional,
     builder: (column) => column,
   );
+
+  GeneratedColumn<bool> get requiresUnitIdentity => $composableBuilder(
+    column: $table.requiresUnitIdentity,
+    builder: (column) => column,
+  );
 }
 
 class $$InventoryItemsTableTableManager
@@ -4312,6 +4389,7 @@ class $$InventoryItemsTableTableManager
                 Value<int> lateFeePerDay = const Value.absent(),
                 Value<String> currencyCode = const Value.absent(),
                 Value<bool> dueDateOptional = const Value.absent(),
+                Value<bool> requiresUnitIdentity = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => InventoryItemsCompanion(
                 id: id,
@@ -4327,6 +4405,7 @@ class $$InventoryItemsTableTableManager
                 lateFeePerDay: lateFeePerDay,
                 currencyCode: currencyCode,
                 dueDateOptional: dueDateOptional,
+                requiresUnitIdentity: requiresUnitIdentity,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -4344,6 +4423,7 @@ class $$InventoryItemsTableTableManager
                 Value<int> lateFeePerDay = const Value.absent(),
                 Value<String> currencyCode = const Value.absent(),
                 Value<bool> dueDateOptional = const Value.absent(),
+                Value<bool> requiresUnitIdentity = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => InventoryItemsCompanion.insert(
                 id: id,
@@ -4359,6 +4439,7 @@ class $$InventoryItemsTableTableManager
                 lateFeePerDay: lateFeePerDay,
                 currencyCode: currencyCode,
                 dueDateOptional: dueDateOptional,
+                requiresUnitIdentity: requiresUnitIdentity,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

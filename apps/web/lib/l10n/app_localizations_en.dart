@@ -193,6 +193,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get categoryLabel => 'Category';
 
   @override
+  String get categoryOtherLabel => 'Other';
+
+  @override
+  String get categoryCustomLabel => 'Enter category';
+
+  @override
+  String get categoryCustomHint => 'Custom category name';
+
+  @override
   String get totalUnitsLabel => 'Total units';
 
   @override
@@ -1076,4 +1085,62 @@ class AppLocalizationsEn extends AppLocalizations {
   ) {
     return '$phone • $tier • Advance $advance · Pending $pending · Due $due';
   }
+
+  @override
+  String get requiresUnitIdentityLabel => 'Requires unit name/id';
+
+  @override
+  String get requiresUnitIdentitySubtitle =>
+      'On for parent categories (e.g. Novels). Off for individual items that share one catalog name.';
+
+  @override
+  String get quantityLabel => 'Quantity';
+
+  @override
+  String labelUnitHeading(String name, int index) {
+    return '$name #$index';
+  }
+
+  @override
+  String get labelsAutoAssignedHint =>
+      'Individual items get catalog name and an auto short code.';
+
+  @override
+  String get orderStatusHeading => 'Order status';
+
+  @override
+  String orderIssuedSummary(int count) {
+    return 'Originally issued: $count';
+  }
+
+  @override
+  String orderPendingSummary(int count) {
+    return 'Still out: $count';
+  }
+
+  @override
+  String orderReturnedSummary(int count) {
+    return 'Already returned: $count';
+  }
+
+  @override
+  String rentalOrderStatusChips(int issued, int pending, int returned) {
+    return 'Issued $issued · Pending $pending · Returned $returned';
+  }
+
+  @override
+  String get activityTimelineHeading => 'Activity';
+
+  @override
+  String activityIssued(String labels) {
+    return 'Issued: $labels';
+  }
+
+  @override
+  String activityReturned(String label) {
+    return 'Returned: $label';
+  }
+
+  @override
+  String get activityEmpty => 'No activity yet.';
 }

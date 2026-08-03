@@ -34,6 +34,9 @@ class InventoryItems extends Table {
   /// When true, rentals may omit a due date (open-ended accrual until return).
   BoolColumn get dueDateOptional =>
       boolean().withDefault(const Constant(false))();
+  /// When true, each issued unit needs instance name + short code (parent catalog).
+  BoolColumn get requiresUnitIdentity =>
+      boolean().withDefault(const Constant(true))();
 
   @override
   Set<Column<Object>> get primaryKey => <Column<Object>>{id};

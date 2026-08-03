@@ -81,6 +81,9 @@
   "editTooltip": "Edit",
   "itemNameLabel": "Item name",
   "categoryLabel": "Category",
+  "categoryOtherLabel": "Other",
+  "categoryCustomLabel": "Enter category",
+  "categoryCustomHint": "Custom category name",
   "totalUnitsLabel": "Total units",
   "totalUnitsHelper": "Available adjusts with total; cannot exceed total.",
   "notesLabel": "Notes",
@@ -642,5 +645,57 @@
       "pending": {"type": "String"},
       "due": {"type": "String"}
     }
-  }
+  },
+  "requiresUnitIdentityLabel": "Requires unit name/id",
+  "requiresUnitIdentitySubtitle": "On for parent categories (e.g. Novels). Off for individual items that share one catalog name.",
+  "quantityLabel": "Quantity",
+  "labelUnitHeading": "{name} #{index}",
+  "@labelUnitHeading": {
+    "placeholders": {
+      "name": {"type": "String"},
+      "index": {"type": "int"}
+    }
+  },
+  "labelsAutoAssignedHint": "Individual items get catalog name and an auto short code.",
+  "orderStatusHeading": "Order status",
+  "orderIssuedSummary": "Originally issued: {count}",
+  "@orderIssuedSummary": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "orderPendingSummary": "Still out: {count}",
+  "@orderPendingSummary": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "orderReturnedSummary": "Already returned: {count}",
+  "@orderReturnedSummary": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "rentalOrderStatusChips": "Issued {issued} · Pending {pending} · Returned {returned}",
+  "@rentalOrderStatusChips": {
+    "placeholders": {
+      "issued": {"type": "int"},
+      "pending": {"type": "int"},
+      "returned": {"type": "int"}
+    }
+  },
+  "activityTimelineHeading": "Activity",
+  "activityIssued": "Issued: {labels}",
+  "@activityIssued": {
+    "placeholders": {
+      "labels": {"type": "String"}
+    }
+  },
+  "activityReturned": "Returned: {label}",
+  "@activityReturned": {
+    "placeholders": {
+      "label": {"type": "String"}
+    }
+  },
+  "activityEmpty": "No activity yet."
 }

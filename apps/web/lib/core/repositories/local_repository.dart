@@ -143,6 +143,26 @@ class LocalRepository {
   /// Normalize short codes for storage and uniqueness checks.
   static String normalizeShortCode(String value) => value.trim().toUpperCase();
 
+  /// Auto short code for catalog items that do not require unit identity.
+  static String generateAutoShortCode({
+    required String catalogName,
+    required int index,
+    required Set<String> usedCodes,
+  }) {
+    final String cleaned = catalogName.replaceAll(RegExp(r'[^A-Za-z0-9]'), '');
+    final String upper = cleaned.toUpperCase();
+    final String prefix = upper.isEmpty
+        ? 'UNT'
+        : (upper.length >= 3 ? upper.substring(0, 3) : upper.padRight(3, 'X'));
+    int n = index < 1 ? 1 : index;
+    String code;
+    do {
+      code = normalizeShortCode('$prefix-$n');
+      n += 1;
+    } while (usedCodes.contains(code));
+    return code;
+  }
+
   Future<String> createRental({
     required Customer customer,
     required List<RentalLineInput> lines,
@@ -740,6 +760,7 @@ class LocalRepository {
     int lateFeePerDay = 0,
     String currencyCode = 'INR',
     bool dueDateOptional = false,
+    bool requiresUnitIdentity = true,
   }) async {
     final String trimmedName = name.trim();
     final String trimmedCategory = category.trim();
@@ -775,6 +796,7 @@ class LocalRepository {
           currencyCode.trim().isEmpty ? 'INR' : currencyCode.trim().toUpperCase(),
         ),
         dueDateOptional: Value<bool>(dueDateOptional),
+        requiresUnitIdentity: Value<bool>(requiresUnitIdentity),
       ),
     );
   }
@@ -845,6 +867,7 @@ class LocalRepository {
     int? lateFeePerDay,
     String? currencyCode,
     bool? dueDateOptional,
+    bool? requiresUnitIdentity,
   }) async {
     final String trimmedName = name.trim();
     final String trimmedCategory = category.trim();
@@ -909,6 +932,9 @@ class LocalRepository {
         dueDateOptional: dueDateOptional == null
             ? const Value.absent()
             : Value<bool>(dueDateOptional),
+        requiresUnitIdentity: requiresUnitIdentity == null
+            ? const Value.absent()
+            : Value<bool>(requiresUnitIdentity),
       ),
     );
   }
@@ -1188,6 +1214,7 @@ class LocalRepository {
       lateFeePerDay: Value<int>(item.lateFeePerDay),
       currencyCode: Value<String>(item.currencyCode),
       dueDateOptional: Value<bool>(item.dueDateOptional),
+      requiresUnitIdentity: Value<bool>(item.requiresUnitIdentity),
     );
   }
 
@@ -1230,6 +1257,7 @@ class LocalRepository {
       lateFeePerDay: row.lateFeePerDay,
       currencyCode: row.currencyCode,
       dueDateOptional: row.dueDateOptional,
+      requiresUnitIdentity: row.requiresUnitIdentity,
     );
   }
 
