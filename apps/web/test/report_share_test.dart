@@ -56,6 +56,7 @@ void main() {
       customerId: 'CUS-1',
       lines: const <RentalLine>[
         RentalLine(
+          id: 'RLI-REN-1-INV-2',
           itemId: 'INV-2',
           catalogName: 'Tripod',
           instanceName: 'Floor stand',
@@ -72,6 +73,7 @@ void main() {
       customerId: 'CUS-2',
       lines: const <RentalLine>[
         RentalLine(
+          id: 'RLI-REN-2-INV-1',
           itemId: 'INV-1',
           catalogName: 'DSLR',
           instanceName: 'Body A',
@@ -88,6 +90,7 @@ void main() {
       customerId: 'CUS-1',
       lines: const <RentalLine>[
         RentalLine(
+          id: 'RLI-REN-3-INV-1',
           itemId: 'INV-1',
           catalogName: 'DSLR',
           instanceName: 'Body B',
@@ -200,6 +203,7 @@ void main() {
           customerId: kSelfCustomerId,
           lines: const <RentalLine>[
             RentalLine(
+              id: 'RLI-REN-SELF-1-INV-1',
               itemId: 'INV-1',
               catalogName: 'DSLR',
               instanceName: 'Body A',

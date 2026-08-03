@@ -21,7 +21,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -91,6 +91,105 @@ class AppDatabase extends _$AppDatabase {
         await customStatement('''
           UPDATE rentals
           SET deposit_applied = COALESCE(deposit_applied, 0)
+        ''');
+      }
+      if (from < 6) {
+        await m.addColumn(rentals, rentals.replacedFromRentalId);
+        // Rebuild rental_items: line id PK + returnedAt + per-line amounts.
+        await customStatement('''
+          CREATE TABLE rental_items_new (
+            id TEXT NOT NULL PRIMARY KEY,
+            rental_id TEXT NOT NULL REFERENCES rentals (id),
+            item_id TEXT NOT NULL REFERENCES inventory_items (id),
+            instance_name TEXT NOT NULL DEFAULT '',
+            short_code TEXT NOT NULL DEFAULT 'LEGACY',
+            returned_at INTEGER NULL,
+            base_amount INTEGER NOT NULL DEFAULT 0,
+            late_amount INTEGER NOT NULL DEFAULT 0,
+            deposit_applied INTEGER NOT NULL DEFAULT 0
+          )
+        ''');
+        await customStatement('''
+          INSERT INTO rental_items_new (
+            id, rental_id, item_id, instance_name, short_code,
+            returned_at, base_amount, late_amount, deposit_applied
+          )
+          SELECT
+            'RLI-' || rental_id || '-' || item_id,
+            rental_id,
+            item_id,
+            COALESCE(instance_name, ''),
+            COALESCE(short_code, 'LEGACY'),
+            (SELECT returned_at FROM rentals WHERE rentals.id = rental_items.rental_id),
+            0,
+            0,
+            0
+          FROM rental_items
+        ''');
+        await customStatement('DROP TABLE rental_items');
+        await customStatement(
+          'ALTER TABLE rental_items_new RENAME TO rental_items',
+        );
+        // Spread parent base across lines when possible (equal share).
+        await customStatement('''
+          UPDATE rental_items
+          SET base_amount = CAST(
+            (
+              SELECT CAST(rentals.base_amount AS REAL) /
+                CASE
+                  WHEN (
+                    SELECT COUNT(*) FROM rental_items ri2
+                    WHERE ri2.rental_id = rental_items.rental_id
+                  ) < 1 THEN 1.0
+                  ELSE (
+                    SELECT COUNT(*) FROM rental_items ri2
+                    WHERE ri2.rental_id = rental_items.rental_id
+                  )
+                END
+              FROM rentals WHERE rentals.id = rental_items.rental_id
+            ) AS INTEGER
+          )
+        ''');
+        await customStatement('''
+          UPDATE rental_items
+          SET late_amount = CASE
+            WHEN returned_at IS NOT NULL THEN CAST(
+              (
+                SELECT CAST(rentals.late_amount AS REAL) /
+                  CASE
+                    WHEN (
+                      SELECT COUNT(*) FROM rental_items ri2
+                      WHERE ri2.rental_id = rental_items.rental_id
+                    ) < 1 THEN 1.0
+                    ELSE (
+                      SELECT COUNT(*) FROM rental_items ri2
+                      WHERE ri2.rental_id = rental_items.rental_id
+                    )
+                  END
+                FROM rentals WHERE rentals.id = rental_items.rental_id
+              ) AS INTEGER
+            )
+            ELSE 0
+          END,
+          deposit_applied = CASE
+            WHEN returned_at IS NOT NULL THEN CAST(
+              (
+                SELECT CAST(rentals.deposit_applied AS REAL) /
+                  CASE
+                    WHEN (
+                      SELECT COUNT(*) FROM rental_items ri2
+                      WHERE ri2.rental_id = rental_items.rental_id
+                    ) < 1 THEN 1.0
+                    ELSE (
+                      SELECT COUNT(*) FROM rental_items ri2
+                      WHERE ri2.rental_id = rental_items.rental_id
+                    )
+                  END
+                FROM rentals WHERE rentals.id = rental_items.rental_id
+              ) AS INTEGER
+            )
+            ELSE 0
+          END
         ''');
       }
     },

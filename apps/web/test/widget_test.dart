@@ -193,6 +193,7 @@ void main() {
           customerId: 'CUS-M1',
           lines: const <RentalLine>[
             RentalLine(
+              id: 'RLI-REN-M1-INV-M1',
               itemId: 'INV-M1',
               catalogName: 'Migrated Camera',
               instanceName: 'Migrated Camera',

@@ -518,5 +518,44 @@
       "phone": {"type": "String"},
       "amount": {"type": "String"}
     }
+  },
+  "returnSelectedAction": "चयनित वापस करें",
+  "returnAllAction": "सभी वापस करें",
+  "replaceLineAction": "बदलें",
+  "selectLinesToReturn": "वापसी के लिए पंक्तियाँ चुनें",
+  "openLinesHeading": "बाहर",
+  "returnedLinesHeading": "वापस हुए",
+  "lineReturnedLabel": "वापस",
+  "lineOpenLabel": "बाहर",
+  "partialReturnSnack": "{count} वस्तु वापस। किराया अभी सक्रिय है।",
+  "@partialReturnSnack": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "replaceFlowTitle": "वस्तु बदलें",
+  "replaceSettlementIntro": "पुरानी वस्तु का निपटान करें, फिर नया जारी करें।",
+  "replaceConfirmAction": "बदलें और जारी करें",
+  "replaceSuccessSnack": "पुरानी पंक्ति निपटाई; नया {newId}। जमा शेष {balance}।",
+  "@replaceSuccessSnack": {
+    "placeholders": {
+      "newId": {"type": "String"},
+      "balance": {"type": "String"}
+    }
+  },
+  "noLinesSelected": "वापसी के लिए कम से कम एक वस्तु चुनें।",
+  "linesOpenCount": "{total} में से {open} अभी बाहर",
+  "@linesOpenCount": {
+    "placeholders": {
+      "open": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "lineChargePreview": "{label}: {amount}",
+  "@lineChargePreview": {
+    "placeholders": {
+      "label": {"type": "String"},
+      "amount": {"type": "String"}
+    }
   }
 }

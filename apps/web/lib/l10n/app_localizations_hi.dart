@@ -841,4 +841,61 @@ class AppLocalizationsHi extends AppLocalizations {
   String existingCustomerWithDeposit(String phone, String amount) {
     return '$phone • मौजूदा • जमा $amount';
   }
+
+  @override
+  String get returnSelectedAction => 'चयनित वापस करें';
+
+  @override
+  String get returnAllAction => 'सभी वापस करें';
+
+  @override
+  String get replaceLineAction => 'बदलें';
+
+  @override
+  String get selectLinesToReturn => 'वापसी के लिए पंक्तियाँ चुनें';
+
+  @override
+  String get openLinesHeading => 'बाहर';
+
+  @override
+  String get returnedLinesHeading => 'वापस हुए';
+
+  @override
+  String get lineReturnedLabel => 'वापस';
+
+  @override
+  String get lineOpenLabel => 'बाहर';
+
+  @override
+  String partialReturnSnack(int count) {
+    return '$count वस्तु वापस। किराया अभी सक्रिय है।';
+  }
+
+  @override
+  String get replaceFlowTitle => 'वस्तु बदलें';
+
+  @override
+  String get replaceSettlementIntro =>
+      'पुरानी वस्तु का निपटान करें, फिर नया जारी करें।';
+
+  @override
+  String get replaceConfirmAction => 'बदलें और जारी करें';
+
+  @override
+  String replaceSuccessSnack(String newId, String balance) {
+    return 'पुरानी पंक्ति निपटाई; नया $newId। जमा शेष $balance।';
+  }
+
+  @override
+  String get noLinesSelected => 'वापसी के लिए कम से कम एक वस्तु चुनें।';
+
+  @override
+  String linesOpenCount(int open, int total) {
+    return '$total में से $open अभी बाहर';
+  }
+
+  @override
+  String lineChargePreview(String label, String amount) {
+    return '$label: $amount';
+  }
 }

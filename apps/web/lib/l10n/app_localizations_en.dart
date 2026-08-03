@@ -839,4 +839,61 @@ class AppLocalizationsEn extends AppLocalizations {
   String existingCustomerWithDeposit(String phone, String amount) {
     return '$phone • Existing • Deposit $amount';
   }
+
+  @override
+  String get returnSelectedAction => 'Return selected';
+
+  @override
+  String get returnAllAction => 'Return all';
+
+  @override
+  String get replaceLineAction => 'Replace';
+
+  @override
+  String get selectLinesToReturn => 'Select lines to return';
+
+  @override
+  String get openLinesHeading => 'Out';
+
+  @override
+  String get returnedLinesHeading => 'Returned';
+
+  @override
+  String get lineReturnedLabel => 'Returned';
+
+  @override
+  String get lineOpenLabel => 'Out';
+
+  @override
+  String partialReturnSnack(int count) {
+    return 'Returned $count item(s). Rental still active.';
+  }
+
+  @override
+  String get replaceFlowTitle => 'Replace item';
+
+  @override
+  String get replaceSettlementIntro =>
+      'Settle the old item, then issue a replacement.';
+
+  @override
+  String get replaceConfirmAction => 'Replace & issue';
+
+  @override
+  String replaceSuccessSnack(String newId, String balance) {
+    return 'Settled old line; opened $newId. Deposit balance $balance.';
+  }
+
+  @override
+  String get noLinesSelected => 'Select at least one item to return.';
+
+  @override
+  String linesOpenCount(int open, int total) {
+    return '$open of $total still out';
+  }
+
+  @override
+  String lineChargePreview(String label, String amount) {
+    return '$label: $amount';
+  }
 }

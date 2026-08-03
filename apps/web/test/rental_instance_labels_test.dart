@@ -1,4 +1,4 @@
-import 'package:drift/drift.dart' show driftRuntimeOptions;
+import 'package:drift/drift.dart' show Value, driftRuntimeOptions;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -144,10 +144,10 @@ void main() {
       );
     });
 
-    test('schema v4 tables include pricing defaults', () async {
+    test('schema v6 tables include line id primary key', () async {
       final AppDatabase db = AppDatabase(NativeDatabase.memory());
       addTearDown(db.close);
-      expect(db.schemaVersion, 5);
+      expect(db.schemaVersion, 6);
 
       await db.into(db.customers).insert(
         CustomersCompanion.insert(
@@ -177,37 +177,23 @@ void main() {
           qrCode: 'rental:x',
         ),
       );
-      // Defaults mimic pre-backfill rows (empty name / LEGACY code).
       await db.into(db.rentalItems).insert(
         RentalItemsCompanion.insert(
+          id: 'RLI-X-1',
           rentalId: 'REN-X',
           itemId: 'INV-X',
+          instanceName: const Value<String>('Novel'),
+          shortCode: const Value<String>('LEGACY-REN-X-INV-X'),
         ),
       );
-
-      // Same backfill SQL as AppDatabase migration from < 3.
-      await db.customStatement('''
-        UPDATE rental_items
-        SET instance_name = COALESCE(
-          (SELECT name FROM inventory_items
-           WHERE inventory_items.id = rental_items.item_id),
-          ''
-        )
-        WHERE instance_name IS NULL OR instance_name = ''
-      ''');
-      await db.customStatement('''
-        UPDATE rental_items
-        SET short_code = upper('LEGACY-' || rental_id || '-' || item_id)
-        WHERE short_code IS NULL
-           OR short_code = ''
-           OR upper(short_code) = 'LEGACY'
-      ''');
 
       final RentalItemRow row = await (db.select(db.rentalItems)
             ..where((t) => t.rentalId.equals('REN-X')))
           .getSingle();
+      expect(row.id, 'RLI-X-1');
       expect(row.instanceName, 'Novel');
       expect(row.shortCode, 'LEGACY-REN-X-INV-X');
+      expect(row.returnedAt, isNull);
     });
 
     test('legacy snapshot without lines still imports', () async {

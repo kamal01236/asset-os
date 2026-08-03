@@ -203,16 +203,57 @@ class RentalLineInput {
 /// One issued unit on a rental: catalog type + instance name/code.
 class RentalLine {
   const RentalLine({
+    required this.id,
     required this.itemId,
     required this.catalogName,
     required this.instanceName,
     required this.shortCode,
+    this.returnedAt,
+    this.baseAmount = 0,
+    this.lateAmount = 0,
+    this.depositApplied = 0,
+    this.lateFeePerDay = 0,
   });
 
+  final String id;
   final String itemId;
   final String catalogName;
   final String instanceName;
   final String shortCode;
+  final DateTime? returnedAt;
+  final int baseAmount;
+  final int lateAmount;
+  final int depositApplied;
+  /// Catalog late fee used for open-line estimates (paise/day).
+  final int lateFeePerDay;
+
+  bool get isOpen => returnedAt == null;
+
+  int get totalAmount => baseAmount + lateAmount;
+
+  int get amountDueAfterDeposit =>
+      (totalAmount - depositApplied).clamp(0, totalAmount);
+
+  int lateAmountAsOf(DateTime due, DateTime asOf) {
+    if (!isOpen) {
+      return lateAmount;
+    }
+    return computeLateAmount(
+      due: due,
+      asOf: asOf,
+      lateFeePerDay: lateFeePerDay,
+    );
+  }
+
+  int totalAmountAsOf(DateTime due, DateTime asOf) {
+    if (!isOpen) {
+      return totalAmount;
+    }
+    return computeTotalAmount(
+      baseAmount: baseAmount,
+      lateAmount: lateAmountAsOf(due, asOf),
+    );
+  }
 
   /// e.g. `Novel · Harry Potter (NOV-042)`.
   String get displayLabel {
@@ -232,17 +273,32 @@ class RentalLine {
   }
 
   Map<String, dynamic> toJson() => <String, dynamic>{
+    'id': id,
     'itemId': itemId,
     'catalogName': catalogName,
     'instanceName': instanceName,
     'shortCode': shortCode,
+    'returnedAt': returnedAt?.toIso8601String(),
+    'baseAmount': baseAmount,
+    'lateAmount': lateAmount,
+    'depositApplied': depositApplied,
+    'lateFeePerDay': lateFeePerDay,
   };
 
   factory RentalLine.fromJson(Map<String, dynamic> json) => RentalLine(
+    id: (json['id'] as String?) ??
+        'RLI-${json['itemId'] as String? ?? 'LEGACY'}',
     itemId: json['itemId'] as String,
     catalogName: (json['catalogName'] as String?) ?? '',
     instanceName: (json['instanceName'] as String?) ?? '',
     shortCode: (json['shortCode'] as String?) ?? 'LEGACY',
+    returnedAt: json['returnedAt'] == null
+        ? null
+        : DateTime.parse(json['returnedAt'] as String),
+    baseAmount: (json['baseAmount'] as int?) ?? 0,
+    lateAmount: (json['lateAmount'] as int?) ?? 0,
+    depositApplied: (json['depositApplied'] as int?) ?? 0,
+    lateFeePerDay: (json['lateFeePerDay'] as int?) ?? 0,
   );
 }
 
@@ -322,14 +378,30 @@ class RentalReturnResult {
     required this.totalAmount,
     required this.depositApplied,
     required this.depositBalanceAfter,
+    this.returnedLineIds = const <String>[],
+    this.rentalClosed = true,
   });
 
   final String rentalId;
   final int totalAmount;
   final int depositApplied;
   final int depositBalanceAfter;
+  final List<String> returnedLineIds;
+  /// True when the parent rental has no open lines left.
+  final bool rentalClosed;
 
   int get amountDue => (totalAmount - depositApplied).clamp(0, totalAmount);
+}
+
+/// Result of replacing a rental line (return + new rental).
+class RentalReplaceResult {
+  const RentalReplaceResult({
+    required this.returnResult,
+    required this.newRentalId,
+  });
+
+  final RentalReturnResult returnResult;
+  final String newRentalId;
 }
 
 class Rental {
@@ -351,6 +423,7 @@ class Rental {
     this.totalAmount = 0,
     this.depositApplied = 0,
     this.durationUnits = 1,
+    this.replacedFromRentalId,
   });
 
   final String id;
@@ -372,9 +445,16 @@ class Rental {
   /// Deposit applied from wallet at return (paise).
   final int depositApplied;
   final int durationUnits;
+  final String? replacedFromRentalId;
 
   List<String> get itemIds =>
       lines.map((RentalLine line) => line.itemId).toList(growable: false);
+
+  List<RentalLine> get openLines =>
+      lines.where((RentalLine line) => line.isOpen).toList(growable: false);
+
+  List<RentalLine> get returnedLines =>
+      lines.where((RentalLine line) => !line.isOpen).toList(growable: false);
 
   bool get isActive => returnedAt == null;
 
@@ -387,21 +467,22 @@ class Rental {
     if (!isActive) {
       return lateAmount;
     }
-    return computeLateAmount(
-      due: dueAt,
-      asOf: asOf,
-      lateFeePerDay: lateFeePerDay,
-    );
+    int late = 0;
+    for (final RentalLine line in lines) {
+      late += line.lateAmountAsOf(dueAt, asOf);
+    }
+    return late;
   }
 
   int totalAmountAsOf(DateTime asOf) {
     if (!isActive) {
       return totalAmount;
     }
-    return computeTotalAmount(
-      baseAmount: baseAmount,
-      lateAmount: lateAmountAsOf(asOf),
-    );
+    int total = 0;
+    for (final RentalLine line in lines) {
+      total += line.totalAmountAsOf(dueAt, asOf);
+    }
+    return total;
   }
 
   AssetStatus statusFor(DateTime now) {
@@ -433,6 +514,7 @@ class Rental {
     int? depositApplied,
     int? durationUnits,
     DateTime? dueAt,
+    String? replacedFromRentalId,
   }) => Rental(
     id: id,
     customerId: customerId,
@@ -451,6 +533,7 @@ class Rental {
     totalAmount: totalAmount ?? this.totalAmount,
     depositApplied: depositApplied ?? this.depositApplied,
     durationUnits: durationUnits ?? this.durationUnits,
+    replacedFromRentalId: replacedFromRentalId ?? this.replacedFromRentalId,
   );
 
   Map<String, dynamic> toJson() => <String, dynamic>{
@@ -472,6 +555,7 @@ class Rental {
     'totalAmount': totalAmount,
     'depositApplied': depositApplied,
     'durationUnits': durationUnits,
+    'replacedFromRentalId': replacedFromRentalId,
   };
 
   factory Rental.fromJson(Map<String, dynamic> json) {
@@ -487,6 +571,7 @@ class Rental {
       lines = ids
           .map(
             (String id) => RentalLine(
+              id: 'RLI-${json['id'] as String}-$id',
               itemId: id,
               catalogName: '',
               instanceName: '',
@@ -517,6 +602,7 @@ class Rental {
       totalAmount: (json['totalAmount'] as int?) ?? 0,
       depositApplied: (json['depositApplied'] as int?) ?? 0,
       durationUnits: (json['durationUnits'] as int?) ?? 1,
+      replacedFromRentalId: json['replacedFromRentalId'] as String?,
     );
   }
 }

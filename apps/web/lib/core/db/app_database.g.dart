@@ -1305,6 +1305,17 @@ class $RentalsTable extends Rentals with TableInfo<$RentalsTable, RentalRow> {
     requiredDuringInsert: false,
     defaultValue: const Constant(1),
   );
+  static const VerificationMeta _replacedFromRentalIdMeta =
+      const VerificationMeta('replacedFromRentalId');
+  @override
+  late final GeneratedColumn<String> replacedFromRentalId =
+      GeneratedColumn<String>(
+        'replaced_from_rental_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1322,6 +1333,7 @@ class $RentalsTable extends Rentals with TableInfo<$RentalsTable, RentalRow> {
     totalAmount,
     depositApplied,
     durationUnits,
+    replacedFromRentalId,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1447,6 +1459,15 @@ class $RentalsTable extends Rentals with TableInfo<$RentalsTable, RentalRow> {
         ),
       );
     }
+    if (data.containsKey('replaced_from_rental_id')) {
+      context.handle(
+        _replacedFromRentalIdMeta,
+        replacedFromRentalId.isAcceptableOrUnknown(
+          data['replaced_from_rental_id']!,
+          _replacedFromRentalIdMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -1516,6 +1537,10 @@ class $RentalsTable extends Rentals with TableInfo<$RentalsTable, RentalRow> {
         DriftSqlType.int,
         data['${effectivePrefix}duration_units'],
       )!,
+      replacedFromRentalId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}replaced_from_rental_id'],
+      ),
     );
   }
 
@@ -1553,6 +1578,9 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
 
   /// Chosen duration (e.g. 1 week → 1; fixed due-days still stored here).
   final int durationUnits;
+
+  /// Set when this rental was opened as a replacement for a line on another rental.
+  final String? replacedFromRentalId;
   const RentalRow({
     required this.id,
     required this.customerId,
@@ -1569,6 +1597,7 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
     required this.totalAmount,
     required this.depositApplied,
     required this.durationUnits,
+    this.replacedFromRentalId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1592,6 +1621,9 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
     map['total_amount'] = Variable<int>(totalAmount);
     map['deposit_applied'] = Variable<int>(depositApplied);
     map['duration_units'] = Variable<int>(durationUnits);
+    if (!nullToAbsent || replacedFromRentalId != null) {
+      map['replaced_from_rental_id'] = Variable<String>(replacedFromRentalId);
+    }
     return map;
   }
 
@@ -1616,6 +1648,9 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
       totalAmount: Value(totalAmount),
       depositApplied: Value(depositApplied),
       durationUnits: Value(durationUnits),
+      replacedFromRentalId: replacedFromRentalId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(replacedFromRentalId),
     );
   }
 
@@ -1640,6 +1675,9 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
       totalAmount: serializer.fromJson<int>(json['totalAmount']),
       depositApplied: serializer.fromJson<int>(json['depositApplied']),
       durationUnits: serializer.fromJson<int>(json['durationUnits']),
+      replacedFromRentalId: serializer.fromJson<String?>(
+        json['replacedFromRentalId'],
+      ),
     );
   }
   @override
@@ -1661,6 +1699,7 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
       'totalAmount': serializer.toJson<int>(totalAmount),
       'depositApplied': serializer.toJson<int>(depositApplied),
       'durationUnits': serializer.toJson<int>(durationUnits),
+      'replacedFromRentalId': serializer.toJson<String?>(replacedFromRentalId),
     };
   }
 
@@ -1680,6 +1719,7 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
     int? totalAmount,
     int? depositApplied,
     int? durationUnits,
+    Value<String?> replacedFromRentalId = const Value.absent(),
   }) => RentalRow(
     id: id ?? this.id,
     customerId: customerId ?? this.customerId,
@@ -1696,6 +1736,9 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
     totalAmount: totalAmount ?? this.totalAmount,
     depositApplied: depositApplied ?? this.depositApplied,
     durationUnits: durationUnits ?? this.durationUnits,
+    replacedFromRentalId: replacedFromRentalId.present
+        ? replacedFromRentalId.value
+        : this.replacedFromRentalId,
   );
   RentalRow copyWithCompanion(RentalsCompanion data) {
     return RentalRow(
@@ -1734,6 +1777,9 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
       durationUnits: data.durationUnits.present
           ? data.durationUnits.value
           : this.durationUnits,
+      replacedFromRentalId: data.replacedFromRentalId.present
+          ? data.replacedFromRentalId.value
+          : this.replacedFromRentalId,
     );
   }
 
@@ -1754,7 +1800,8 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
           ..write('lateAmount: $lateAmount, ')
           ..write('totalAmount: $totalAmount, ')
           ..write('depositApplied: $depositApplied, ')
-          ..write('durationUnits: $durationUnits')
+          ..write('durationUnits: $durationUnits, ')
+          ..write('replacedFromRentalId: $replacedFromRentalId')
           ..write(')'))
         .toString();
   }
@@ -1776,6 +1823,7 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
     totalAmount,
     depositApplied,
     durationUnits,
+    replacedFromRentalId,
   );
   @override
   bool operator ==(Object other) =>
@@ -1795,7 +1843,8 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
           other.lateAmount == this.lateAmount &&
           other.totalAmount == this.totalAmount &&
           other.depositApplied == this.depositApplied &&
-          other.durationUnits == this.durationUnits);
+          other.durationUnits == this.durationUnits &&
+          other.replacedFromRentalId == this.replacedFromRentalId);
 }
 
 class RentalsCompanion extends UpdateCompanion<RentalRow> {
@@ -1814,6 +1863,7 @@ class RentalsCompanion extends UpdateCompanion<RentalRow> {
   final Value<int> totalAmount;
   final Value<int> depositApplied;
   final Value<int> durationUnits;
+  final Value<String?> replacedFromRentalId;
   final Value<int> rowid;
   const RentalsCompanion({
     this.id = const Value.absent(),
@@ -1831,6 +1881,7 @@ class RentalsCompanion extends UpdateCompanion<RentalRow> {
     this.totalAmount = const Value.absent(),
     this.depositApplied = const Value.absent(),
     this.durationUnits = const Value.absent(),
+    this.replacedFromRentalId = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   RentalsCompanion.insert({
@@ -1849,6 +1900,7 @@ class RentalsCompanion extends UpdateCompanion<RentalRow> {
     this.totalAmount = const Value.absent(),
     this.depositApplied = const Value.absent(),
     this.durationUnits = const Value.absent(),
+    this.replacedFromRentalId = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        customerId = Value(customerId),
@@ -1871,6 +1923,7 @@ class RentalsCompanion extends UpdateCompanion<RentalRow> {
     Expression<int>? totalAmount,
     Expression<int>? depositApplied,
     Expression<int>? durationUnits,
+    Expression<String>? replacedFromRentalId,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -1889,6 +1942,8 @@ class RentalsCompanion extends UpdateCompanion<RentalRow> {
       if (totalAmount != null) 'total_amount': totalAmount,
       if (depositApplied != null) 'deposit_applied': depositApplied,
       if (durationUnits != null) 'duration_units': durationUnits,
+      if (replacedFromRentalId != null)
+        'replaced_from_rental_id': replacedFromRentalId,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -1909,6 +1964,7 @@ class RentalsCompanion extends UpdateCompanion<RentalRow> {
     Value<int>? totalAmount,
     Value<int>? depositApplied,
     Value<int>? durationUnits,
+    Value<String?>? replacedFromRentalId,
     Value<int>? rowid,
   }) {
     return RentalsCompanion(
@@ -1927,6 +1983,7 @@ class RentalsCompanion extends UpdateCompanion<RentalRow> {
       totalAmount: totalAmount ?? this.totalAmount,
       depositApplied: depositApplied ?? this.depositApplied,
       durationUnits: durationUnits ?? this.durationUnits,
+      replacedFromRentalId: replacedFromRentalId ?? this.replacedFromRentalId,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1979,6 +2036,11 @@ class RentalsCompanion extends UpdateCompanion<RentalRow> {
     if (durationUnits.present) {
       map['duration_units'] = Variable<int>(durationUnits.value);
     }
+    if (replacedFromRentalId.present) {
+      map['replaced_from_rental_id'] = Variable<String>(
+        replacedFromRentalId.value,
+      );
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -2003,6 +2065,7 @@ class RentalsCompanion extends UpdateCompanion<RentalRow> {
           ..write('totalAmount: $totalAmount, ')
           ..write('depositApplied: $depositApplied, ')
           ..write('durationUnits: $durationUnits, ')
+          ..write('replacedFromRentalId: $replacedFromRentalId, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -2015,6 +2078,15 @@ class $RentalItemsTable extends RentalItems
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $RentalItemsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
   static const VerificationMeta _rentalIdMeta = const VerificationMeta(
     'rentalId',
   );
@@ -2059,12 +2131,64 @@ class $RentalItemsTable extends RentalItems
     requiredDuringInsert: false,
     defaultValue: const Constant('LEGACY'),
   );
+  static const VerificationMeta _returnedAtMeta = const VerificationMeta(
+    'returnedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> returnedAt = GeneratedColumn<DateTime>(
+    'returned_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _baseAmountMeta = const VerificationMeta(
+    'baseAmount',
+  );
+  @override
+  late final GeneratedColumn<int> baseAmount = GeneratedColumn<int>(
+    'base_amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _lateAmountMeta = const VerificationMeta(
+    'lateAmount',
+  );
+  @override
+  late final GeneratedColumn<int> lateAmount = GeneratedColumn<int>(
+    'late_amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _depositAppliedMeta = const VerificationMeta(
+    'depositApplied',
+  );
+  @override
+  late final GeneratedColumn<int> depositApplied = GeneratedColumn<int>(
+    'deposit_applied',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   @override
   List<GeneratedColumn> get $columns => [
+    id,
     rentalId,
     itemId,
     instanceName,
     shortCode,
+    returnedAt,
+    baseAmount,
+    lateAmount,
+    depositApplied,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2078,6 +2202,11 @@ class $RentalItemsTable extends RentalItems
   }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
     if (data.containsKey('rental_id')) {
       context.handle(
         _rentalIdMeta,
@@ -2109,15 +2238,46 @@ class $RentalItemsTable extends RentalItems
         shortCode.isAcceptableOrUnknown(data['short_code']!, _shortCodeMeta),
       );
     }
+    if (data.containsKey('returned_at')) {
+      context.handle(
+        _returnedAtMeta,
+        returnedAt.isAcceptableOrUnknown(data['returned_at']!, _returnedAtMeta),
+      );
+    }
+    if (data.containsKey('base_amount')) {
+      context.handle(
+        _baseAmountMeta,
+        baseAmount.isAcceptableOrUnknown(data['base_amount']!, _baseAmountMeta),
+      );
+    }
+    if (data.containsKey('late_amount')) {
+      context.handle(
+        _lateAmountMeta,
+        lateAmount.isAcceptableOrUnknown(data['late_amount']!, _lateAmountMeta),
+      );
+    }
+    if (data.containsKey('deposit_applied')) {
+      context.handle(
+        _depositAppliedMeta,
+        depositApplied.isAcceptableOrUnknown(
+          data['deposit_applied']!,
+          _depositAppliedMeta,
+        ),
+      );
+    }
     return context;
   }
 
   @override
-  Set<GeneratedColumn> get $primaryKey => {rentalId, itemId};
+  Set<GeneratedColumn> get $primaryKey => {id};
   @override
   RentalItemRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return RentalItemRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
       rentalId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}rental_id'],
@@ -2134,6 +2294,22 @@ class $RentalItemsTable extends RentalItems
         DriftSqlType.string,
         data['${effectivePrefix}short_code'],
       )!,
+      returnedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}returned_at'],
+      ),
+      baseAmount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}base_amount'],
+      )!,
+      lateAmount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}late_amount'],
+      )!,
+      depositApplied: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}deposit_applied'],
+      )!,
     );
   }
 
@@ -2144,36 +2320,69 @@ class $RentalItemsTable extends RentalItems
 }
 
 class RentalItemRow extends DataClass implements Insertable<RentalItemRow> {
+  /// Line id (e.g. RLI-…); allows multiple units of the same catalog item.
+  final String id;
   final String rentalId;
   final String itemId;
 
   /// Copy/title for this issue (e.g. novel title); not inventory master.
   final String instanceName;
 
-  /// Short tracking code unique among active rental lines (case-insensitive).
+  /// Short tracking code unique among open rental lines (case-insensitive).
   final String shortCode;
+
+  /// Null while the line is still out; set on partial or full return.
+  final DateTime? returnedAt;
+
+  /// Line base charge in paise (snapshot at issue).
+  final int baseAmount;
+
+  /// Finalized late fee in paise (set on return).
+  final int lateAmount;
+
+  /// Deposit applied from wallet for this line (paise).
+  final int depositApplied;
   const RentalItemRow({
+    required this.id,
     required this.rentalId,
     required this.itemId,
     required this.instanceName,
     required this.shortCode,
+    this.returnedAt,
+    required this.baseAmount,
+    required this.lateAmount,
+    required this.depositApplied,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
     map['rental_id'] = Variable<String>(rentalId);
     map['item_id'] = Variable<String>(itemId);
     map['instance_name'] = Variable<String>(instanceName);
     map['short_code'] = Variable<String>(shortCode);
+    if (!nullToAbsent || returnedAt != null) {
+      map['returned_at'] = Variable<DateTime>(returnedAt);
+    }
+    map['base_amount'] = Variable<int>(baseAmount);
+    map['late_amount'] = Variable<int>(lateAmount);
+    map['deposit_applied'] = Variable<int>(depositApplied);
     return map;
   }
 
   RentalItemsCompanion toCompanion(bool nullToAbsent) {
     return RentalItemsCompanion(
+      id: Value(id),
       rentalId: Value(rentalId),
       itemId: Value(itemId),
       instanceName: Value(instanceName),
       shortCode: Value(shortCode),
+      returnedAt: returnedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(returnedAt),
+      baseAmount: Value(baseAmount),
+      lateAmount: Value(lateAmount),
+      depositApplied: Value(depositApplied),
     );
   }
 
@@ -2183,117 +2392,206 @@ class RentalItemRow extends DataClass implements Insertable<RentalItemRow> {
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return RentalItemRow(
+      id: serializer.fromJson<String>(json['id']),
       rentalId: serializer.fromJson<String>(json['rentalId']),
       itemId: serializer.fromJson<String>(json['itemId']),
       instanceName: serializer.fromJson<String>(json['instanceName']),
       shortCode: serializer.fromJson<String>(json['shortCode']),
+      returnedAt: serializer.fromJson<DateTime?>(json['returnedAt']),
+      baseAmount: serializer.fromJson<int>(json['baseAmount']),
+      lateAmount: serializer.fromJson<int>(json['lateAmount']),
+      depositApplied: serializer.fromJson<int>(json['depositApplied']),
     );
   }
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
       'rentalId': serializer.toJson<String>(rentalId),
       'itemId': serializer.toJson<String>(itemId),
       'instanceName': serializer.toJson<String>(instanceName),
       'shortCode': serializer.toJson<String>(shortCode),
+      'returnedAt': serializer.toJson<DateTime?>(returnedAt),
+      'baseAmount': serializer.toJson<int>(baseAmount),
+      'lateAmount': serializer.toJson<int>(lateAmount),
+      'depositApplied': serializer.toJson<int>(depositApplied),
     };
   }
 
   RentalItemRow copyWith({
+    String? id,
     String? rentalId,
     String? itemId,
     String? instanceName,
     String? shortCode,
+    Value<DateTime?> returnedAt = const Value.absent(),
+    int? baseAmount,
+    int? lateAmount,
+    int? depositApplied,
   }) => RentalItemRow(
+    id: id ?? this.id,
     rentalId: rentalId ?? this.rentalId,
     itemId: itemId ?? this.itemId,
     instanceName: instanceName ?? this.instanceName,
     shortCode: shortCode ?? this.shortCode,
+    returnedAt: returnedAt.present ? returnedAt.value : this.returnedAt,
+    baseAmount: baseAmount ?? this.baseAmount,
+    lateAmount: lateAmount ?? this.lateAmount,
+    depositApplied: depositApplied ?? this.depositApplied,
   );
   RentalItemRow copyWithCompanion(RentalItemsCompanion data) {
     return RentalItemRow(
+      id: data.id.present ? data.id.value : this.id,
       rentalId: data.rentalId.present ? data.rentalId.value : this.rentalId,
       itemId: data.itemId.present ? data.itemId.value : this.itemId,
       instanceName: data.instanceName.present
           ? data.instanceName.value
           : this.instanceName,
       shortCode: data.shortCode.present ? data.shortCode.value : this.shortCode,
+      returnedAt: data.returnedAt.present
+          ? data.returnedAt.value
+          : this.returnedAt,
+      baseAmount: data.baseAmount.present
+          ? data.baseAmount.value
+          : this.baseAmount,
+      lateAmount: data.lateAmount.present
+          ? data.lateAmount.value
+          : this.lateAmount,
+      depositApplied: data.depositApplied.present
+          ? data.depositApplied.value
+          : this.depositApplied,
     );
   }
 
   @override
   String toString() {
     return (StringBuffer('RentalItemRow(')
+          ..write('id: $id, ')
           ..write('rentalId: $rentalId, ')
           ..write('itemId: $itemId, ')
           ..write('instanceName: $instanceName, ')
-          ..write('shortCode: $shortCode')
+          ..write('shortCode: $shortCode, ')
+          ..write('returnedAt: $returnedAt, ')
+          ..write('baseAmount: $baseAmount, ')
+          ..write('lateAmount: $lateAmount, ')
+          ..write('depositApplied: $depositApplied')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(rentalId, itemId, instanceName, shortCode);
+  int get hashCode => Object.hash(
+    id,
+    rentalId,
+    itemId,
+    instanceName,
+    shortCode,
+    returnedAt,
+    baseAmount,
+    lateAmount,
+    depositApplied,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is RentalItemRow &&
+          other.id == this.id &&
           other.rentalId == this.rentalId &&
           other.itemId == this.itemId &&
           other.instanceName == this.instanceName &&
-          other.shortCode == this.shortCode);
+          other.shortCode == this.shortCode &&
+          other.returnedAt == this.returnedAt &&
+          other.baseAmount == this.baseAmount &&
+          other.lateAmount == this.lateAmount &&
+          other.depositApplied == this.depositApplied);
 }
 
 class RentalItemsCompanion extends UpdateCompanion<RentalItemRow> {
+  final Value<String> id;
   final Value<String> rentalId;
   final Value<String> itemId;
   final Value<String> instanceName;
   final Value<String> shortCode;
+  final Value<DateTime?> returnedAt;
+  final Value<int> baseAmount;
+  final Value<int> lateAmount;
+  final Value<int> depositApplied;
   final Value<int> rowid;
   const RentalItemsCompanion({
+    this.id = const Value.absent(),
     this.rentalId = const Value.absent(),
     this.itemId = const Value.absent(),
     this.instanceName = const Value.absent(),
     this.shortCode = const Value.absent(),
+    this.returnedAt = const Value.absent(),
+    this.baseAmount = const Value.absent(),
+    this.lateAmount = const Value.absent(),
+    this.depositApplied = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   RentalItemsCompanion.insert({
+    required String id,
     required String rentalId,
     required String itemId,
     this.instanceName = const Value.absent(),
     this.shortCode = const Value.absent(),
+    this.returnedAt = const Value.absent(),
+    this.baseAmount = const Value.absent(),
+    this.lateAmount = const Value.absent(),
+    this.depositApplied = const Value.absent(),
     this.rowid = const Value.absent(),
-  }) : rentalId = Value(rentalId),
+  }) : id = Value(id),
+       rentalId = Value(rentalId),
        itemId = Value(itemId);
   static Insertable<RentalItemRow> custom({
+    Expression<String>? id,
     Expression<String>? rentalId,
     Expression<String>? itemId,
     Expression<String>? instanceName,
     Expression<String>? shortCode,
+    Expression<DateTime>? returnedAt,
+    Expression<int>? baseAmount,
+    Expression<int>? lateAmount,
+    Expression<int>? depositApplied,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
+      if (id != null) 'id': id,
       if (rentalId != null) 'rental_id': rentalId,
       if (itemId != null) 'item_id': itemId,
       if (instanceName != null) 'instance_name': instanceName,
       if (shortCode != null) 'short_code': shortCode,
+      if (returnedAt != null) 'returned_at': returnedAt,
+      if (baseAmount != null) 'base_amount': baseAmount,
+      if (lateAmount != null) 'late_amount': lateAmount,
+      if (depositApplied != null) 'deposit_applied': depositApplied,
       if (rowid != null) 'rowid': rowid,
     });
   }
 
   RentalItemsCompanion copyWith({
+    Value<String>? id,
     Value<String>? rentalId,
     Value<String>? itemId,
     Value<String>? instanceName,
     Value<String>? shortCode,
+    Value<DateTime?>? returnedAt,
+    Value<int>? baseAmount,
+    Value<int>? lateAmount,
+    Value<int>? depositApplied,
     Value<int>? rowid,
   }) {
     return RentalItemsCompanion(
+      id: id ?? this.id,
       rentalId: rentalId ?? this.rentalId,
       itemId: itemId ?? this.itemId,
       instanceName: instanceName ?? this.instanceName,
       shortCode: shortCode ?? this.shortCode,
+      returnedAt: returnedAt ?? this.returnedAt,
+      baseAmount: baseAmount ?? this.baseAmount,
+      lateAmount: lateAmount ?? this.lateAmount,
+      depositApplied: depositApplied ?? this.depositApplied,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -2301,6 +2599,9 @@ class RentalItemsCompanion extends UpdateCompanion<RentalItemRow> {
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
     if (rentalId.present) {
       map['rental_id'] = Variable<String>(rentalId.value);
     }
@@ -2313,6 +2614,18 @@ class RentalItemsCompanion extends UpdateCompanion<RentalItemRow> {
     if (shortCode.present) {
       map['short_code'] = Variable<String>(shortCode.value);
     }
+    if (returnedAt.present) {
+      map['returned_at'] = Variable<DateTime>(returnedAt.value);
+    }
+    if (baseAmount.present) {
+      map['base_amount'] = Variable<int>(baseAmount.value);
+    }
+    if (lateAmount.present) {
+      map['late_amount'] = Variable<int>(lateAmount.value);
+    }
+    if (depositApplied.present) {
+      map['deposit_applied'] = Variable<int>(depositApplied.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -2322,10 +2635,15 @@ class RentalItemsCompanion extends UpdateCompanion<RentalItemRow> {
   @override
   String toString() {
     return (StringBuffer('RentalItemsCompanion(')
+          ..write('id: $id, ')
           ..write('rentalId: $rentalId, ')
           ..write('itemId: $itemId, ')
           ..write('instanceName: $instanceName, ')
           ..write('shortCode: $shortCode, ')
+          ..write('returnedAt: $returnedAt, ')
+          ..write('baseAmount: $baseAmount, ')
+          ..write('lateAmount: $lateAmount, ')
+          ..write('depositApplied: $depositApplied, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -4005,6 +4323,7 @@ typedef $$RentalsTableCreateCompanionBuilder =
       Value<int> totalAmount,
       Value<int> depositApplied,
       Value<int> durationUnits,
+      Value<String?> replacedFromRentalId,
       Value<int> rowid,
     });
 typedef $$RentalsTableUpdateCompanionBuilder =
@@ -4024,6 +4343,7 @@ typedef $$RentalsTableUpdateCompanionBuilder =
       Value<int> totalAmount,
       Value<int> depositApplied,
       Value<int> durationUnits,
+      Value<String?> replacedFromRentalId,
       Value<int> rowid,
     });
 
@@ -4108,6 +4428,11 @@ class $$RentalsTableFilterComposer
 
   ColumnFilters<int> get durationUnits => $composableBuilder(
     column: $table.durationUnits,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get replacedFromRentalId => $composableBuilder(
+    column: $table.replacedFromRentalId,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -4195,6 +4520,11 @@ class $$RentalsTableOrderingComposer
     column: $table.durationUnits,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get replacedFromRentalId => $composableBuilder(
+    column: $table.replacedFromRentalId,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$RentalsTableAnnotationComposer
@@ -4270,6 +4600,11 @@ class $$RentalsTableAnnotationComposer
     column: $table.durationUnits,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get replacedFromRentalId => $composableBuilder(
+    column: $table.replacedFromRentalId,
+    builder: (column) => column,
+  );
 }
 
 class $$RentalsTableTableManager
@@ -4315,6 +4650,7 @@ class $$RentalsTableTableManager
                 Value<int> totalAmount = const Value.absent(),
                 Value<int> depositApplied = const Value.absent(),
                 Value<int> durationUnits = const Value.absent(),
+                Value<String?> replacedFromRentalId = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => RentalsCompanion(
                 id: id,
@@ -4332,6 +4668,7 @@ class $$RentalsTableTableManager
                 totalAmount: totalAmount,
                 depositApplied: depositApplied,
                 durationUnits: durationUnits,
+                replacedFromRentalId: replacedFromRentalId,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -4351,6 +4688,7 @@ class $$RentalsTableTableManager
                 Value<int> totalAmount = const Value.absent(),
                 Value<int> depositApplied = const Value.absent(),
                 Value<int> durationUnits = const Value.absent(),
+                Value<String?> replacedFromRentalId = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => RentalsCompanion.insert(
                 id: id,
@@ -4368,6 +4706,7 @@ class $$RentalsTableTableManager
                 totalAmount: totalAmount,
                 depositApplied: depositApplied,
                 durationUnits: durationUnits,
+                replacedFromRentalId: replacedFromRentalId,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -4394,18 +4733,28 @@ typedef $$RentalsTableProcessedTableManager =
     >;
 typedef $$RentalItemsTableCreateCompanionBuilder =
     RentalItemsCompanion Function({
+      required String id,
       required String rentalId,
       required String itemId,
       Value<String> instanceName,
       Value<String> shortCode,
+      Value<DateTime?> returnedAt,
+      Value<int> baseAmount,
+      Value<int> lateAmount,
+      Value<int> depositApplied,
       Value<int> rowid,
     });
 typedef $$RentalItemsTableUpdateCompanionBuilder =
     RentalItemsCompanion Function({
+      Value<String> id,
       Value<String> rentalId,
       Value<String> itemId,
       Value<String> instanceName,
       Value<String> shortCode,
+      Value<DateTime?> returnedAt,
+      Value<int> baseAmount,
+      Value<int> lateAmount,
+      Value<int> depositApplied,
       Value<int> rowid,
     });
 
@@ -4418,6 +4767,11 @@ class $$RentalItemsTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<String> get rentalId => $composableBuilder(
     column: $table.rentalId,
     builder: (column) => ColumnFilters(column),
@@ -4437,6 +4791,26 @@ class $$RentalItemsTableFilterComposer
     column: $table.shortCode,
     builder: (column) => ColumnFilters(column),
   );
+
+  ColumnFilters<DateTime> get returnedAt => $composableBuilder(
+    column: $table.returnedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get baseAmount => $composableBuilder(
+    column: $table.baseAmount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get lateAmount => $composableBuilder(
+    column: $table.lateAmount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get depositApplied => $composableBuilder(
+    column: $table.depositApplied,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$RentalItemsTableOrderingComposer
@@ -4448,6 +4822,11 @@ class $$RentalItemsTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get rentalId => $composableBuilder(
     column: $table.rentalId,
     builder: (column) => ColumnOrderings(column),
@@ -4467,6 +4846,26 @@ class $$RentalItemsTableOrderingComposer
     column: $table.shortCode,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<DateTime> get returnedAt => $composableBuilder(
+    column: $table.returnedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get baseAmount => $composableBuilder(
+    column: $table.baseAmount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get lateAmount => $composableBuilder(
+    column: $table.lateAmount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get depositApplied => $composableBuilder(
+    column: $table.depositApplied,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$RentalItemsTableAnnotationComposer
@@ -4478,6 +4877,9 @@ class $$RentalItemsTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
   GeneratedColumn<String> get rentalId =>
       $composableBuilder(column: $table.rentalId, builder: (column) => column);
 
@@ -4491,6 +4893,26 @@ class $$RentalItemsTableAnnotationComposer
 
   GeneratedColumn<String> get shortCode =>
       $composableBuilder(column: $table.shortCode, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get returnedAt => $composableBuilder(
+    column: $table.returnedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get baseAmount => $composableBuilder(
+    column: $table.baseAmount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get lateAmount => $composableBuilder(
+    column: $table.lateAmount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get depositApplied => $composableBuilder(
+    column: $table.depositApplied,
+    builder: (column) => column,
+  );
 }
 
 class $$RentalItemsTableTableManager
@@ -4524,30 +4946,50 @@ class $$RentalItemsTableTableManager
               $$RentalItemsTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
+                Value<String> id = const Value.absent(),
                 Value<String> rentalId = const Value.absent(),
                 Value<String> itemId = const Value.absent(),
                 Value<String> instanceName = const Value.absent(),
                 Value<String> shortCode = const Value.absent(),
+                Value<DateTime?> returnedAt = const Value.absent(),
+                Value<int> baseAmount = const Value.absent(),
+                Value<int> lateAmount = const Value.absent(),
+                Value<int> depositApplied = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => RentalItemsCompanion(
+                id: id,
                 rentalId: rentalId,
                 itemId: itemId,
                 instanceName: instanceName,
                 shortCode: shortCode,
+                returnedAt: returnedAt,
+                baseAmount: baseAmount,
+                lateAmount: lateAmount,
+                depositApplied: depositApplied,
                 rowid: rowid,
               ),
           createCompanionCallback:
               ({
+                required String id,
                 required String rentalId,
                 required String itemId,
                 Value<String> instanceName = const Value.absent(),
                 Value<String> shortCode = const Value.absent(),
+                Value<DateTime?> returnedAt = const Value.absent(),
+                Value<int> baseAmount = const Value.absent(),
+                Value<int> lateAmount = const Value.absent(),
+                Value<int> depositApplied = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => RentalItemsCompanion.insert(
+                id: id,
                 rentalId: rentalId,
                 itemId: itemId,
                 instanceName: instanceName,
                 shortCode: shortCode,
+                returnedAt: returnedAt,
+                baseAmount: baseAmount,
+                lateAmount: lateAmount,
+                depositApplied: depositApplied,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

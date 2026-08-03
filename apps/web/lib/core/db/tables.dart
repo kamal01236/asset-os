@@ -59,6 +59,8 @@ class Rentals extends Table {
   IntColumn get depositApplied => integer().withDefault(const Constant(0))();
   /// Chosen duration (e.g. 1 week → 1; fixed due-days still stored here).
   IntColumn get durationUnits => integer().withDefault(const Constant(1))();
+  /// Set when this rental was opened as a replacement for a line on another rental.
+  TextColumn get replacedFromRentalId => text().nullable()();
 
   @override
   Set<Column<Object>> get primaryKey => <Column<Object>>{id};
@@ -66,15 +68,25 @@ class Rentals extends Table {
 
 @DataClassName('RentalItemRow')
 class RentalItems extends Table {
+  /// Line id (e.g. RLI-…); allows multiple units of the same catalog item.
+  TextColumn get id => text()();
   TextColumn get rentalId => text().references(Rentals, #id)();
   TextColumn get itemId => text().references(InventoryItems, #id)();
   /// Copy/title for this issue (e.g. novel title); not inventory master.
   TextColumn get instanceName => text().withDefault(const Constant(''))();
-  /// Short tracking code unique among active rental lines (case-insensitive).
+  /// Short tracking code unique among open rental lines (case-insensitive).
   TextColumn get shortCode => text().withDefault(const Constant('LEGACY'))();
+  /// Null while the line is still out; set on partial or full return.
+  DateTimeColumn get returnedAt => dateTime().nullable()();
+  /// Line base charge in paise (snapshot at issue).
+  IntColumn get baseAmount => integer().withDefault(const Constant(0))();
+  /// Finalized late fee in paise (set on return).
+  IntColumn get lateAmount => integer().withDefault(const Constant(0))();
+  /// Deposit applied from wallet for this line (paise).
+  IntColumn get depositApplied => integer().withDefault(const Constant(0))();
 
   @override
-  Set<Column<Object>> get primaryKey => <Column<Object>>{rentalId, itemId};
+  Set<Column<Object>> get primaryKey => <Column<Object>>{id};
 }
 
 @DataClassName('RentalEventRow')

@@ -1519,6 +1519,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{phone} • Existing • Deposit {amount}'**
   String existingCustomerWithDeposit(String phone, String amount);
+
+  /// No description provided for @returnSelectedAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Return selected'**
+  String get returnSelectedAction;
+
+  /// No description provided for @returnAllAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Return all'**
+  String get returnAllAction;
+
+  /// No description provided for @replaceLineAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace'**
+  String get replaceLineAction;
+
+  /// No description provided for @selectLinesToReturn.
+  ///
+  /// In en, this message translates to:
+  /// **'Select lines to return'**
+  String get selectLinesToReturn;
+
+  /// No description provided for @openLinesHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Out'**
+  String get openLinesHeading;
+
+  /// No description provided for @returnedLinesHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Returned'**
+  String get returnedLinesHeading;
+
+  /// No description provided for @lineReturnedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Returned'**
+  String get lineReturnedLabel;
+
+  /// No description provided for @lineOpenLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Out'**
+  String get lineOpenLabel;
+
+  /// No description provided for @partialReturnSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Returned {count} item(s). Rental still active.'**
+  String partialReturnSnack(int count);
+
+  /// No description provided for @replaceFlowTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace item'**
+  String get replaceFlowTitle;
+
+  /// No description provided for @replaceSettlementIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Settle the old item, then issue a replacement.'**
+  String get replaceSettlementIntro;
+
+  /// No description provided for @replaceConfirmAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace & issue'**
+  String get replaceConfirmAction;
+
+  /// No description provided for @replaceSuccessSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Settled old line; opened {newId}. Deposit balance {balance}.'**
+  String replaceSuccessSnack(String newId, String balance);
+
+  /// No description provided for @noLinesSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'Select at least one item to return.'**
+  String get noLinesSelected;
+
+  /// No description provided for @linesOpenCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{open} of {total} still out'**
+  String linesOpenCount(int open, int total);
+
+  /// No description provided for @lineChargePreview.
+  ///
+  /// In en, this message translates to:
+  /// **'{label}: {amount}'**
+  String lineChargePreview(String label, String amount);
 }
 
 class _AppLocalizationsDelegate

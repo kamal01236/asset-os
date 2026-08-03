@@ -518,5 +518,44 @@
       "phone": {"type": "String"},
       "amount": {"type": "String"}
     }
+  },
+  "returnSelectedAction": "Return selected",
+  "returnAllAction": "Return all",
+  "replaceLineAction": "Replace",
+  "selectLinesToReturn": "Select lines to return",
+  "openLinesHeading": "Out",
+  "returnedLinesHeading": "Returned",
+  "lineReturnedLabel": "Returned",
+  "lineOpenLabel": "Out",
+  "partialReturnSnack": "Returned {count} item(s). Rental still active.",
+  "@partialReturnSnack": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "replaceFlowTitle": "Replace item",
+  "replaceSettlementIntro": "Settle the old item, then issue a replacement.",
+  "replaceConfirmAction": "Replace & issue",
+  "replaceSuccessSnack": "Settled old line; opened {newId}. Deposit balance {balance}.",
+  "@replaceSuccessSnack": {
+    "placeholders": {
+      "newId": {"type": "String"},
+      "balance": {"type": "String"}
+    }
+  },
+  "noLinesSelected": "Select at least one item to return.",
+  "linesOpenCount": "{open} of {total} still out",
+  "@linesOpenCount": {
+    "placeholders": {
+      "open": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "lineChargePreview": "{label}: {amount}",
+  "@lineChargePreview": {
+    "placeholders": {
+      "label": {"type": "String"},
+      "amount": {"type": "String"}
+    }
   }
 }

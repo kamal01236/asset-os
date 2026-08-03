@@ -350,9 +350,7 @@ class RentalsScreen extends ConsumerWidget {
               ),
             );
             return EntityCard(
-              title: rental.lines.isNotEmpty
-                  ? rental.lines.map((RentalLine line) => line.displayLabel).join(', ')
-                  : rental.id,
+              title: _rentalLinesLabel(rental),
               subtitle:
                   '${rentalPartyLabel(customer, rental)} · ${_rentalAmountSubtitle(l10n, rental)}',
               leadingIcon: Icons.assignment_outlined,
@@ -641,7 +639,7 @@ class GlobalActionsButton extends StatelessWidget {
   }
 }
 
-class RentalDetailScreen extends ConsumerWidget {
+class RentalDetailScreen extends ConsumerStatefulWidget {
   const RentalDetailScreen({
     required this.rentalId,
     super.key,
@@ -650,7 +648,14 @@ class RentalDetailScreen extends ConsumerWidget {
   final String rentalId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<RentalDetailScreen> createState() => _RentalDetailScreenState();
+}
+
+class _RentalDetailScreenState extends ConsumerState<RentalDetailScreen> {
+  final Set<String> _selectedLineIds = <String>{};
+
+  @override
+  Widget build(BuildContext context) {
     final AppLocalizations l10n = context.l10n;
     final AsyncValue<List<Rental>> rentalsAsync = ref.watch(rentalsProvider);
     final AsyncValue<List<Customer>> customersAsync = ref.watch(customersProvider);
@@ -662,11 +667,17 @@ class RentalDetailScreen extends ConsumerWidget {
     final List<Rental> rentals = rentalsAsync.valueOrNull ?? const <Rental>[];
     final List<Customer> customers = customersAsync.valueOrNull ?? const <Customer>[];
 
-    final Rental rental = rentals.firstWhere((item) => item.id == rentalId);
+    final Rental rental = rentals.firstWhere((item) => item.id == widget.rentalId);
     final Customer customer = customers.firstWhere((item) => item.id == rental.customerId);
     final DateTime now = DateTime.now();
     final int lateShown = rental.lateAmountAsOf(now);
     final int totalShown = rental.totalAmountAsOf(now);
+    final List<RentalLine> openLines = rental.openLines;
+    final List<RentalLine> closedLines = rental.returnedLines;
+    final Set<String> openIds =
+        openLines.map((RentalLine l) => l.id).toSet();
+    final Set<String> selectedIds =
+        _selectedLineIds.where(openIds.contains).toSet();
 
     return Scaffold(
       appBar: AppBar(title: Text(rental.id)),
@@ -681,6 +692,13 @@ class RentalDetailScreen extends ConsumerWidget {
             leadingIcon: Icons.person_outline,
             status: rental.statusFor(now),
           ),
+          if (rental.replacedFromRentalId != null) ...<Widget>[
+            const SizedBox(height: 8),
+            Text(
+              '← ${rental.replacedFromRentalId}',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
           const SizedBox(height: 10),
           Card(
             child: Padding(
@@ -689,11 +707,67 @@ class RentalDetailScreen extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Text(l10n.itemsHeading, style: Theme.of(context).textTheme.titleSmall),
-                  const SizedBox(height: 6),
-                  ...rental.lines.map((RentalLine line) => Padding(
-                    padding: const EdgeInsets.only(bottom: 4),
-                    child: Text('• ${line.displayLabel}'),
-                  )),
+                  if (rental.isActive && openLines.isNotEmpty) ...<Widget>[
+                    const SizedBox(height: 4),
+                    Text(
+                      l10n.linesOpenCount(openLines.length, rental.lines.length),
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(l10n.selectLinesToReturn),
+                    ...openLines.map((RentalLine line) {
+                      final bool selected = selectedIds.contains(line.id);
+                      final int lineTotal = line.totalAmountAsOf(rental.dueAt, now);
+                      return CheckboxListTile(
+                        contentPadding: EdgeInsets.zero,
+                        dense: true,
+                        value: selected,
+                        onChanged: (bool? value) {
+                          setState(() {
+                            if (value == true) {
+                              _selectedLineIds.add(line.id);
+                            } else {
+                              _selectedLineIds.remove(line.id);
+                            }
+                          });
+                        },
+                        title: Text(line.displayLabel),
+                        subtitle: Text(
+                          '${l10n.lineOpenLabel} · ${formatMoney(lineTotal)}',
+                        ),
+                        secondary: TextButton(
+                          onPressed: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute<void>(
+                                builder: (_) => ReplaceLineFlowScreen(
+                                  rentalId: rental.id,
+                                  lineId: line.id,
+                                ),
+                              ),
+                            );
+                          },
+                          child: Text(l10n.replaceLineAction),
+                        ),
+                      );
+                    }),
+                  ],
+                  if (closedLines.isNotEmpty) ...<Widget>[
+                    const SizedBox(height: 8),
+                    Text(
+                      l10n.returnedLinesHeading,
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                    ...closedLines.map(
+                      (RentalLine line) => Padding(
+                        padding: const EdgeInsets.only(bottom: 4, top: 4),
+                        child: Text(
+                          '• ${line.displayLabel} — ${l10n.lineReturnedLabel} · '
+                          '${formatMoney(line.totalAmount)}'
+                          '${line.depositApplied > 0 ? ' · ${l10n.depositAppliedLabel(formatMoney(line.depositApplied))}' : ''}',
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -732,12 +806,20 @@ class RentalDetailScreen extends ConsumerWidget {
                     ),
                     Builder(
                       builder: (BuildContext context) {
-                        final int willApply = customer.depositBalance < totalShown
+                        final List<RentalLine> settleLines = selectedIds.isEmpty
+                            ? openLines
+                            : openLines
+                                .where((RentalLine l) => selectedIds.contains(l.id))
+                                .toList();
+                        int previewTotal = 0;
+                        for (final RentalLine line in settleLines) {
+                          previewTotal += line.totalAmountAsOf(rental.dueAt, now);
+                        }
+                        final int willApply = customer.depositBalance < previewTotal
                             ? customer.depositBalance
-                            : totalShown;
-                        final int remainingDue = totalShown - willApply;
-                        final int leftover =
-                            customer.depositBalance - willApply;
+                            : previewTotal;
+                        final int remainingDue = previewTotal - willApply;
+                        final int leftover = customer.depositBalance - willApply;
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
@@ -769,12 +851,11 @@ class RentalDetailScreen extends ConsumerWidget {
                           formatMoney(rental.depositApplied),
                         ),
                       ),
-                    if (!rental.isActive)
-                      Text(
-                        l10n.depositNetDueLabel(
-                          formatMoney(rental.amountDueAfterDeposit),
-                        ),
+                    Text(
+                      l10n.depositNetDueLabel(
+                        formatMoney(rental.amountDueAfterDeposit),
                       ),
+                    ),
                   ],
                 ],
               ),
@@ -796,53 +877,72 @@ class RentalDetailScreen extends ConsumerWidget {
           ),
         ],
       ),
-      bottomNavigationBar: SafeArea(
-        minimum: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-        child: Row(
-          children: <Widget>[
-            Expanded(
-              child: OutlinedButton(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(l10n.extendPlaceholder)),
-                  );
-                },
-                child: Text(l10n.extendAction),
+      bottomNavigationBar: rental.isActive
+          ? SafeArea(
+              minimum: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: Row(
+                children: <Widget>[
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: openLines.isEmpty
+                          ? null
+                          : () async {
+                              final bool done = await _confirmAndReturnRental(
+                                context: context,
+                                ref: ref,
+                                rental: rental,
+                                customer: customer,
+                                lineIds: openLines
+                                    .map((RentalLine l) => l.id)
+                                    .toList(),
+                              );
+                              if (done && context.mounted) {
+                                Navigator.of(context).pop();
+                              }
+                            },
+                      child: Text(l10n.returnAllAction),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: selectedIds.isEmpty
+                          ? null
+                          : () async {
+                              final bool done = await _confirmAndReturnRental(
+                                context: context,
+                                ref: ref,
+                                rental: rental,
+                                customer: customer,
+                                lineIds: selectedIds.toList(),
+                              );
+                              if (!done || !mounted) {
+                                return;
+                              }
+                              final Rental? updated = (await ref
+                                      .read(repositoryProvider)
+                                      .listRentals())
+                                  .cast<Rental?>()
+                                  .firstWhere(
+                                    (Rental? r) => r?.id == rental.id,
+                                    orElse: () => null,
+                                  );
+                              if (!mounted) {
+                                return;
+                              }
+                              if (updated == null || !updated.isActive) {
+                                Navigator.of(this.context).pop();
+                              } else {
+                                setState(() => _selectedLineIds.clear());
+                              }
+                            },
+                      child: Text(l10n.returnSelectedAction),
+                    ),
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: OutlinedButton(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(l10n.sharePlaceholder)),
-                  );
-                },
-                child: Text(l10n.shareAction),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: FilledButton(
-                onPressed: rental.isActive
-                    ? () async {
-                        final bool done = await _confirmAndReturnRental(
-                          context: context,
-                          ref: ref,
-                          rental: rental,
-                          customer: customer,
-                        );
-                        if (done && context.mounted) {
-                          Navigator.of(context).pop();
-                        }
-                      }
-                    : null,
-                child: Text(l10n.actionReturn),
-              ),
-            ),
-          ],
-        ),
-      ),
+            )
+          : null,
     );
   }
 }
@@ -1283,9 +1383,7 @@ class CustomerDetailScreen extends ConsumerWidget {
             (rental) => Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: EntityCard(
-                title: rental.lines.isNotEmpty
-                    ? rental.lines.map((RentalLine line) => line.displayLabel).join(', ')
-                    : rental.id,
+                title: _rentalLinesLabel(rental),
                 subtitle: _rentalAmountSubtitle(l10n, rental),
                 leadingIcon: Icons.assignment_outlined,
                 status: rental.statusFor(DateTime.now()),
@@ -1388,9 +1486,7 @@ class _UniversalSearchScreenState extends ConsumerState<UniversalSearchScreen> {
             title: l10n.searchSectionCurrentRentals,
             items: _results.currentRentals,
             itemBuilder: (rental) => EntityCard(
-              title: rental.lines.isNotEmpty
-                  ? rental.lines.map((RentalLine line) => line.displayLabel).join(', ')
-                  : rental.id,
+              title: _rentalLinesLabel(rental),
               subtitle: _rentalAmountSubtitle(l10n, rental),
               leadingIcon: Icons.assignment_outlined,
               status: rental.statusFor(DateTime.now()),
@@ -1407,9 +1503,7 @@ class _UniversalSearchScreenState extends ConsumerState<UniversalSearchScreen> {
             title: l10n.searchSectionPreviousRentals,
             items: _results.previousRentals,
             itemBuilder: (rental) => EntityCard(
-              title: rental.lines.isNotEmpty
-                  ? rental.lines.map((RentalLine line) => line.displayLabel).join(', ')
-                  : rental.id,
+              title: _rentalLinesLabel(rental),
               subtitle: <String>[
                 l10n.returnedDate(_date(rental.returnedAt ?? rental.dueAt)),
                 if (rental.depositApplied > 0)
@@ -2107,6 +2201,7 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
                           _lineCharge(item, _previewDue(selectedItems));
                       return Text(
                         '• ${RentalLine(
+                          id: 'preview-${item.id}',
                           itemId: item.id,
                           catalogName: item.name,
                           instanceName: name,
@@ -2260,6 +2355,257 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
   }
 }
 
+class ReplaceLineFlowScreen extends ConsumerStatefulWidget {
+  const ReplaceLineFlowScreen({
+    required this.rentalId,
+    required this.lineId,
+    super.key,
+  });
+
+  final String rentalId;
+  final String lineId;
+
+  @override
+  ConsumerState<ReplaceLineFlowScreen> createState() =>
+      _ReplaceLineFlowScreenState();
+}
+
+class _ReplaceLineFlowScreenState extends ConsumerState<ReplaceLineFlowScreen> {
+  final TextEditingController _instanceNameController = TextEditingController();
+  final TextEditingController _shortCodeController = TextEditingController();
+  final TextEditingController _durationController =
+      TextEditingController(text: '1');
+  String? _selectedItemId;
+  DateTime? _customEnd;
+  bool _submitting = false;
+
+  @override
+  void dispose() {
+    _instanceNameController.dispose();
+    _shortCodeController.dispose();
+    _durationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final AppLocalizations l10n = context.l10n;
+    final AsyncValue<List<Rental>> rentalsAsync = ref.watch(rentalsProvider);
+    final AsyncValue<List<InventoryItem>> inventoryAsync =
+        ref.watch(inventoryProvider);
+    final AsyncValue<List<Customer>> customersAsync =
+        ref.watch(customersProvider);
+
+    if (rentalsAsync.isLoading ||
+        inventoryAsync.isLoading ||
+        customersAsync.isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    final Rental rental = (rentalsAsync.valueOrNull ?? const <Rental>[])
+        .firstWhere((Rental r) => r.id == widget.rentalId);
+    final RentalLine line = rental.lines.firstWhere(
+      (RentalLine l) => l.id == widget.lineId,
+    );
+    final Customer customer = (customersAsync.valueOrNull ?? const <Customer>[])
+        .firstWhere((Customer c) => c.id == rental.customerId);
+    final List<InventoryItem> available = (inventoryAsync.valueOrNull ??
+            const <InventoryItem>[])
+        .where((InventoryItem i) => i.availableUnits > 0)
+        .toList();
+    final InventoryItem? selected = _selectedItemId == null
+        ? null
+        : available.cast<InventoryItem?>().firstWhere(
+              (InventoryItem? i) => i?.id == _selectedItemId,
+              orElse: () => null,
+            );
+    final DateTime now = DateTime.now();
+    final int oldCharge = line.totalAmountAsOf(rental.dueAt, now);
+
+    return Scaffold(
+      appBar: AppBar(title: Text(l10n.replaceFlowTitle)),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: <Widget>[
+          Text(l10n.replaceSettlementIntro),
+          const SizedBox(height: 8),
+          Text(
+            l10n.lineChargePreview(line.displayLabel, formatMoney(oldCharge)),
+          ),
+          Text(
+            l10n.depositAvailableLabel(formatMoney(customer.depositBalance)),
+          ),
+          const SizedBox(height: 16),
+          Text(l10n.reviewItemsLabel),
+          const SizedBox(height: 8),
+          ...available.map(
+            (InventoryItem item) => ListTile(
+              leading: Icon(
+                _selectedItemId == item.id
+                    ? Icons.radio_button_checked
+                    : Icons.radio_button_off,
+              ),
+              title: Text(item.name),
+              subtitle: Text(
+                l10n.inventoryAvailableSubtitle(
+                  item.category,
+                  item.availableUnits,
+                  item.totalUnits,
+                ),
+              ),
+              onTap: () => setState(() => _selectedItemId = item.id),
+            ),
+          ),
+          if (selected != null) ...<Widget>[
+            const SizedBox(height: 8),
+            TextField(
+              controller: _instanceNameController,
+              decoration: InputDecoration(
+                labelText: l10n.instanceNameLabel,
+                hintText: l10n.instanceNameHint,
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _shortCodeController,
+              decoration: InputDecoration(
+                labelText: l10n.shortCodeLabel,
+                hintText: l10n.shortCodeHint,
+              ),
+            ),
+            const SizedBox(height: 8),
+            if (selected.billingMode == BillingMode.custom)
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(l10n.customEndDateLabel),
+                subtitle: Text(
+                  _customEnd == null ? '—' : _date(_customEnd!),
+                ),
+                trailing: const Icon(Icons.calendar_today_outlined),
+                onTap: () async {
+                  final DateTime today = DateTime.now();
+                  final DateTime? picked = await showDatePicker(
+                    context: context,
+                    initialDate: _customEnd ?? today,
+                    firstDate: today,
+                    lastDate: today.add(const Duration(days: 365 * 2)),
+                  );
+                  if (picked != null) {
+                    setState(() => _customEnd = picked);
+                  }
+                },
+              )
+            else
+              TextField(
+                controller: _durationController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: switch (selected.billingMode) {
+                    BillingMode.daily => l10n.durationUnitsDaily,
+                    BillingMode.weekly => l10n.durationUnitsWeekly,
+                    BillingMode.monthly => l10n.durationUnitsMonthly,
+                    BillingMode.fixed => l10n.durationUnitsFixed,
+                    BillingMode.custom => l10n.durationUnitsLabel,
+                  },
+                ),
+              ),
+          ],
+        ],
+      ),
+      bottomNavigationBar: SafeArea(
+        minimum: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        child: FilledButton(
+          onPressed: _submitting || selected == null
+              ? null
+              : () async {
+                  final String instanceName =
+                      _instanceNameController.text.trim();
+                  final String shortCode =
+                      LocalRepository.normalizeShortCode(
+                    _shortCodeController.text,
+                  );
+                  if (instanceName.isEmpty || shortCode.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(l10n.instanceLabelsRequired)),
+                    );
+                    return;
+                  }
+                  if (selected.billingMode == BillingMode.custom &&
+                      _customEnd == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(l10n.customEndRequired)),
+                    );
+                    return;
+                  }
+                  final int units =
+                      int.tryParse(_durationController.text.trim()) ?? 1;
+                  setState(() => _submitting = true);
+                  try {
+                    final String? nick = isSelfCustomer(customer)
+                        ? rental.nickname
+                        : null;
+                    final RentalReplaceResult? result = await ref
+                        .read(repositoryProvider)
+                        .replaceRentalLine(
+                          rentalId: rental.id,
+                          lineId: line.id,
+                          newLine: RentalLineInput(
+                            itemId: selected.id,
+                            instanceName: instanceName,
+                            shortCode: shortCode,
+                          ),
+                          nickname: nick,
+                          durationUnits: units < 1 ? 1 : units,
+                          customEnd: selected.billingMode == BillingMode.custom
+                              ? _customEnd
+                              : null,
+                          billingModeOverride: selected.billingMode,
+                        );
+                    if (!context.mounted) {
+                      return;
+                    }
+                    if (result == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(l10n.rentalReturned(rental.id))),
+                      );
+                      return;
+                    }
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          l10n.replaceSuccessSnack(
+                            result.newRentalId,
+                            formatMoney(
+                              result.returnResult.depositBalanceAfter,
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                    Navigator.of(context).pop();
+                  } on DuplicateActiveShortCodeException catch (error) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            l10n.duplicateShortCode(error.shortCode),
+                          ),
+                        ),
+                      );
+                    }
+                  } finally {
+                    if (mounted) {
+                      setState(() => _submitting = false);
+                    }
+                  }
+                },
+          child: Text(l10n.replaceConfirmAction),
+        ),
+      ),
+    );
+  }
+}
+
 class ReturnFlowScreen extends ConsumerWidget {
   const ReturnFlowScreen({super.key});
 
@@ -2304,29 +2650,32 @@ class ReturnFlowScreen extends ConsumerWidget {
                       final int willApply = customer.depositBalance < total
                           ? customer.depositBalance
                           : total;
+                      final String openBit = rental.openLines.length < rental.lines.length
+                          ? l10n.linesOpenCount(
+                              rental.openLines.length,
+                              rental.lines.length,
+                            )
+                          : '';
                       return EntityCard(
-                        title: rental.lines.isNotEmpty
-                            ? rental.lines
-                                .map((RentalLine line) => line.displayLabel)
-                                .join(', ')
-                            : rental.id,
+                        title: _rentalLinesLabel(rental),
                         subtitle: <String>[
                           l10n.rentalAmountSubtitle(
                             _date(rental.dueAt),
                             formatMoney(total),
                           ),
+                          if (openBit.isNotEmpty) openBit,
                           if (customer.depositBalance > 0)
                             l10n.depositWillApplyLabel(formatMoney(willApply)),
                         ].join('\n'),
                         leadingIcon: Icons.assignment_return_outlined,
                         status: rental.statusFor(now),
                         trailing: FilledButton(
-                          onPressed: () async {
-                            await _confirmAndReturnRental(
-                              context: context,
-                              ref: ref,
-                              rental: rental,
-                              customer: customer,
+                          onPressed: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute<void>(
+                                builder: (_) =>
+                                    RentalDetailScreen(rentalId: rental.id),
+                              ),
                             );
                           },
                           child: Text(l10n.actionReturn),
@@ -2631,6 +2980,17 @@ class _StubScaffold extends StatelessWidget {
   }
 }
 
+String _rentalLinesLabel(Rental rental) {
+  final List<RentalLine> preferred =
+      rental.isActive ? rental.openLines : rental.lines;
+  final List<RentalLine> source =
+      preferred.isNotEmpty ? preferred : rental.lines;
+  if (source.isEmpty) {
+    return rental.id;
+  }
+  return source.map((RentalLine line) => line.displayLabel).join(', ');
+}
+
 String _date(DateTime value) {
   return '${value.day.toString().padLeft(2, '0')}/${value.month.toString().padLeft(2, '0')}/${value.year}';
 }
@@ -2682,10 +3042,29 @@ Future<bool> _confirmAndReturnRental({
   required WidgetRef ref,
   required Rental rental,
   required Customer customer,
+  List<String>? lineIds,
 }) async {
   final AppLocalizations l10n = context.l10n;
   final DateTime now = DateTime.now();
-  final int total = rental.totalAmountAsOf(now);
+  final List<RentalLine> targets;
+  if (lineIds == null || lineIds.isEmpty) {
+    targets = rental.openLines;
+  } else {
+    final Set<String> wanted = lineIds.toSet();
+    targets =
+        rental.openLines.where((RentalLine l) => wanted.contains(l.id)).toList();
+  }
+  if (targets.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l10n.noLinesSelected)),
+    );
+    return false;
+  }
+
+  int total = 0;
+  for (final RentalLine line in targets) {
+    total += line.totalAmountAsOf(rental.dueAt, now);
+  }
   final int willApply =
       customer.depositBalance < total ? customer.depositBalance : total;
   final int remainingDue = total - willApply;
@@ -2696,20 +3075,31 @@ Future<bool> _confirmAndReturnRental({
     builder: (BuildContext dialogContext) {
       return AlertDialog(
         title: Text(l10n.returnSettlementTitle),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Text(l10n.chargeTotalLabel(formatMoney(total))),
-            Text(
-              l10n.depositAvailableLabel(formatMoney(customer.depositBalance)),
-            ),
-            Text(l10n.depositWillApplyLabel(formatMoney(willApply))),
-            if (remainingDue > 0)
-              Text(l10n.depositRemainingDueLabel(formatMoney(remainingDue)))
-            else if (leftover > 0)
-              Text(l10n.depositLeftoverLabel(formatMoney(leftover))),
-          ],
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              ...targets.map(
+                (RentalLine line) => Text(
+                  l10n.lineChargePreview(
+                    line.displayLabel,
+                    formatMoney(line.totalAmountAsOf(rental.dueAt, now)),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(l10n.chargeTotalLabel(formatMoney(total))),
+              Text(
+                l10n.depositAvailableLabel(formatMoney(customer.depositBalance)),
+              ),
+              Text(l10n.depositWillApplyLabel(formatMoney(willApply))),
+              if (remainingDue > 0)
+                Text(l10n.depositRemainingDueLabel(formatMoney(remainingDue)))
+              else if (leftover > 0)
+                Text(l10n.depositLeftoverLabel(formatMoney(leftover))),
+            ],
+          ),
         ),
         actions: <Widget>[
           TextButton(
@@ -2728,8 +3118,12 @@ Future<bool> _confirmAndReturnRental({
     return false;
   }
 
-  final RentalReturnResult? result =
-      await ref.read(repositoryProvider).returnRental(rental.id);
+  final RentalReturnResult? result = await ref
+      .read(repositoryProvider)
+      .returnRentalLines(
+        rental.id,
+        targets.map((RentalLine l) => l.id).toList(),
+      );
   if (!context.mounted) {
     return result != null;
   }
@@ -2739,8 +3133,12 @@ Future<bool> _confirmAndReturnRental({
     );
     return false;
   }
+  final String snack = result.rentalClosed
+      ? _returnSettlementSnack(l10n, result)
+      : '${l10n.partialReturnSnack(result.returnedLineIds.length)} '
+          '${_returnSettlementSnack(l10n, result)}';
   ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(content: Text(_returnSettlementSnack(l10n, result))),
+    SnackBar(content: Text(snack)),
   );
   return true;
 }

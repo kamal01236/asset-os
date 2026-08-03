@@ -141,13 +141,14 @@ class LocalRepository {
   /// Normalize short codes for storage and uniqueness checks.
   static String normalizeShortCode(String value) => value.trim().toUpperCase();
 
-  Future<void> createRental({
+  Future<String> createRental({
     required Customer customer,
     required List<RentalLineInput> lines,
     String? nickname,
     int durationUnits = 1,
     DateTime? customEnd,
     BillingMode? billingModeOverride,
+    String? replacedFromRentalId,
   }) async {
     final String? trimmedNick = nickname?.trim();
     final String? storedNick =
@@ -185,6 +186,10 @@ class LocalRepository {
     final String rentalId = 'REN-${now.millisecondsSinceEpoch}';
     final String qrCode = 'rental:${now.millisecondsSinceEpoch}';
     final int units = durationUnits < 1 ? 1 : durationUnits;
+    final String? replacedFrom =
+        (replacedFromRentalId != null && replacedFromRentalId.trim().isNotEmpty)
+            ? replacedFromRentalId.trim()
+            : null;
 
     await _db.transaction(() async {
       for (final RentalLineInput line in normalized) {
@@ -192,14 +197,28 @@ class LocalRepository {
       }
 
       final List<InventoryItemRow> itemRows = <InventoryItemRow>[];
+      final Map<String, int> neededByItem = <String, int>{};
       for (final RentalLineInput line in normalized) {
+        neededByItem[line.itemId] = (neededByItem[line.itemId] ?? 0) + 1;
+      }
+      final Map<String, InventoryItemRow> itemById = <String, InventoryItemRow>{};
+      for (final String itemId in neededByItem.keys) {
         final InventoryItemRow? row = await (_db.select(_db.inventoryItems)
-              ..where((t) => t.id.equals(line.itemId)))
+              ..where((t) => t.id.equals(itemId)))
             .getSingleOrNull();
         if (row == null) {
-          throw ArgumentError('Inventory item not found: ${line.itemId}');
+          throw ArgumentError('Inventory item not found: $itemId');
         }
-        itemRows.add(row);
+        if (row.availableUnits < neededByItem[itemId]!) {
+          throw ArgumentError(
+            'Not enough units available for ${row.name} '
+            '(need ${neededByItem[itemId]}, have ${row.availableUnits})',
+          );
+        }
+        itemById[itemId] = row;
+      }
+      for (final RentalLineInput line in normalized) {
+        itemRows.add(itemById[line.itemId]!);
       }
 
       // v1: duration UI follows primary (first) item mode; charges are per-line.
@@ -212,16 +231,19 @@ class LocalRepository {
         customEnd: customEnd,
       );
 
+      final List<int> lineBaseAmounts = <int>[];
       int baseAmount = 0;
       int lateFeePerDay = 0;
       for (final InventoryItemRow row in itemRows) {
         final BillingMode lineMode = BillingMode.parse(row.billingMode);
-        baseAmount += computeBaseAmount(
+        final int lineBase = computeBaseAmount(
           mode: lineMode,
           rateAmount: row.rateAmount,
           start: now,
           due: dueAt,
         );
+        lineBaseAmounts.add(lineBase);
+        baseAmount += lineBase;
         lateFeePerDay += row.lateFeePerDay;
       }
 
@@ -240,23 +262,34 @@ class LocalRepository {
           lateAmount: const Value<int>(0),
           totalAmount: Value<int>(baseAmount),
           durationUnits: Value<int>(units),
+          replacedFromRentalId: Value<String?>(replacedFrom),
         ),
       );
+
+      final Map<String, int> remainingByItem = <String, int>{
+        for (final MapEntry<String, InventoryItemRow> e in itemById.entries)
+          e.key: e.value.availableUnits,
+      };
 
       for (var i = 0; i < normalized.length; i++) {
         final RentalLineInput line = normalized[i];
         final InventoryItemRow row = itemRows[i];
+        final String lineId =
+            'RLI-${now.millisecondsSinceEpoch}-${i.toString().padLeft(2, '0')}';
         await _db.into(_db.rentalItems).insert(
           RentalItemsCompanion.insert(
+            id: lineId,
             rentalId: rentalId,
             itemId: line.itemId,
             instanceName: Value<String>(line.instanceName),
             shortCode: Value<String>(line.shortCode),
+            baseAmount: Value<int>(lineBaseAmounts[i]),
           ),
         );
 
         final int nextAvailable =
-            (row.availableUnits - 1).clamp(0, row.totalUnits);
+            (remainingByItem[line.itemId]! - 1).clamp(0, row.totalUnits);
+        remainingByItem[line.itemId] = nextAvailable;
         await (_db.update(_db.inventoryItems)..where((t) => t.id.equals(line.itemId)))
             .write(
           InventoryItemsCompanion(
@@ -273,33 +306,56 @@ class LocalRepository {
       await _db.into(_db.rentalEvents).insert(
         RentalEventsCompanion.insert(
           rentalId: rentalId,
-          title: 'Rental opened',
-          subtitle: 'Created from phone-first quick flow.',
+          title: replacedFrom != null ? 'Replacement opened' : 'Rental opened',
+          subtitle: replacedFrom != null
+              ? 'Replacement for $replacedFrom.'
+              : 'Created from phone-first quick flow.',
           at: now,
         ),
       );
     });
+
+    return rentalId;
   }
 
   Future<void> _assertShortCodeAvailable(String normalizedCode) async {
     final List<RentalItemRow> links = await _db.select(_db.rentalItems).get();
     for (final RentalItemRow link in links) {
+      if (link.returnedAt != null) {
+        continue;
+      }
       if (normalizeShortCode(link.shortCode) != normalizedCode) {
         continue;
       }
-      final RentalRow? rental = await (_db.select(_db.rentals)
-            ..where((t) => t.id.equals(link.rentalId)))
-          .getSingleOrNull();
-      if (rental != null && rental.returnedAt == null) {
-        throw DuplicateActiveShortCodeException(normalizedCode);
-      }
+      throw DuplicateActiveShortCodeException(normalizedCode);
     }
   }
 
-  /// Settles charges from the customer deposit wallet on return.
-  /// Returns null if the rental is missing or already returned.
+  /// Returns all open lines on the rental (full return).
   Future<RentalReturnResult?> returnRental(String rentalId) async {
+    final Rental? rental = await _findRental(rentalId);
+    if (rental == null || !rental.isActive) {
+      return null;
+    }
+    final List<String> openIds =
+        rental.openLines.map((RentalLine l) => l.id).toList();
+    if (openIds.isEmpty) {
+      return null;
+    }
+    return returnRentalLines(rentalId, openIds);
+  }
+
+  /// Settles selected open lines; closes parent when none remain open.
+  Future<RentalReturnResult?> returnRentalLines(
+    String rentalId,
+    List<String> lineIds,
+  ) async {
+    if (lineIds.isEmpty) {
+      return null;
+    }
     final DateTime now = DateTime.now();
+    final Set<String> wanted = lineIds.toSet();
+
     return _db.transaction(() async {
       final RentalRow? rental = await (_db.select(_db.rentals)
             ..where((t) => t.id.equals(rentalId)))
@@ -308,76 +364,95 @@ class LocalRepository {
         return null;
       }
 
-      final int lateAmount = computeLateAmount(
-        due: rental.dueAt,
-        asOf: now,
-        lateFeePerDay: rental.lateFeePerDay,
-      );
-      final int totalAmount = computeTotalAmount(
-        baseAmount: rental.baseAmount,
-        lateAmount: lateAmount,
-      );
-
-      final CustomerRow? customer = await (_db.select(_db.customers)
-            ..where((t) => t.id.equals(rental.customerId)))
-          .getSingleOrNull();
-      final int depositBalance = customer?.depositBalance ?? 0;
-      final int depositApplied =
-          depositBalance < totalAmount ? depositBalance : totalAmount;
-      final int balanceAfter = depositBalance - depositApplied;
-
-      await (_db.update(_db.rentals)..where((t) => t.id.equals(rentalId))).write(
-        RentalsCompanion(
-          returnedAt: Value<DateTime?>(now),
-          lateAmount: Value<int>(lateAmount),
-          totalAmount: Value<int>(totalAmount),
-          depositApplied: Value<int>(depositApplied),
-        ),
-      );
-
-      if (customer != null && depositApplied > 0) {
-        await (_db.update(_db.customers)
-              ..where((t) => t.id.equals(customer.id)))
-            .write(
-          CustomersCompanion(depositBalance: Value<int>(balanceAfter)),
-        );
-        await _db.into(_db.depositLedger).insert(
-          DepositLedgerCompanion.insert(
-            id: 'DEP-${now.millisecondsSinceEpoch}',
-            customerId: customer.id,
-            rentalId: Value<String?>(rentalId),
-            type: DepositLedgerType.apply.storageValue,
-            amount: -depositApplied,
-            balanceAfter: balanceAfter,
-            note: const Value<String?>('Applied on return'),
-            at: now,
-          ),
-        );
-      }
-
-      await _db.into(_db.rentalEvents).insert(
-        RentalEventsCompanion.insert(
-          rentalId: rentalId,
-          title: 'Returned',
-          subtitle: lateAmount > 0
-              ? 'Marked as returned by staff. Late fee applied.'
-              : 'Marked as returned by staff.',
-          at: now,
-        ),
-      );
-
       final List<RentalItemRow> links = await (_db.select(_db.rentalItems)
             ..where((t) => t.rentalId.equals(rentalId)))
           .get();
-      for (final RentalItemRow link in links) {
+      final List<RentalItemRow> toReturn = links
+          .where(
+            (RentalItemRow link) =>
+                wanted.contains(link.id) && link.returnedAt == null,
+          )
+          .toList();
+      if (toReturn.isEmpty) {
+        return null;
+      }
+
+      CustomerRow? customer = await (_db.select(_db.customers)
+            ..where((t) => t.id.equals(rental.customerId)))
+          .getSingleOrNull();
+      int depositBalance = customer?.depositBalance ?? 0;
+
+      int batchTotal = 0;
+      int batchDeposit = 0;
+      final List<String> returnedIds = <String>[];
+      final Map<String, int> stockBump = <String, int>{};
+
+      for (final RentalItemRow link in toReturn) {
         final InventoryItemRow? item = await (_db.select(_db.inventoryItems)
               ..where((t) => t.id.equals(link.itemId)))
+            .getSingleOrNull();
+        final int lineBase = link.baseAmount;
+        final int lineLate = computeLateAmount(
+          due: rental.dueAt,
+          asOf: now,
+          lateFeePerDay: item?.lateFeePerDay ?? 0,
+        );
+        final int lineTotal = computeTotalAmount(
+          baseAmount: lineBase,
+          lateAmount: lineLate,
+        );
+        final int lineDeposit =
+            depositBalance < lineTotal ? depositBalance : lineTotal;
+        depositBalance -= lineDeposit;
+        batchTotal += lineTotal;
+        batchDeposit += lineDeposit;
+        returnedIds.add(link.id);
+
+        await (_db.update(_db.rentalItems)..where((t) => t.id.equals(link.id)))
+            .write(
+          RentalItemsCompanion(
+            returnedAt: Value<DateTime?>(now),
+            lateAmount: Value<int>(lineLate),
+            depositApplied: Value<int>(lineDeposit),
+          ),
+        );
+
+        if (item != null) {
+          stockBump[item.id] = (stockBump[item.id] ?? 0) + 1;
+        }
+
+        if (customer != null && lineDeposit > 0) {
+          await (_db.update(_db.customers)
+                ..where((t) => t.id.equals(customer.id)))
+              .write(
+            CustomersCompanion(depositBalance: Value<int>(depositBalance)),
+          );
+          await _db.into(_db.depositLedger).insert(
+            DepositLedgerCompanion.insert(
+              id: 'DEP-${now.millisecondsSinceEpoch}-${link.id}',
+              customerId: customer.id,
+              rentalId: Value<String?>(rentalId),
+              type: DepositLedgerType.apply.storageValue,
+              amount: -lineDeposit,
+              balanceAfter: depositBalance,
+              note: Value<String?>('Applied on return of ${link.shortCode}'),
+              at: now,
+            ),
+          );
+        }
+      }
+
+      for (final MapEntry<String, int> bump in stockBump.entries) {
+        final InventoryItemRow? item = await (_db.select(_db.inventoryItems)
+              ..where((t) => t.id.equals(bump.key)))
             .getSingleOrNull();
         if (item == null) {
           continue;
         }
-        final int nextAvailable = (item.availableUnits + 1).clamp(0, item.totalUnits);
-        await (_db.update(_db.inventoryItems)..where((t) => t.id.equals(item.id))).write(
+        final int nextAvailable =
+            (item.availableUnits + bump.value).clamp(0, item.totalUnits);
+        await (_db.update(_db.inventoryItems)..where((t) => t.id.equals(item.id)))
+            .write(
           InventoryItemsCompanion(
             availableUnits: Value<int>(nextAvailable),
             status: Value<String>(AssetStatus.available.name),
@@ -385,13 +460,130 @@ class LocalRepository {
         );
       }
 
+      final List<RentalItemRow> refreshed = await (_db.select(_db.rentalItems)
+            ..where((t) => t.rentalId.equals(rentalId)))
+          .get();
+      final bool allReturned =
+          refreshed.every((RentalItemRow l) => l.returnedAt != null);
+
+      int parentBase = 0;
+      int parentLate = 0;
+      int parentDeposit = 0;
+      int openLateFeePerDay = 0;
+      for (final RentalItemRow link in refreshed) {
+        parentBase += link.baseAmount;
+        parentLate += link.lateAmount;
+        parentDeposit += link.depositApplied;
+        if (link.returnedAt == null) {
+          final InventoryItemRow? item = await (_db.select(_db.inventoryItems)
+                ..where((t) => t.id.equals(link.itemId)))
+              .getSingleOrNull();
+          openLateFeePerDay += item?.lateFeePerDay ?? 0;
+        }
+      }
+      final int parentTotal = parentBase + parentLate;
+
+      await (_db.update(_db.rentals)..where((t) => t.id.equals(rentalId))).write(
+        RentalsCompanion(
+          returnedAt: Value<DateTime?>(allReturned ? now : null),
+          baseAmount: Value<int>(parentBase),
+          lateAmount: Value<int>(parentLate),
+          totalAmount: Value<int>(parentTotal),
+          depositApplied: Value<int>(parentDeposit),
+          lateFeePerDay: Value<int>(
+            allReturned ? rental.lateFeePerDay : openLateFeePerDay,
+          ),
+        ),
+      );
+
+      final String subtitle = allReturned
+          ? (batchTotal > parentBase
+                ? 'All lines returned. Late fee applied.'
+                : 'All lines returned by staff.')
+          : 'Returned ${returnedIds.length} of ${refreshed.length} lines.';
+
+      await _db.into(_db.rentalEvents).insert(
+        RentalEventsCompanion.insert(
+          rentalId: rentalId,
+          title: allReturned ? 'Returned' : 'Partial return',
+          subtitle: subtitle,
+          at: now,
+        ),
+      );
+
       return RentalReturnResult(
         rentalId: rentalId,
-        totalAmount: totalAmount,
-        depositApplied: depositApplied,
-        depositBalanceAfter: balanceAfter,
+        totalAmount: batchTotal,
+        depositApplied: batchDeposit,
+        depositBalanceAfter: depositBalance,
+        returnedLineIds: returnedIds,
+        rentalClosed: allReturned,
       );
     });
+  }
+
+  /// Return one open line and open a replacement rental for the same customer.
+  Future<RentalReplaceResult?> replaceRentalLine({
+    required String rentalId,
+    required String lineId,
+    required RentalLineInput newLine,
+    String? nickname,
+    int durationUnits = 1,
+    DateTime? customEnd,
+    BillingMode? billingModeOverride,
+  }) async {
+    final Rental? rental = await _findRental(rentalId);
+    if (rental == null || !rental.isActive) {
+      return null;
+    }
+    final bool hasLine = rental.openLines.any((RentalLine l) => l.id == lineId);
+    if (!hasLine) {
+      return null;
+    }
+
+    final Customer? customer = await customerById(rental.customerId);
+    if (customer == null) {
+      throw ArgumentError('Customer not found: ${rental.customerId}');
+    }
+
+    final RentalReturnResult? returned =
+        await returnRentalLines(rentalId, <String>[lineId]);
+    if (returned == null) {
+      return null;
+    }
+
+    final String? nick = nickname ?? rental.nickname;
+    final String newRentalId = await createRental(
+      customer: customer,
+      lines: <RentalLineInput>[newLine],
+      nickname: isSelfCustomer(customer) ? nick : nickname,
+      durationUnits: durationUnits,
+      customEnd: customEnd,
+      billingModeOverride: billingModeOverride,
+      replacedFromRentalId: rentalId,
+    );
+
+    return RentalReplaceResult(
+      returnResult: returned,
+      newRentalId: newRentalId,
+    );
+  }
+
+  Future<Rental?> _findRental(String rentalId) async {
+    final RentalRow? row = await (_db.select(_db.rentals)
+          ..where((t) => t.id.equals(rentalId)))
+        .getSingleOrNull();
+    if (row == null) {
+      return null;
+    }
+    return _mapRental(row);
+  }
+
+  Future<Customer?> customerById(String customerId) async {
+    final CustomerRow? row = await (_db.select(_db.customers)
+          ..where((t) => t.id.equals(customerId)))
+        .getSingleOrNull();
+    return row == null ? null : _mapCustomer(row);
   }
 
   /// Credit the customer deposit wallet. [amountPaise] must be &gt; 0.
@@ -704,10 +896,14 @@ class LocalRepository {
       }
       for (final RentalLine line in rental.lines) {
         if (line.instanceName.toLowerCase().contains(q) ||
-            line.shortCode.toLowerCase().contains(q) ||
-            line.catalogName.toLowerCase().contains(q) ||
-            line.displayLabel.toLowerCase().contains(q)) {
+            line.catalogName.toLowerCase().contains(q)) {
           return true;
+        }
+        // Short codes: open lines for active rentals; any line when closed.
+        if (line.shortCode.toLowerCase().contains(q)) {
+          if (!rental.isActive || line.isOpen) {
+            return true;
+          }
         }
       }
       return false;
@@ -800,21 +996,33 @@ class LocalRepository {
             totalAmount: Value<int>(rental.totalAmount),
             depositApplied: Value<int>(rental.depositApplied),
             durationUnits: Value<int>(rental.durationUnits),
+            replacedFromRentalId: Value<String?>(rental.replacedFromRentalId),
           ),
         );
-        for (final RentalLine line in rental.lines) {
+        for (var i = 0; i < rental.lines.length; i++) {
+          final RentalLine line = rental.lines[i];
           final String instanceName = line.instanceName.trim().isEmpty
               ? line.catalogName.trim()
               : line.instanceName.trim();
           final String shortCode = LocalRepository.normalizeShortCode(
             line.shortCode.trim().isEmpty ? 'LEGACY' : line.shortCode,
           );
+          final String lineId = line.id.trim().isEmpty
+              ? 'RLI-${rental.id}-$i'
+              : line.id;
+          final DateTime? lineReturned =
+              line.returnedAt ?? rental.returnedAt;
           await _db.into(_db.rentalItems).insertOnConflictUpdate(
             RentalItemsCompanion.insert(
+              id: lineId,
               rentalId: rental.id,
               itemId: line.itemId,
               instanceName: Value<String>(instanceName),
               shortCode: Value<String>(shortCode),
+              returnedAt: Value<DateTime?>(lineReturned),
+              baseAmount: Value<int>(line.baseAmount),
+              lateAmount: Value<int>(line.lateAmount),
+              depositApplied: Value<int>(line.depositApplied),
             ),
           );
         }
@@ -916,10 +1124,16 @@ class LocalRepository {
           .getSingleOrNull();
       lines.add(
         RentalLine(
+          id: link.id,
           itemId: link.itemId,
           catalogName: item?.name ?? link.itemId,
           instanceName: link.instanceName,
           shortCode: link.shortCode,
+          returnedAt: link.returnedAt,
+          baseAmount: link.baseAmount,
+          lateAmount: link.lateAmount,
+          depositApplied: link.depositApplied,
+          lateFeePerDay: item?.lateFeePerDay ?? 0,
         ),
       );
     }
@@ -941,6 +1155,7 @@ class LocalRepository {
       totalAmount: row.totalAmount,
       depositApplied: row.depositApplied,
       durationUnits: row.durationUnits,
+      replacedFromRentalId: row.replacedFromRentalId,
       timeline: events
           .map(
             (event) => RentalEvent(
@@ -1027,10 +1242,13 @@ AppDataSnapshot buildDemoSnapshot({DateTime? now}) {
       customerId: seedCustomers[1].id,
       lines: const <RentalLine>[
         RentalLine(
+          id: 'RLI-REN-3001-INV-2002',
           itemId: 'INV-2002',
           catalogName: 'Drill Kit',
           instanceName: 'Workshop set A',
           shortCode: 'DRL-001',
+          baseAmount: 50000,
+          lateFeePerDay: 5000,
         ),
       ],
       startedAt: clock.subtract(const Duration(days: 2)),
@@ -1059,12 +1277,16 @@ AppDataSnapshot buildDemoSnapshot({DateTime? now}) {
     Rental(
       id: 'REN-3002',
       customerId: seedCustomers[2].id,
-      lines: const <RentalLine>[
+      lines: <RentalLine>[
         RentalLine(
+          id: 'RLI-REN-3002-INV-2001',
           itemId: 'INV-2001',
           catalogName: 'DSLR',
           instanceName: 'Body unit 1',
           shortCode: 'CAM-001',
+          baseAmount: 600000,
+          lateFeePerDay: 20000,
+          returnedAt: clock.subtract(const Duration(days: 1)),
         ),
       ],
       startedAt: clock.subtract(const Duration(days: 5)),

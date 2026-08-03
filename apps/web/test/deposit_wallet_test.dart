@@ -282,10 +282,10 @@ void main() {
       );
     });
 
-    test('schema v5 includes deposit columns and ledger table', () async {
+    test('schema v6 includes deposit columns and ledger table', () async {
       final AppDatabase db = AppDatabase(NativeDatabase.memory());
       addTearDown(db.close);
-      expect(db.schemaVersion, 5);
+      expect(db.schemaVersion, 6);
 
       await db.into(db.customers).insert(
         CustomersCompanion.insert(

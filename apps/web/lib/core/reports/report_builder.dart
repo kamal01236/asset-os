@@ -160,17 +160,19 @@ class ReportBuilder {
       for (final Rental rental in byCustomer[customerId]!) {
         final String itemNames = rental.lines
             .map((RentalLine line) {
+              final String statusBit = line.isOpen ? '' : ' [returned]';
               if (line.catalogName.trim().isEmpty) {
                 final String fallback =
                     itemsById[line.itemId]?.name ?? line.itemId;
-                return RentalLine(
+                return '${RentalLine(
+                  id: line.id,
                   itemId: line.itemId,
                   catalogName: fallback,
                   instanceName: line.instanceName,
                   shortCode: line.shortCode,
-                ).displayLabel;
+                ).displayLabel}$statusBit';
               }
-              return line.displayLabel;
+              return '${line.displayLabel}$statusBit';
             })
             .join(', ');
         final AssetStatus status = rental.statusFor(clock);
@@ -179,11 +181,16 @@ class ReportBuilder {
         final int amount = rental.isActive
             ? rental.totalAmountAsOf(clock)
             : rental.totalAmount;
-        final String depositBit = !rental.isActive && rental.depositApplied > 0
+        final int openCount = rental.openLines.length;
+        final int returnedCount = rental.returnedLines.length;
+        final String partialBit = rental.isActive && returnedCount > 0
+            ? ' | lines $openCount open/$returnedCount returned'
+            : '';
+        final String depositBit = rental.depositApplied > 0
             ? ' | deposit ${formatMoney(rental.depositApplied)} | due ${formatMoney(rental.amountDueAfterDeposit)}'
             : '';
         lines.add(
-          '  • $prefix${rental.id}: $itemNames | due ${_formatDate(rental.dueAt)} | ${status.label} | ${formatMoney(amount)}$depositBit',
+          '  • $prefix${rental.id}: $itemNames | due ${_formatDate(rental.dueAt)} | ${status.label} | ${formatMoney(amount)}$partialBit$depositBit',
         );
       }
     }
@@ -215,7 +222,7 @@ class ReportBuilder {
     }
 
     for (final Rental rental in rentals.where((Rental r) => r.isActive)) {
-      for (final RentalLine line in rental.lines) {
+      for (final RentalLine line in rental.openLines) {
         unitsOut[line.itemId] = (unitsOut[line.itemId] ?? 0) + 1;
         final String label = line.instanceName.trim().isEmpty
             ? line.shortCode
