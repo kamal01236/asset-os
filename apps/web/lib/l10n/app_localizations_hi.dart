@@ -297,6 +297,34 @@ class AppLocalizationsHi extends AppLocalizations {
   String get customerNameNewHint => 'केवल नए ग्राहक के लिए आवश्यक';
 
   @override
+  String get selfKnownQuickPick => 'SELF Known';
+
+  @override
+  String get rentalNicknameLabel => 'इस किराये का उपनाम';
+
+  @override
+  String get rentalNicknameHint => 'वस्तुएँ कौन ले जा रहा है?';
+
+  @override
+  String get rentalNicknameRequired =>
+      'SELF Known किराये के लिए उपनाम दर्ज करें।';
+
+  @override
+  String reviewNickname(String nickname, String customerName) {
+    return 'उपनाम: $nickname · $customerName';
+  }
+
+  @override
+  String rentalNicknameSubtitle(String customerName, String phone) {
+    return '$customerName · $phone';
+  }
+
+  @override
+  String rentalNicknameDueSubtitle(String nickname, String date) {
+    return '$nickname • देय $date';
+  }
+
+  @override
   String get selectItems => 'वस्तुएँ चुनें';
 
   @override

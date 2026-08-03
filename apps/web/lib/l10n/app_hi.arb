@@ -144,6 +144,31 @@
   },
   "customerNameNewLabel": "ग्राहक का नाम (नया)",
   "customerNameNewHint": "केवल नए ग्राहक के लिए आवश्यक",
+  "selfKnownQuickPick": "SELF Known",
+  "rentalNicknameLabel": "इस किराये का उपनाम",
+  "rentalNicknameHint": "वस्तुएँ कौन ले जा रहा है?",
+  "rentalNicknameRequired": "SELF Known किराये के लिए उपनाम दर्ज करें।",
+  "reviewNickname": "उपनाम: {nickname} · {customerName}",
+  "@reviewNickname": {
+    "placeholders": {
+      "nickname": {"type": "String"},
+      "customerName": {"type": "String"}
+    }
+  },
+  "rentalNicknameSubtitle": "{customerName} · {phone}",
+  "@rentalNicknameSubtitle": {
+    "placeholders": {
+      "customerName": {"type": "String"},
+      "phone": {"type": "String"}
+    }
+  },
+  "rentalNicknameDueSubtitle": "{nickname} • देय {date}",
+  "@rentalNicknameDueSubtitle": {
+    "placeholders": {
+      "nickname": {"type": "String"},
+      "date": {"type": "String"}
+    }
+  },
   "selectItems": "वस्तुएँ चुनें",
   "itemAvailableCount": "{category} • {available} उपलब्ध",
   "@itemAvailableCount": {

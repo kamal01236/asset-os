@@ -932,6 +932,17 @@ class $RentalsTable extends Rentals with TableInfo<$RentalsTable, RentalRow> {
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _nicknameMeta = const VerificationMeta(
+    'nickname',
+  );
+  @override
+  late final GeneratedColumn<String> nickname = GeneratedColumn<String>(
+    'nickname',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -940,6 +951,7 @@ class $RentalsTable extends Rentals with TableInfo<$RentalsTable, RentalRow> {
     dueAt,
     returnedAt,
     qrCode,
+    nickname,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -996,6 +1008,12 @@ class $RentalsTable extends Rentals with TableInfo<$RentalsTable, RentalRow> {
     } else if (isInserting) {
       context.missing(_qrCodeMeta);
     }
+    if (data.containsKey('nickname')) {
+      context.handle(
+        _nicknameMeta,
+        nickname.isAcceptableOrUnknown(data['nickname']!, _nicknameMeta),
+      );
+    }
     return context;
   }
 
@@ -1029,6 +1047,10 @@ class $RentalsTable extends Rentals with TableInfo<$RentalsTable, RentalRow> {
         DriftSqlType.string,
         data['${effectivePrefix}qr_code'],
       )!,
+      nickname: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}nickname'],
+      ),
     );
   }
 
@@ -1045,6 +1067,9 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
   final DateTime dueAt;
   final DateTime? returnedAt;
   final String qrCode;
+
+  /// Per-rental display name (required when issuing to SELF Known).
+  final String? nickname;
   const RentalRow({
     required this.id,
     required this.customerId,
@@ -1052,6 +1077,7 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
     required this.dueAt,
     this.returnedAt,
     required this.qrCode,
+    this.nickname,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1064,6 +1090,9 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
       map['returned_at'] = Variable<DateTime>(returnedAt);
     }
     map['qr_code'] = Variable<String>(qrCode);
+    if (!nullToAbsent || nickname != null) {
+      map['nickname'] = Variable<String>(nickname);
+    }
     return map;
   }
 
@@ -1077,6 +1106,9 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
           ? const Value.absent()
           : Value(returnedAt),
       qrCode: Value(qrCode),
+      nickname: nickname == null && nullToAbsent
+          ? const Value.absent()
+          : Value(nickname),
     );
   }
 
@@ -1092,6 +1124,7 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
       dueAt: serializer.fromJson<DateTime>(json['dueAt']),
       returnedAt: serializer.fromJson<DateTime?>(json['returnedAt']),
       qrCode: serializer.fromJson<String>(json['qrCode']),
+      nickname: serializer.fromJson<String?>(json['nickname']),
     );
   }
   @override
@@ -1104,6 +1137,7 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
       'dueAt': serializer.toJson<DateTime>(dueAt),
       'returnedAt': serializer.toJson<DateTime?>(returnedAt),
       'qrCode': serializer.toJson<String>(qrCode),
+      'nickname': serializer.toJson<String?>(nickname),
     };
   }
 
@@ -1114,6 +1148,7 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
     DateTime? dueAt,
     Value<DateTime?> returnedAt = const Value.absent(),
     String? qrCode,
+    Value<String?> nickname = const Value.absent(),
   }) => RentalRow(
     id: id ?? this.id,
     customerId: customerId ?? this.customerId,
@@ -1121,6 +1156,7 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
     dueAt: dueAt ?? this.dueAt,
     returnedAt: returnedAt.present ? returnedAt.value : this.returnedAt,
     qrCode: qrCode ?? this.qrCode,
+    nickname: nickname.present ? nickname.value : this.nickname,
   );
   RentalRow copyWithCompanion(RentalsCompanion data) {
     return RentalRow(
@@ -1134,6 +1170,7 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
           ? data.returnedAt.value
           : this.returnedAt,
       qrCode: data.qrCode.present ? data.qrCode.value : this.qrCode,
+      nickname: data.nickname.present ? data.nickname.value : this.nickname,
     );
   }
 
@@ -1145,14 +1182,22 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
           ..write('startedAt: $startedAt, ')
           ..write('dueAt: $dueAt, ')
           ..write('returnedAt: $returnedAt, ')
-          ..write('qrCode: $qrCode')
+          ..write('qrCode: $qrCode, ')
+          ..write('nickname: $nickname')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, customerId, startedAt, dueAt, returnedAt, qrCode);
+  int get hashCode => Object.hash(
+    id,
+    customerId,
+    startedAt,
+    dueAt,
+    returnedAt,
+    qrCode,
+    nickname,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1162,7 +1207,8 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
           other.startedAt == this.startedAt &&
           other.dueAt == this.dueAt &&
           other.returnedAt == this.returnedAt &&
-          other.qrCode == this.qrCode);
+          other.qrCode == this.qrCode &&
+          other.nickname == this.nickname);
 }
 
 class RentalsCompanion extends UpdateCompanion<RentalRow> {
@@ -1172,6 +1218,7 @@ class RentalsCompanion extends UpdateCompanion<RentalRow> {
   final Value<DateTime> dueAt;
   final Value<DateTime?> returnedAt;
   final Value<String> qrCode;
+  final Value<String?> nickname;
   final Value<int> rowid;
   const RentalsCompanion({
     this.id = const Value.absent(),
@@ -1180,6 +1227,7 @@ class RentalsCompanion extends UpdateCompanion<RentalRow> {
     this.dueAt = const Value.absent(),
     this.returnedAt = const Value.absent(),
     this.qrCode = const Value.absent(),
+    this.nickname = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   RentalsCompanion.insert({
@@ -1189,6 +1237,7 @@ class RentalsCompanion extends UpdateCompanion<RentalRow> {
     required DateTime dueAt,
     this.returnedAt = const Value.absent(),
     required String qrCode,
+    this.nickname = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        customerId = Value(customerId),
@@ -1202,6 +1251,7 @@ class RentalsCompanion extends UpdateCompanion<RentalRow> {
     Expression<DateTime>? dueAt,
     Expression<DateTime>? returnedAt,
     Expression<String>? qrCode,
+    Expression<String>? nickname,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -1211,6 +1261,7 @@ class RentalsCompanion extends UpdateCompanion<RentalRow> {
       if (dueAt != null) 'due_at': dueAt,
       if (returnedAt != null) 'returned_at': returnedAt,
       if (qrCode != null) 'qr_code': qrCode,
+      if (nickname != null) 'nickname': nickname,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -1222,6 +1273,7 @@ class RentalsCompanion extends UpdateCompanion<RentalRow> {
     Value<DateTime>? dueAt,
     Value<DateTime?>? returnedAt,
     Value<String>? qrCode,
+    Value<String?>? nickname,
     Value<int>? rowid,
   }) {
     return RentalsCompanion(
@@ -1231,6 +1283,7 @@ class RentalsCompanion extends UpdateCompanion<RentalRow> {
       dueAt: dueAt ?? this.dueAt,
       returnedAt: returnedAt ?? this.returnedAt,
       qrCode: qrCode ?? this.qrCode,
+      nickname: nickname ?? this.nickname,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1256,6 +1309,9 @@ class RentalsCompanion extends UpdateCompanion<RentalRow> {
     if (qrCode.present) {
       map['qr_code'] = Variable<String>(qrCode.value);
     }
+    if (nickname.present) {
+      map['nickname'] = Variable<String>(nickname.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -1271,6 +1327,7 @@ class RentalsCompanion extends UpdateCompanion<RentalRow> {
           ..write('dueAt: $dueAt, ')
           ..write('returnedAt: $returnedAt, ')
           ..write('qrCode: $qrCode, ')
+          ..write('nickname: $nickname, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -2536,6 +2593,7 @@ typedef $$RentalsTableCreateCompanionBuilder =
       required DateTime dueAt,
       Value<DateTime?> returnedAt,
       required String qrCode,
+      Value<String?> nickname,
       Value<int> rowid,
     });
 typedef $$RentalsTableUpdateCompanionBuilder =
@@ -2546,6 +2604,7 @@ typedef $$RentalsTableUpdateCompanionBuilder =
       Value<DateTime> dueAt,
       Value<DateTime?> returnedAt,
       Value<String> qrCode,
+      Value<String?> nickname,
       Value<int> rowid,
     });
 
@@ -2585,6 +2644,11 @@ class $$RentalsTableFilterComposer
 
   ColumnFilters<String> get qrCode => $composableBuilder(
     column: $table.qrCode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get nickname => $composableBuilder(
+    column: $table.nickname,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -2627,6 +2691,11 @@ class $$RentalsTableOrderingComposer
     column: $table.qrCode,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get nickname => $composableBuilder(
+    column: $table.nickname,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$RentalsTableAnnotationComposer
@@ -2659,6 +2728,9 @@ class $$RentalsTableAnnotationComposer
 
   GeneratedColumn<String> get qrCode =>
       $composableBuilder(column: $table.qrCode, builder: (column) => column);
+
+  GeneratedColumn<String> get nickname =>
+      $composableBuilder(column: $table.nickname, builder: (column) => column);
 }
 
 class $$RentalsTableTableManager
@@ -2695,6 +2767,7 @@ class $$RentalsTableTableManager
                 Value<DateTime> dueAt = const Value.absent(),
                 Value<DateTime?> returnedAt = const Value.absent(),
                 Value<String> qrCode = const Value.absent(),
+                Value<String?> nickname = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => RentalsCompanion(
                 id: id,
@@ -2703,6 +2776,7 @@ class $$RentalsTableTableManager
                 dueAt: dueAt,
                 returnedAt: returnedAt,
                 qrCode: qrCode,
+                nickname: nickname,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -2713,6 +2787,7 @@ class $$RentalsTableTableManager
                 required DateTime dueAt,
                 Value<DateTime?> returnedAt = const Value.absent(),
                 required String qrCode,
+                Value<String?> nickname = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => RentalsCompanion.insert(
                 id: id,
@@ -2721,6 +2796,7 @@ class $$RentalsTableTableManager
                 dueAt: dueAt,
                 returnedAt: returnedAt,
                 qrCode: qrCode,
+                nickname: nickname,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

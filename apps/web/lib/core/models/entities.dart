@@ -150,6 +150,7 @@ class Rental {
     required this.timeline,
     required this.qrCode,
     this.returnedAt,
+    this.nickname,
   });
 
   final String id;
@@ -160,6 +161,8 @@ class Rental {
   final DateTime? returnedAt;
   final List<RentalEvent> timeline;
   final String qrCode;
+  /// Per-rental nickname (used for SELF Known issues; not stored on customer).
+  final String? nickname;
 
   bool get isActive => returnedAt == null;
 
@@ -181,6 +184,7 @@ class Rental {
   Rental copyWith({
     DateTime? returnedAt,
     List<RentalEvent>? timeline,
+    String? nickname,
   }) => Rental(
     id: id,
     customerId: customerId,
@@ -190,6 +194,7 @@ class Rental {
     returnedAt: returnedAt ?? this.returnedAt,
     timeline: timeline ?? this.timeline,
     qrCode: qrCode,
+    nickname: nickname ?? this.nickname,
   );
 
   Map<String, dynamic> toJson() => <String, dynamic>{
@@ -201,6 +206,7 @@ class Rental {
     'returnedAt': returnedAt?.toIso8601String(),
     'timeline': timeline.map((event) => event.toJson()).toList(),
     'qrCode': qrCode,
+    'nickname': nickname,
   };
 
   factory Rental.fromJson(Map<String, dynamic> json) => Rental(
@@ -216,6 +222,7 @@ class Rental {
         .map((entry) => RentalEvent.fromJson(entry as Map<String, dynamic>))
         .toList(),
     qrCode: json['qrCode'] as String,
+    nickname: json['nickname'] as String?,
   );
 }
 

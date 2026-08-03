@@ -24,7 +24,7 @@ The Asset Handover Platform is an offline-first operational tool for physical as
 Use **Flutter** as the application framework, shipping **web first**.
 
 - Develop and validate in `apps/web`
-- Publish static Flutter web builds to **Fly.io** (nginx) for customer feedback
+- Publish static Flutter web builds to **GitHub Pages** for customer feedback
 - Defer native Android/iOS packaging until after feedback; platform choice remains open
 
 For broader local-first architecture, stack context (Riverpod, Drift, SQLCipher), and module layout, see [Complete Idea Summary §9 — System architecture & technology](../../vision/complete-idea-summary.md#9-system-architecture--technology).
@@ -36,7 +36,7 @@ For broader local-first architecture, stack context (Riverpod, Drift, SQLCipher)
 - **Single Dart codebase** can target web now and native later without rewriting core UX
 - **Strong local persistence options** (Drift, Isar, sqflite) support a local-first source of truth
 - **Mature plugin ecosystem** for QR, camera, and local notifications — needed when offline/native capabilities land
-- **Web delivery on Fly.io** enables sharing a public URL for feedback without app stores
+- **Web delivery on GitHub Pages** enables sharing a public URL for feedback without app stores
 
 ---
 
@@ -44,7 +44,7 @@ For broader local-first architecture, stack context (Riverpod, Drift, SQLCipher)
 
 - The **local database remains the intended source of truth**; any future sync layer is additive and must not be required for core workflows
 - Engineering skill and tooling center on Dart/Flutter for the client
-- Current scripts and docs assume **web only** (Chrome / web-server / Fly.io); no emulator or APK workflow
+- Current scripts and docs assume **web only** (Chrome / web-server / GitHub Pages); no emulator or APK workflow
 - Native packaging decisions stay deferred until after customer feedback
 
 ---

@@ -144,6 +144,31 @@
   },
   "customerNameNewLabel": "Customer name (new)",
   "customerNameNewHint": "Only needed if new customer",
+  "selfKnownQuickPick": "SELF Known",
+  "rentalNicknameLabel": "Nickname for this rental",
+  "rentalNicknameHint": "Who is taking the items?",
+  "rentalNicknameRequired": "Enter a nickname for SELF Known rentals.",
+  "reviewNickname": "Nickname: {nickname} · {customerName}",
+  "@reviewNickname": {
+    "placeholders": {
+      "nickname": {"type": "String"},
+      "customerName": {"type": "String"}
+    }
+  },
+  "rentalNicknameSubtitle": "{customerName} · {phone}",
+  "@rentalNicknameSubtitle": {
+    "placeholders": {
+      "customerName": {"type": "String"},
+      "phone": {"type": "String"}
+    }
+  },
+  "rentalNicknameDueSubtitle": "{nickname} • Due {date}",
+  "@rentalNicknameDueSubtitle": {
+    "placeholders": {
+      "nickname": {"type": "String"},
+      "date": {"type": "String"}
+    }
+  },
   "selectItems": "Select items",
   "itemAvailableCount": "{category} • {available} available",
   "@itemAvailableCount": {

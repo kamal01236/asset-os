@@ -30,7 +30,7 @@ In `apps/web`:
 
 - Core workflows no longer depend on SharedPreferences snapshots or `ChangeNotifier` app state.
 - Sync, SQLCipher encryption, real camera QR, notifications, reports, and native packaging remain **out of scope** (future ADRs).
-- Web deploys must serve `sqlite3.wasm` with `Content-Type: application/wasm` (see repo `nginx.conf`).
+- Web deploys must serve `sqlite3.wasm` with `Content-Type: application/wasm` (GitHub Pages does this in normal cases). SPA deep links on Pages use a copied `404.html` (same content as `index.html`) from the CI build.
 
 ---
 

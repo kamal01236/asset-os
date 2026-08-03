@@ -40,4 +40,4 @@ echo "  ./scripts/dev.sh servelocal"
 echo "  # from Windows PowerShell: .\\scripts\\wsl.ps1 servelocal"
 echo
 echo "Optional port: ./scripts/dev.sh servelocal 8787"
-echo "For a public feedback URL, use: ./scripts/flydeploy.sh"
+echo "Public preview: push to main → GitHub Pages (https://kamal01236.github.io/asset-os/)"

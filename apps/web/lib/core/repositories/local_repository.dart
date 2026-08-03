@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../db/app_database.dart';
 import '../models/entities.dart';
+import '../models/self_customer.dart';
 import '../templates/industry_templates.dart';
 
 class TemplateImportResult {
@@ -69,6 +70,7 @@ class LocalRepository {
       if (!alreadyMigrated) {
         await _markMigrationComplete();
       }
+      await ensureSelfCustomer();
       return;
     }
 
@@ -78,11 +80,34 @@ class LocalRepository {
       await _insertSnapshot(snapshot);
       await _markMigrationComplete();
       await _preferences.remove(snapshotKey);
+      await ensureSelfCustomer();
       return;
     }
 
     await _insertSnapshot(buildDemoSnapshot());
     await _markMigrationComplete();
+    await ensureSelfCustomer();
+  }
+
+  /// Inserts the fixed SELF Known sentinel if missing; never renames it.
+  Future<Customer> ensureSelfCustomer() async {
+    final CustomerRow? byId = await (_db.select(_db.customers)
+          ..where((t) => t.id.equals(kSelfCustomerId)))
+        .getSingleOrNull();
+    if (byId != null) {
+      return _mapCustomer(byId);
+    }
+
+    final CustomerRow? byPhone = await (_db.select(_db.customers)
+          ..where((t) => t.phone.equals(kSelfCustomerPhone)))
+        .getSingleOrNull();
+    if (byPhone != null) {
+      return _mapCustomer(byPhone);
+    }
+
+    final Customer self = buildSelfCustomer();
+    await _db.into(_db.customers).insert(_customerCompanion(self));
+    return self;
   }
 
   Stream<List<Customer>> watchCustomers() {
@@ -115,7 +140,17 @@ class LocalRepository {
   Future<void> createRental({
     required Customer customer,
     required List<InventoryItem> selectedItems,
+    String? nickname,
   }) async {
+    final String? trimmedNick = nickname?.trim();
+    final String? storedNick =
+        (trimmedNick != null && trimmedNick.isNotEmpty) ? trimmedNick : null;
+    if (isSelfCustomer(customer) && storedNick == null) {
+      throw ArgumentError(
+        'Nickname is required when issuing to $kSelfCustomerName',
+      );
+    }
+
     final DateTime now = DateTime.now();
     final String rentalId = 'REN-${now.millisecondsSinceEpoch}';
     final String qrCode = 'rental:${now.millisecondsSinceEpoch}';
@@ -128,6 +163,7 @@ class LocalRepository {
           startedAt: now,
           dueAt: now.add(const Duration(days: 3)),
           qrCode: qrCode,
+          nickname: Value<String?>(storedNick),
         ),
       );
 
@@ -317,6 +353,9 @@ class LocalRepository {
     required String phone,
     String? fallbackName,
   }) async {
+    if (isSelfCustomerPhone(phone)) {
+      return ensureSelfCustomer();
+    }
     final Customer? existing = await customerByPhone(phone);
     if (existing != null) {
       return existing;
@@ -365,14 +404,16 @@ class LocalRepository {
     }).toList();
 
     final List<Rental> rentals = await listRentals();
-    final List<Rental> currentRentals = rentals.where((rental) {
-      return rental.isActive &&
-          (rental.id.toLowerCase().contains(q) || rental.qrCode.toLowerCase().contains(q));
-    }).toList();
-    final List<Rental> previousRentals = rentals.where((rental) {
-      return !rental.isActive &&
-          (rental.id.toLowerCase().contains(q) || rental.qrCode.toLowerCase().contains(q));
-    }).toList();
+    bool rentalMatches(Rental rental) {
+      return rental.id.toLowerCase().contains(q) ||
+          rental.qrCode.toLowerCase().contains(q) ||
+          (rental.nickname?.toLowerCase().contains(q) ?? false);
+    }
+
+    final List<Rental> currentRentals =
+        rentals.where((rental) => rental.isActive && rentalMatches(rental)).toList();
+    final List<Rental> previousRentals =
+        rentals.where((rental) => !rental.isActive && rentalMatches(rental)).toList();
 
     final List<InventoryItem> inventory = (await listInventory()).where((item) {
       return item.name.toLowerCase().contains(q) ||
@@ -447,6 +488,7 @@ class LocalRepository {
             dueAt: rental.dueAt,
             returnedAt: Value<DateTime?>(rental.returnedAt),
             qrCode: rental.qrCode,
+            nickname: Value<String?>(rental.nickname),
           ),
         );
         for (final String itemId in rental.itemIds) {
@@ -530,6 +572,7 @@ class LocalRepository {
       dueAt: row.dueAt,
       returnedAt: row.returnedAt,
       qrCode: row.qrCode,
+      nickname: row.nickname,
       timeline: events
           .map(
             (event) => RentalEvent(
@@ -547,6 +590,7 @@ class LocalRepository {
 AppDataSnapshot buildDemoSnapshot({DateTime? now}) {
   final DateTime clock = now ?? DateTime.now();
   final List<Customer> seedCustomers = <Customer>[
+    buildSelfCustomer(),
     const Customer(
       id: 'CUS-1001',
       name: 'Priya Patel',
@@ -604,7 +648,7 @@ AppDataSnapshot buildDemoSnapshot({DateTime? now}) {
   final List<Rental> seedRentals = <Rental>[
     Rental(
       id: 'REN-3001',
-      customerId: seedCustomers[0].id,
+      customerId: seedCustomers[1].id,
       itemIds: <String>['INV-2002'],
       startedAt: clock.subtract(const Duration(days: 2)),
       dueAt: clock,
@@ -624,7 +668,7 @@ AppDataSnapshot buildDemoSnapshot({DateTime? now}) {
     ),
     Rental(
       id: 'REN-3002',
-      customerId: seedCustomers[1].id,
+      customerId: seedCustomers[2].id,
       itemIds: <String>['INV-2001'],
       startedAt: clock.subtract(const Duration(days: 5)),
       dueAt: clock.subtract(const Duration(days: 1)),

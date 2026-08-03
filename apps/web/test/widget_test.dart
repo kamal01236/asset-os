@@ -157,10 +157,11 @@ void main() {
     final List<InventoryItem> inventory = await repo.listInventory();
     final List<Rental> rentals = await repo.listRentals();
 
-    expect(customers, hasLength(3));
+    expect(customers, hasLength(4));
     expect(inventory, hasLength(3));
     expect(rentals, hasLength(2));
     expect(customers.any((c) => c.phone == '6666666666'), isTrue);
+    expect(customers.any((c) => c.id == 'CUS-SELF'), isTrue);
   });
 
   test('migrates SharedPreferences snapshot once', () async {
@@ -214,15 +215,22 @@ void main() {
     final LocalRepository repo = container.read(repositoryProvider);
     final SharedPreferences prefs = container.read(sharedPreferencesProvider);
 
-    expect(await repo.listCustomers(), hasLength(1));
-    expect((await repo.listCustomers()).first.name, 'Migrated User');
+    expect(await repo.listCustomers(), hasLength(2));
+    expect(
+      (await repo.listCustomers()).any((c) => c.name == 'Migrated User'),
+      isTrue,
+    );
+    expect(
+      (await repo.listCustomers()).any((c) => c.id == 'CUS-SELF'),
+      isTrue,
+    );
     expect(await repo.listInventory(), hasLength(1));
     expect(await repo.listRentals(), hasLength(1));
     expect(prefs.getString(LocalRepository.snapshotKey), isNull);
 
     // Re-initialize against same DB must not duplicate.
     await repo.initialize();
-    expect(await repo.listCustomers(), hasLength(1));
+    expect(await repo.listCustomers(), hasLength(2));
   });
 
   test('create rental, return, phone lookup, search, and QR resolve', () async {

@@ -35,6 +35,8 @@ class Rentals extends Table {
   DateTimeColumn get dueAt => dateTime()();
   DateTimeColumn get returnedAt => dateTime().nullable()();
   TextColumn get qrCode => text()();
+  /// Per-rental display name (required when issuing to SELF Known).
+  TextColumn get nickname => text().nullable()();
 
   @override
   Set<Column<Object>> get primaryKey => <Column<Object>>{id};

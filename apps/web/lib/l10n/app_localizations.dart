@@ -620,6 +620,48 @@ abstract class AppLocalizations {
   /// **'Only needed if new customer'**
   String get customerNameNewHint;
 
+  /// No description provided for @selfKnownQuickPick.
+  ///
+  /// In en, this message translates to:
+  /// **'SELF Known'**
+  String get selfKnownQuickPick;
+
+  /// No description provided for @rentalNicknameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Nickname for this rental'**
+  String get rentalNicknameLabel;
+
+  /// No description provided for @rentalNicknameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Who is taking the items?'**
+  String get rentalNicknameHint;
+
+  /// No description provided for @rentalNicknameRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a nickname for SELF Known rentals.'**
+  String get rentalNicknameRequired;
+
+  /// No description provided for @reviewNickname.
+  ///
+  /// In en, this message translates to:
+  /// **'Nickname: {nickname} · {customerName}'**
+  String reviewNickname(String nickname, String customerName);
+
+  /// No description provided for @rentalNicknameSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{customerName} · {phone}'**
+  String rentalNicknameSubtitle(String customerName, String phone);
+
+  /// No description provided for @rentalNicknameDueSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{nickname} • Due {date}'**
+  String rentalNicknameDueSubtitle(String nickname, String date);
+
   /// No description provided for @selectItems.
   ///
   /// In en, this message translates to:

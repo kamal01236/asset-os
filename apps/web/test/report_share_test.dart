@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'package:asset_os/core/config/app_branding.dart';
 import 'package:asset_os/core/models/entities.dart';
+import 'package:asset_os/core/models/self_customer.dart';
 import 'package:asset_os/core/reports/report_builder.dart';
 import 'package:asset_os/core/reports/report_models.dart';
 import 'package:asset_os/core/sharing/whatsapp_share.dart';
@@ -162,6 +163,38 @@ void main() {
       expect(text, contains('Priya Patel'));
       expect(text, contains('Tripod'));
       expect(text, contains('Amit Shah'));
+    });
+
+    test('customer-wise prefixes nickname on rental lines', () {
+      final List<Customer> selfCustomers = <Customer>[
+        buildSelfCustomer(),
+      ];
+      final List<Rental> selfRentals = <Rental>[
+        Rental(
+          id: 'REN-SELF-1',
+          customerId: kSelfCustomerId,
+          itemIds: <String>['INV-1'],
+          startedAt: now.subtract(const Duration(days: 1)),
+          dueAt: now.add(const Duration(days: 2)),
+          timeline: const <RentalEvent>[],
+          qrCode: 'rental:self1',
+          nickname: 'Raju',
+        ),
+      ];
+      final ReportDateRange range = ReportDateRange.resolve(
+        period: ReportPeriod.weekly,
+        now: now,
+      );
+      final String text = builder.build(
+        type: ReportType.customerWise,
+        range: range,
+        customers: selfCustomers,
+        inventory: inventory,
+        rentals: selfRentals,
+        now: now,
+      );
+      expect(text, contains('$kSelfCustomerName ($kSelfCustomerPhone)'));
+      expect(text, contains('Raju — REN-SELF-1'));
     });
 
     test('inventory-wise lists rent counts and availability', () {

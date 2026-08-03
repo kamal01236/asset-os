@@ -1,6 +1,6 @@
 # Hando — Flutter web client
 
-Flutter shell for Hando (web for local validation and Fly.io feedback). Native packaging is deferred until after feedback.
+Flutter shell for Hando (web for local validation and GitHub Pages feedback). Native packaging is deferred until after feedback.
 
 ## Local-first foundation
 
@@ -25,10 +25,9 @@ Use repo-root scripts from WSL (or `.\scripts\wsl.ps1` from Windows):
 ./scripts/localrun.sh      # Chrome / web-server
 ./scripts/test.sh
 ./scripts/wsldeploy.sh     # flutter build web
-./scripts/flydeploy.sh     # deploy to Fly.io
 ```
 
-See the [repository README](../../README.md) for the full command table and Fly.io feedback workflow.
+Public preview: push to `main` → GitHub Pages at [https://kamal01236.github.io/asset-os/](https://kamal01236.github.io/asset-os/). See the [repository README](../../README.md) for setup and the full command table.
 
 ## Business Templates
 

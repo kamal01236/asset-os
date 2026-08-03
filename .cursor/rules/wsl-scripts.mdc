@@ -8,5 +8,5 @@ alwaysApply: false
 
 - Keep `scripts/wsl.ps1` and `scripts/dev.sh` as the dispatcher surface. New commands must be wired into both.
 - Web-only messaging; no adb, APK, emulator, or native packaging steps.
-- Fly deploy stays behind `flydeploy`; do not embed secrets in scripts.
+- Public preview is GitHub Pages CI (push to `main`); do not embed deploy secrets in scripts.
 - Prefer extending `_lib.sh` helpers over duplicating Flutter/path logic.

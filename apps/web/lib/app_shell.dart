@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/config/app_branding.dart';
 import 'core/l10n/l10n_ext.dart';
 import 'core/models/entities.dart';
+import 'core/models/self_customer.dart';
 import 'core/providers/app_providers.dart';
 import 'core/repositories/local_repository.dart';
 import 'core/widgets/rental_timeline.dart';
@@ -342,7 +343,10 @@ class RentalsScreen extends ConsumerWidget {
             );
             return EntityCard(
               title: rental.id,
-              subtitle: l10n.rentalDueSubtitle(customer.name, _date(rental.dueAt)),
+              subtitle: l10n.rentalDueSubtitle(
+                rentalPartyLabel(customer, rental),
+                _date(rental.dueAt),
+              ),
               leadingIcon: Icons.assignment_outlined,
               status: rental.statusFor(now),
               trailing: const Icon(Icons.chevron_right),
@@ -653,8 +657,10 @@ class RentalDetailScreen extends ConsumerWidget {
         padding: const EdgeInsets.all(16),
         children: <Widget>[
           EntityCard(
-            title: customer.name,
-            subtitle: l10n.phoneLabel(customer.phone),
+            title: rentalPartyLabel(customer, rental),
+            subtitle: rental.nickname?.trim().isNotEmpty == true
+                ? l10n.rentalNicknameSubtitle(customer.name, customer.phone)
+                : l10n.phoneLabel(customer.phone),
             leadingIcon: Icons.person_outline,
             status: rental.statusFor(DateTime.now()),
           ),
@@ -997,7 +1003,12 @@ class CustomerDetailScreen extends ConsumerWidget {
               padding: const EdgeInsets.only(bottom: 8),
               child: EntityCard(
                 title: rental.id,
-                subtitle: l10n.dueDate(_date(rental.dueAt)),
+                subtitle: rental.nickname?.trim().isNotEmpty == true
+                    ? l10n.rentalNicknameDueSubtitle(
+                        rental.nickname!.trim(),
+                        _date(rental.dueAt),
+                      )
+                    : l10n.dueDate(_date(rental.dueAt)),
                 leadingIcon: Icons.assignment_outlined,
                 status: rental.statusFor(DateTime.now()),
                 onTap: () {
@@ -1197,15 +1208,41 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
   int _step = 0;
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _nicknameController = TextEditingController();
   final Set<String> _selectedInventoryIds = <String>{};
   Customer? _resolvedCustomer;
   bool _submitting = false;
+
+  bool get _isSelfSelected =>
+      _resolvedCustomer != null && isSelfCustomer(_resolvedCustomer!);
 
   @override
   void dispose() {
     _phoneController.dispose();
     _nameController.dispose();
+    _nicknameController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickSelfCustomer() async {
+    final Customer self = await ref.read(repositoryProvider).ensureSelfCustomer();
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _resolvedCustomer = self;
+      _phoneController.text = kSelfCustomerPhone;
+      _nameController.clear();
+    });
+  }
+
+  Future<void> _onPhoneChanged(String value) async {
+    final Customer? matched =
+        await ref.read(repositoryProvider).customerByPhone(value);
+    if (!mounted) {
+      return;
+    }
+    setState(() => _resolvedCustomer = matched);
   }
 
   @override
@@ -1219,7 +1256,9 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
         .where((item) => _selectedInventoryIds.contains(item.id))
         .toList();
     final bool canContinue = switch (_step) {
-      0 => _phoneController.text.trim().length >= 10,
+      0 => _isSelfSelected
+          ? _nicknameController.text.trim().isNotEmpty
+          : _phoneController.text.trim().length >= 10,
       1 => _selectedInventoryIds.isNotEmpty,
       _ => true,
     };
@@ -1235,6 +1274,15 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
           ),
           const SizedBox(height: 8),
           if (_step == 0) ...<Widget>[
+            Align(
+              alignment: Alignment.centerLeft,
+              child: FilterChip(
+                selected: _isSelfSelected,
+                label: Text(l10n.selfKnownQuickPick),
+                onSelected: (_) => _pickSelfCustomer(),
+              ),
+            ),
+            const SizedBox(height: 8),
             TextField(
               controller: _phoneController,
               keyboardType: TextInputType.phone,
@@ -1243,16 +1291,27 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
                 hintText: l10n.phoneNumberHint,
               ),
               onChanged: (value) async {
-                final Customer? matched =
-                    await ref.read(repositoryProvider).customerByPhone(value);
-                if (!mounted) {
-                  return;
-                }
-                setState(() => _resolvedCustomer = matched);
+                await _onPhoneChanged(value);
               },
             ),
             const SizedBox(height: 8),
-            if (_resolvedCustomer != null)
+            if (_isSelfSelected) ...<Widget>[
+              EntityCard(
+                title: kSelfCustomerName,
+                subtitle: l10n.existingCustomerSubtitle(kSelfCustomerPhone),
+                leadingIcon: Icons.verified_user_outlined,
+                status: AssetStatus.available,
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: _nicknameController,
+                decoration: InputDecoration(
+                  labelText: l10n.rentalNicknameLabel,
+                  hintText: l10n.rentalNicknameHint,
+                ),
+                onChanged: (_) => setState(() {}),
+              ),
+            ] else if (_resolvedCustomer != null)
               EntityCard(
                 title: _resolvedCustomer!.name,
                 subtitle: l10n.existingCustomerSubtitle(_resolvedCustomer!.phone),
@@ -1309,12 +1368,22 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    Text(l10n.reviewPhone(_phoneController.text.trim())),
-                    Text(
-                      l10n.reviewName(
-                        _resolvedCustomer?.name ?? _nameController.text.trim(),
+                    if (_isSelfSelected) ...<Widget>[
+                      Text(
+                        l10n.reviewNickname(
+                          _nicknameController.text.trim(),
+                          kSelfCustomerName,
+                        ),
                       ),
-                    ),
+                      Text(l10n.reviewPhone(kSelfCustomerPhone)),
+                    ] else ...<Widget>[
+                      Text(l10n.reviewPhone(_phoneController.text.trim())),
+                      Text(
+                        l10n.reviewName(
+                          _resolvedCustomer?.name ?? _nameController.text.trim(),
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 6),
                     Text(l10n.reviewItemsLabel),
                     ...selectedItems.map((item) => Text('• ${item.name}')),
@@ -1346,6 +1415,14 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
                 onPressed: (!canContinue || _submitting)
                     ? null
                     : () async {
+                        if (_step == 0 &&
+                            _isSelfSelected &&
+                            _nicknameController.text.trim().isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(l10n.rentalNicknameRequired)),
+                          );
+                          return;
+                        }
                         if (_step < 2) {
                           setState(() {
                             _step += 1;
@@ -1354,15 +1431,40 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
                         }
                         setState(() => _submitting = true);
                         final LocalRepository repository = ref.read(repositoryProvider);
-                        final Customer customer = _resolvedCustomer ??
-                            await repository.upsertCustomerByPhone(
-                              phone: _phoneController.text.trim(),
-                              fallbackName: _nameController.text.trim(),
+                        final Customer customer;
+                        final String? nickname;
+                        if (_isSelfSelected) {
+                          customer = await repository.ensureSelfCustomer();
+                          nickname = _nicknameController.text.trim();
+                        } else {
+                          customer = _resolvedCustomer ??
+                              await repository.upsertCustomerByPhone(
+                                phone: _phoneController.text.trim(),
+                                fallbackName: _nameController.text.trim(),
+                              );
+                          nickname = null;
+                        }
+                        try {
+                          await repository.createRental(
+                            customer: customer,
+                            selectedItems: selectedItems,
+                            nickname: nickname,
+                          );
+                        } catch (error) {
+                          if (context.mounted) {
+                            setState(() => _submitting = false);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  error is ArgumentError
+                                      ? l10n.rentalNicknameRequired
+                                      : '$error',
+                                ),
+                              ),
                             );
-                        await repository.createRental(
-                          customer: customer,
-                          selectedItems: selectedItems,
-                        );
+                          }
+                          return;
+                        }
                         if (context.mounted) {
                           Navigator.of(context).pop();
                         }

@@ -296,6 +296,34 @@ class AppLocalizationsEn extends AppLocalizations {
   String get customerNameNewHint => 'Only needed if new customer';
 
   @override
+  String get selfKnownQuickPick => 'SELF Known';
+
+  @override
+  String get rentalNicknameLabel => 'Nickname for this rental';
+
+  @override
+  String get rentalNicknameHint => 'Who is taking the items?';
+
+  @override
+  String get rentalNicknameRequired =>
+      'Enter a nickname for SELF Known rentals.';
+
+  @override
+  String reviewNickname(String nickname, String customerName) {
+    return 'Nickname: $nickname · $customerName';
+  }
+
+  @override
+  String rentalNicknameSubtitle(String customerName, String phone) {
+    return '$customerName · $phone';
+  }
+
+  @override
+  String rentalNicknameDueSubtitle(String nickname, String date) {
+    return '$nickname • Due $date';
+  }
+
+  @override
   String get selectItems => 'Select items';
 
   @override

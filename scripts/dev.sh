@@ -16,7 +16,6 @@ Commands:
   test        flutter analyze + flutter test
   wsldeploy   Build web artifacts (build/web) and print serve hints
   servelocal  Serve build/web locally and print the open URL (optional port)
-  flydeploy   Deploy static web app to Fly.io (requires fly auth login)
   doctor      flutter doctor -v
   help        Show this help
 
@@ -46,9 +45,6 @@ case "$cmd" in
     ;;
   servelocal)
     exec bash "${SCRIPT_DIR}/servelocal.sh" "$@"
-    ;;
-  flydeploy)
-    exec bash "${SCRIPT_DIR}/flydeploy.sh" "$@"
     ;;
   doctor)
     if ! ensure_flutter_on_path; then

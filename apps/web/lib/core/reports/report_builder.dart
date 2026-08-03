@@ -111,8 +111,10 @@ class ReportBuilder {
             .map((String id) => itemsById[id]?.name ?? id)
             .join(', ');
         final AssetStatus status = rental.statusFor(clock);
+        final String nick = rental.nickname?.trim() ?? '';
+        final String prefix = nick.isNotEmpty ? '$nick — ' : '';
         lines.add(
-          '  • ${rental.id}: $itemNames | due ${_formatDate(rental.dueAt)} | ${status.label}',
+          '  • $prefix${rental.id}: $itemNames | due ${_formatDate(rental.dueAt)} | ${status.label}',
         );
       }
     }
