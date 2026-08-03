@@ -12,7 +12,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get navHome => 'होम';
 
   @override
-  String get navRentals => 'किराए';
+  String get navRentals => 'ऑर्डर';
 
   @override
   String get navInventory => 'इन्वेंटरी';
@@ -27,7 +27,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get actionSearch => 'खोजें';
 
   @override
-  String get actionNewRental => 'नया किराया';
+  String get actionNewRental => 'नया ऑर्डर';
 
   @override
   String get issueItemAction => 'जारी करें';
@@ -92,11 +92,11 @@ class AppLocalizationsHi extends AppLocalizations {
       'ऑफ़लाइन काम कर रहे हैं — बदलाव बाद में सिंक होंगे।';
 
   @override
-  String get noRentalsYetTitle => 'अभी कोई किराया नहीं';
+  String get noRentalsYetTitle => 'अभी कोई ऑर्डर नहीं';
 
   @override
   String get noRentalsYetSubtitle =>
-      'अपना पहला लेन-देन बनाने के लिए नया किराया शुरू करें।';
+      'अपना पहला लेन-देन बनाने के लिए नया ऑर्डर शुरू करें।';
 
   @override
   String get unknownCustomer => 'अज्ञात ग्राहक';
@@ -252,7 +252,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get whatsAppPlaceholder => 'WhatsApp प्लेसहोल्डर कार्रवाई।';
 
   @override
-  String get recentRentals => 'हाल के किराए';
+  String get recentRentals => 'हाल के ऑर्डर';
 
   @override
   String dueDate(String date) {
@@ -265,16 +265,16 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String get searchHint => 'ग्राहक, किराया या इन्वेंटरी खोजें';
+  String get searchHint => 'ग्राहक, ऑर्डर या इन्वेंटरी खोजें';
 
   @override
   String get searchSectionCustomers => 'ग्राहक';
 
   @override
-  String get searchSectionCurrentRentals => 'वर्तमान किराए';
+  String get searchSectionCurrentRentals => 'वर्तमान ऑर्डर';
 
   @override
-  String get searchSectionPreviousRentals => 'पिछले किराए';
+  String get searchSectionPreviousRentals => 'पिछले ऑर्डर';
 
   @override
   String get searchSectionInventory => 'इन्वेंटरी';
@@ -318,14 +318,14 @@ class AppLocalizationsHi extends AppLocalizations {
   String get selfKnownQuickPick => 'SELF Known';
 
   @override
-  String get rentalNicknameLabel => 'इस किराये का उपनाम';
+  String get rentalNicknameLabel => 'इस ऑर्डर का उपनाम';
 
   @override
   String get rentalNicknameHint => 'वस्तुएँ कौन ले जा रहा है?';
 
   @override
   String get rentalNicknameRequired =>
-      'SELF Known किराये के लिए उपनाम दर्ज करें।';
+      'SELF Known ऑर्डर के लिए उपनाम दर्ज करें।';
 
   @override
   String reviewNickname(String nickname, String customerName) {
@@ -375,12 +375,12 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String duplicateShortCode(String code) {
-    return 'छोटा कोड $code पहले से किसी सक्रिय किराए पर उपयोग में है।';
+    return 'छोटा कोड $code पहले से किसी सक्रिय ऑर्डर पर उपयोग में है।';
   }
 
   @override
   String get inventoryInstancesNote =>
-      'किराया जारी करते समय व्यक्तिगत प्रतियों का नाम और छोटा कोड दर्ज किया जाता है।';
+      'ऑर्डर बनाते समय व्यक्तिगत प्रतियों का नाम और छोटा कोड दर्ज किया जाता है।';
 
   @override
   String get reviewHeading => 'समीक्षा';
@@ -405,10 +405,10 @@ class AppLocalizationsHi extends AppLocalizations {
   String get continueAction => 'आगे बढ़ें';
 
   @override
-  String get confirmRental => 'किराया पुष्टि करें';
+  String get confirmRental => 'ऑर्डर बनाएँ';
 
   @override
-  String get noActiveRentalsTitle => 'कोई सक्रिय किराया नहीं';
+  String get noActiveRentalsTitle => 'कोई सक्रिय ऑर्डर नहीं';
 
   @override
   String get noActiveRentalsSubtitle => 'सब कुछ पहले ही वापस हो चुका है।';
@@ -924,20 +924,20 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get needsAttentionEmptySubtitle =>
-      'आज देय और अतिदेय किराए यहाँ दिखेंगे।';
+      'आज देय और अतिदेय ऑर्डर यहाँ दिखेंगे।';
 
   @override
   String get recentActivityTitle => 'हाल की गतिविधि';
 
   @override
-  String get recentActivityEmpty => 'अभी कोई हालिया किराया या वापसी नहीं।';
+  String get recentActivityEmpty => 'अभी कोई हालिया ऑर्डर या वापसी नहीं।';
 
   @override
   String get homeFilterEmptyTitle => 'कोई मिलान नहीं';
 
   @override
   String homeFilterEmptyRentalsSubtitle(String label) {
-    return 'अभी कोई किराया $label से मेल नहीं खाता।';
+    return 'अभी कोई ऑर्डर $label से मेल नहीं खाता।';
   }
 
   @override
@@ -965,7 +965,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get moduleKpisSubtitle =>
-      'कॉम्पैक्ट चिप्स; टैप पर फ़िल्टर के साथ किराए या इन्वेंटरी खोलता है';
+      'कॉम्पैक्ट चिप्स; टैप पर फ़िल्टर के साथ ऑर्डर या इन्वेंटरी खोलता है';
 
   @override
   String get moduleFilterResults => 'फ़िल्टर परिणाम';
@@ -978,20 +978,19 @@ class AppLocalizationsHi extends AppLocalizations {
   String get moduleNeedsAttention => 'ध्यान दें';
 
   @override
-  String get moduleNeedsAttentionSubtitle => 'आज देय और अतिदेय किराए';
+  String get moduleNeedsAttentionSubtitle => 'आज देय और अतिदेय ऑर्डर';
 
   @override
   String get moduleQuickActions => 'त्वरित कार्रवाई';
 
   @override
-  String get moduleQuickActionsSubtitle =>
-      'नया किराया, वापसी, इन्वेंटरी जोड़ें';
+  String get moduleQuickActionsSubtitle => 'नया ऑर्डर, वापसी, इन्वेंटरी जोड़ें';
 
   @override
   String get moduleRecentActivity => 'हाल की गतिविधि';
 
   @override
-  String get moduleRecentActivitySubtitle => 'नवीनतम किराए और वापसी';
+  String get moduleRecentActivitySubtitle => 'नवीनतम ऑर्डर और वापसी';
 
   @override
   String get moduleSuggestions => 'AI सुझाव';
@@ -1146,4 +1145,32 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get activityEmpty => 'अभी कोई गतिविधि नहीं।';
+
+  @override
+  String get changeCustomerAction => 'ग्राहक बदलें';
+
+  @override
+  String get addOrderLineAction => 'पंक्ति जोड़ें';
+
+  @override
+  String get removeOrderLineAction => 'पंक्ति हटाएँ';
+
+  @override
+  String get selectInventoryItemLabel => 'इन्वेंटरी वस्तु';
+
+  @override
+  String orderLineHeading(int number) {
+    return 'पंक्ति $number';
+  }
+
+  @override
+  String orderTotalLabel(String amount) {
+    return 'ऑर्डर कुल: $amount';
+  }
+
+  @override
+  String get depositTopUpOptionalLabel => 'जमा टॉप-अप (वैकल्पिक)';
+
+  @override
+  String get depositTopUpOptionalHint => 'राशि रुपये में';
 }

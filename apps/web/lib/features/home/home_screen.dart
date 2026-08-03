@@ -6,24 +6,25 @@ import '../../core/models/entities.dart';
 import '../../core/models/self_customer.dart';
 import '../../core/pricing/rental_pricing.dart';
 import '../../core/providers/app_providers.dart';
+import '../../core/widgets/global_search_typeahead.dart';
 import '../../core/widgets/ui_primitives.dart';
 
 /// Composes Home from enabled modules (search always present).
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({
-    required this.onOpenSearch,
     required this.onNewRental,
     required this.onReturnItem,
     required this.onAddInventory,
+    required this.onOpenCustomer,
     required this.onOpenRental,
     required this.onOpenInventory,
     super.key,
   });
 
-  final VoidCallback onOpenSearch;
   final VoidCallback onNewRental;
   final VoidCallback onReturnItem;
   final VoidCallback onAddInventory;
+  final ValueChanged<Customer> onOpenCustomer;
   final ValueChanged<Rental> onOpenRental;
   final ValueChanged<InventoryItem> onOpenInventory;
 
@@ -89,9 +90,11 @@ class HomeScreen extends ConsumerWidget {
   }) {
     switch (id) {
       case HomeModuleId.search:
-        return LargeSearchBar(
-          onTap: onOpenSearch,
+        return GlobalSearchTypeahead(
           hintText: context.l10n.searchAnything,
+          onOpenCustomer: onOpenCustomer,
+          onOpenRental: onOpenRental,
+          onOpenInventory: onOpenInventory,
         );
       case HomeModuleId.kpis:
         return HomeKpisSection(

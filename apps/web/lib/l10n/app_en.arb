@@ -1,12 +1,12 @@
 {
   "@@locale": "en",
   "navHome": "Home",
-  "navRentals": "Rentals",
+  "navRentals": "Orders",
   "navInventory": "Inventory",
   "navCustomers": "Customers",
   "navMore": "More",
   "actionSearch": "Search",
-  "actionNewRental": "New Rental",
+  "actionNewRental": "New Order",
   "issueItemAction": "Issue",
   "issueToCustomerAction": "Issue",
   "searchInventoryHint": "Search by name or category",
@@ -27,8 +27,8 @@
   "aiSuggestionsTitle": "AI suggestions (beta)",
   "aiSuggestionsBody": "• Follow up on 1 overdue rental\n• Move Bosch Drill Kit to premium pricing\n• Call Priya Patel for extension confirmation",
   "offlineBanner": "Working offline — changes will sync later.",
-  "noRentalsYetTitle": "No rentals yet",
-  "noRentalsYetSubtitle": "Start a new rental to create your first transaction.",
+  "noRentalsYetTitle": "No orders yet",
+  "noRentalsYetSubtitle": "Start a new order to create your first transaction.",
   "unknownCustomer": "Unknown customer",
   "rentalDueSubtitle": "{customerName} • Due {date}",
   "@rentalDueSubtitle": {
@@ -100,7 +100,7 @@
   "whatsAppSubtitle": "Placeholder integration hook",
   "callPlaceholder": "Call placeholder action.",
   "whatsAppPlaceholder": "WhatsApp placeholder action.",
-  "recentRentals": "Recent rentals",
+  "recentRentals": "Recent orders",
   "dueDate": "Due {date}",
   "@dueDate": {
     "placeholders": {
@@ -113,10 +113,10 @@
       "date": {"type": "String"}
     }
   },
-  "searchHint": "Find customer, rental, or inventory",
+  "searchHint": "Find customer, order, or inventory",
   "searchSectionCustomers": "Customers",
-  "searchSectionCurrentRentals": "Current rentals",
-  "searchSectionPreviousRentals": "Previous rentals",
+  "searchSectionCurrentRentals": "Current orders",
+  "searchSectionPreviousRentals": "Previous orders",
   "searchSectionInventory": "Inventory",
   "noMatchingSection": "No matching {section}",
   "@noMatchingSection": {
@@ -151,9 +151,9 @@
   "customerNameNewLabel": "Customer name (new)",
   "customerNameNewHint": "Only needed if new customer",
   "selfKnownQuickPick": "SELF Known",
-  "rentalNicknameLabel": "Nickname for this rental",
+  "rentalNicknameLabel": "Nickname for this order",
   "rentalNicknameHint": "Who is taking the items?",
-  "rentalNicknameRequired": "Enter a nickname for SELF Known rentals.",
+  "rentalNicknameRequired": "Enter a nickname for SELF Known orders.",
   "reviewNickname": "Nickname: {nickname} · {customerName}",
   "@reviewNickname": {
     "placeholders": {
@@ -190,13 +190,13 @@
   "shortCodeLabel": "Short code",
   "shortCodeHint": "e.g. NOV-042",
   "instanceLabelsRequired": "Enter an instance name and short code for each item.",
-  "duplicateShortCode": "Short code {code} is already in use on an active rental.",
+  "duplicateShortCode": "Short code {code} is already in use on an active order.",
   "@duplicateShortCode": {
     "placeholders": {
       "code": {"type": "String"}
     }
   },
-  "inventoryInstancesNote": "Individual copies are named with a short code when you issue a rental.",
+  "inventoryInstancesNote": "Individual copies are named with a short code when you generate an order.",
   "reviewHeading": "Review",
   "reviewPhone": "Phone: {phone}",
   "@reviewPhone": {
@@ -213,8 +213,8 @@
   "reviewItemsLabel": "Items:",
   "back": "Back",
   "continueAction": "Continue",
-  "confirmRental": "Confirm rental",
-  "noActiveRentalsTitle": "No active rentals",
+  "confirmRental": "Generate Order",
+  "noActiveRentalsTitle": "No active orders",
   "noActiveRentalsSubtitle": "Everything is already returned.",
   "backToHome": "Back to Home",
   "rentalReturned": "{id} returned",
@@ -570,11 +570,11 @@
   },
   "needsAttentionTitle": "Needs attention",
   "needsAttentionEmptyTitle": "Nothing needs attention",
-  "needsAttentionEmptySubtitle": "Due today and overdue rentals will show up here.",
+  "needsAttentionEmptySubtitle": "Due today and overdue orders will show up here.",
   "recentActivityTitle": "Recent activity",
-  "recentActivityEmpty": "No recent rentals or returns yet.",
+  "recentActivityEmpty": "No recent orders or returns yet.",
   "homeFilterEmptyTitle": "No matches",
-  "homeFilterEmptyRentalsSubtitle": "No rentals match {label} right now.",
+  "homeFilterEmptyRentalsSubtitle": "No orders match {label} right now.",
   "@homeFilterEmptyRentalsSubtitle": {
     "placeholders": {
       "label": {"type": "String"}
@@ -587,15 +587,15 @@
   "moduleSearch": "Search",
   "moduleSearchLocked": "Always on",
   "moduleKpis": "Status chips",
-  "moduleKpisSubtitle": "Compact chips; tap opens Rentals or Inventory filtered",
+  "moduleKpisSubtitle": "Compact chips; tap opens Orders or Inventory filtered",
   "moduleFilterResults": "Filter results",
   "moduleFilterResultsSubtitle": "Optional in-place list under chips when a Home filter is set",
   "moduleNeedsAttention": "Needs attention",
-  "moduleNeedsAttentionSubtitle": "Due today and overdue rentals",
+  "moduleNeedsAttentionSubtitle": "Due today and overdue orders",
   "moduleQuickActions": "Quick actions",
-  "moduleQuickActionsSubtitle": "New Rental, Return, Add Inventory",
+  "moduleQuickActionsSubtitle": "New Order, Return, Add Inventory",
   "moduleRecentActivity": "Recent activity",
-  "moduleRecentActivitySubtitle": "Latest rentals and returns",
+  "moduleRecentActivitySubtitle": "Latest orders and returns",
   "moduleSuggestions": "AI suggestions",
   "moduleSuggestionsSubtitle": "Optional beta tips",
   "applyHomeLayoutTitle": "Apply Home layout?",
@@ -697,5 +697,23 @@
       "label": {"type": "String"}
     }
   },
-  "activityEmpty": "No activity yet."
+  "activityEmpty": "No activity yet.",
+  "changeCustomerAction": "Change customer",
+  "addOrderLineAction": "Add line",
+  "removeOrderLineAction": "Remove line",
+  "selectInventoryItemLabel": "Inventory item",
+  "orderLineHeading": "Line {number}",
+  "@orderLineHeading": {
+    "placeholders": {
+      "number": {"type": "int"}
+    }
+  },
+  "orderTotalLabel": "Order total: {amount}",
+  "@orderTotalLabel": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "depositTopUpOptionalLabel": "Deposit top-up (optional)",
+  "depositTopUpOptionalHint": "Amount in rupees"
 }

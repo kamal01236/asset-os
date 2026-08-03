@@ -190,7 +190,7 @@ void main() {
   ) async {
     await _pumpAppShell(tester);
 
-    await tester.tap(find.text('Rentals'));
+    await tester.tap(find.text('Orders'));
     await tester.pumpAndSettle();
     expect(find.text('Drill Kit · Workshop set A (DRL-001)'), findsOneWidget);
 
@@ -211,16 +211,30 @@ void main() {
     expect(find.text('Customize Home'), findsOneWidget);
   });
 
-  testWidgets('opens Search from home search bar', (WidgetTester tester) async {
+  testWidgets('Home search is inline typeahead without a search route', (
+    WidgetTester tester,
+  ) async {
     await _pumpAppShell(tester);
 
-    await tester.tap(find.text('Search Anything'));
+    expect(find.text('Search Anything'), findsOneWidget);
+    expect(find.text('Type at least 3 characters'), findsWidgets);
+    expect(find.widgetWithText(AppBar, 'Search'), findsNothing);
+    expect(find.widgetWithText(AppBar, kAppDisplayName), findsOneWidget);
+  });
+
+  testWidgets('FAB Search opens typeahead bottom sheet', (
+    WidgetTester tester,
+  ) async {
+    await _pumpAppShell(tester);
+
+    await tester.tap(find.text('Actions'));
     await tester.pumpAndSettle();
-    expect(find.text('Find customer, rental, or inventory'), findsOneWidget);
-    expect(find.text('Type at least 3 characters'), findsOneWidget);
-    expect(find.widgetWithText(AppBar, 'Search'), findsOneWidget);
-    Navigator.of(tester.element(find.byType(Scaffold).first)).pop();
+    await tester.tap(find.text('Search').last);
     await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.text('Find customer, order, or inventory'), findsOneWidget);
+    expect(find.widgetWithText(AppBar, 'Search'), findsNothing);
   });
 
   testWidgets('ScopedSearchField shows suggestions once query meets min length', (
@@ -275,17 +289,17 @@ void main() {
     expect(find.text('DSLR'), findsOneWidget);
   });
 
-  testWidgets('starts New Rental flow from Actions sheet', (WidgetTester tester) async {
+  testWidgets('starts New Order flow from Actions sheet', (WidgetTester tester) async {
     await _pumpAppShell(tester);
 
     await tester.tap(find.text('Actions'));
     await tester.pumpAndSettle();
-    // Home Quick Actions also shows "New Rental"; prefer the sheet ListTile.
-    await tester.tap(find.widgetWithText(ListTile, 'New Rental'));
+    // Home Quick Actions also shows "New Order"; prefer the sheet ListTile.
+    await tester.tap(find.widgetWithText(ListTile, 'New Order'));
     await tester.pumpAndSettle();
 
-    expect(find.widgetWithText(AppBar, 'New Rental'), findsOneWidget);
-    expect(find.text('Step 1 of 5'), findsOneWidget);
+    expect(find.widgetWithText(AppBar, 'New Order'), findsOneWidget);
+    expect(find.text('Step 1 of 2'), findsOneWidget);
     expect(find.text('Phone number'), findsOneWidget);
   });
 

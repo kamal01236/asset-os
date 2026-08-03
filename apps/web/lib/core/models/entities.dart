@@ -206,11 +206,23 @@ class RentalLineInput {
     required this.itemId,
     required this.instanceName,
     required this.shortCode,
+    this.durationUnits,
+    this.customEnd,
+    this.openEnded,
   });
 
   final String itemId;
   final String instanceName;
   final String shortCode;
+
+  /// When set, overrides parent [LocalRepository.createRental] duration for this line.
+  final int? durationUnits;
+
+  /// Custom due date for this line when billing mode is custom.
+  final DateTime? customEnd;
+
+  /// When set, overrides parent open-ended flag for this line.
+  final bool? openEnded;
 }
 
 /// One issued unit on a rental: catalog type + instance name/code.

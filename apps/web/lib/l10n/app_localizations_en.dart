@@ -12,7 +12,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navHome => 'Home';
 
   @override
-  String get navRentals => 'Rentals';
+  String get navRentals => 'Orders';
 
   @override
   String get navInventory => 'Inventory';
@@ -27,7 +27,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get actionSearch => 'Search';
 
   @override
-  String get actionNewRental => 'New Rental';
+  String get actionNewRental => 'New Order';
 
   @override
   String get issueItemAction => 'Issue';
@@ -91,11 +91,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get offlineBanner => 'Working offline — changes will sync later.';
 
   @override
-  String get noRentalsYetTitle => 'No rentals yet';
+  String get noRentalsYetTitle => 'No orders yet';
 
   @override
   String get noRentalsYetSubtitle =>
-      'Start a new rental to create your first transaction.';
+      'Start a new order to create your first transaction.';
 
   @override
   String get unknownCustomer => 'Unknown customer';
@@ -251,7 +251,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get whatsAppPlaceholder => 'WhatsApp placeholder action.';
 
   @override
-  String get recentRentals => 'Recent rentals';
+  String get recentRentals => 'Recent orders';
 
   @override
   String dueDate(String date) {
@@ -264,16 +264,16 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get searchHint => 'Find customer, rental, or inventory';
+  String get searchHint => 'Find customer, order, or inventory';
 
   @override
   String get searchSectionCustomers => 'Customers';
 
   @override
-  String get searchSectionCurrentRentals => 'Current rentals';
+  String get searchSectionCurrentRentals => 'Current orders';
 
   @override
-  String get searchSectionPreviousRentals => 'Previous rentals';
+  String get searchSectionPreviousRentals => 'Previous orders';
 
   @override
   String get searchSectionInventory => 'Inventory';
@@ -317,14 +317,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get selfKnownQuickPick => 'SELF Known';
 
   @override
-  String get rentalNicknameLabel => 'Nickname for this rental';
+  String get rentalNicknameLabel => 'Nickname for this order';
 
   @override
   String get rentalNicknameHint => 'Who is taking the items?';
 
   @override
   String get rentalNicknameRequired =>
-      'Enter a nickname for SELF Known rentals.';
+      'Enter a nickname for SELF Known orders.';
 
   @override
   String reviewNickname(String nickname, String customerName) {
@@ -374,12 +374,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String duplicateShortCode(String code) {
-    return 'Short code $code is already in use on an active rental.';
+    return 'Short code $code is already in use on an active order.';
   }
 
   @override
   String get inventoryInstancesNote =>
-      'Individual copies are named with a short code when you issue a rental.';
+      'Individual copies are named with a short code when you generate an order.';
 
   @override
   String get reviewHeading => 'Review';
@@ -404,10 +404,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get continueAction => 'Continue';
 
   @override
-  String get confirmRental => 'Confirm rental';
+  String get confirmRental => 'Generate Order';
 
   @override
-  String get noActiveRentalsTitle => 'No active rentals';
+  String get noActiveRentalsTitle => 'No active orders';
 
   @override
   String get noActiveRentalsSubtitle => 'Everything is already returned.';
@@ -922,20 +922,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get needsAttentionEmptySubtitle =>
-      'Due today and overdue rentals will show up here.';
+      'Due today and overdue orders will show up here.';
 
   @override
   String get recentActivityTitle => 'Recent activity';
 
   @override
-  String get recentActivityEmpty => 'No recent rentals or returns yet.';
+  String get recentActivityEmpty => 'No recent orders or returns yet.';
 
   @override
   String get homeFilterEmptyTitle => 'No matches';
 
   @override
   String homeFilterEmptyRentalsSubtitle(String label) {
-    return 'No rentals match $label right now.';
+    return 'No orders match $label right now.';
   }
 
   @override
@@ -963,7 +963,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get moduleKpisSubtitle =>
-      'Compact chips; tap opens Rentals or Inventory filtered';
+      'Compact chips; tap opens Orders or Inventory filtered';
 
   @override
   String get moduleFilterResults => 'Filter results';
@@ -976,19 +976,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get moduleNeedsAttention => 'Needs attention';
 
   @override
-  String get moduleNeedsAttentionSubtitle => 'Due today and overdue rentals';
+  String get moduleNeedsAttentionSubtitle => 'Due today and overdue orders';
 
   @override
   String get moduleQuickActions => 'Quick actions';
 
   @override
-  String get moduleQuickActionsSubtitle => 'New Rental, Return, Add Inventory';
+  String get moduleQuickActionsSubtitle => 'New Order, Return, Add Inventory';
 
   @override
   String get moduleRecentActivity => 'Recent activity';
 
   @override
-  String get moduleRecentActivitySubtitle => 'Latest rentals and returns';
+  String get moduleRecentActivitySubtitle => 'Latest orders and returns';
 
   @override
   String get moduleSuggestions => 'AI suggestions';
@@ -1143,4 +1143,32 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get activityEmpty => 'No activity yet.';
+
+  @override
+  String get changeCustomerAction => 'Change customer';
+
+  @override
+  String get addOrderLineAction => 'Add line';
+
+  @override
+  String get removeOrderLineAction => 'Remove line';
+
+  @override
+  String get selectInventoryItemLabel => 'Inventory item';
+
+  @override
+  String orderLineHeading(int number) {
+    return 'Line $number';
+  }
+
+  @override
+  String orderTotalLabel(String amount) {
+    return 'Order total: $amount';
+  }
+
+  @override
+  String get depositTopUpOptionalLabel => 'Deposit top-up (optional)';
+
+  @override
+  String get depositTopUpOptionalHint => 'Amount in rupees';
 }

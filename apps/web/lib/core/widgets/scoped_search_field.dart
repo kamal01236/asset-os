@@ -3,6 +3,9 @@ import 'package:flutter/services.dart';
 
 import '../validation/text_rules.dart';
 
+/// Entity kind for a [SearchSuggestion], used by global typeahead navigation.
+enum SearchHitKind { customer, rental, inventory }
+
 /// One selectable row in [ScopedSearchField] suggestions.
 class SearchSuggestion {
   const SearchSuggestion({
@@ -10,12 +13,16 @@ class SearchSuggestion {
     required this.title,
     required this.subtitle,
     required this.leadingIcon,
+    this.kind,
   });
 
   final String id;
   final String title;
   final String subtitle;
   final IconData leadingIcon;
+
+  /// Optional hit kind so global search can navigate without ambiguous IDs.
+  final SearchHitKind? kind;
 }
 
 /// Accessible typeahead search field gated at [kMinMeaningfulTextLength].

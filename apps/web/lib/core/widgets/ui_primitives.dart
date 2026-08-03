@@ -4,50 +4,6 @@ import '../l10n/l10n_ext.dart';
 import '../models/entities.dart';
 import '../theme/app_theme.dart';
 
-class LargeSearchBar extends StatelessWidget {
-  const LargeSearchBar({
-    required this.onTap,
-    required this.hintText,
-    super.key,
-  });
-
-  final VoidCallback onTap;
-  final String hintText;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.grey.shade300),
-          ),
-          child: Row(
-            children: <Widget>[
-              const Icon(Icons.search),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  hintText,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey.shade700,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class StatusPill extends StatelessWidget {
   const StatusPill({
     required this.status,

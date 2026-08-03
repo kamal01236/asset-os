@@ -107,7 +107,7 @@ abstract class AppLocalizations {
   /// No description provided for @navRentals.
   ///
   /// In en, this message translates to:
-  /// **'Rentals'**
+  /// **'Orders'**
   String get navRentals;
 
   /// No description provided for @navInventory.
@@ -137,7 +137,7 @@ abstract class AppLocalizations {
   /// No description provided for @actionNewRental.
   ///
   /// In en, this message translates to:
-  /// **'New Rental'**
+  /// **'New Order'**
   String get actionNewRental;
 
   /// No description provided for @issueItemAction.
@@ -263,13 +263,13 @@ abstract class AppLocalizations {
   /// No description provided for @noRentalsYetTitle.
   ///
   /// In en, this message translates to:
-  /// **'No rentals yet'**
+  /// **'No orders yet'**
   String get noRentalsYetTitle;
 
   /// No description provided for @noRentalsYetSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Start a new rental to create your first transaction.'**
+  /// **'Start a new order to create your first transaction.'**
   String get noRentalsYetSubtitle;
 
   /// No description provided for @unknownCustomer.
@@ -557,7 +557,7 @@ abstract class AppLocalizations {
   /// No description provided for @recentRentals.
   ///
   /// In en, this message translates to:
-  /// **'Recent rentals'**
+  /// **'Recent orders'**
   String get recentRentals;
 
   /// No description provided for @dueDate.
@@ -575,7 +575,7 @@ abstract class AppLocalizations {
   /// No description provided for @searchHint.
   ///
   /// In en, this message translates to:
-  /// **'Find customer, rental, or inventory'**
+  /// **'Find customer, order, or inventory'**
   String get searchHint;
 
   /// No description provided for @searchSectionCustomers.
@@ -587,13 +587,13 @@ abstract class AppLocalizations {
   /// No description provided for @searchSectionCurrentRentals.
   ///
   /// In en, this message translates to:
-  /// **'Current rentals'**
+  /// **'Current orders'**
   String get searchSectionCurrentRentals;
 
   /// No description provided for @searchSectionPreviousRentals.
   ///
   /// In en, this message translates to:
-  /// **'Previous rentals'**
+  /// **'Previous orders'**
   String get searchSectionPreviousRentals;
 
   /// No description provided for @searchSectionInventory.
@@ -665,7 +665,7 @@ abstract class AppLocalizations {
   /// No description provided for @rentalNicknameLabel.
   ///
   /// In en, this message translates to:
-  /// **'Nickname for this rental'**
+  /// **'Nickname for this order'**
   String get rentalNicknameLabel;
 
   /// No description provided for @rentalNicknameHint.
@@ -677,7 +677,7 @@ abstract class AppLocalizations {
   /// No description provided for @rentalNicknameRequired.
   ///
   /// In en, this message translates to:
-  /// **'Enter a nickname for SELF Known rentals.'**
+  /// **'Enter a nickname for SELF Known orders.'**
   String get rentalNicknameRequired;
 
   /// No description provided for @reviewNickname.
@@ -755,13 +755,13 @@ abstract class AppLocalizations {
   /// No description provided for @duplicateShortCode.
   ///
   /// In en, this message translates to:
-  /// **'Short code {code} is already in use on an active rental.'**
+  /// **'Short code {code} is already in use on an active order.'**
   String duplicateShortCode(String code);
 
   /// No description provided for @inventoryInstancesNote.
   ///
   /// In en, this message translates to:
-  /// **'Individual copies are named with a short code when you issue a rental.'**
+  /// **'Individual copies are named with a short code when you generate an order.'**
   String get inventoryInstancesNote;
 
   /// No description provided for @reviewHeading.
@@ -803,13 +803,13 @@ abstract class AppLocalizations {
   /// No description provided for @confirmRental.
   ///
   /// In en, this message translates to:
-  /// **'Confirm rental'**
+  /// **'Generate Order'**
   String get confirmRental;
 
   /// No description provided for @noActiveRentalsTitle.
   ///
   /// In en, this message translates to:
-  /// **'No active rentals'**
+  /// **'No active orders'**
   String get noActiveRentalsTitle;
 
   /// No description provided for @noActiveRentalsSubtitle.
@@ -1661,7 +1661,7 @@ abstract class AppLocalizations {
   /// No description provided for @needsAttentionEmptySubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Due today and overdue rentals will show up here.'**
+  /// **'Due today and overdue orders will show up here.'**
   String get needsAttentionEmptySubtitle;
 
   /// No description provided for @recentActivityTitle.
@@ -1673,7 +1673,7 @@ abstract class AppLocalizations {
   /// No description provided for @recentActivityEmpty.
   ///
   /// In en, this message translates to:
-  /// **'No recent rentals or returns yet.'**
+  /// **'No recent orders or returns yet.'**
   String get recentActivityEmpty;
 
   /// No description provided for @homeFilterEmptyTitle.
@@ -1685,7 +1685,7 @@ abstract class AppLocalizations {
   /// No description provided for @homeFilterEmptyRentalsSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'No rentals match {label} right now.'**
+  /// **'No orders match {label} right now.'**
   String homeFilterEmptyRentalsSubtitle(String label);
 
   /// No description provided for @homeFilterEmptyInventorySubtitle.
@@ -1733,7 +1733,7 @@ abstract class AppLocalizations {
   /// No description provided for @moduleKpisSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Compact chips; tap opens Rentals or Inventory filtered'**
+  /// **'Compact chips; tap opens Orders or Inventory filtered'**
   String get moduleKpisSubtitle;
 
   /// No description provided for @moduleFilterResults.
@@ -1757,7 +1757,7 @@ abstract class AppLocalizations {
   /// No description provided for @moduleNeedsAttentionSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Due today and overdue rentals'**
+  /// **'Due today and overdue orders'**
   String get moduleNeedsAttentionSubtitle;
 
   /// No description provided for @moduleQuickActions.
@@ -1769,7 +1769,7 @@ abstract class AppLocalizations {
   /// No description provided for @moduleQuickActionsSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'New Rental, Return, Add Inventory'**
+  /// **'New Order, Return, Add Inventory'**
   String get moduleQuickActionsSubtitle;
 
   /// No description provided for @moduleRecentActivity.
@@ -1781,7 +1781,7 @@ abstract class AppLocalizations {
   /// No description provided for @moduleRecentActivitySubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Latest rentals and returns'**
+  /// **'Latest orders and returns'**
   String get moduleRecentActivitySubtitle;
 
   /// No description provided for @moduleSuggestions.
@@ -2029,6 +2029,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No activity yet.'**
   String get activityEmpty;
+
+  /// No description provided for @changeCustomerAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Change customer'**
+  String get changeCustomerAction;
+
+  /// No description provided for @addOrderLineAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Add line'**
+  String get addOrderLineAction;
+
+  /// No description provided for @removeOrderLineAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove line'**
+  String get removeOrderLineAction;
+
+  /// No description provided for @selectInventoryItemLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Inventory item'**
+  String get selectInventoryItemLabel;
+
+  /// No description provided for @orderLineHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Line {number}'**
+  String orderLineHeading(int number);
+
+  /// No description provided for @orderTotalLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Order total: {amount}'**
+  String orderTotalLabel(String amount);
+
+  /// No description provided for @depositTopUpOptionalLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Deposit top-up (optional)'**
+  String get depositTopUpOptionalLabel;
+
+  /// No description provided for @depositTopUpOptionalHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount in rupees'**
+  String get depositTopUpOptionalHint;
 }
 
 class _AppLocalizationsDelegate

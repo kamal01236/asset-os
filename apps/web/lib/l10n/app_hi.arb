@@ -1,12 +1,12 @@
 {
   "@@locale": "hi",
   "navHome": "होम",
-  "navRentals": "किराए",
+  "navRentals": "ऑर्डर",
   "navInventory": "इन्वेंटरी",
   "navCustomers": "ग्राहक",
   "navMore": "और",
   "actionSearch": "खोजें",
-  "actionNewRental": "नया किराया",
+  "actionNewRental": "नया ऑर्डर",
   "issueItemAction": "जारी करें",
   "issueToCustomerAction": "जारी करें",
   "searchInventoryHint": "नाम या श्रेणी से खोजें",
@@ -27,8 +27,8 @@
   "aiSuggestionsTitle": "AI सुझाव (बीटा)",
   "aiSuggestionsBody": "• 1 अतिदेय किराए का फ़ॉलो-अप करें\n• Bosch Drill Kit को प्रीमियम मूल्य पर ले जाएँ\n• विस्तार पुष्टि के लिए Priya Patel को कॉल करें",
   "offlineBanner": "ऑफ़लाइन काम कर रहे हैं — बदलाव बाद में सिंक होंगे।",
-  "noRentalsYetTitle": "अभी कोई किराया नहीं",
-  "noRentalsYetSubtitle": "अपना पहला लेन-देन बनाने के लिए नया किराया शुरू करें।",
+  "noRentalsYetTitle": "अभी कोई ऑर्डर नहीं",
+  "noRentalsYetSubtitle": "अपना पहला लेन-देन बनाने के लिए नया ऑर्डर शुरू करें।",
   "unknownCustomer": "अज्ञात ग्राहक",
   "rentalDueSubtitle": "{customerName} • देय {date}",
   "@rentalDueSubtitle": {
@@ -100,7 +100,7 @@
   "whatsAppSubtitle": "प्लेसहोल्डर इंटीग्रेशन हुक",
   "callPlaceholder": "कॉल प्लेसहोल्डर कार्रवाई।",
   "whatsAppPlaceholder": "WhatsApp प्लेसहोल्डर कार्रवाई।",
-  "recentRentals": "हाल के किराए",
+  "recentRentals": "हाल के ऑर्डर",
   "dueDate": "देय {date}",
   "@dueDate": {
     "placeholders": {
@@ -113,10 +113,10 @@
       "date": {"type": "String"}
     }
   },
-  "searchHint": "ग्राहक, किराया या इन्वेंटरी खोजें",
+  "searchHint": "ग्राहक, ऑर्डर या इन्वेंटरी खोजें",
   "searchSectionCustomers": "ग्राहक",
-  "searchSectionCurrentRentals": "वर्तमान किराए",
-  "searchSectionPreviousRentals": "पिछले किराए",
+  "searchSectionCurrentRentals": "वर्तमान ऑर्डर",
+  "searchSectionPreviousRentals": "पिछले ऑर्डर",
   "searchSectionInventory": "इन्वेंटरी",
   "noMatchingSection": "कोई मिलान नहीं: {section}",
   "@noMatchingSection": {
@@ -151,9 +151,9 @@
   "customerNameNewLabel": "ग्राहक का नाम (नया)",
   "customerNameNewHint": "केवल नए ग्राहक के लिए आवश्यक",
   "selfKnownQuickPick": "SELF Known",
-  "rentalNicknameLabel": "इस किराये का उपनाम",
+  "rentalNicknameLabel": "इस ऑर्डर का उपनाम",
   "rentalNicknameHint": "वस्तुएँ कौन ले जा रहा है?",
-  "rentalNicknameRequired": "SELF Known किराये के लिए उपनाम दर्ज करें।",
+  "rentalNicknameRequired": "SELF Known ऑर्डर के लिए उपनाम दर्ज करें।",
   "reviewNickname": "उपनाम: {nickname} · {customerName}",
   "@reviewNickname": {
     "placeholders": {
@@ -190,13 +190,13 @@
   "shortCodeLabel": "छोटा कोड",
   "shortCodeHint": "जैसे NOV-042",
   "instanceLabelsRequired": "प्रत्येक वस्तु के लिए उदाहरण नाम और छोटा कोड दर्ज करें।",
-  "duplicateShortCode": "छोटा कोड {code} पहले से किसी सक्रिय किराए पर उपयोग में है।",
+  "duplicateShortCode": "छोटा कोड {code} पहले से किसी सक्रिय ऑर्डर पर उपयोग में है।",
   "@duplicateShortCode": {
     "placeholders": {
       "code": {"type": "String"}
     }
   },
-  "inventoryInstancesNote": "किराया जारी करते समय व्यक्तिगत प्रतियों का नाम और छोटा कोड दर्ज किया जाता है।",
+  "inventoryInstancesNote": "ऑर्डर बनाते समय व्यक्तिगत प्रतियों का नाम और छोटा कोड दर्ज किया जाता है।",
   "reviewHeading": "समीक्षा",
   "reviewPhone": "फ़ोन: {phone}",
   "@reviewPhone": {
@@ -213,8 +213,8 @@
   "reviewItemsLabel": "वस्तुएँ:",
   "back": "वापस",
   "continueAction": "आगे बढ़ें",
-  "confirmRental": "किराया पुष्टि करें",
-  "noActiveRentalsTitle": "कोई सक्रिय किराया नहीं",
+  "confirmRental": "ऑर्डर बनाएँ",
+  "noActiveRentalsTitle": "कोई सक्रिय ऑर्डर नहीं",
   "noActiveRentalsSubtitle": "सब कुछ पहले ही वापस हो चुका है।",
   "backToHome": "होम पर वापस जाएँ",
   "rentalReturned": "{id} वापस हो गया",
@@ -570,11 +570,11 @@
   },
   "needsAttentionTitle": "ध्यान दें",
   "needsAttentionEmptyTitle": "कुछ ध्यान देने योग्य नहीं",
-  "needsAttentionEmptySubtitle": "आज देय और अतिदेय किराए यहाँ दिखेंगे।",
+  "needsAttentionEmptySubtitle": "आज देय और अतिदेय ऑर्डर यहाँ दिखेंगे।",
   "recentActivityTitle": "हाल की गतिविधि",
-  "recentActivityEmpty": "अभी कोई हालिया किराया या वापसी नहीं।",
+  "recentActivityEmpty": "अभी कोई हालिया ऑर्डर या वापसी नहीं।",
   "homeFilterEmptyTitle": "कोई मिलान नहीं",
-  "homeFilterEmptyRentalsSubtitle": "अभी कोई किराया {label} से मेल नहीं खाता।",
+  "homeFilterEmptyRentalsSubtitle": "अभी कोई ऑर्डर {label} से मेल नहीं खाता।",
   "@homeFilterEmptyRentalsSubtitle": {
     "placeholders": {
       "label": {"type": "String"}
@@ -587,15 +587,15 @@
   "moduleSearch": "खोज",
   "moduleSearchLocked": "हमेशा चालू",
   "moduleKpis": "स्थिति चिप्स",
-  "moduleKpisSubtitle": "कॉम्पैक्ट चिप्स; टैप पर फ़िल्टर के साथ किराए या इन्वेंटरी खोलता है",
+  "moduleKpisSubtitle": "कॉम्पैक्ट चिप्स; टैप पर फ़िल्टर के साथ ऑर्डर या इन्वेंटरी खोलता है",
   "moduleFilterResults": "फ़िल्टर परिणाम",
   "moduleFilterResultsSubtitle": "होम फ़िल्टर सेट होने पर चिप्स के नीचे वैकल्पिक सूची",
   "moduleNeedsAttention": "ध्यान दें",
-  "moduleNeedsAttentionSubtitle": "आज देय और अतिदेय किराए",
+  "moduleNeedsAttentionSubtitle": "आज देय और अतिदेय ऑर्डर",
   "moduleQuickActions": "त्वरित कार्रवाई",
-  "moduleQuickActionsSubtitle": "नया किराया, वापसी, इन्वेंटरी जोड़ें",
+  "moduleQuickActionsSubtitle": "नया ऑर्डर, वापसी, इन्वेंटरी जोड़ें",
   "moduleRecentActivity": "हाल की गतिविधि",
-  "moduleRecentActivitySubtitle": "नवीनतम किराए और वापसी",
+  "moduleRecentActivitySubtitle": "नवीनतम ऑर्डर और वापसी",
   "moduleSuggestions": "AI सुझाव",
   "moduleSuggestionsSubtitle": "वैकल्पिक बीटा सुझाव",
   "applyHomeLayoutTitle": "होम लेआउट लागू करें?",
@@ -697,5 +697,23 @@
       "label": {"type": "String"}
     }
   },
-  "activityEmpty": "अभी कोई गतिविधि नहीं।"
+  "activityEmpty": "अभी कोई गतिविधि नहीं।",
+  "changeCustomerAction": "ग्राहक बदलें",
+  "addOrderLineAction": "पंक्ति जोड़ें",
+  "removeOrderLineAction": "पंक्ति हटाएँ",
+  "selectInventoryItemLabel": "इन्वेंटरी वस्तु",
+  "orderLineHeading": "पंक्ति {number}",
+  "@orderLineHeading": {
+    "placeholders": {
+      "number": {"type": "int"}
+    }
+  },
+  "orderTotalLabel": "ऑर्डर कुल: {amount}",
+  "@orderTotalLabel": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "depositTopUpOptionalLabel": "जमा टॉप-अप (वैकल्पिक)",
+  "depositTopUpOptionalHint": "राशि रुपये में"
 }

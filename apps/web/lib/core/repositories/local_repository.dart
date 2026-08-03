@@ -172,6 +172,7 @@ class LocalRepository {
     BillingMode? billingModeOverride,
     String? replacedFromRentalId,
     bool openEnded = false,
+    int depositTopUpPaise = 0,
   }) async {
     final String? trimmedNick = nickname?.trim();
     final String? storedNick =
@@ -188,6 +189,9 @@ class LocalRepository {
     }
     if (lines.isEmpty) {
       throw ArgumentError('At least one rental line is required');
+    }
+    if (depositTopUpPaise < 0) {
+      throw ArgumentError('Deposit top-up cannot be negative');
     }
 
     final List<RentalLineInput> normalized = <RentalLineInput>[];
@@ -211,6 +215,9 @@ class LocalRepository {
           itemId: line.itemId,
           instanceName: instanceName,
           shortCode: shortCode,
+          durationUnits: line.durationUnits,
+          customEnd: line.customEnd,
+          openEnded: line.openEnded,
         ),
       );
     }
@@ -218,13 +225,40 @@ class LocalRepository {
     final DateTime now = DateTime.now();
     final String rentalId = 'REN-${now.millisecondsSinceEpoch}';
     final String qrCode = 'rental:${now.millisecondsSinceEpoch}';
-    final int units = durationUnits < 1 ? 1 : durationUnits;
+    final int parentUnits = durationUnits < 1 ? 1 : durationUnits;
     final String? replacedFrom =
         (replacedFromRentalId != null && replacedFromRentalId.trim().isNotEmpty)
             ? replacedFromRentalId.trim()
             : null;
 
     await _db.transaction(() async {
+      if (depositTopUpPaise > 0) {
+        final CustomerRow? depositRow = await (_db.select(_db.customers)
+              ..where((t) => t.id.equals(customer.id)))
+            .getSingleOrNull();
+        if (depositRow == null) {
+          throw ArgumentError('Customer not found: ${customer.id}');
+        }
+        final int balanceAfter =
+            depositRow.depositBalance + depositTopUpPaise;
+        await (_db.update(_db.customers)
+              ..where((t) => t.id.equals(customer.id)))
+            .write(
+          CustomersCompanion(depositBalance: Value<int>(balanceAfter)),
+        );
+        await _db.into(_db.depositLedger).insert(
+          DepositLedgerCompanion.insert(
+            id: 'DEP-${now.microsecondsSinceEpoch}-topup',
+            customerId: customer.id,
+            type: DepositLedgerType.topUp.storageValue,
+            amount: depositTopUpPaise,
+            balanceAfter: balanceAfter,
+            note: const Value<String?>('Top-up with order'),
+            at: now,
+          ),
+        );
+      }
+
       for (final RentalLineInput line in normalized) {
         await _assertShortCodeAvailable(line.shortCode);
       }
@@ -254,47 +288,77 @@ class LocalRepository {
         itemRows.add(itemById[line.itemId]!);
       }
 
-      // v1: duration UI follows primary (first) item mode; charges are per-line.
-      final BillingMode mode = billingModeOverride ??
-          BillingMode.parse(itemRows.first.billingMode);
-
-      if (openEnded) {
-        for (final InventoryItemRow row in itemById.values) {
-          if (!row.dueDateOptional) {
-            throw ArgumentError(
-              'Open-ended rental requires all items to allow optional due date',
-            );
-          }
-        }
-      }
-
-      final DateTime? dueAt = openEnded
-          ? null
-          : computeDueAt(
-              start: now,
-              mode: mode,
-              durationUnits: units,
-              customEnd: customEnd,
-            );
-      final int storedDurationUnits = openEnded ? 0 : units;
-
+      final List<bool> lineOpenEndedFlags = <bool>[];
+      final List<DateTime?> lineDues = <DateTime?>[];
       final List<int> lineBaseAmounts = <int>[];
+      final List<int> lineDurationUnits = <int>[];
       int baseAmount = 0;
       int lateFeePerDay = 0;
-      for (final InventoryItemRow row in itemRows) {
+
+      for (var i = 0; i < normalized.length; i++) {
+        final RentalLineInput line = normalized[i];
+        final InventoryItemRow row = itemRows[i];
         final BillingMode lineMode = BillingMode.parse(row.billingMode);
-        final int lineBase = openEnded
-            ? 0
-            : computeBaseAmount(
-                mode: lineMode,
-                rateAmount: row.rateAmount,
-                start: now,
-                due: dueAt!,
-              );
+        final bool lineOpenEnded = line.openEnded ?? openEnded;
+        lineOpenEndedFlags.add(lineOpenEnded);
+
+        if (lineOpenEnded) {
+          if (!row.dueDateOptional) {
+            throw ArgumentError(
+              'Open-ended rental requires item to allow optional due date',
+            );
+          }
+          lineDues.add(null);
+          lineBaseAmounts.add(0);
+          lineDurationUnits.add(0);
+          lateFeePerDay += row.lateFeePerDay;
+          continue;
+        }
+
+        final int lineUnitsRaw = line.durationUnits ?? parentUnits;
+        final int lineUnits = lineUnitsRaw < 1 ? 1 : lineUnitsRaw;
+        final DateTime? lineCustomEnd = line.customEnd ?? customEnd;
+        final DateTime lineDue = computeDueAt(
+          start: now,
+          mode: lineMode,
+          durationUnits: lineUnits,
+          customEnd: lineMode == BillingMode.custom ? lineCustomEnd : null,
+        );
+        final int lineBase = computeBaseAmount(
+          mode: lineMode,
+          rateAmount: row.rateAmount,
+          start: now,
+          due: lineDue,
+        );
+        lineDues.add(lineDue);
         lineBaseAmounts.add(lineBase);
+        lineDurationUnits.add(lineUnits);
         baseAmount += lineBase;
         lateFeePerDay += row.lateFeePerDay;
       }
+
+      DateTime? dueAt;
+      for (final DateTime? lineDue in lineDues) {
+        if (lineDue == null) {
+          continue;
+        }
+        if (dueAt == null || lineDue.isBefore(dueAt)) {
+          dueAt = lineDue;
+        }
+      }
+
+      int snapshotIndex = 0;
+      for (var i = 0; i < lineOpenEndedFlags.length; i++) {
+        if (!lineOpenEndedFlags[i]) {
+          snapshotIndex = i;
+          break;
+        }
+      }
+      final BillingMode mode = billingModeOverride ??
+          BillingMode.parse(itemRows[snapshotIndex].billingMode);
+      final int storedDurationUnits = lineOpenEndedFlags.every((bool v) => v)
+          ? 0
+          : lineDurationUnits[snapshotIndex];
 
       await _db.into(_db.rentals).insert(
         RentalsCompanion.insert(
@@ -305,7 +369,7 @@ class LocalRepository {
           qrCode: qrCode,
           nickname: Value<String?>(storedNick),
           billingMode: Value<String>(mode.name),
-          rateAmount: Value<int>(itemRows.first.rateAmount),
+          rateAmount: Value<int>(itemRows[snapshotIndex].rateAmount),
           lateFeePerDay: Value<int>(lateFeePerDay),
           baseAmount: Value<int>(baseAmount),
           lateAmount: const Value<int>(0),
@@ -355,10 +419,10 @@ class LocalRepository {
       await _db.into(_db.rentalEvents).insert(
         RentalEventsCompanion.insert(
           rentalId: rentalId,
-          title: replacedFrom != null ? 'Replacement opened' : 'Rental opened',
+          title: replacedFrom != null ? 'Replacement opened' : 'Order opened',
           subtitle: replacedFrom != null
               ? 'Replacement for $replacedFrom.'
-              : 'Created from phone-first quick flow.',
+              : 'Created from phone-first order flow.',
           at: now,
         ),
       );

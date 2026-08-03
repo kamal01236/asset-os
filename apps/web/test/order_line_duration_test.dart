@@ -1,0 +1,119 @@
+import 'package:drift/drift.dart' show driftRuntimeOptions;
+import 'package:drift/native.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'package:asset_os/core/db/app_database.dart';
+import 'package:asset_os/core/models/entities.dart';
+import 'package:asset_os/core/repositories/local_repository.dart';
+
+Future<LocalRepository> _bootRepo() async {
+  SharedPreferences.setMockInitialValues(<String, Object>{});
+  final SharedPreferences preferences = await SharedPreferences.getInstance();
+  final AppDatabase db = AppDatabase(NativeDatabase.memory());
+  addTearDown(db.close);
+  final LocalRepository repository = LocalRepository(db, preferences);
+  await repository.initialize();
+  return repository;
+}
+
+void main() {
+  driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
+
+  group('createRental per-line duration', () {
+    test('distinct line amounts and earliest parent dueAt', () async {
+      final LocalRepository repository = await _bootRepo();
+      await repository.addInventory(
+        name: 'Daily Cam',
+        category: 'Camera',
+        units: 3,
+        billingMode: BillingMode.daily,
+        rateAmount: 10000,
+        requiresUnitIdentity: false,
+      );
+      await repository.addInventory(
+        name: 'Weekly Lens',
+        category: 'Camera',
+        units: 3,
+        billingMode: BillingMode.weekly,
+        rateAmount: 5000,
+        requiresUnitIdentity: false,
+      );
+      final List<InventoryItem> inventory = await repository.listInventory();
+      final InventoryItem daily = inventory.firstWhere(
+        (InventoryItem i) => i.name == 'Daily Cam',
+      );
+      final InventoryItem weekly = inventory.firstWhere(
+        (InventoryItem i) => i.name == 'Weekly Lens',
+      );
+      final Customer customer =
+          (await repository.customerByPhone('6666666666'))!;
+
+      final DateTime before = DateTime.now();
+      await repository.createRental(
+        customer: customer,
+        lines: <RentalLineInput>[
+          RentalLineInput(
+            itemId: daily.id,
+            instanceName: 'Daily Cam',
+            shortCode: 'DAY-1',
+            durationUnits: 2,
+          ),
+          RentalLineInput(
+            itemId: weekly.id,
+            instanceName: 'Weekly Lens',
+            shortCode: 'WK-1',
+            durationUnits: 1,
+          ),
+        ],
+      );
+      final DateTime after = DateTime.now();
+
+      final Rental created = (await repository.listRentals()).first;
+      expect(created.lines, hasLength(2));
+      expect(created.lines[0].baseAmount, 20000); // 2 days * 10000
+      expect(created.lines[1].baseAmount, 5000); // 1 week * 5000
+      expect(created.baseAmount, 25000);
+      expect(created.totalAmount, 25000);
+
+      // Earliest due is daily +2d (before weekly +7d).
+      final DateTime minDue = before.add(const Duration(days: 2));
+      final DateTime maxDue = after.add(const Duration(days: 2));
+      expect(
+        !created.dueAt!.isBefore(minDue.subtract(const Duration(seconds: 2))),
+        isTrue,
+      );
+      expect(
+        !created.dueAt!.isAfter(maxDue.add(const Duration(seconds: 2))),
+        isTrue,
+      );
+    });
+
+    test('depositTopUpPaise credits wallet in same create', () async {
+      final LocalRepository repository = await _bootRepo();
+      final Customer customer =
+          (await repository.customerByPhone('6666666666'))!;
+      expect(customer.depositBalance, 0);
+
+      await repository.createRental(
+        customer: customer,
+        lines: <RentalLineInput>[
+          RentalLineInput(
+            itemId: 'INV-2003',
+            instanceName: 'Tripod unit',
+            shortCode: 'TRP-99',
+            durationUnits: 1,
+          ),
+        ],
+        depositTopUpPaise: 2500,
+      );
+
+      final Customer updated =
+          (await repository.customerByPhone('6666666666'))!;
+      expect(updated.depositBalance, 2500);
+      final List<DepositLedgerEntry> ledger =
+          await repository.listDepositLedger(updated.id);
+      expect(ledger.any((DepositLedgerEntry e) => e.amount == 2500), isTrue);
+    });
+  });
+}
