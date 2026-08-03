@@ -38,6 +38,11 @@ final rentalsProvider = StreamProvider<List<Rental>>((ref) {
   return ref.watch(repositoryProvider).watchRentals();
 });
 
+final depositLedgerProvider =
+    StreamProvider.family<List<DepositLedgerEntry>, String>((ref, customerId) {
+  return ref.watch(repositoryProvider).watchDepositLedger(customerId);
+});
+
 final currentTabIndexProvider = StateProvider<int>((ref) => 0);
 
 final offlineModeProvider = StateProvider<bool>((ref) => false);

@@ -379,5 +379,141 @@
   },
   "chargesHeading": "शुल्क",
   "durationRequired": "मान्य अवधि दर्ज करें (कम से कम 1)।",
-  "customEndRequired": "आज या उसके बाद की वापसी तिथि चुनें।"
+  "customEndRequired": "आज या उसके बाद की वापसी तिथि चुनें।",
+  "depositBalanceLabel": "जमा शेष",
+  "depositBalanceAmount": "जमा: {amount}",
+  "@depositBalanceAmount": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "depositAddAction": "जमा जोड़ें",
+  "depositRefundAction": "वापसी",
+  "depositAmountLabel": "राशि (₹)",
+  "depositAmountHint": "जैसे 500",
+  "depositNoteLabel": "नोट (वैकल्पिक)",
+  "depositNoteHint": "कारण या संदर्भ",
+  "depositTopUpTitle": "जमा जोड़ें",
+  "depositRefundTitle": "जमा वापसी",
+  "depositConfirmTopUp": "जोड़ें",
+  "depositConfirmRefund": "वापसी",
+  "depositInvalidAmount": "शून्य से अधिक राशि दर्ज करें।",
+  "depositRefundExceeds": "वापसी वर्तमान जमा शेष से अधिक नहीं हो सकती।",
+  "depositTopUpSuccess": "जमा अपडेट होकर {amount} हो गई।",
+  "@depositTopUpSuccess": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "depositRefundSuccess": "वापसी हो गई। जमा अब {amount} है।",
+  "@depositRefundSuccess": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "depositLedgerHeading": "जमा इतिहास",
+  "depositLedgerEmpty": "अभी कोई जमा गतिविधि नहीं।",
+  "depositLedgerTopUp": "टॉप-अप {amount}",
+  "@depositLedgerTopUp": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "depositLedgerApply": "वापसी पर लागू {amount}",
+  "@depositLedgerApply": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "depositLedgerRefund": "वापसी {amount}",
+  "@depositLedgerRefund": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "depositLedgerAdjust": "समायोजन {amount}",
+  "@depositLedgerAdjust": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "depositLedgerBalanceAfter": "शेष {amount}",
+  "@depositLedgerBalanceAfter": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "depositAvailableLabel": "उपलब्ध जमा: {amount}",
+  "@depositAvailableLabel": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "depositWillApplyLabel": "जमा से लागू होगा: {amount}",
+  "@depositWillApplyLabel": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "depositRemainingDueLabel": "शेष देय: {amount}",
+  "@depositRemainingDueLabel": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "depositLeftoverLabel": "बचा हुआ जमा: {amount}",
+  "@depositLeftoverLabel": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "depositAppliedLabel": "जमा लागू: {amount}",
+  "@depositAppliedLabel": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "depositNetDueLabel": "नेट देय: {amount}",
+  "@depositNetDueLabel": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "returnSettlementTitle": "वापसी निपटान",
+  "confirmReturnAction": "वापसी पुष्टि करें",
+  "depositReturnSnackApplied": "जमा से {applied} लागू; शेष अब {balance}।",
+  "@depositReturnSnackApplied": {
+    "placeholders": {
+      "applied": {"type": "String"},
+      "balance": {"type": "String"}
+    }
+  },
+  "depositReturnSnackDue": "जमा से {applied} लागू; शेष देय {due}।",
+  "@depositReturnSnackDue": {
+    "placeholders": {
+      "applied": {"type": "String"},
+      "due": {"type": "String"}
+    }
+  },
+  "depositReturnSnackNoDeposit": "वापस किया गया। कुल {total} नकद देय।",
+  "@depositReturnSnackNoDeposit": {
+    "placeholders": {
+      "total": {"type": "String"}
+    }
+  },
+  "customerSubtitleWithDeposit": "{phone} • {tier} • जमा {amount}",
+  "@customerSubtitleWithDeposit": {
+    "placeholders": {
+      "phone": {"type": "String"},
+      "tier": {"type": "String"},
+      "amount": {"type": "String"}
+    }
+  },
+  "existingCustomerWithDeposit": "{phone} • मौजूदा • जमा {amount}",
+  "@existingCustomerWithDeposit": {
+    "placeholders": {
+      "phone": {"type": "String"},
+      "amount": {"type": "String"}
+    }
+  }
 }

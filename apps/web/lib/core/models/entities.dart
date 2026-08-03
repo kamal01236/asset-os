@@ -36,6 +36,7 @@ class Customer {
     required this.phone,
     required this.isTrusted,
     required this.qrCode,
+    this.depositBalance = 0,
   });
 
   final String id;
@@ -43,6 +44,22 @@ class Customer {
   final String phone;
   final bool isTrusted;
   final String qrCode;
+  /// Wallet deposit balance in paise.
+  final int depositBalance;
+
+  Customer copyWith({
+    String? name,
+    String? phone,
+    bool? isTrusted,
+    int? depositBalance,
+  }) => Customer(
+    id: id,
+    name: name ?? this.name,
+    phone: phone ?? this.phone,
+    isTrusted: isTrusted ?? this.isTrusted,
+    qrCode: qrCode,
+    depositBalance: depositBalance ?? this.depositBalance,
+  );
 
   Map<String, dynamic> toJson() => <String, dynamic>{
     'id': id,
@@ -50,6 +67,7 @@ class Customer {
     'phone': phone,
     'isTrusted': isTrusted,
     'qrCode': qrCode,
+    'depositBalance': depositBalance,
   };
 
   factory Customer.fromJson(Map<String, dynamic> json) => Customer(
@@ -58,6 +76,7 @@ class Customer {
     phone: json['phone'] as String,
     isTrusted: json['isTrusted'] as bool,
     qrCode: json['qrCode'] as String,
+    depositBalance: (json['depositBalance'] as int?) ?? 0,
   );
 }
 
@@ -237,6 +256,82 @@ class DuplicateActiveShortCodeException implements Exception {
   String toString() => 'Duplicate active short code: $shortCode';
 }
 
+/// Deposit wallet ledger entry types (stored as snake_case in Drift).
+enum DepositLedgerType {
+  topUp,
+  apply,
+  refund,
+  adjust;
+
+  String get storageValue {
+    switch (this) {
+      case DepositLedgerType.topUp:
+        return 'top_up';
+      case DepositLedgerType.apply:
+        return 'apply';
+      case DepositLedgerType.refund:
+        return 'refund';
+      case DepositLedgerType.adjust:
+        return 'adjust';
+    }
+  }
+
+  static DepositLedgerType parse(String? raw) {
+    switch (raw) {
+      case 'top_up':
+        return DepositLedgerType.topUp;
+      case 'apply':
+        return DepositLedgerType.apply;
+      case 'refund':
+        return DepositLedgerType.refund;
+      case 'adjust':
+        return DepositLedgerType.adjust;
+      default:
+        return DepositLedgerType.adjust;
+    }
+  }
+}
+
+class DepositLedgerEntry {
+  const DepositLedgerEntry({
+    required this.id,
+    required this.customerId,
+    required this.type,
+    required this.amount,
+    required this.balanceAfter,
+    required this.at,
+    this.rentalId,
+    this.note,
+  });
+
+  final String id;
+  final String customerId;
+  final String? rentalId;
+  final DepositLedgerType type;
+  /// Signed amount in paise (+ top-up, − apply/refund).
+  final int amount;
+  final int balanceAfter;
+  final String? note;
+  final DateTime at;
+}
+
+/// Result of settling a rental return against the customer deposit wallet.
+class RentalReturnResult {
+  const RentalReturnResult({
+    required this.rentalId,
+    required this.totalAmount,
+    required this.depositApplied,
+    required this.depositBalanceAfter,
+  });
+
+  final String rentalId;
+  final int totalAmount;
+  final int depositApplied;
+  final int depositBalanceAfter;
+
+  int get amountDue => (totalAmount - depositApplied).clamp(0, totalAmount);
+}
+
 class Rental {
   const Rental({
     required this.id,
@@ -254,6 +349,7 @@ class Rental {
     this.baseAmount = 0,
     this.lateAmount = 0,
     this.totalAmount = 0,
+    this.depositApplied = 0,
     this.durationUnits = 1,
   });
 
@@ -273,12 +369,18 @@ class Rental {
   final int baseAmount;
   final int lateAmount;
   final int totalAmount;
+  /// Deposit applied from wallet at return (paise).
+  final int depositApplied;
   final int durationUnits;
 
   List<String> get itemIds =>
       lines.map((RentalLine line) => line.itemId).toList(growable: false);
 
   bool get isActive => returnedAt == null;
+
+  /// Cash still owed after deposit applied (finalized on returned rentals).
+  int get amountDueAfterDeposit =>
+      (totalAmount - depositApplied).clamp(0, totalAmount);
 
   /// Running late fee estimate for active rentals; finalized [lateAmount] when returned.
   int lateAmountAsOf(DateTime asOf) {
@@ -328,6 +430,7 @@ class Rental {
     int? baseAmount,
     int? lateAmount,
     int? totalAmount,
+    int? depositApplied,
     int? durationUnits,
     DateTime? dueAt,
   }) => Rental(
@@ -346,6 +449,7 @@ class Rental {
     baseAmount: baseAmount ?? this.baseAmount,
     lateAmount: lateAmount ?? this.lateAmount,
     totalAmount: totalAmount ?? this.totalAmount,
+    depositApplied: depositApplied ?? this.depositApplied,
     durationUnits: durationUnits ?? this.durationUnits,
   );
 
@@ -366,6 +470,7 @@ class Rental {
     'baseAmount': baseAmount,
     'lateAmount': lateAmount,
     'totalAmount': totalAmount,
+    'depositApplied': depositApplied,
     'durationUnits': durationUnits,
   };
 
@@ -410,6 +515,7 @@ class Rental {
       baseAmount: (json['baseAmount'] as int?) ?? 0,
       lateAmount: (json['lateAmount'] as int?) ?? 0,
       totalAmount: (json['totalAmount'] as int?) ?? 0,
+      depositApplied: (json['depositApplied'] as int?) ?? 0,
       durationUnits: (json['durationUnits'] as int?) ?? 1,
     );
   }

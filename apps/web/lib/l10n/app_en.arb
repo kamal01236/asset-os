@@ -379,5 +379,141 @@
   },
   "chargesHeading": "Charges",
   "durationRequired": "Enter a valid duration (at least 1).",
-  "customEndRequired": "Pick a return-by date on or after today."
+  "customEndRequired": "Pick a return-by date on or after today.",
+  "depositBalanceLabel": "Deposit balance",
+  "depositBalanceAmount": "Deposit: {amount}",
+  "@depositBalanceAmount": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "depositAddAction": "Add deposit",
+  "depositRefundAction": "Refund",
+  "depositAmountLabel": "Amount (₹)",
+  "depositAmountHint": "e.g. 500",
+  "depositNoteLabel": "Note (optional)",
+  "depositNoteHint": "Reason or reference",
+  "depositTopUpTitle": "Add deposit",
+  "depositRefundTitle": "Refund deposit",
+  "depositConfirmTopUp": "Add",
+  "depositConfirmRefund": "Refund",
+  "depositInvalidAmount": "Enter an amount greater than zero.",
+  "depositRefundExceeds": "Refund cannot exceed the current deposit balance.",
+  "depositTopUpSuccess": "Deposit updated to {amount}.",
+  "@depositTopUpSuccess": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "depositRefundSuccess": "Refunded. Deposit now {amount}.",
+  "@depositRefundSuccess": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "depositLedgerHeading": "Deposit history",
+  "depositLedgerEmpty": "No deposit activity yet.",
+  "depositLedgerTopUp": "Top-up {amount}",
+  "@depositLedgerTopUp": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "depositLedgerApply": "Applied on return {amount}",
+  "@depositLedgerApply": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "depositLedgerRefund": "Refund {amount}",
+  "@depositLedgerRefund": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "depositLedgerAdjust": "Adjust {amount}",
+  "@depositLedgerAdjust": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "depositLedgerBalanceAfter": "Balance {amount}",
+  "@depositLedgerBalanceAfter": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "depositAvailableLabel": "Deposit available: {amount}",
+  "@depositAvailableLabel": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "depositWillApplyLabel": "Will apply from deposit: {amount}",
+  "@depositWillApplyLabel": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "depositRemainingDueLabel": "Remaining due: {amount}",
+  "@depositRemainingDueLabel": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "depositLeftoverLabel": "Leftover deposit: {amount}",
+  "@depositLeftoverLabel": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "depositAppliedLabel": "Deposit applied: {amount}",
+  "@depositAppliedLabel": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "depositNetDueLabel": "Net due: {amount}",
+  "@depositNetDueLabel": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "returnSettlementTitle": "Return settlement",
+  "confirmReturnAction": "Confirm return",
+  "depositReturnSnackApplied": "Applied {applied} from deposit; balance now {balance}.",
+  "@depositReturnSnackApplied": {
+    "placeholders": {
+      "applied": {"type": "String"},
+      "balance": {"type": "String"}
+    }
+  },
+  "depositReturnSnackDue": "Applied {applied} from deposit; remaining due {due}.",
+  "@depositReturnSnackDue": {
+    "placeholders": {
+      "applied": {"type": "String"},
+      "due": {"type": "String"}
+    }
+  },
+  "depositReturnSnackNoDeposit": "Returned. Total {total} due in cash.",
+  "@depositReturnSnackNoDeposit": {
+    "placeholders": {
+      "total": {"type": "String"}
+    }
+  },
+  "customerSubtitleWithDeposit": "{phone} • {tier} • Deposit {amount}",
+  "@customerSubtitleWithDeposit": {
+    "placeholders": {
+      "phone": {"type": "String"},
+      "tier": {"type": "String"},
+      "amount": {"type": "String"}
+    }
+  },
+  "existingCustomerWithDeposit": "{phone} • Existing • Deposit {amount}",
+  "@existingCustomerWithDeposit": {
+    "placeholders": {
+      "phone": {"type": "String"},
+      "amount": {"type": "String"}
+    }
+  }
 }

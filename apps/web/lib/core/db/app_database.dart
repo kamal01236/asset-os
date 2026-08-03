@@ -12,6 +12,7 @@ part 'app_database.g.dart';
     Rentals,
     RentalItems,
     RentalEvents,
+    DepositLedger,
     AppMeta,
   ],
 )
@@ -20,7 +21,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -77,6 +78,19 @@ class AppDatabase extends _$AppDatabase {
               late_amount = COALESCE(late_amount, 0),
               total_amount = COALESCE(total_amount, 0),
               duration_units = COALESCE(duration_units, 1)
+        ''');
+      }
+      if (from < 5) {
+        await m.addColumn(customers, customers.depositBalance);
+        await m.addColumn(rentals, rentals.depositApplied);
+        await m.createTable(depositLedger);
+        await customStatement('''
+          UPDATE customers
+          SET deposit_balance = COALESCE(deposit_balance, 0)
+        ''');
+        await customStatement('''
+          UPDATE rentals
+          SET deposit_applied = COALESCE(deposit_applied, 0)
         ''');
       }
     },

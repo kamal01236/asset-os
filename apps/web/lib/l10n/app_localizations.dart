@@ -1285,6 +1285,222 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Pick a return-by date on or after today.'**
   String get customEndRequired;
+
+  /// No description provided for @depositBalanceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Deposit balance'**
+  String get depositBalanceLabel;
+
+  /// No description provided for @depositBalanceAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Deposit: {amount}'**
+  String depositBalanceAmount(String amount);
+
+  /// No description provided for @depositAddAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Add deposit'**
+  String get depositAddAction;
+
+  /// No description provided for @depositRefundAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Refund'**
+  String get depositRefundAction;
+
+  /// No description provided for @depositAmountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount (₹)'**
+  String get depositAmountLabel;
+
+  /// No description provided for @depositAmountHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. 500'**
+  String get depositAmountHint;
+
+  /// No description provided for @depositNoteLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Note (optional)'**
+  String get depositNoteLabel;
+
+  /// No description provided for @depositNoteHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason or reference'**
+  String get depositNoteHint;
+
+  /// No description provided for @depositTopUpTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add deposit'**
+  String get depositTopUpTitle;
+
+  /// No description provided for @depositRefundTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Refund deposit'**
+  String get depositRefundTitle;
+
+  /// No description provided for @depositConfirmTopUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get depositConfirmTopUp;
+
+  /// No description provided for @depositConfirmRefund.
+  ///
+  /// In en, this message translates to:
+  /// **'Refund'**
+  String get depositConfirmRefund;
+
+  /// No description provided for @depositInvalidAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter an amount greater than zero.'**
+  String get depositInvalidAmount;
+
+  /// No description provided for @depositRefundExceeds.
+  ///
+  /// In en, this message translates to:
+  /// **'Refund cannot exceed the current deposit balance.'**
+  String get depositRefundExceeds;
+
+  /// No description provided for @depositTopUpSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Deposit updated to {amount}.'**
+  String depositTopUpSuccess(String amount);
+
+  /// No description provided for @depositRefundSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Refunded. Deposit now {amount}.'**
+  String depositRefundSuccess(String amount);
+
+  /// No description provided for @depositLedgerHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Deposit history'**
+  String get depositLedgerHeading;
+
+  /// No description provided for @depositLedgerEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No deposit activity yet.'**
+  String get depositLedgerEmpty;
+
+  /// No description provided for @depositLedgerTopUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Top-up {amount}'**
+  String depositLedgerTopUp(String amount);
+
+  /// No description provided for @depositLedgerApply.
+  ///
+  /// In en, this message translates to:
+  /// **'Applied on return {amount}'**
+  String depositLedgerApply(String amount);
+
+  /// No description provided for @depositLedgerRefund.
+  ///
+  /// In en, this message translates to:
+  /// **'Refund {amount}'**
+  String depositLedgerRefund(String amount);
+
+  /// No description provided for @depositLedgerAdjust.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjust {amount}'**
+  String depositLedgerAdjust(String amount);
+
+  /// No description provided for @depositLedgerBalanceAfter.
+  ///
+  /// In en, this message translates to:
+  /// **'Balance {amount}'**
+  String depositLedgerBalanceAfter(String amount);
+
+  /// No description provided for @depositAvailableLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Deposit available: {amount}'**
+  String depositAvailableLabel(String amount);
+
+  /// No description provided for @depositWillApplyLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Will apply from deposit: {amount}'**
+  String depositWillApplyLabel(String amount);
+
+  /// No description provided for @depositRemainingDueLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Remaining due: {amount}'**
+  String depositRemainingDueLabel(String amount);
+
+  /// No description provided for @depositLeftoverLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Leftover deposit: {amount}'**
+  String depositLeftoverLabel(String amount);
+
+  /// No description provided for @depositAppliedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Deposit applied: {amount}'**
+  String depositAppliedLabel(String amount);
+
+  /// No description provided for @depositNetDueLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Net due: {amount}'**
+  String depositNetDueLabel(String amount);
+
+  /// No description provided for @returnSettlementTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Return settlement'**
+  String get returnSettlementTitle;
+
+  /// No description provided for @confirmReturnAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm return'**
+  String get confirmReturnAction;
+
+  /// No description provided for @depositReturnSnackApplied.
+  ///
+  /// In en, this message translates to:
+  /// **'Applied {applied} from deposit; balance now {balance}.'**
+  String depositReturnSnackApplied(String applied, String balance);
+
+  /// No description provided for @depositReturnSnackDue.
+  ///
+  /// In en, this message translates to:
+  /// **'Applied {applied} from deposit; remaining due {due}.'**
+  String depositReturnSnackDue(String applied, String due);
+
+  /// No description provided for @depositReturnSnackNoDeposit.
+  ///
+  /// In en, this message translates to:
+  /// **'Returned. Total {total} due in cash.'**
+  String depositReturnSnackNoDeposit(String total);
+
+  /// No description provided for @customerSubtitleWithDeposit.
+  ///
+  /// In en, this message translates to:
+  /// **'{phone} • {tier} • Deposit {amount}'**
+  String customerSubtitleWithDeposit(String phone, String tier, String amount);
+
+  /// No description provided for @existingCustomerWithDeposit.
+  ///
+  /// In en, this message translates to:
+  /// **'{phone} • Existing • Deposit {amount}'**
+  String existingCustomerWithDeposit(String phone, String amount);
 }
 
 class _AppLocalizationsDelegate

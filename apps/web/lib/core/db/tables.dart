@@ -7,6 +7,8 @@ class Customers extends Table {
   TextColumn get phone => text()();
   BoolColumn get isTrusted => boolean().withDefault(const Constant(false))();
   TextColumn get qrCode => text()();
+  /// Wallet deposit balance in paise.
+  IntColumn get depositBalance => integer().withDefault(const Constant(0))();
 
   @override
   Set<Column<Object>> get primaryKey => <Column<Object>>{id};
@@ -53,6 +55,8 @@ class Rentals extends Table {
   IntColumn get baseAmount => integer().withDefault(const Constant(0))();
   IntColumn get lateAmount => integer().withDefault(const Constant(0))();
   IntColumn get totalAmount => integer().withDefault(const Constant(0))();
+  /// Deposit applied from customer wallet at return (paise).
+  IntColumn get depositApplied => integer().withDefault(const Constant(0))();
   /// Chosen duration (e.g. 1 week → 1; fixed due-days still stored here).
   IntColumn get durationUnits => integer().withDefault(const Constant(1))();
 
@@ -80,6 +84,24 @@ class RentalEvents extends Table {
   TextColumn get title => text()();
   TextColumn get subtitle => text()();
   DateTimeColumn get at => dateTime()();
+}
+
+/// Append-only deposit wallet ledger (`top_up` | `apply` | `refund` | `adjust`).
+@DataClassName('DepositLedgerRow')
+class DepositLedger extends Table {
+  TextColumn get id => text()();
+  TextColumn get customerId => text().references(Customers, #id)();
+  TextColumn get rentalId => text().nullable().references(Rentals, #id)();
+  /// `top_up` | `apply` | `refund` | `adjust`
+  TextColumn get type => text()();
+  /// Signed amount in paise (+ top-up, − apply/refund).
+  IntColumn get amount => integer()();
+  IntColumn get balanceAfter => integer()();
+  TextColumn get note => text().nullable()();
+  DateTimeColumn get at => dateTime()();
+
+  @override
+  Set<Column<Object>> get primaryKey => <Column<Object>>{id};
 }
 
 /// Key/value flags (e.g. SharedPreferences snapshot migration).

@@ -167,6 +167,8 @@ void main() {
       expect(text, contains('Overdue: 1'));
       expect(text, contains('Charges (opened in range):'));
       expect(text, contains('Charges (returned in range):'));
+      expect(text, contains('Deposit applied (returned in range):'));
+      expect(text, contains('Balance due after deposit (returned):'));
     });
 
     test('customer-wise lists customers and items', () {

@@ -61,6 +61,8 @@ class ReportBuilder {
       'Overdue: $overdue',
       'Charges (opened in range): ${formatMoney(_sumOpenedCharges(rentals, range))}',
       'Charges (returned in range): ${formatMoney(_sumReturnedCharges(rentals, range))}',
+      'Deposit applied (returned in range): ${formatMoney(_sumDepositApplied(rentals, range))}',
+      'Balance due after deposit (returned): ${formatMoney(_sumBalanceDue(rentals, range))}',
     ].join('\n');
   }
 
@@ -79,6 +81,26 @@ class ReportBuilder {
     for (final Rental r in rentals) {
       if (r.returnedAt != null && _inRange(r.returnedAt!, range)) {
         total += r.totalAmount;
+      }
+    }
+    return total;
+  }
+
+  int _sumDepositApplied(List<Rental> rentals, ReportDateRange range) {
+    int total = 0;
+    for (final Rental r in rentals) {
+      if (r.returnedAt != null && _inRange(r.returnedAt!, range)) {
+        total += r.depositApplied;
+      }
+    }
+    return total;
+  }
+
+  int _sumBalanceDue(List<Rental> rentals, ReportDateRange range) {
+    int total = 0;
+    for (final Rental r in rentals) {
+      if (r.returnedAt != null && _inRange(r.returnedAt!, range)) {
+        total += r.amountDueAfterDeposit;
       }
     }
     return total;
@@ -128,7 +150,13 @@ class ReportBuilder {
       final String name = customer?.name ?? customerId;
       final String phone = customer?.phone ?? '';
       lines.add('');
-      lines.add(phone.isEmpty ? name : '$name ($phone)');
+      final String header = phone.isEmpty ? name : '$name ($phone)';
+      final int deposit = customer?.depositBalance ?? 0;
+      lines.add(
+        deposit > 0
+            ? '$header | deposit ${formatMoney(deposit)}'
+            : header,
+      );
       for (final Rental rental in byCustomer[customerId]!) {
         final String itemNames = rental.lines
             .map((RentalLine line) {
@@ -151,8 +179,11 @@ class ReportBuilder {
         final int amount = rental.isActive
             ? rental.totalAmountAsOf(clock)
             : rental.totalAmount;
+        final String depositBit = !rental.isActive && rental.depositApplied > 0
+            ? ' | deposit ${formatMoney(rental.depositApplied)} | due ${formatMoney(rental.amountDueAfterDeposit)}'
+            : '';
         lines.add(
-          '  • $prefix${rental.id}: $itemNames | due ${_formatDate(rental.dueAt)} | ${status.label} | ${formatMoney(amount)}',
+          '  • $prefix${rental.id}: $itemNames | due ${_formatDate(rental.dueAt)} | ${status.label} | ${formatMoney(amount)}$depositBit',
         );
       }
     }

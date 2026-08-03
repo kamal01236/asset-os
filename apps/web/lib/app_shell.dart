@@ -347,10 +347,7 @@ class RentalsScreen extends ConsumerWidget {
                   ? rental.lines.map((RentalLine line) => line.displayLabel).join(', ')
                   : rental.id,
               subtitle:
-                  '${rentalPartyLabel(customer, rental)} · ${l10n.rentalAmountSubtitle(
-                    _date(rental.dueAt),
-                    formatMoney(rental.totalAmountAsOf(now)),
-                  )}',
+                  '${rentalPartyLabel(customer, rental)} · ${_rentalAmountSubtitle(l10n, rental)}',
               leadingIcon: Icons.assignment_outlined,
               status: rental.statusFor(now),
               trailing: const Icon(Icons.chevron_right),
@@ -436,7 +433,13 @@ class CustomersScreen extends ConsumerWidget {
                 customer.isTrusted ? l10n.customerTrusted : l10n.customerStandard;
             return EntityCard(
               title: customer.name,
-              subtitle: l10n.customerSubtitle(customer.phone, tier),
+              subtitle: customer.depositBalance > 0
+                  ? l10n.customerSubtitleWithDeposit(
+                      customer.phone,
+                      tier,
+                      formatMoney(customer.depositBalance),
+                    )
+                  : l10n.customerSubtitle(customer.phone, tier),
               leadingIcon: Icons.person_outline,
               status: customer.isTrusted ? AssetStatus.available : AssetStatus.archived,
               trailing: const Icon(Icons.chevron_right),
@@ -713,6 +716,59 @@ class RentalDetailScreen extends ConsumerWidget {
                       fontWeight: FontWeight.w700,
                     ),
                   ),
+                  if (rental.isActive) ...<Widget>[
+                    const SizedBox(height: 6),
+                    Text(
+                      l10n.depositAvailableLabel(
+                        formatMoney(customer.depositBalance),
+                      ),
+                    ),
+                    Builder(
+                      builder: (BuildContext context) {
+                        final int willApply = customer.depositBalance < totalShown
+                            ? customer.depositBalance
+                            : totalShown;
+                        final int remainingDue = totalShown - willApply;
+                        final int leftover =
+                            customer.depositBalance - willApply;
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Text(
+                              l10n.depositWillApplyLabel(
+                                formatMoney(willApply),
+                              ),
+                            ),
+                            if (remainingDue > 0)
+                              Text(
+                                l10n.depositRemainingDueLabel(
+                                  formatMoney(remainingDue),
+                                ),
+                              )
+                            else if (leftover > 0)
+                              Text(
+                                l10n.depositLeftoverLabel(
+                                  formatMoney(leftover),
+                                ),
+                              ),
+                          ],
+                        );
+                      },
+                    ),
+                  ] else ...<Widget>[
+                    if (rental.depositApplied > 0)
+                      Text(
+                        l10n.depositAppliedLabel(
+                          formatMoney(rental.depositApplied),
+                        ),
+                      ),
+                    if (!rental.isActive)
+                      Text(
+                        l10n.depositNetDueLabel(
+                          formatMoney(rental.amountDueAfterDeposit),
+                        ),
+                      ),
+                  ],
                 ],
               ),
             ),
@@ -763,8 +819,13 @@ class RentalDetailScreen extends ConsumerWidget {
               child: FilledButton(
                 onPressed: rental.isActive
                     ? () async {
-                        await ref.read(repositoryProvider).returnRental(rental.id);
-                        if (context.mounted) {
+                        final bool done = await _confirmAndReturnRental(
+                          context: context,
+                          ref: ref,
+                          rental: rental,
+                          customer: customer,
+                        );
+                        if (done && context.mounted) {
                           Navigator.of(context).pop();
                         }
                       }
@@ -1052,6 +1113,8 @@ class CustomerDetailScreen extends ConsumerWidget {
     final AppLocalizations l10n = context.l10n;
     final AsyncValue<List<Customer>> customersAsync = ref.watch(customersProvider);
     final AsyncValue<List<Rental>> rentalsAsync = ref.watch(rentalsProvider);
+    final AsyncValue<List<DepositLedgerEntry>> ledgerAsync =
+        ref.watch(depositLedgerProvider(customerId));
 
     if (customersAsync.isLoading || rentalsAsync.isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -1062,6 +1125,8 @@ class CustomerDetailScreen extends ConsumerWidget {
     final Customer customer = customers.firstWhere((entry) => entry.id == customerId);
     final List<Rental> customerRentals =
         rentals.where((entry) => entry.customerId == customer.id).toList();
+    final List<DepositLedgerEntry> ledger =
+        (ledgerAsync.valueOrNull ?? const <DepositLedgerEntry>[]).take(10).toList();
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.customerProfileTitle)),
@@ -1073,6 +1138,58 @@ class CustomerDetailScreen extends ConsumerWidget {
             subtitle: customer.phone,
             leadingIcon: Icons.person_outline,
             status: customer.isTrusted ? AssetStatus.available : AssetStatus.archived,
+          ),
+          const SizedBox(height: 10),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    l10n.depositBalanceLabel,
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    formatMoney(customer.depositBalance),
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: <Widget>[
+                      Expanded(
+                        child: FilledButton(
+                          onPressed: () => _showDepositAmountDialog(
+                            context: context,
+                            ref: ref,
+                            customer: customer,
+                            isTopUp: true,
+                          ),
+                          child: Text(l10n.depositAddAction),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: customer.depositBalance > 0
+                              ? () => _showDepositAmountDialog(
+                                    context: context,
+                                    ref: ref,
+                                    customer: customer,
+                                    isTopUp: false,
+                                  )
+                              : null,
+                          child: Text(l10n.depositRefundAction),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
           ),
           const SizedBox(height: 10),
           Card(
@@ -1104,6 +1221,37 @@ class CustomerDetailScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 10),
           Text(
+            l10n.depositLedgerHeading,
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 8),
+          if (ledger.isEmpty)
+            Text(l10n.depositLedgerEmpty)
+          else
+            ...ledger.map(
+              (DepositLedgerEntry entry) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Card(
+                  child: ListTile(
+                    title: Text(_depositLedgerTitle(l10n, entry)),
+                    subtitle: Text(
+                      <String>[
+                        l10n.depositLedgerBalanceAfter(
+                          formatMoney(entry.balanceAfter),
+                        ),
+                        if (entry.note != null && entry.note!.isNotEmpty)
+                          entry.note!,
+                        _date(entry.at),
+                      ].join(' · '),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          const SizedBox(height: 10),
+          Text(
             l10n.recentRentals,
             style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
           ),
@@ -1115,10 +1263,7 @@ class CustomerDetailScreen extends ConsumerWidget {
                 title: rental.lines.isNotEmpty
                     ? rental.lines.map((RentalLine line) => line.displayLabel).join(', ')
                     : rental.id,
-                subtitle: l10n.rentalAmountSubtitle(
-                  _date(rental.dueAt),
-                  formatMoney(rental.totalAmountAsOf(DateTime.now())),
-                ),
+                subtitle: _rentalAmountSubtitle(l10n, rental),
                 leadingIcon: Icons.assignment_outlined,
                 status: rental.statusFor(DateTime.now()),
                 onTap: () {
@@ -1208,10 +1353,7 @@ class _UniversalSearchScreenState extends ConsumerState<UniversalSearchScreen> {
               title: rental.lines.isNotEmpty
                   ? rental.lines.map((RentalLine line) => line.displayLabel).join(', ')
                   : rental.id,
-              subtitle: l10n.rentalAmountSubtitle(
-                _date(rental.dueAt),
-                formatMoney(rental.totalAmountAsOf(DateTime.now())),
-              ),
+              subtitle: _rentalAmountSubtitle(l10n, rental),
               leadingIcon: Icons.assignment_outlined,
               status: rental.statusFor(DateTime.now()),
               onTap: () {
@@ -1230,7 +1372,11 @@ class _UniversalSearchScreenState extends ConsumerState<UniversalSearchScreen> {
               title: rental.lines.isNotEmpty
                   ? rental.lines.map((RentalLine line) => line.displayLabel).join(', ')
                   : rental.id,
-              subtitle: l10n.returnedDate(_date(rental.returnedAt ?? rental.dueAt)),
+              subtitle: <String>[
+                l10n.returnedDate(_date(rental.returnedAt ?? rental.dueAt)),
+                if (rental.depositApplied > 0)
+                  l10n.depositAppliedLabel(formatMoney(rental.depositApplied)),
+              ].join(' · '),
               leadingIcon: Icons.history,
               status: AssetStatus.archived,
               onTap: () {
@@ -1552,7 +1698,12 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
             ] else if (_resolvedCustomer != null)
               EntityCard(
                 title: _resolvedCustomer!.name,
-                subtitle: l10n.existingCustomerSubtitle(_resolvedCustomer!.phone),
+                subtitle: _resolvedCustomer!.depositBalance > 0
+                    ? l10n.existingCustomerWithDeposit(
+                        _resolvedCustomer!.phone,
+                        formatMoney(_resolvedCustomer!.depositBalance),
+                      )
+                    : l10n.existingCustomerSubtitle(_resolvedCustomer!.phone),
                 leadingIcon: Icons.verified_user_outlined,
                 status: AssetStatus.available,
               )
@@ -1929,11 +2080,14 @@ class ReturnFlowScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final AppLocalizations l10n = context.l10n;
     final AsyncValue<List<Rental>> rentalsAsync = ref.watch(rentalsProvider);
+    final AsyncValue<List<Customer>> customersAsync = ref.watch(customersProvider);
     return rentalsAsync.when(
       loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (Object error, StackTrace _) => Scaffold(body: Center(child: Text('$error'))),
       data: (List<Rental> rentals) {
         final List<Rental> active = rentals.where((item) => item.isActive).toList();
+        final List<Customer> customers =
+            customersAsync.valueOrNull ?? const <Customer>[];
         return Scaffold(
           appBar: AppBar(title: Text(l10n.actionReturnItem)),
           body: Padding(
@@ -1949,26 +2103,44 @@ class ReturnFlowScreen extends ConsumerWidget {
                     itemBuilder: (BuildContext context, int index) {
                       final Rental rental = active[index];
                       final DateTime now = DateTime.now();
+                      final Customer customer = customers.firstWhere(
+                        (Customer c) => c.id == rental.customerId,
+                        orElse: () => Customer(
+                          id: rental.customerId,
+                          name: l10n.unknownCustomer,
+                          phone: '',
+                          isTrusted: false,
+                          qrCode: '',
+                        ),
+                      );
+                      final int total = rental.totalAmountAsOf(now);
+                      final int willApply = customer.depositBalance < total
+                          ? customer.depositBalance
+                          : total;
                       return EntityCard(
                         title: rental.lines.isNotEmpty
                             ? rental.lines
                                 .map((RentalLine line) => line.displayLabel)
                                 .join(', ')
                             : rental.id,
-                        subtitle: l10n.rentalAmountSubtitle(
-                          _date(rental.dueAt),
-                          formatMoney(rental.totalAmountAsOf(now)),
-                        ),
+                        subtitle: <String>[
+                          l10n.rentalAmountSubtitle(
+                            _date(rental.dueAt),
+                            formatMoney(total),
+                          ),
+                          if (customer.depositBalance > 0)
+                            l10n.depositWillApplyLabel(formatMoney(willApply)),
+                        ].join('\n'),
                         leadingIcon: Icons.assignment_return_outlined,
                         status: rental.statusFor(now),
                         trailing: FilledButton(
                           onPressed: () async {
-                            await ref.read(repositoryProvider).returnRental(rental.id);
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text(l10n.rentalReturned(rental.id))),
-                              );
-                            }
+                            await _confirmAndReturnRental(
+                              context: context,
+                              ref: ref,
+                              rental: rental,
+                              customer: customer,
+                            );
                           },
                           child: Text(l10n.actionReturn),
                         ),
@@ -2274,4 +2446,225 @@ class _StubScaffold extends StatelessWidget {
 
 String _date(DateTime value) {
   return '${value.day.toString().padLeft(2, '0')}/${value.month.toString().padLeft(2, '0')}/${value.year}';
+}
+
+String _rentalAmountSubtitle(AppLocalizations l10n, Rental rental) {
+  final DateTime now = DateTime.now();
+  final String base = l10n.rentalAmountSubtitle(
+    _date(rental.dueAt),
+    formatMoney(rental.totalAmountAsOf(now)),
+  );
+  if (!rental.isActive && rental.depositApplied > 0) {
+    return '$base · ${l10n.depositAppliedLabel(formatMoney(rental.depositApplied))}';
+  }
+  return base;
+}
+
+String _depositLedgerTitle(AppLocalizations l10n, DepositLedgerEntry entry) {
+  final String amount = formatMoney(entry.amount.abs());
+  switch (entry.type) {
+    case DepositLedgerType.topUp:
+      return l10n.depositLedgerTopUp(amount);
+    case DepositLedgerType.apply:
+      return l10n.depositLedgerApply(amount);
+    case DepositLedgerType.refund:
+      return l10n.depositLedgerRefund(amount);
+    case DepositLedgerType.adjust:
+      return l10n.depositLedgerAdjust(amount);
+  }
+}
+
+String _returnSettlementSnack(AppLocalizations l10n, RentalReturnResult result) {
+  if (result.depositApplied <= 0) {
+    return l10n.depositReturnSnackNoDeposit(formatMoney(result.totalAmount));
+  }
+  if (result.amountDue > 0) {
+    return l10n.depositReturnSnackDue(
+      formatMoney(result.depositApplied),
+      formatMoney(result.amountDue),
+    );
+  }
+  return l10n.depositReturnSnackApplied(
+    formatMoney(result.depositApplied),
+    formatMoney(result.depositBalanceAfter),
+  );
+}
+
+Future<bool> _confirmAndReturnRental({
+  required BuildContext context,
+  required WidgetRef ref,
+  required Rental rental,
+  required Customer customer,
+}) async {
+  final AppLocalizations l10n = context.l10n;
+  final DateTime now = DateTime.now();
+  final int total = rental.totalAmountAsOf(now);
+  final int willApply =
+      customer.depositBalance < total ? customer.depositBalance : total;
+  final int remainingDue = total - willApply;
+  final int leftover = customer.depositBalance - willApply;
+
+  final bool? confirmed = await showDialog<bool>(
+    context: context,
+    builder: (BuildContext dialogContext) {
+      return AlertDialog(
+        title: Text(l10n.returnSettlementTitle),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text(l10n.chargeTotalLabel(formatMoney(total))),
+            Text(
+              l10n.depositAvailableLabel(formatMoney(customer.depositBalance)),
+            ),
+            Text(l10n.depositWillApplyLabel(formatMoney(willApply))),
+            if (remainingDue > 0)
+              Text(l10n.depositRemainingDueLabel(formatMoney(remainingDue)))
+            else if (leftover > 0)
+              Text(l10n.depositLeftoverLabel(formatMoney(leftover))),
+          ],
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(l10n.confirmReturnAction),
+          ),
+        ],
+      );
+    },
+  );
+  if (confirmed != true || !context.mounted) {
+    return false;
+  }
+
+  final RentalReturnResult? result =
+      await ref.read(repositoryProvider).returnRental(rental.id);
+  if (!context.mounted) {
+    return result != null;
+  }
+  if (result == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l10n.rentalReturned(rental.id))),
+    );
+    return false;
+  }
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(content: Text(_returnSettlementSnack(l10n, result))),
+  );
+  return true;
+}
+
+Future<void> _showDepositAmountDialog({
+  required BuildContext context,
+  required WidgetRef ref,
+  required Customer customer,
+  required bool isTopUp,
+}) async {
+  final AppLocalizations l10n = context.l10n;
+  final TextEditingController amountController = TextEditingController();
+  final TextEditingController noteController = TextEditingController();
+
+  final bool? confirmed = await showDialog<bool>(
+    context: context,
+    builder: (BuildContext dialogContext) {
+      return AlertDialog(
+        title: Text(isTopUp ? l10n.depositTopUpTitle : l10n.depositRefundTitle),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            TextField(
+              controller: amountController,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              autofocus: true,
+              decoration: InputDecoration(
+                labelText: l10n.depositAmountLabel,
+                hintText: l10n.depositAmountHint,
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: noteController,
+              decoration: InputDecoration(
+                labelText: l10n.depositNoteLabel,
+                hintText: l10n.depositNoteHint,
+              ),
+            ),
+          ],
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(
+              isTopUp ? l10n.depositConfirmTopUp : l10n.depositConfirmRefund,
+            ),
+          ),
+        ],
+      );
+    },
+  );
+
+  final int amountPaise = parseRupeesToPaise(amountController.text);
+  amountController.dispose();
+  final String note = noteController.text.trim();
+  noteController.dispose();
+
+  if (confirmed != true || !context.mounted) {
+    return;
+  }
+  if (amountPaise <= 0) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l10n.depositInvalidAmount)),
+    );
+    return;
+  }
+  if (!isTopUp && amountPaise > customer.depositBalance) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l10n.depositRefundExceeds)),
+    );
+    return;
+  }
+
+  try {
+    final Customer updated = isTopUp
+        ? await ref.read(repositoryProvider).topUpDeposit(
+              customer.id,
+              amountPaise,
+              note: note.isEmpty ? null : note,
+            )
+        : await ref.read(repositoryProvider).refundDeposit(
+              customer.id,
+              amountPaise,
+              note: note.isEmpty ? null : note,
+            );
+    if (!context.mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          isTopUp
+              ? l10n.depositTopUpSuccess(formatMoney(updated.depositBalance))
+              : l10n.depositRefundSuccess(formatMoney(updated.depositBalance)),
+        ),
+      ),
+    );
+  } on ArgumentError catch (error) {
+    if (!context.mounted) {
+      return;
+    }
+    final String message = error.message == 'Refund cannot exceed deposit balance'
+        ? l10n.depositRefundExceeds
+        : '$error';
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
 }

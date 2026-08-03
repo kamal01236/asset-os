@@ -683,4 +683,151 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get customEndRequired => 'Pick a return-by date on or after today.';
+
+  @override
+  String get depositBalanceLabel => 'Deposit balance';
+
+  @override
+  String depositBalanceAmount(String amount) {
+    return 'Deposit: $amount';
+  }
+
+  @override
+  String get depositAddAction => 'Add deposit';
+
+  @override
+  String get depositRefundAction => 'Refund';
+
+  @override
+  String get depositAmountLabel => 'Amount (₹)';
+
+  @override
+  String get depositAmountHint => 'e.g. 500';
+
+  @override
+  String get depositNoteLabel => 'Note (optional)';
+
+  @override
+  String get depositNoteHint => 'Reason or reference';
+
+  @override
+  String get depositTopUpTitle => 'Add deposit';
+
+  @override
+  String get depositRefundTitle => 'Refund deposit';
+
+  @override
+  String get depositConfirmTopUp => 'Add';
+
+  @override
+  String get depositConfirmRefund => 'Refund';
+
+  @override
+  String get depositInvalidAmount => 'Enter an amount greater than zero.';
+
+  @override
+  String get depositRefundExceeds =>
+      'Refund cannot exceed the current deposit balance.';
+
+  @override
+  String depositTopUpSuccess(String amount) {
+    return 'Deposit updated to $amount.';
+  }
+
+  @override
+  String depositRefundSuccess(String amount) {
+    return 'Refunded. Deposit now $amount.';
+  }
+
+  @override
+  String get depositLedgerHeading => 'Deposit history';
+
+  @override
+  String get depositLedgerEmpty => 'No deposit activity yet.';
+
+  @override
+  String depositLedgerTopUp(String amount) {
+    return 'Top-up $amount';
+  }
+
+  @override
+  String depositLedgerApply(String amount) {
+    return 'Applied on return $amount';
+  }
+
+  @override
+  String depositLedgerRefund(String amount) {
+    return 'Refund $amount';
+  }
+
+  @override
+  String depositLedgerAdjust(String amount) {
+    return 'Adjust $amount';
+  }
+
+  @override
+  String depositLedgerBalanceAfter(String amount) {
+    return 'Balance $amount';
+  }
+
+  @override
+  String depositAvailableLabel(String amount) {
+    return 'Deposit available: $amount';
+  }
+
+  @override
+  String depositWillApplyLabel(String amount) {
+    return 'Will apply from deposit: $amount';
+  }
+
+  @override
+  String depositRemainingDueLabel(String amount) {
+    return 'Remaining due: $amount';
+  }
+
+  @override
+  String depositLeftoverLabel(String amount) {
+    return 'Leftover deposit: $amount';
+  }
+
+  @override
+  String depositAppliedLabel(String amount) {
+    return 'Deposit applied: $amount';
+  }
+
+  @override
+  String depositNetDueLabel(String amount) {
+    return 'Net due: $amount';
+  }
+
+  @override
+  String get returnSettlementTitle => 'Return settlement';
+
+  @override
+  String get confirmReturnAction => 'Confirm return';
+
+  @override
+  String depositReturnSnackApplied(String applied, String balance) {
+    return 'Applied $applied from deposit; balance now $balance.';
+  }
+
+  @override
+  String depositReturnSnackDue(String applied, String due) {
+    return 'Applied $applied from deposit; remaining due $due.';
+  }
+
+  @override
+  String depositReturnSnackNoDeposit(String total) {
+    return 'Returned. Total $total due in cash.';
+  }
+
+  @override
+  String customerSubtitleWithDeposit(String phone, String tier, String amount) {
+    return '$phone • $tier • Deposit $amount';
+  }
+
+  @override
+  String existingCustomerWithDeposit(String phone, String amount) {
+    return '$phone • Existing • Deposit $amount';
+  }
 }

@@ -685,4 +685,151 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get customEndRequired => 'आज या उसके बाद की वापसी तिथि चुनें।';
+
+  @override
+  String get depositBalanceLabel => 'जमा शेष';
+
+  @override
+  String depositBalanceAmount(String amount) {
+    return 'जमा: $amount';
+  }
+
+  @override
+  String get depositAddAction => 'जमा जोड़ें';
+
+  @override
+  String get depositRefundAction => 'वापसी';
+
+  @override
+  String get depositAmountLabel => 'राशि (₹)';
+
+  @override
+  String get depositAmountHint => 'जैसे 500';
+
+  @override
+  String get depositNoteLabel => 'नोट (वैकल्पिक)';
+
+  @override
+  String get depositNoteHint => 'कारण या संदर्भ';
+
+  @override
+  String get depositTopUpTitle => 'जमा जोड़ें';
+
+  @override
+  String get depositRefundTitle => 'जमा वापसी';
+
+  @override
+  String get depositConfirmTopUp => 'जोड़ें';
+
+  @override
+  String get depositConfirmRefund => 'वापसी';
+
+  @override
+  String get depositInvalidAmount => 'शून्य से अधिक राशि दर्ज करें।';
+
+  @override
+  String get depositRefundExceeds =>
+      'वापसी वर्तमान जमा शेष से अधिक नहीं हो सकती।';
+
+  @override
+  String depositTopUpSuccess(String amount) {
+    return 'जमा अपडेट होकर $amount हो गई।';
+  }
+
+  @override
+  String depositRefundSuccess(String amount) {
+    return 'वापसी हो गई। जमा अब $amount है।';
+  }
+
+  @override
+  String get depositLedgerHeading => 'जमा इतिहास';
+
+  @override
+  String get depositLedgerEmpty => 'अभी कोई जमा गतिविधि नहीं।';
+
+  @override
+  String depositLedgerTopUp(String amount) {
+    return 'टॉप-अप $amount';
+  }
+
+  @override
+  String depositLedgerApply(String amount) {
+    return 'वापसी पर लागू $amount';
+  }
+
+  @override
+  String depositLedgerRefund(String amount) {
+    return 'वापसी $amount';
+  }
+
+  @override
+  String depositLedgerAdjust(String amount) {
+    return 'समायोजन $amount';
+  }
+
+  @override
+  String depositLedgerBalanceAfter(String amount) {
+    return 'शेष $amount';
+  }
+
+  @override
+  String depositAvailableLabel(String amount) {
+    return 'उपलब्ध जमा: $amount';
+  }
+
+  @override
+  String depositWillApplyLabel(String amount) {
+    return 'जमा से लागू होगा: $amount';
+  }
+
+  @override
+  String depositRemainingDueLabel(String amount) {
+    return 'शेष देय: $amount';
+  }
+
+  @override
+  String depositLeftoverLabel(String amount) {
+    return 'बचा हुआ जमा: $amount';
+  }
+
+  @override
+  String depositAppliedLabel(String amount) {
+    return 'जमा लागू: $amount';
+  }
+
+  @override
+  String depositNetDueLabel(String amount) {
+    return 'नेट देय: $amount';
+  }
+
+  @override
+  String get returnSettlementTitle => 'वापसी निपटान';
+
+  @override
+  String get confirmReturnAction => 'वापसी पुष्टि करें';
+
+  @override
+  String depositReturnSnackApplied(String applied, String balance) {
+    return 'जमा से $applied लागू; शेष अब $balance।';
+  }
+
+  @override
+  String depositReturnSnackDue(String applied, String due) {
+    return 'जमा से $applied लागू; शेष देय $due।';
+  }
+
+  @override
+  String depositReturnSnackNoDeposit(String total) {
+    return 'वापस किया गया। कुल $total नकद देय।';
+  }
+
+  @override
+  String customerSubtitleWithDeposit(String phone, String tier, String amount) {
+    return '$phone • $tier • जमा $amount';
+  }
+
+  @override
+  String existingCustomerWithDeposit(String phone, String amount) {
+    return '$phone • मौजूदा • जमा $amount';
+  }
 }

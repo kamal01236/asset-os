@@ -296,14 +296,16 @@ class LocalRepository {
     }
   }
 
-  Future<void> returnRental(String rentalId) async {
+  /// Settles charges from the customer deposit wallet on return.
+  /// Returns null if the rental is missing or already returned.
+  Future<RentalReturnResult?> returnRental(String rentalId) async {
     final DateTime now = DateTime.now();
-    await _db.transaction(() async {
+    return _db.transaction(() async {
       final RentalRow? rental = await (_db.select(_db.rentals)
             ..where((t) => t.id.equals(rentalId)))
           .getSingleOrNull();
       if (rental == null || rental.returnedAt != null) {
-        return;
+        return null;
       }
 
       final int lateAmount = computeLateAmount(
@@ -316,13 +318,42 @@ class LocalRepository {
         lateAmount: lateAmount,
       );
 
+      final CustomerRow? customer = await (_db.select(_db.customers)
+            ..where((t) => t.id.equals(rental.customerId)))
+          .getSingleOrNull();
+      final int depositBalance = customer?.depositBalance ?? 0;
+      final int depositApplied =
+          depositBalance < totalAmount ? depositBalance : totalAmount;
+      final int balanceAfter = depositBalance - depositApplied;
+
       await (_db.update(_db.rentals)..where((t) => t.id.equals(rentalId))).write(
         RentalsCompanion(
           returnedAt: Value<DateTime?>(now),
           lateAmount: Value<int>(lateAmount),
           totalAmount: Value<int>(totalAmount),
+          depositApplied: Value<int>(depositApplied),
         ),
       );
+
+      if (customer != null && depositApplied > 0) {
+        await (_db.update(_db.customers)
+              ..where((t) => t.id.equals(customer.id)))
+            .write(
+          CustomersCompanion(depositBalance: Value<int>(balanceAfter)),
+        );
+        await _db.into(_db.depositLedger).insert(
+          DepositLedgerCompanion.insert(
+            id: 'DEP-${now.millisecondsSinceEpoch}',
+            customerId: customer.id,
+            rentalId: Value<String?>(rentalId),
+            type: DepositLedgerType.apply.storageValue,
+            amount: -depositApplied,
+            balanceAfter: balanceAfter,
+            note: const Value<String?>('Applied on return'),
+            at: now,
+          ),
+        );
+      }
 
       await _db.into(_db.rentalEvents).insert(
         RentalEventsCompanion.insert(
@@ -353,7 +384,116 @@ class LocalRepository {
           ),
         );
       }
+
+      return RentalReturnResult(
+        rentalId: rentalId,
+        totalAmount: totalAmount,
+        depositApplied: depositApplied,
+        depositBalanceAfter: balanceAfter,
+      );
     });
+  }
+
+  /// Credit the customer deposit wallet. [amountPaise] must be &gt; 0.
+  Future<Customer> topUpDeposit(
+    String customerId,
+    int amountPaise, {
+    String? note,
+  }) async {
+    if (amountPaise <= 0) {
+      throw ArgumentError('Top-up amount must be greater than zero');
+    }
+    final DateTime now = DateTime.now();
+    return _db.transaction(() async {
+      final CustomerRow? row = await (_db.select(_db.customers)
+            ..where((t) => t.id.equals(customerId)))
+          .getSingleOrNull();
+      if (row == null) {
+        throw ArgumentError('Customer not found: $customerId');
+      }
+      final int balanceAfter = row.depositBalance + amountPaise;
+      await (_db.update(_db.customers)..where((t) => t.id.equals(customerId)))
+          .write(
+        CustomersCompanion(depositBalance: Value<int>(balanceAfter)),
+      );
+      await _db.into(_db.depositLedger).insert(
+        DepositLedgerCompanion.insert(
+          id: 'DEP-${now.millisecondsSinceEpoch}',
+          customerId: customerId,
+          type: DepositLedgerType.topUp.storageValue,
+          amount: amountPaise,
+          balanceAfter: balanceAfter,
+          note: Value<String?>(
+            note == null || note.trim().isEmpty ? null : note.trim(),
+          ),
+          at: now,
+        ),
+      );
+      return _mapCustomer(row).copyWith(depositBalance: balanceAfter);
+    });
+  }
+
+  /// Debit the customer deposit wallet. Cannot exceed current balance.
+  Future<Customer> refundDeposit(
+    String customerId,
+    int amountPaise, {
+    String? note,
+  }) async {
+    if (amountPaise <= 0) {
+      throw ArgumentError('Refund amount must be greater than zero');
+    }
+    final DateTime now = DateTime.now();
+    return _db.transaction(() async {
+      final CustomerRow? row = await (_db.select(_db.customers)
+            ..where((t) => t.id.equals(customerId)))
+          .getSingleOrNull();
+      if (row == null) {
+        throw ArgumentError('Customer not found: $customerId');
+      }
+      if (amountPaise > row.depositBalance) {
+        throw ArgumentError('Refund cannot exceed deposit balance');
+      }
+      final int balanceAfter = row.depositBalance - amountPaise;
+      await (_db.update(_db.customers)..where((t) => t.id.equals(customerId)))
+          .write(
+        CustomersCompanion(depositBalance: Value<int>(balanceAfter)),
+      );
+      await _db.into(_db.depositLedger).insert(
+        DepositLedgerCompanion.insert(
+          id: 'DEP-${now.millisecondsSinceEpoch}',
+          customerId: customerId,
+          type: DepositLedgerType.refund.storageValue,
+          amount: -amountPaise,
+          balanceAfter: balanceAfter,
+          note: Value<String?>(
+            note == null || note.trim().isEmpty ? null : note.trim(),
+          ),
+          at: now,
+        ),
+      );
+      return _mapCustomer(row).copyWith(depositBalance: balanceAfter);
+    });
+  }
+
+  Stream<List<DepositLedgerEntry>> watchDepositLedger(String customerId) {
+    final query = _db.select(_db.depositLedger)
+      ..where((t) => t.customerId.equals(customerId))
+      ..orderBy([(t) => OrderingTerm.desc(t.at)]);
+    return query.watch().map(
+      (rows) => rows.map(_mapDepositLedger).toList(growable: false),
+    );
+  }
+
+  Future<List<DepositLedgerEntry>> listDepositLedger(
+    String customerId, {
+    int limit = 20,
+  }) async {
+    final query = _db.select(_db.depositLedger)
+      ..where((t) => t.customerId.equals(customerId))
+      ..orderBy([(t) => OrderingTerm.desc(t.at)])
+      ..limit(limit);
+    final List<DepositLedgerRow> rows = await query.get();
+    return rows.map(_mapDepositLedger).toList(growable: false);
   }
 
   Future<void> addInventory({
@@ -658,6 +798,7 @@ class LocalRepository {
             baseAmount: Value<int>(rental.baseAmount),
             lateAmount: Value<int>(rental.lateAmount),
             totalAmount: Value<int>(rental.totalAmount),
+            depositApplied: Value<int>(rental.depositApplied),
             durationUnits: Value<int>(rental.durationUnits),
           ),
         );
@@ -698,6 +839,7 @@ class LocalRepository {
       phone: customer.phone,
       isTrusted: Value<bool>(customer.isTrusted),
       qrCode: customer.qrCode,
+      depositBalance: Value<int>(customer.depositBalance),
     );
   }
 
@@ -725,6 +867,20 @@ class LocalRepository {
       phone: row.phone,
       isTrusted: row.isTrusted,
       qrCode: row.qrCode,
+      depositBalance: row.depositBalance,
+    );
+  }
+
+  DepositLedgerEntry _mapDepositLedger(DepositLedgerRow row) {
+    return DepositLedgerEntry(
+      id: row.id,
+      customerId: row.customerId,
+      rentalId: row.rentalId,
+      type: DepositLedgerType.parse(row.type),
+      amount: row.amount,
+      balanceAfter: row.balanceAfter,
+      note: row.note,
+      at: row.at,
     );
   }
 
@@ -783,6 +939,7 @@ class LocalRepository {
       baseAmount: row.baseAmount,
       lateAmount: row.lateAmount,
       totalAmount: row.totalAmount,
+      depositApplied: row.depositApplied,
       durationUnits: row.durationUnits,
       timeline: events
           .map(

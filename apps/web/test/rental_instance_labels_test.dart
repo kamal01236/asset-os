@@ -147,7 +147,7 @@ void main() {
     test('schema v4 tables include pricing defaults', () async {
       final AppDatabase db = AppDatabase(NativeDatabase.memory());
       addTearDown(db.close);
-      expect(db.schemaVersion, 4);
+      expect(db.schemaVersion, 5);
 
       await db.into(db.customers).insert(
         CustomersCompanion.insert(
