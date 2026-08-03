@@ -600,5 +600,14 @@
   "applyHomeLayoutCustomizedBody": "आपने होम पहले अनुकूलित किया है। इसे इस टेम्पलेट के लेआउट से बदलें?",
   "applyHomeLayoutSkip": "वर्तमान रखें",
   "applyHomeLayoutConfirm": "लेआउट लागू करें",
-  "applyHomeLayoutDone": "होम लेआउट अपडेट हो गया।"
+  "applyHomeLayoutDone": "होम लेआउट अपडेट हो गया।",
+  "minMeaningfulTextError": "कम से कम {min} अक्षर दर्ज करें।",
+  "@minMeaningfulTextError": {
+    "placeholders": {
+      "min": {"type": "int"}
+    }
+  },
+  "searchTypeMinChars": "कम से कम 3 अक्षर लिखें",
+  "searchCustomersHint": "नाम, फ़ोन या उपनाम से खोजें",
+  "searchNoResults": "कोई मिलान नहीं"
 }

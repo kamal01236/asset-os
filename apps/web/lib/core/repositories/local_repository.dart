@@ -5,7 +5,9 @@ import '../db/app_database.dart';
 import '../models/entities.dart';
 import '../models/self_customer.dart';
 import '../pricing/rental_pricing.dart';
+import '../search/search_scope.dart';
 import '../templates/industry_templates.dart';
+import '../validation/text_rules.dart';
 
 class TemplateImportResult {
   const TemplateImportResult({
@@ -158,6 +160,11 @@ class LocalRepository {
         'Nickname is required when issuing to $kSelfCustomerName',
       );
     }
+    if (storedNick != null && !meetsMinMeaningfulText(storedNick)) {
+      throw ArgumentError(
+        'Nickname must be at least $kMinMeaningfulTextLength characters',
+      );
+    }
     if (lines.isEmpty) {
       throw ArgumentError('At least one rental line is required');
     }
@@ -169,6 +176,11 @@ class LocalRepository {
       final String shortCode = normalizeShortCode(line.shortCode);
       if (instanceName.isEmpty || shortCode.isEmpty) {
         throw ArgumentError('Instance name and short code are required');
+      }
+      if (!meetsMinMeaningfulText(instanceName)) {
+        throw ArgumentError(
+          'Instance name must be at least $kMinMeaningfulTextLength characters',
+        );
       }
       if (!batchCodes.add(shortCode)) {
         throw DuplicateActiveShortCodeException(shortCode);
@@ -698,17 +710,33 @@ class LocalRepository {
     int lateFeePerDay = 0,
     String currencyCode = 'INR',
   }) async {
+    final String trimmedName = name.trim();
+    final String trimmedCategory = category.trim();
+    final String? trimmedNotes = notes?.trim();
+    if (!meetsMinMeaningfulText(trimmedName) ||
+        !meetsMinMeaningfulText(trimmedCategory)) {
+      throw ArgumentError(
+        'Name and category must be at least $kMinMeaningfulTextLength characters',
+      );
+    }
+    if (!meetsMinMeaningfulText(trimmedNotes, allowEmpty: true)) {
+      throw ArgumentError(
+        'Notes must be at least $kMinMeaningfulTextLength characters when set',
+      );
+    }
     final DateTime now = DateTime.now();
     await _db.into(_db.inventoryItems).insert(
       InventoryItemsCompanion.insert(
         id: 'INV-${now.millisecondsSinceEpoch}',
-        name: name,
-        category: category,
+        name: trimmedName,
+        category: trimmedCategory,
         availableUnits: units,
         totalUnits: units,
         status: AssetStatus.available.name,
         qrCode: 'inventory:${now.millisecondsSinceEpoch}',
-        notes: Value<String?>(notes?.isEmpty == true ? null : notes),
+        notes: Value<String?>(
+          (trimmedNotes == null || trimmedNotes.isEmpty) ? null : trimmedNotes,
+        ),
         billingMode: Value<String>(billingMode.name),
         rateAmount: Value<int>(rateAmount < 0 ? 0 : rateAmount),
         lateFeePerDay: Value<int>(lateFeePerDay < 0 ? 0 : lateFeePerDay),
@@ -785,6 +813,20 @@ class LocalRepository {
     int? lateFeePerDay,
     String? currencyCode,
   }) async {
+    final String trimmedName = name.trim();
+    final String trimmedCategory = category.trim();
+    final String? trimmedNotes = notes?.trim();
+    if (!meetsMinMeaningfulText(trimmedName) ||
+        !meetsMinMeaningfulText(trimmedCategory)) {
+      throw ArgumentError(
+        'Name and category must be at least $kMinMeaningfulTextLength characters',
+      );
+    }
+    if (!meetsMinMeaningfulText(trimmedNotes, allowEmpty: true)) {
+      throw ArgumentError(
+        'Notes must be at least $kMinMeaningfulTextLength characters when set',
+      );
+    }
     final InventoryItemRow? row = await (_db.select(_db.inventoryItems)
           ..where((t) => t.id.equals(id)))
         .getSingleOrNull();
@@ -805,14 +847,16 @@ class LocalRepository {
 
     await (_db.update(_db.inventoryItems)..where((t) => t.id.equals(id))).write(
       InventoryItemsCompanion(
-        name: Value<String>(name.trim()),
-        category: Value<String>(category.trim()),
+        name: Value<String>(trimmedName),
+        category: Value<String>(trimmedCategory),
         totalUnits: Value<int>(nextTotal),
         availableUnits: Value<int>(nextAvailable),
         status: Value<String>(
           nextAvailable > 0 ? AssetStatus.available.name : AssetStatus.rented.name,
         ),
-        notes: Value<String?>(notes?.isEmpty == true ? null : notes),
+        notes: Value<String?>(
+          (trimmedNotes == null || trimmedNotes.isEmpty) ? null : trimmedNotes,
+        ),
         billingMode: billingMode == null
             ? const Value.absent()
             : Value<String>(billingMode.name),
@@ -844,12 +888,20 @@ class LocalRepository {
     if (existing != null) {
       return existing;
     }
+    final String? trimmedName = fallbackName?.trim();
+    if (trimmedName != null &&
+        trimmedName.isNotEmpty &&
+        !meetsMinMeaningfulText(trimmedName)) {
+      throw ArgumentError(
+        'Customer name must be at least $kMinMeaningfulTextLength characters',
+      );
+    }
     final DateTime now = DateTime.now();
     final int count = (await _db.select(_db.customers).get()).length;
     final Customer customer = Customer(
       id: 'CUS-${now.millisecondsSinceEpoch}',
-      name: fallbackName?.trim().isNotEmpty == true
-          ? fallbackName!.trim()
+      name: trimmedName != null && trimmedName.isNotEmpty
+          ? trimmedName
           : 'Customer ${count + 1}',
       phone: phone.trim(),
       isTrusted: false,
@@ -870,9 +922,12 @@ class LocalRepository {
     return row == null ? null : _mapCustomer(row);
   }
 
-  Future<SearchResults> search(String query) async {
+  Future<SearchResults> search(
+    String query, {
+    SearchScope scope = SearchScope.global,
+  }) async {
     final String q = query.trim().toLowerCase();
-    if (q.isEmpty) {
+    if (q.length < kMinMeaningfulTextLength) {
       return const SearchResults(
         customers: <Customer>[],
         currentRentals: <Rental>[],
@@ -881,44 +936,75 @@ class LocalRepository {
       );
     }
 
-    final List<Customer> customers = (await listCustomers()).where((customer) {
-      return customer.name.toLowerCase().contains(q) ||
-          customer.phone.toLowerCase().contains(q) ||
-          customer.id.toLowerCase().contains(q);
-    }).toList();
-
+    final List<Customer> allCustomers = await listCustomers();
     final List<Rental> rentals = await listRentals();
-    bool rentalMatches(Rental rental) {
-      if (rental.id.toLowerCase().contains(q) ||
-          rental.qrCode.toLowerCase().contains(q) ||
-          (rental.nickname?.toLowerCase().contains(q) ?? false)) {
-        return true;
-      }
-      for (final RentalLine line in rental.lines) {
-        if (line.instanceName.toLowerCase().contains(q) ||
-            line.catalogName.toLowerCase().contains(q)) {
-          return true;
-        }
-        // Short codes: open lines for active rentals; any line when closed.
-        if (line.shortCode.toLowerCase().contains(q)) {
-          if (!rental.isActive || line.isOpen) {
-            return true;
+    final List<InventoryItem> allInventory = await listInventory();
+
+    List<Customer> customers = const <Customer>[];
+    List<Rental> currentRentals = const <Rental>[];
+    List<Rental> previousRentals = const <Rental>[];
+    List<InventoryItem> inventory = const <InventoryItem>[];
+
+    if (scope == SearchScope.global || scope == SearchScope.customers) {
+      final Set<String> nicknameMatchedCustomerIds = <String>{};
+      if (scope == SearchScope.customers || scope == SearchScope.global) {
+        for (final Rental rental in rentals) {
+          if (rental.nickname?.toLowerCase().contains(q) ?? false) {
+            nicknameMatchedCustomerIds.add(rental.customerId);
           }
         }
       }
-      return false;
+
+      customers = allCustomers.where((customer) {
+        final bool directMatch = customer.name.toLowerCase().contains(q) ||
+            customer.phone.toLowerCase().contains(q) ||
+            customer.id.toLowerCase().contains(q);
+        if (directMatch) {
+          return true;
+        }
+        if (scope == SearchScope.customers) {
+          return nicknameMatchedCustomerIds.contains(customer.id);
+        }
+        return false;
+      }).toList();
     }
 
-    final List<Rental> currentRentals =
-        rentals.where((rental) => rental.isActive && rentalMatches(rental)).toList();
-    final List<Rental> previousRentals =
-        rentals.where((rental) => !rental.isActive && rentalMatches(rental)).toList();
+    if (scope == SearchScope.global) {
+      bool rentalMatches(Rental rental) {
+        if (rental.id.toLowerCase().contains(q) ||
+            rental.qrCode.toLowerCase().contains(q) ||
+            (rental.nickname?.toLowerCase().contains(q) ?? false)) {
+          return true;
+        }
+        for (final RentalLine line in rental.lines) {
+          if (line.instanceName.toLowerCase().contains(q) ||
+              line.catalogName.toLowerCase().contains(q)) {
+            return true;
+          }
+          // Short codes: open lines for active rentals; any line when closed.
+          if (line.shortCode.toLowerCase().contains(q)) {
+            if (!rental.isActive || line.isOpen) {
+              return true;
+            }
+          }
+        }
+        return false;
+      }
 
-    final List<InventoryItem> inventory = (await listInventory()).where((item) {
-      return item.name.toLowerCase().contains(q) ||
-          item.category.toLowerCase().contains(q) ||
-          item.id.toLowerCase().contains(q);
-    }).toList();
+      currentRentals =
+          rentals.where((rental) => rental.isActive && rentalMatches(rental)).toList();
+      previousRentals =
+          rentals.where((rental) => !rental.isActive && rentalMatches(rental)).toList();
+    }
+
+    if (scope == SearchScope.global || scope == SearchScope.inventory) {
+      inventory = allInventory.where((item) {
+        return item.name.toLowerCase().contains(q) ||
+            item.category.toLowerCase().contains(q) ||
+            item.id.toLowerCase().contains(q) ||
+            (item.notes?.toLowerCase().contains(q) ?? false);
+      }).toList();
+    }
 
     return SearchResults(
       customers: customers,

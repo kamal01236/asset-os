@@ -1813,6 +1813,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Home layout updated.'**
   String get applyHomeLayoutDone;
+
+  /// No description provided for @minMeaningfulTextError.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter at least {min} characters.'**
+  String minMeaningfulTextError(int min);
+
+  /// No description provided for @searchTypeMinChars.
+  ///
+  /// In en, this message translates to:
+  /// **'Type at least 3 characters'**
+  String get searchTypeMinChars;
+
+  /// No description provided for @searchCustomersHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by name, phone, or nickname'**
+  String get searchCustomersHint;
+
+  /// No description provided for @searchNoResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No matches'**
+  String get searchNoResults;
 }
 
 class _AppLocalizationsDelegate

@@ -1005,4 +1005,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get applyHomeLayoutDone => 'Home layout updated.';
+
+  @override
+  String minMeaningfulTextError(int min) => 'Enter at least $min characters.';
+
+  @override
+  String get searchTypeMinChars => 'Type at least 3 characters';
+
+  @override
+  String get searchCustomersHint => 'Search by name, phone, or nickname';
+
+  @override
+  String get searchNoResults => 'No matches';
 }

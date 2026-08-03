@@ -139,12 +139,12 @@ void main() {
         lines: <RentalLineInput>[
           RentalLineInput(
             itemId: item.id,
-            instanceName: 'A',
+            instanceName: 'Unit A',
             shortCode: 'DP-A',
           ),
           RentalLineInput(
             itemId: item.id,
-            instanceName: 'B',
+            instanceName: 'Unit B',
             shortCode: 'DP-B',
           ),
         ],

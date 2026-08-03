@@ -156,7 +156,42 @@ void main() {
     await tester.tap(find.text('Search Anything'));
     await tester.pumpAndSettle();
     expect(find.text('Find customer, rental, or inventory'), findsOneWidget);
+    expect(find.text('Type at least 3 characters'), findsOneWidget);
     expect(find.widgetWithText(AppBar, 'Search'), findsOneWidget);
+  });
+
+  testWidgets('Inventory scoped search shows suggestions after 3 chars', (
+    WidgetTester tester,
+  ) async {
+    await _pumpAppShell(tester);
+
+    await tester.tap(find.text('Inventory'));
+    await tester.pumpAndSettle();
+    expect(find.text('Type at least 3 characters'), findsOneWidget);
+
+    await tester.enterText(find.byType(TextField).first, 'ds');
+    await tester.pumpAndSettle();
+    expect(find.text('Type at least 3 characters'), findsOneWidget);
+    expect(find.text('DSLR'), findsOneWidget);
+
+    await tester.enterText(find.byType(TextField).first, 'dsl');
+    await tester.pumpAndSettle();
+    expect(find.text('Type at least 3 characters'), findsNothing);
+    expect(find.text('DSLR'), findsWidgets);
+  });
+
+  testWidgets('Customers scoped search shows suggestions after 3 chars', (
+    WidgetTester tester,
+  ) async {
+    await _pumpAppShell(tester);
+
+    await tester.tap(find.text('Customers'));
+    await tester.pumpAndSettle();
+    expect(find.text('Search by name, phone, or nickname'), findsOneWidget);
+
+    await tester.enterText(find.byType(TextField).first, 'pri');
+    await tester.pumpAndSettle();
+    expect(find.text('Priya Patel'), findsWidgets);
   });
 
   testWidgets('starts New Rental flow from Actions sheet', (WidgetTester tester) async {

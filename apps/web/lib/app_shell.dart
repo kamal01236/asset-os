@@ -8,7 +8,10 @@ import 'core/models/self_customer.dart';
 import 'core/pricing/rental_pricing.dart';
 import 'core/providers/app_providers.dart';
 import 'core/repositories/local_repository.dart';
+import 'core/search/search_scope.dart';
+import 'core/validation/text_rules.dart';
 import 'core/widgets/rental_timeline.dart';
+import 'core/widgets/scoped_search_field.dart';
 import 'core/widgets/ui_primitives.dart';
 import 'features/home/customize_home_screen.dart';
 import 'features/home/home_screen.dart';
@@ -233,7 +236,7 @@ class RentalsScreen extends ConsumerWidget {
   }
 }
 
-class InventoryScreen extends ConsumerWidget {
+class InventoryScreen extends ConsumerStatefulWidget {
   const InventoryScreen({
     required this.onOpenInventory,
     super.key,
@@ -242,45 +245,132 @@ class InventoryScreen extends ConsumerWidget {
   final ValueChanged<InventoryItem> onOpenInventory;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<InventoryScreen> createState() => _InventoryScreenState();
+}
+
+class _InventoryScreenState extends ConsumerState<InventoryScreen> {
+  final TextEditingController _searchController = TextEditingController();
+  String _query = '';
+  List<SearchSuggestion> _suggestions = const <SearchSuggestion>[];
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _onQueryChanged(String value) async {
+    setState(() => _query = value);
+    final String trimmed = value.trim();
+    if (trimmed.length < kMinMeaningfulTextLength) {
+      setState(() => _suggestions = const <SearchSuggestion>[]);
+      return;
+    }
+    final SearchResults results = await ref.read(repositoryProvider).search(
+          trimmed,
+          scope: SearchScope.inventory,
+        );
+    if (!mounted) {
+      return;
+    }
     final AppLocalizations l10n = context.l10n;
-    final AsyncValue<List<InventoryItem>> inventoryAsync = ref.watch(inventoryProvider);
+    setState(() {
+      _suggestions = results.inventory
+          .map(
+            (InventoryItem item) => SearchSuggestion(
+              id: item.id,
+              title: item.name,
+              subtitle: l10n.inventoryAvailableSubtitle(
+                item.category,
+                item.availableUnits,
+                item.totalUnits,
+              ),
+              leadingIcon: Icons.inventory_2_outlined,
+            ),
+          )
+          .toList();
+    });
+  }
+
+  List<InventoryItem> _visibleInventory(List<InventoryItem> inventory) {
+    final String q = _query.trim().toLowerCase();
+    if (q.length < kMinMeaningfulTextLength) {
+      return inventory;
+    }
+    return inventory
+        .where(
+          (InventoryItem item) =>
+              item.name.toLowerCase().contains(q) ||
+              item.category.toLowerCase().contains(q) ||
+              item.id.toLowerCase().contains(q) ||
+              (item.notes?.toLowerCase().contains(q) ?? false),
+        )
+        .toList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final AppLocalizations l10n = context.l10n;
+    final AsyncValue<List<InventoryItem>> inventoryAsync =
+        ref.watch(inventoryProvider);
     return inventoryAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (Object error, StackTrace _) => Center(child: Text('$error')),
       data: (List<InventoryItem> inventory) {
-        return ListView.separated(
+        final List<InventoryItem> visible = _visibleInventory(inventory);
+        return ListView(
           padding: const EdgeInsets.all(16),
-          itemBuilder: (BuildContext context, int index) {
-            final InventoryItem item = inventory[index];
-            final AssetStatus status =
-                item.availableUnits > 0 ? AssetStatus.available : AssetStatus.rented;
-            return EntityCard(
-              title: item.name,
-              subtitle:
-                  '${l10n.inventoryAvailableSubtitle(
-                    item.category,
-                    item.availableUnits,
-                    item.totalUnits,
-                  )} · ${l10n.inventoryRateSubtitle(
-                    localizedBillingMode(l10n, item.billingMode),
-                    formatMoney(item.rateAmount, currencyCode: item.currencyCode),
-                  )}',
-              leadingIcon: Icons.inventory_2_outlined,
-              status: status,
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => onOpenInventory(item),
-            );
-          },
-          separatorBuilder: (_, _) => const SizedBox(height: 10),
-          itemCount: inventory.length,
+          children: <Widget>[
+            ScopedSearchField(
+              controller: _searchController,
+              hintText: l10n.searchInventoryHint,
+              minLengthHint: l10n.searchTypeMinChars,
+              noResultsText: l10n.searchNoResults,
+              suggestions: _suggestions,
+              onQueryChanged: _onQueryChanged,
+              onSelected: (SearchSuggestion suggestion) {
+                final InventoryItem item = inventory.firstWhere(
+                  (InventoryItem entry) => entry.id == suggestion.id,
+                );
+                widget.onOpenInventory(item);
+              },
+            ),
+            const SizedBox(height: 12),
+            ...visible.map((InventoryItem item) {
+              final AssetStatus status = item.availableUnits > 0
+                  ? AssetStatus.available
+                  : AssetStatus.rented;
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: EntityCard(
+                  title: item.name,
+                  subtitle:
+                      '${l10n.inventoryAvailableSubtitle(
+                        item.category,
+                        item.availableUnits,
+                        item.totalUnits,
+                      )} · ${l10n.inventoryRateSubtitle(
+                        localizedBillingMode(l10n, item.billingMode),
+                        formatMoney(
+                          item.rateAmount,
+                          currencyCode: item.currencyCode,
+                        ),
+                      )}',
+                  leadingIcon: Icons.inventory_2_outlined,
+                  status: status,
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => widget.onOpenInventory(item),
+                ),
+              );
+            }),
+          ],
         );
       },
     );
   }
 }
 
-class CustomersScreen extends ConsumerWidget {
+class CustomersScreen extends ConsumerStatefulWidget {
   const CustomersScreen({
     required this.onOpenCustomer,
     super.key,
@@ -289,36 +379,114 @@ class CustomersScreen extends ConsumerWidget {
   final ValueChanged<Customer> onOpenCustomer;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<CustomersScreen> createState() => _CustomersScreenState();
+}
+
+class _CustomersScreenState extends ConsumerState<CustomersScreen> {
+  final TextEditingController _searchController = TextEditingController();
+  String _query = '';
+  List<SearchSuggestion> _suggestions = const <SearchSuggestion>[];
+  Set<String> _matchedIds = const <String>{};
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _onQueryChanged(String value) async {
+    setState(() => _query = value);
+    final String trimmed = value.trim();
+    if (trimmed.length < kMinMeaningfulTextLength) {
+      setState(() {
+        _suggestions = const <SearchSuggestion>[];
+        _matchedIds = const <String>{};
+      });
+      return;
+    }
+    final SearchResults results = await ref.read(repositoryProvider).search(
+          trimmed,
+          scope: SearchScope.customers,
+        );
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _matchedIds = results.customers.map((Customer c) => c.id).toSet();
+      _suggestions = results.customers
+          .map(
+            (Customer customer) => SearchSuggestion(
+              id: customer.id,
+              title: customer.name,
+              subtitle: customer.phone,
+              leadingIcon: Icons.person_outline,
+            ),
+          )
+          .toList();
+    });
+  }
+
+  List<Customer> _visibleCustomers(List<Customer> customers) {
+    if (_query.trim().length < kMinMeaningfulTextLength) {
+      return customers;
+    }
+    return customers
+        .where((Customer customer) => _matchedIds.contains(customer.id))
+        .toList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final AppLocalizations l10n = context.l10n;
-    final AsyncValue<List<Customer>> customersAsync = ref.watch(customersProvider);
+    final AsyncValue<List<Customer>> customersAsync =
+        ref.watch(customersProvider);
     return customersAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (Object error, StackTrace _) => Center(child: Text('$error')),
       data: (List<Customer> customers) {
-        return ListView.separated(
+        final List<Customer> visible = _visibleCustomers(customers);
+        return ListView(
           padding: const EdgeInsets.all(16),
-          itemBuilder: (BuildContext context, int index) {
-            final Customer customer = customers[index];
-            final String tier =
-                customer.isTrusted ? l10n.customerTrusted : l10n.customerStandard;
-            return EntityCard(
-              title: customer.name,
-              subtitle: customer.depositBalance > 0
-                  ? l10n.customerSubtitleWithDeposit(
-                      customer.phone,
-                      tier,
-                      formatMoney(customer.depositBalance),
-                    )
-                  : l10n.customerSubtitle(customer.phone, tier),
-              leadingIcon: Icons.person_outline,
-              status: customer.isTrusted ? AssetStatus.available : AssetStatus.archived,
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => onOpenCustomer(customer),
-            );
-          },
-          separatorBuilder: (_, _) => const SizedBox(height: 10),
-          itemCount: customers.length,
+          children: <Widget>[
+            ScopedSearchField(
+              controller: _searchController,
+              hintText: l10n.searchCustomersHint,
+              minLengthHint: l10n.searchTypeMinChars,
+              noResultsText: l10n.searchNoResults,
+              suggestions: _suggestions,
+              onQueryChanged: _onQueryChanged,
+              onSelected: (SearchSuggestion suggestion) {
+                final Customer customer = customers.firstWhere(
+                  (Customer entry) => entry.id == suggestion.id,
+                );
+                widget.onOpenCustomer(customer);
+              },
+            ),
+            const SizedBox(height: 12),
+            ...visible.map((Customer customer) {
+              final String tier =
+                  customer.isTrusted ? l10n.customerTrusted : l10n.customerStandard;
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: EntityCard(
+                  title: customer.name,
+                  subtitle: customer.depositBalance > 0
+                      ? l10n.customerSubtitleWithDeposit(
+                          customer.phone,
+                          tier,
+                          formatMoney(customer.depositBalance),
+                        )
+                      : l10n.customerSubtitle(customer.phone, tier),
+                  leadingIcon: Icons.person_outline,
+                  status: customer.isTrusted
+                      ? AssetStatus.available
+                      : AssetStatus.archived,
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => widget.onOpenCustomer(customer),
+                ),
+              );
+            }),
+          ],
         );
       },
     );
@@ -879,9 +1047,20 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
     final AppLocalizations l10n = context.l10n;
     final String name = _nameController.text.trim();
     final String category = _categoryController.text.trim();
-    if (name.isEmpty || category.isEmpty) {
+    final String notes = _notesController.text.trim();
+    if (!meetsMinMeaningfulText(name) || !meetsMinMeaningfulText(category)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.nameCategoryRequired)),
+        SnackBar(
+          content: Text(l10n.minMeaningfulTextError(kMinMeaningfulTextLength)),
+        ),
+      );
+      return;
+    }
+    if (!meetsMinMeaningfulText(notes, allowEmpty: true)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.minMeaningfulTextError(kMinMeaningfulTextLength)),
+        ),
       );
       return;
     }
@@ -892,7 +1071,7 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
       name: name,
       category: category,
       units: units < 1 ? 1 : units,
-      notes: _notesController.text.trim(),
+      notes: notes,
       billingMode: _billingMode,
       rateAmount: parseRupeesToPaise(_rateController.text),
       lateFeePerDay: parseRupeesToPaise(_lateFeeController.text),
@@ -1313,6 +1492,7 @@ class _UniversalSearchScreenState extends ConsumerState<UniversalSearchScreen> {
     previousRentals: <Rental>[],
     inventory: <InventoryItem>[],
   );
+  String _query = '';
 
   @override
   void dispose() {
@@ -1321,12 +1501,25 @@ class _UniversalSearchScreenState extends ConsumerState<UniversalSearchScreen> {
   }
 
   Future<void> _runSearch(String query) async {
-    final SearchResults results = await ref.read(repositoryProvider).search(query);
+    setState(() => _query = query);
+    final SearchResults results = await ref.read(repositoryProvider).search(
+          query,
+          scope: SearchScope.global,
+        );
     if (!mounted) {
       return;
     }
     setState(() => _results = results);
   }
+
+  bool get _meetsMin =>
+      _query.trim().length >= kMinMeaningfulTextLength;
+
+  bool get _hasAnyResults =>
+      _results.customers.isNotEmpty ||
+      _results.currentRentals.isNotEmpty ||
+      _results.previousRentals.isNotEmpty ||
+      _results.inventory.isNotEmpty;
 
   @override
   Widget build(BuildContext context) {
@@ -1342,85 +1535,98 @@ class _UniversalSearchScreenState extends ConsumerState<UniversalSearchScreen> {
             decoration: InputDecoration(
               prefixIcon: const Icon(Icons.search),
               hintText: l10n.searchHint,
+              helperText: _meetsMin ? null : l10n.searchTypeMinChars,
             ),
             onChanged: _runSearch,
           ),
           const SizedBox(height: 12),
-          _SearchSection<Customer>(
-            title: l10n.searchSectionCustomers,
-            items: _results.customers,
-            itemBuilder: (customer) => EntityCard(
-              title: customer.name,
-              subtitle: customer.phone,
-              leadingIcon: Icons.person_outline,
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => CustomerDetailScreen(customerId: customer.id),
-                  ),
-                );
-              },
-            ),
-          ),
-          _SearchSection<Rental>(
-            title: l10n.searchSectionCurrentRentals,
-            items: _results.currentRentals,
-            itemBuilder: (rental) => EntityCard(
-              title: _rentalLinesLabel(rental),
-              subtitle: _rentalAmountSubtitle(l10n, rental),
-              leadingIcon: Icons.assignment_outlined,
-              status: rental.statusFor(DateTime.now()),
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => RentalDetailScreen(rentalId: rental.id),
-                  ),
-                );
-              },
-            ),
-          ),
-          _SearchSection<Rental>(
-            title: l10n.searchSectionPreviousRentals,
-            items: _results.previousRentals,
-            itemBuilder: (rental) => EntityCard(
-              title: _rentalLinesLabel(rental),
-              subtitle: <String>[
-                l10n.returnedDate(_date(rental.returnedAt ?? rental.dueAt)),
-                if (rental.depositApplied > 0)
-                  l10n.depositAppliedLabel(formatMoney(rental.depositApplied)),
-              ].join(' · '),
-              leadingIcon: Icons.history,
-              status: AssetStatus.archived,
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => RentalDetailScreen(rentalId: rental.id),
-                  ),
-                );
-              },
-            ),
-          ),
-          _SearchSection<InventoryItem>(
-            title: l10n.searchSectionInventory,
-            items: _results.inventory,
-            itemBuilder: (item) => EntityCard(
-              title: item.name,
-              subtitle: l10n.inventoryUnitsSubtitle(
-                item.category,
-                item.availableUnits,
-                item.totalUnits,
+          if (!_meetsMin)
+            const SizedBox.shrink()
+          else if (!_hasAnyResults)
+            Text(
+              l10n.searchNoResults,
+              style: Theme.of(context).textTheme.bodySmall,
+            )
+          else ...<Widget>[
+            _SearchSection<Customer>(
+              title: l10n.searchSectionCustomers,
+              items: _results.customers,
+              itemBuilder: (customer) => EntityCard(
+                title: customer.name,
+                subtitle: customer.phone,
+                leadingIcon: Icons.person_outline,
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) =>
+                          CustomerDetailScreen(customerId: customer.id),
+                    ),
+                  );
+                },
               ),
-              leadingIcon: Icons.inventory_2_outlined,
-              status: item.availableUnits > 0 ? AssetStatus.available : AssetStatus.rented,
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => InventoryDetailScreen(itemId: item.id),
-                  ),
-                );
-              },
             ),
-          ),
+            _SearchSection<Rental>(
+              title: l10n.searchSectionCurrentRentals,
+              items: _results.currentRentals,
+              itemBuilder: (rental) => EntityCard(
+                title: _rentalLinesLabel(rental),
+                subtitle: _rentalAmountSubtitle(l10n, rental),
+                leadingIcon: Icons.assignment_outlined,
+                status: rental.statusFor(DateTime.now()),
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => RentalDetailScreen(rentalId: rental.id),
+                    ),
+                  );
+                },
+              ),
+            ),
+            _SearchSection<Rental>(
+              title: l10n.searchSectionPreviousRentals,
+              items: _results.previousRentals,
+              itemBuilder: (rental) => EntityCard(
+                title: _rentalLinesLabel(rental),
+                subtitle: <String>[
+                  l10n.returnedDate(_date(rental.returnedAt ?? rental.dueAt)),
+                  if (rental.depositApplied > 0)
+                    l10n.depositAppliedLabel(formatMoney(rental.depositApplied)),
+                ].join(' · '),
+                leadingIcon: Icons.history,
+                status: AssetStatus.archived,
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => RentalDetailScreen(rentalId: rental.id),
+                    ),
+                  );
+                },
+              ),
+            ),
+            _SearchSection<InventoryItem>(
+              title: l10n.searchSectionInventory,
+              items: _results.inventory,
+              itemBuilder: (item) => EntityCard(
+                title: item.name,
+                subtitle: l10n.inventoryUnitsSubtitle(
+                  item.category,
+                  item.availableUnits,
+                  item.totalUnits,
+                ),
+                leadingIcon: Icons.inventory_2_outlined,
+                status: item.availableUnits > 0
+                    ? AssetStatus.available
+                    : AssetStatus.rented,
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => InventoryDetailScreen(itemId: item.id),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -1704,6 +1910,9 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
       if (name.isEmpty || code.isEmpty) {
         return false;
       }
+      if (!meetsMinMeaningfulText(name)) {
+        return false;
+      }
       if (!codes.add(code)) {
         return false;
       }
@@ -1746,7 +1955,7 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
 
   List<InventoryItem> _filteredAvailable(List<InventoryItem> availableItems) {
     final String query = _inventoryQuery.trim().toLowerCase();
-    if (query.isEmpty) {
+    if (query.length < kMinMeaningfulTextLength) {
       return availableItems;
     }
     return availableItems
@@ -1761,8 +1970,10 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
   bool _canContinue(List<InventoryItem> selectedItems) {
     return switch (_currentStep) {
       _RentalFlowStep.party => _isSelfSelected
-          ? _nicknameController.text.trim().isNotEmpty
-          : _phoneController.text.trim().length >= 10,
+          ? meetsMinMeaningfulText(_nicknameController.text)
+          : _phoneController.text.trim().length >= 10 &&
+              (_resolvedCustomer != null ||
+                  meetsMinMeaningfulText(_nameController.text)),
       _RentalFlowStep.items => _selectedInventoryIds.isNotEmpty,
       _RentalFlowStep.labels => _labelsComplete(selectedItems),
       _RentalFlowStep.duration => _durationComplete(selectedItems),
@@ -1876,6 +2087,10 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
                   labelText: l10n.actionSearch,
                   hintText: l10n.searchInventoryHint,
                   prefixIcon: const Icon(Icons.search),
+                  helperText: _inventoryQuery.trim().length >=
+                          kMinMeaningfulTextLength
+                      ? null
+                      : l10n.searchTypeMinChars,
                 ),
                 onChanged: (String value) {
                   setState(() => _inventoryQuery = value);
@@ -2129,9 +2344,30 @@ class _NewRentalFlowScreenState extends ConsumerState<NewRentalFlowScreen> {
                     : () async {
                         if (_currentStep == _RentalFlowStep.party &&
                             _isSelfSelected &&
-                            _nicknameController.text.trim().isEmpty) {
+                            !meetsMinMeaningfulText(_nicknameController.text)) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(l10n.rentalNicknameRequired)),
+                            SnackBar(
+                              content: Text(
+                                l10n.minMeaningfulTextError(
+                                  kMinMeaningfulTextLength,
+                                ),
+                              ),
+                            ),
+                          );
+                          return;
+                        }
+                        if (_currentStep == _RentalFlowStep.party &&
+                            !_isSelfSelected &&
+                            _resolvedCustomer == null &&
+                            !meetsMinMeaningfulText(_nameController.text)) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                l10n.minMeaningfulTextError(
+                                  kMinMeaningfulTextLength,
+                                ),
+                              ),
+                            ),
                           );
                           return;
                         }
@@ -2692,10 +2928,27 @@ class _AddInventoryFlowScreenState extends ConsumerState<AddInventoryFlowScreen>
           onPressed: _submitting
               ? null
               : () async {
-                  if (_nameController.text.trim().isEmpty ||
-                      _categoryController.text.trim().isEmpty) {
+                  if (!meetsMinMeaningfulText(_nameController.text) ||
+                      !meetsMinMeaningfulText(_categoryController.text)) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(l10n.nameCategoryRequired)),
+                      SnackBar(
+                        content: Text(
+                          l10n.minMeaningfulTextError(kMinMeaningfulTextLength),
+                        ),
+                      ),
+                    );
+                    return;
+                  }
+                  if (!meetsMinMeaningfulText(
+                    _notesController.text,
+                    allowEmpty: true,
+                  )) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          l10n.minMeaningfulTextError(kMinMeaningfulTextLength),
+                        ),
+                      ),
                     );
                     return;
                   }

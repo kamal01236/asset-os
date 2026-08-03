@@ -1008,4 +1008,16 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get applyHomeLayoutDone => 'होम लेआउट अपडेट हो गया।';
+
+  @override
+  String minMeaningfulTextError(int min) => 'कम से कम $min अक्षर दर्ज करें।';
+
+  @override
+  String get searchTypeMinChars => 'कम से कम 3 अक्षर लिखें';
+
+  @override
+  String get searchCustomersHint => 'नाम, फ़ोन या उपनाम से खोजें';
+
+  @override
+  String get searchNoResults => 'कोई मिलान नहीं';
 }

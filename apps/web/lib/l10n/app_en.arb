@@ -600,5 +600,14 @@
   "applyHomeLayoutCustomizedBody": "You customized Home earlier. Replace it with this template’s layout?",
   "applyHomeLayoutSkip": "Keep current",
   "applyHomeLayoutConfirm": "Apply layout",
-  "applyHomeLayoutDone": "Home layout updated."
+  "applyHomeLayoutDone": "Home layout updated.",
+  "minMeaningfulTextError": "Enter at least {min} characters.",
+  "@minMeaningfulTextError": {
+    "placeholders": {
+      "min": {"type": "int"}
+    }
+  },
+  "searchTypeMinChars": "Type at least 3 characters",
+  "searchCustomersHint": "Search by name, phone, or nickname",
+  "searchNoResults": "No matches"
 }

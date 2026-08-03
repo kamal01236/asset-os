@@ -30,6 +30,7 @@ UI-first conventions for `apps/web` to keep flows fast, clear, and touch-friendl
 - Phone-first customer lookup for rental creation.
 - Minimal required fields first; advanced details collapsed by default.
 - Auto-detect existing customer by phone before asking for full profile fields.
+- Free-text identity/note fields (customer name, item name, category, instance name, SELF nickname, notes when non-empty) require at least 3 characters; search runs only at ≥3 chars (Home/global = all entities; Inventory tab = inventory; Customers tab = customers + rental nicknames).
 
 ## Offline and feedback
 - Use a subtle non-blocking offline banner; never block primary workflows.
