@@ -2270,6 +2270,30 @@ abstract class AppLocalizations {
   /// **'Order total: {amount}'**
   String orderTotalLabel(String amount);
 
+  /// No description provided for @orderSummaryHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Order summary'**
+  String get orderSummaryHeading;
+
+  /// No description provided for @orderSummaryUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough stock for {name} (need {need}, available {available}). Adjust quantities to continue.'**
+  String orderSummaryUnavailable(String name, int need, int available);
+
+  /// No description provided for @orderSummaryQuantity.
+  ///
+  /// In en, this message translates to:
+  /// **'Qty {quantity}'**
+  String orderSummaryQuantity(int quantity);
+
+  /// No description provided for @orderSummaryUnitCharge.
+  ///
+  /// In en, this message translates to:
+  /// **'Unit {amount}'**
+  String orderSummaryUnitCharge(String amount);
+
   /// No description provided for @depositTopUpOptionalLabel.
   ///
   /// In en, this message translates to:

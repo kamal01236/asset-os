@@ -774,6 +774,27 @@
       "amount": {"type": "String"}
     }
   },
+  "orderSummaryHeading": "Order summary",
+  "orderSummaryUnavailable": "Not enough stock for {name} (need {need}, available {available}). Adjust quantities to continue.",
+  "@orderSummaryUnavailable": {
+    "placeholders": {
+      "name": {"type": "String"},
+      "need": {"type": "int"},
+      "available": {"type": "int"}
+    }
+  },
+  "orderSummaryQuantity": "Qty {quantity}",
+  "@orderSummaryQuantity": {
+    "placeholders": {
+      "quantity": {"type": "int"}
+    }
+  },
+  "orderSummaryUnitCharge": "Unit {amount}",
+  "@orderSummaryUnitCharge": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
   "depositTopUpOptionalLabel": "Order token / advance (optional)",
   "depositTopUpOptionalHint": "Held on this order, in rupees",
   "itemKindDefaultLabel": "Default order mode",

@@ -1285,6 +1285,24 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
+  String get orderSummaryHeading => 'ऑर्डर सारांश';
+
+  @override
+  String orderSummaryUnavailable(String name, int need, int available) {
+    return '$name के लिए पर्याप्त स्टॉक नहीं है (आवश्यक $need, उपलब्ध $available)। जारी रखने के लिए मात्रा समायोजित करें।';
+  }
+
+  @override
+  String orderSummaryQuantity(int quantity) {
+    return 'मात्रा $quantity';
+  }
+
+  @override
+  String orderSummaryUnitCharge(String amount) {
+    return 'इकाई $amount';
+  }
+
+  @override
   String get depositTopUpOptionalLabel => 'ऑर्डर टोकन / अग्रिम (वैकल्पिक)';
 
   @override

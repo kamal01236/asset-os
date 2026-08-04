@@ -78,6 +78,11 @@ void main() {
     await tester.pump();
     await pumpFrames(tester);
 
+    await tester.tap(find.widgetWithText(FilledButton, 'Continue'));
+    await tester.pump();
+    await pumpFrames(tester);
+    expect(find.text('Order summary'), findsOneWidget);
+
     await tester.tap(find.widgetWithText(FilledButton, 'Generate Order'));
     await tester.pump();
     await pumpFrames(tester, frames: 20);
@@ -139,6 +144,11 @@ void main() {
     await tester.enterText(fields.at(0), '1');
     await tester.pump();
     await pumpFrames(tester);
+
+    await tester.tap(find.widgetWithText(FilledButton, 'Continue'));
+    await tester.pump();
+    await pumpFrames(tester);
+    expect(find.text('Order summary'), findsOneWidget);
 
     await tester.tap(find.widgetWithText(FilledButton, 'Generate Order'));
     await tester.pump();

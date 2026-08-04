@@ -774,6 +774,27 @@
       "amount": {"type": "String"}
     }
   },
+  "orderSummaryHeading": "ऑर्डर सारांश",
+  "orderSummaryUnavailable": "{name} के लिए पर्याप्त स्टॉक नहीं है (आवश्यक {need}, उपलब्ध {available})। जारी रखने के लिए मात्रा समायोजित करें।",
+  "@orderSummaryUnavailable": {
+    "placeholders": {
+      "name": {"type": "String"},
+      "need": {"type": "int"},
+      "available": {"type": "int"}
+    }
+  },
+  "orderSummaryQuantity": "मात्रा {quantity}",
+  "@orderSummaryQuantity": {
+    "placeholders": {
+      "quantity": {"type": "int"}
+    }
+  },
+  "orderSummaryUnitCharge": "इकाई {amount}",
+  "@orderSummaryUnitCharge": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
   "depositTopUpOptionalLabel": "ऑर्डर टोकन / अग्रिम (वैकल्पिक)",
   "depositTopUpOptionalHint": "इस ऑर्डर पर रखा जाएगा, रुपये में",
   "itemKindDefaultLabel": "डिफ़ॉल्ट ऑर्डर मोड",

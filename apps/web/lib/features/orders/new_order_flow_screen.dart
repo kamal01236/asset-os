@@ -11,10 +11,11 @@ import '../../core/repositories/local_repository.dart';
 import '../../core/validation/text_rules.dart';
 import '../../core/widgets/ui_primitives.dart';
 
-/// New Order flow: items first (with running total), then customer, then confirm.
+/// New Order flow: items first (with running total), then customer, then
+/// order summary (sample bill + live stock gate), then generate.
 ///
 /// When [initialCustomerId] is set for a normal customer, the customer step is
-/// skipped and the flow is items → confirm.
+/// skipped and the flow is items → summary → generate.
 class NewOrderFlowScreen extends ConsumerStatefulWidget {
   const NewOrderFlowScreen({
     super.key,
@@ -32,7 +33,19 @@ class NewOrderFlowScreen extends ConsumerStatefulWidget {
 /// Back-compat alias for call sites / older tests.
 typedef NewRentalFlowScreen = NewOrderFlowScreen;
 
-enum _OrderPhase { form, customer }
+enum _OrderPhase { form, customer, summary }
+
+class _StockShortfall {
+  const _StockShortfall({
+    required this.name,
+    required this.need,
+    required this.available,
+  });
+
+  final String name;
+  final int need;
+  final int available;
+}
 
 class _UnitIdentityDraft {
   _UnitIdentityDraft()
@@ -568,6 +581,63 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
     return true;
   }
 
+  /// Live stock check for summary (and create error mapping). Uses full inventory
+  /// so zero-available items still report a shortfall.
+  List<_StockShortfall> _availabilityShortfalls(List<InventoryItem> inventory) {
+    final Map<String, int> neededByItem = <String, int>{};
+    for (final _OrderLineDraft draft in _lines) {
+      final String? id = draft.itemId;
+      if (id == null) {
+        continue;
+      }
+      neededByItem[id] = (neededByItem[id] ?? 0) + draft.quantity;
+    }
+    final List<_StockShortfall> shortfalls = <_StockShortfall>[];
+    for (final MapEntry<String, int> entry in neededByItem.entries) {
+      InventoryItem? match;
+      for (final InventoryItem item in inventory) {
+        if (item.id == entry.key) {
+          match = item;
+          break;
+        }
+      }
+      final int available = match?.availableUnits ?? 0;
+      if (entry.value > available) {
+        shortfalls.add(
+          _StockShortfall(
+            name: match?.name ?? entry.key,
+            need: entry.value,
+            available: available,
+          ),
+        );
+      }
+    }
+    return shortfalls;
+  }
+
+  String _customerDisplayLabel(AppLocalizations l10n) {
+    if (_noPhone) {
+      final String nick = _nameController.text.trim();
+      return nick.isEmpty
+          ? l10n.unknownCustomer
+          : '$nick · ${l10n.unknownCustomer}';
+    }
+    final String name =
+        _resolvedCustomer?.name ?? _nameController.text.trim();
+    final String phone =
+        _resolvedCustomer?.phone ?? _phoneController.text.trim();
+    if (name.isEmpty && phone.isEmpty) {
+      return l10n.unknownCustomer;
+    }
+    if (name.isEmpty) {
+      return phone;
+    }
+    if (phone.isEmpty) {
+      return name;
+    }
+    return '$name · $phone';
+  }
+
   List<RentalLineInput> _buildLineInputs(List<InventoryItem> available) {
     final List<RentalLineInput> inputs = <RentalLineInput>[];
     final Set<String> usedCodes = <String>{};
@@ -680,15 +750,36 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
     return true;
   }
 
-  Future<void> _confirmFromCustomer(List<InventoryItem> available) async {
+  Future<void> _continueFromCustomer() async {
     if (!_validateCustomerOrSnack()) {
       return;
     }
-    await _generateOrder(available);
+    setState(() => _phase = _OrderPhase.summary);
   }
 
   Future<void> _generateOrder(List<InventoryItem> available) async {
     if (!_formReady(available)) {
+      return;
+    }
+    final List<InventoryItem> liveInventory =
+        ref.read(inventoryProvider).valueOrNull ?? available;
+    final List<_StockShortfall> shortfalls =
+        _availabilityShortfalls(liveInventory);
+    if (shortfalls.isNotEmpty) {
+      if (mounted) {
+        final _StockShortfall first = shortfalls.first;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              context.l10n.orderSummaryUnavailable(
+                first.name,
+                first.need,
+                first.available,
+              ),
+            ),
+          ),
+        );
+      }
       return;
     }
     setState(() => _submitting = true);
@@ -738,6 +829,21 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
           } else if (lower.contains('instance') ||
               lower.contains('short code')) {
             message = l10n.instanceLabelsRequired;
+          } else if (lower.contains('not enough units')) {
+            final List<_StockShortfall> liveShortfalls =
+                _availabilityShortfalls(
+              ref.read(inventoryProvider).valueOrNull ?? available,
+            );
+            if (liveShortfalls.isNotEmpty) {
+              final _StockShortfall first = liveShortfalls.first;
+              message = l10n.orderSummaryUnavailable(
+                first.name,
+                first.need,
+                first.available,
+              );
+            } else {
+              message = raw.isEmpty ? '$error' : raw;
+            }
           } else {
             message = raw.isEmpty ? '$error' : raw;
           }
@@ -772,7 +878,41 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
         inventory.where((InventoryItem item) => item.availableUnits > 0).toList();
 
     final bool onForm = _phase == _OrderPhase.form;
+    final bool onCustomer = _phase == _OrderPhase.customer;
+    final bool onSummary = _phase == _OrderPhase.summary;
     final bool formReady = _formReady(availableItems);
+    final List<_StockShortfall> shortfalls =
+        onSummary ? _availabilityShortfalls(inventory) : const <_StockShortfall>[];
+    final bool availabilityOk = shortfalls.isEmpty;
+
+    final int stepCurrent = onForm
+        ? 1
+        : onCustomer
+            ? 2
+            : 3;
+
+    VoidCallback? primaryAction;
+    final String primaryLabel;
+    if (onForm) {
+      primaryLabel = l10n.continueAction;
+      if (formReady) {
+        primaryAction = () => setState(
+              () => _phase = _skipCustomerStep
+                  ? _OrderPhase.summary
+                  : _OrderPhase.customer,
+            );
+      }
+    } else if (onCustomer) {
+      primaryLabel = l10n.continueAction;
+      if (_customerReady) {
+        primaryAction = _continueFromCustomer;
+      }
+    } else {
+      primaryLabel = l10n.confirmRental;
+      if (availabilityOk) {
+        primaryAction = () => _generateOrder(availableItems);
+      }
+    }
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.actionNewRental)),
@@ -781,12 +921,13 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
         children: <Widget>[
           if (!_skipCustomerStep)
             Text(
-              l10n.stepOf(onForm ? 1 : 2, 2),
+              l10n.stepOf(stepCurrent, 3),
               style: Theme.of(context).textTheme.labelLarge,
             ),
           if (!_skipCustomerStep) const SizedBox(height: 8),
           if (onForm) ..._buildFormStep(l10n, availableItems),
-          if (!onForm) ..._buildCustomerStep(l10n, availableItems),
+          if (onCustomer) ..._buildCustomerStep(l10n, availableItems),
+          if (onSummary) ..._buildSummaryStep(l10n, inventory, shortfalls),
         ],
       ),
       bottomNavigationBar: SafeArea(
@@ -798,37 +939,150 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
                 child: OutlinedButton(
                   onPressed: _submitting
                       ? null
-                      : () => setState(() => _phase = _OrderPhase.form),
+                      : () => setState(() {
+                            if (onSummary) {
+                              _phase = _skipCustomerStep
+                                  ? _OrderPhase.form
+                                  : _OrderPhase.customer;
+                            } else {
+                              _phase = _OrderPhase.form;
+                            }
+                          }),
                   child: Text(l10n.back),
                 ),
               ),
             if (!onForm) const SizedBox(width: 8),
             Expanded(
               child: FilledButton(
-                onPressed: _submitting
-                    ? null
-                    : (onForm
-                        ? (formReady
-                            ? (_skipCustomerStep
-                                ? () => _generateOrder(availableItems)
-                                : () => setState(
-                                      () => _phase = _OrderPhase.customer,
-                                    ))
-                            : null)
-                        : (_customerReady
-                            ? () => _confirmFromCustomer(availableItems)
-                            : null)),
-                child: Text(
-                  onForm && !_skipCustomerStep
-                      ? l10n.continueAction
-                      : l10n.confirmRental,
-                ),
+                onPressed: _submitting ? null : primaryAction,
+                child: Text(primaryLabel),
               ),
             ),
           ],
         ),
       ),
     );
+  }
+
+  List<Widget> _buildSummaryStep(
+    AppLocalizations l10n,
+    List<InventoryItem> inventory,
+    List<_StockShortfall> shortfalls,
+  ) {
+    final int total = _orderTotal(inventory);
+    final int deposit = _depositTopUpPaise();
+    final List<Widget> billLines = <Widget>[];
+    for (final _OrderLineDraft draft in _lines) {
+      final InventoryItem? item = _itemFor(draft, inventory);
+      if (item == null) {
+        continue;
+      }
+      final int unitPaise = _lineAmount(draft, item);
+      final int linePaise = unitPaise * draft.quantity;
+      final String fulfillment = draft.isSell
+          ? l10n.lineFulfillmentSell
+          : l10n.lineFulfillmentRent;
+      billLines.add(
+        Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              Text(
+                item.name,
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                '${l10n.orderSummaryQuantity(draft.quantity)} · $fulfillment',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              Text(
+                l10n.orderSummaryUnitCharge(
+                  formatMoney(unitPaise, currencyCode: item.currencyCode),
+                ),
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              if (!draft.isSell &&
+                  _durationComplete(draft, item) &&
+                  !draft.leaveOpenEnded) ...<Widget>[
+                Text(
+                  l10n.chargePreviewDue(
+                    _formatDate(_previewDue(draft, item)!),
+                  ),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
+              if (!draft.isSell && _lineIsOpenEnded(draft, item))
+                Text(
+                  l10n.reviewOpenEndedLabel,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              Text(
+                l10n.chargeLineAmount(
+                  item.name,
+                  formatMoney(linePaise, currencyCode: item.currencyCode),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return <Widget>[
+      Text(
+        l10n.orderSummaryHeading,
+        key: const ValueKey<String>('order-summary-heading'),
+        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+      ),
+      const SizedBox(height: 8),
+      Text(
+        _customerDisplayLabel(l10n),
+        style: Theme.of(context).textTheme.titleMedium,
+      ),
+      if (shortfalls.isNotEmpty) ...<Widget>[
+        const SizedBox(height: 12),
+        for (final _StockShortfall shortfall in shortfalls)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Text(
+              l10n.orderSummaryUnavailable(
+                shortfall.name,
+                shortfall.need,
+                shortfall.available,
+              ),
+              key: ValueKey<String>(
+                'order-summary-unavailable-${shortfall.name}',
+              ),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.error,
+                  ),
+            ),
+          ),
+      ],
+      const SizedBox(height: 16),
+      ...billLines,
+      const Divider(),
+      Text(
+        l10n.orderTotalLabel(formatMoney(total)),
+        key: const ValueKey<String>('order-summary-total'),
+        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+      ),
+      if (deposit > 0) ...<Widget>[
+        const SizedBox(height: 8),
+        Text(
+          '${l10n.orderDepositLabel}: ${formatMoney(deposit)}',
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
+      ],
+    ];
   }
 
   List<Widget> _buildCustomerStep(

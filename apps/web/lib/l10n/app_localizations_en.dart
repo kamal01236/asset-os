@@ -1283,6 +1283,24 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get orderSummaryHeading => 'Order summary';
+
+  @override
+  String orderSummaryUnavailable(String name, int need, int available) {
+    return 'Not enough stock for $name (need $need, available $available). Adjust quantities to continue.';
+  }
+
+  @override
+  String orderSummaryQuantity(int quantity) {
+    return 'Qty $quantity';
+  }
+
+  @override
+  String orderSummaryUnitCharge(String amount) {
+    return 'Unit $amount';
+  }
+
+  @override
   String get depositTopUpOptionalLabel => 'Order token / advance (optional)';
 
   @override

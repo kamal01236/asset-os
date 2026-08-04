@@ -303,7 +303,7 @@ void main() {
     await pumpFrames(tester);
 
     expect(find.widgetWithText(AppBar, 'New Order'), findsOneWidget);
-    expect(find.text('Step 1 of 2'), findsOneWidget);
+    expect(find.text('Step 1 of 3'), findsOneWidget);
     expect(find.text('Line 1'), findsOneWidget);
     expect(find.text('Phone number'), findsNothing);
     expect(find.widgetWithText(FilledButton, 'Continue'), findsOneWidget);
