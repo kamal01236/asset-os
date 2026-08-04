@@ -8,6 +8,10 @@ UI-first conventions for `apps/web` to keep flows fast, clear, and touch-friendl
 - Prefer text search, QR scan, and quick actions over deep menu traversal.
 - Avoid chart-heavy dashboards in MVP; use status cards + list-first layouts.
 - Keep each step understandable in under 5 seconds.
+- **One primary CTA per viewport region** — do not duplicate the same action (e.g. New Order) in an empty state and Quick actions on the same screen.
+- List rows use structured **title / meta / amount** (not one long `·`-joined subtitle). Prefer `ListEntityRow`, `OrderBillCard`, and `MoneyStack` from `ui_primitives.dart`.
+- **Customer tier ≠ inventory status**: Trusted / Standard use `TierPill`, never Available / Archived status pills.
+- Search min-length helper (“Type at least 3 characters”) shows only when the field is **focused** or the query is non-empty and still under 3 characters — not as a permanent helper that reads like an error.
 
 ## Status semantics
 - Available = green
@@ -34,10 +38,12 @@ UI-first conventions for `apps/web` to keep flows fast, clear, and touch-friendl
 - Free-text identity/note fields (customer name, item name, category, instance name, SELF nickname, notes when non-empty) require at least 3 characters; search runs only at ≥3 chars (Home/global = all entities; Inventory tab = inventory; Customers tab = customers + order nicknames).
 
 ## Order bills and deposit
-- Orders tab lists **all** orders as bill-style cards (open, completed, cancelled). Filters (Active / Due today / Overdue) narrow among open bills.
-- Customer detail shows a signed net from all that customer’s orders (positive = owes shop, negative = credit). Advance = sum of order deposits; pending = sum of bill charges. No customer wallet Add/Refund in the profile UI.
+- Orders tab lists **all** orders as bill-style cards (open, completed, cancelled). When no Home KPI filter is active, light chips **All / Open / Completed** narrow the list (cancelled remains under All). Filters (Active / Due today / Overdue) from Home KPIs still narrow among open bills.
+- Bill cards: **party name** as title; item summary + short `#id`; trailing **Bill** / **Deposit** amounts; status pill bottom-left — not a mega concatenated subtitle.
+- Customer detail shows a signed net from all that customer’s orders (positive = owes shop, negative = credit). Advance = sum of order deposits; pending = sum of bill charges. No customer wallet Add/Refund in the profile UI. Customer **list** shows phone + TierPill and signed net only (breakdown stays on detail).
 - Deposit / token / advance lives on the **order** (set at New Order). Return and cancel settle against that order deposit, not a shared customer wallet.
-- Order detail is a full bill: lines, deposit, total, status chip. Return only while status is open and ≥1 rent line is still out. Delete only while open with no returned rent lines. Sell-only orders complete at create.
+- Order detail is a full bill: lines, deposit, total, status chip in the app bar. Charges use `MoneyStack` rows. Return only while status is open and ≥1 rent line is still out. Delete only while open with no returned rent lines (app-bar delete icon). Sell-only orders complete at create.
+- Share reports: **Share to my WhatsApp** stays disabled until the owner number is configured; preview is structured key-value rows with Copy still producing the same plain text.
 
 ## Order return and delete
 - Returns always require an explicit confirm dialog. Show the computed line total (read-only), an editable **final amount to collect** (0…total; remainder shown as discount), deposit preview against that final amount (from the order deposit), and an optional note (≥3 chars when set).

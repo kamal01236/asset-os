@@ -125,7 +125,6 @@ class HomeScreen extends ConsumerWidget {
           rentals: rentals,
           customers: customers,
           onOpenRental: onOpenRental,
-          onNewRental: onNewRental,
         );
       case HomeModuleId.quickActions:
         return HomeQuickActionsSection(
@@ -322,14 +321,12 @@ class HomeNeedsAttentionSection extends StatelessWidget {
     required this.rentals,
     required this.customers,
     required this.onOpenRental,
-    required this.onNewRental,
     super.key,
   });
 
   final List<Rental> rentals;
   final List<Customer> customers;
   final ValueChanged<Rental> onOpenRental;
-  final VoidCallback onNewRental;
 
   @override
   Widget build(BuildContext context) {
@@ -366,11 +363,8 @@ class HomeNeedsAttentionSection extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         if (limited.isEmpty)
-          EmptyStatePane(
-            title: l10n.needsAttentionEmptyTitle,
-            subtitle: l10n.needsAttentionEmptySubtitle,
-            ctaLabel: l10n.actionNewRental,
-            onPressed: onNewRental,
+          CompactEmptyState(
+            message: l10n.needsAttentionEmptySubtitle,
           )
         else
           ..._rentalCards(context, limited, customers, onOpenRental),

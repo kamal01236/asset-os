@@ -34,17 +34,31 @@ typedef NewRentalFlowScreen = NewOrderFlowScreen;
 
 enum _OrderPhase { form, customer }
 
-class _OrderLineDraft {
-  _OrderLineDraft({this.itemId})
+class _UnitIdentityDraft {
+  _UnitIdentityDraft()
       : instanceNameController = TextEditingController(),
-        shortCodeController = TextEditingController(),
-        durationController = TextEditingController(text: '1'),
-        saleAmountController = TextEditingController();
+        shortCodeController = TextEditingController();
 
-  String? itemId;
-  LineFulfillment fulfillment = LineFulfillment.rent;
   final TextEditingController instanceNameController;
   final TextEditingController shortCodeController;
+
+  void dispose() {
+    instanceNameController.dispose();
+    shortCodeController.dispose();
+  }
+}
+
+class _OrderLineDraft {
+  _OrderLineDraft({this.itemId})
+      : durationController = TextEditingController(text: '1'),
+        saleAmountController = TextEditingController() {
+    ensureIdentitySlots(1);
+  }
+
+  String? itemId;
+  int quantity = 1;
+  LineFulfillment fulfillment = LineFulfillment.rent;
+  final List<_UnitIdentityDraft> identities = <_UnitIdentityDraft>[];
   final TextEditingController durationController;
   final TextEditingController saleAmountController;
   DateTime? customEnd;
@@ -52,9 +66,27 @@ class _OrderLineDraft {
 
   bool get isSell => fulfillment == LineFulfillment.sell;
 
+  void ensureIdentitySlots(int count) {
+    final int target = count < 1 ? 1 : count;
+    while (identities.length < target) {
+      identities.add(_UnitIdentityDraft());
+    }
+    while (identities.length > target) {
+      identities.removeLast().dispose();
+    }
+  }
+
+  void clearIdentityFields() {
+    for (final _UnitIdentityDraft unit in identities) {
+      unit.instanceNameController.clear();
+      unit.shortCodeController.clear();
+    }
+  }
+
   void dispose() {
-    instanceNameController.dispose();
-    shortCodeController.dispose();
+    for (final _UnitIdentityDraft unit in identities) {
+      unit.dispose();
+    }
     durationController.dispose();
     saleAmountController.dispose();
   }
@@ -278,10 +310,28 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
         continue;
       }
       if (_lines[i].itemId == itemId) {
-        count += 1;
+        count += _lines[i].quantity;
       }
     }
     return count;
+  }
+
+  int _remainingFor(int index, InventoryItem item) {
+    final int remaining =
+        item.availableUnits - _usedCount(item.id, exceptIndex: index);
+    return remaining < 0 ? 0 : remaining;
+  }
+
+  void _setQuantity(int index, int quantity, InventoryItem item) {
+    setState(() {
+      final _OrderLineDraft draft = _lines[index];
+      final int remaining = _remainingFor(index, item);
+      final int maxQty = remaining < 1 ? 1 : remaining;
+      draft.quantity = quantity.clamp(1, maxQty);
+      if (item.requiresUnitIdentity) {
+        draft.ensureIdentitySlots(draft.quantity);
+      }
+    });
   }
 
   List<InventoryItem> _choicesForLine(
@@ -297,32 +347,9 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
   }
 
   void _applyAutoLabels(int index, InventoryItem item) {
+    // Individual items get catalog name + short codes at submit.
     if (item.requiresUnitIdentity) {
-      return;
-    }
-    final _OrderLineDraft draft = _lines[index];
-    final Set<String> usedCodes = <String>{};
-    for (var i = 0; i < _lines.length; i++) {
-      if (i == index) {
-        continue;
-      }
-      final String code = LocalRepository.normalizeShortCode(
-        _lines[i].shortCodeController.text,
-      );
-      if (code.isNotEmpty) {
-        usedCodes.add(code);
-      }
-    }
-    final int siblingIndex = _usedCount(item.id, exceptIndex: index) + 1;
-    if (draft.instanceNameController.text.trim().isEmpty) {
-      draft.instanceNameController.text = item.name;
-    }
-    if (draft.shortCodeController.text.trim().isEmpty) {
-      draft.shortCodeController.text = LocalRepository.generateAutoShortCode(
-        catalogName: item.name,
-        index: siblingIndex,
-        usedCodes: usedCodes,
-      );
+      _lines[index].ensureIdentitySlots(_lines[index].quantity);
     }
   }
 
@@ -361,8 +388,9 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
     setState(() {
       final _OrderLineDraft draft = _lines[index];
       draft.itemId = itemId;
-      draft.instanceNameController.clear();
-      draft.shortCodeController.clear();
+      draft.quantity = 1;
+      draft.ensureIdentitySlots(1);
+      draft.clearIdentityFields();
       draft.saleAmountController.clear();
       draft.customEnd = null;
       draft.leaveOpenEnded = false;
@@ -463,27 +491,39 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
       if (item == null) {
         continue;
       }
-      total += _lineAmount(draft, item);
+      total += _lineAmount(draft, item) * draft.quantity;
     }
     return total;
   }
 
   bool _labelsReady(_OrderLineDraft draft, InventoryItem item) {
-    final String name = draft.instanceNameController.text.trim();
-    final String code = LocalRepository.normalizeShortCode(
-      draft.shortCodeController.text,
-    );
-    if (name.isEmpty || code.isEmpty) {
+    if (!item.requiresUnitIdentity) {
+      return true;
+    }
+    if (draft.identities.length < draft.quantity) {
       return false;
     }
-    if (item.requiresUnitIdentity && !meetsMinMeaningfulText(name)) {
-      return false;
+    for (var u = 0; u < draft.quantity; u++) {
+      final _UnitIdentityDraft unit = draft.identities[u];
+      final String name = unit.instanceNameController.text.trim();
+      final String code = LocalRepository.normalizeShortCode(
+        unit.shortCodeController.text,
+      );
+      if (name.isEmpty || code.isEmpty) {
+        return false;
+      }
+      if (!meetsMinMeaningfulText(name)) {
+        return false;
+      }
     }
     return true;
   }
 
   bool _lineReady(_OrderLineDraft draft, InventoryItem? item) {
     if (item == null) {
+      return false;
+    }
+    if (draft.quantity < 1) {
       return false;
     }
     if (!_labelsReady(draft, item)) {
@@ -503,16 +543,26 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
       return false;
     }
     final Set<String> codes = <String>{};
-    for (final _OrderLineDraft draft in _lines) {
+    for (var i = 0; i < _lines.length; i++) {
+      final _OrderLineDraft draft = _lines[i];
       final InventoryItem? item = _itemFor(draft, available);
       if (!_lineReady(draft, item)) {
         return false;
       }
-      final String code = LocalRepository.normalizeShortCode(
-        draft.shortCodeController.text,
-      );
-      if (!codes.add(code)) {
+      final int remaining = _remainingFor(i, item!);
+      if (draft.quantity > remaining) {
         return false;
+      }
+      if (!item.requiresUnitIdentity) {
+        continue;
+      }
+      for (var u = 0; u < draft.quantity; u++) {
+        final String code = LocalRepository.normalizeShortCode(
+          draft.identities[u].shortCodeController.text,
+        );
+        if (!codes.add(code)) {
+          return false;
+        }
       }
     }
     return true;
@@ -520,38 +570,65 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
 
   List<RentalLineInput> _buildLineInputs(List<InventoryItem> available) {
     final List<RentalLineInput> inputs = <RentalLineInput>[];
+    final Set<String> usedCodes = <String>{};
+    final Map<String, int> autoIndexByItem = <String, int>{};
+
     for (final _OrderLineDraft draft in _lines) {
       final InventoryItem item = _itemFor(draft, available)!;
-      if (draft.isSell) {
+      if (item.requiresUnitIdentity) {
+        draft.ensureIdentitySlots(draft.quantity);
+      }
+      for (var u = 0; u < draft.quantity; u++) {
+        final String instanceName;
+        final String shortCode;
+        if (item.requiresUnitIdentity) {
+          final _UnitIdentityDraft unit = draft.identities[u];
+          instanceName = unit.instanceNameController.text.trim();
+          shortCode = unit.shortCodeController.text.trim();
+          usedCodes.add(LocalRepository.normalizeShortCode(shortCode));
+        } else {
+          final int nextIndex = (autoIndexByItem[item.id] ?? 0) + 1;
+          autoIndexByItem[item.id] = nextIndex;
+          instanceName = item.name;
+          shortCode = LocalRepository.generateAutoShortCode(
+            catalogName: item.name,
+            index: nextIndex,
+            usedCodes: usedCodes,
+          );
+          usedCodes.add(LocalRepository.normalizeShortCode(shortCode));
+        }
+
+        if (draft.isSell) {
+          inputs.add(
+            RentalLineInput(
+              itemId: item.id,
+              instanceName: instanceName,
+              shortCode: shortCode,
+              fulfillment: LineFulfillment.sell,
+              manualSaleAmountPaise: _saleAmountPaise(draft),
+            ),
+          );
+          continue;
+        }
+        final bool openEnded = _lineIsOpenEnded(draft, item);
         inputs.add(
           RentalLineInput(
             itemId: item.id,
-            instanceName: draft.instanceNameController.text.trim(),
-            shortCode: draft.shortCodeController.text.trim(),
-            fulfillment: LineFulfillment.sell,
-            manualSaleAmountPaise: _saleAmountPaise(draft),
+            instanceName: instanceName,
+            shortCode: shortCode,
+            fulfillment: LineFulfillment.rent,
+            openEnded: openEnded,
+            durationUnits: openEnded
+                ? 0
+                : (item.billingMode == BillingMode.custom
+                    ? 1
+                    : _durationUnits(draft)),
+            customEnd: openEnded || item.billingMode != BillingMode.custom
+                ? null
+                : draft.customEnd,
           ),
         );
-        continue;
       }
-      final bool openEnded = _lineIsOpenEnded(draft, item);
-      inputs.add(
-        RentalLineInput(
-          itemId: item.id,
-          instanceName: draft.instanceNameController.text.trim(),
-          shortCode: draft.shortCodeController.text.trim(),
-          fulfillment: LineFulfillment.rent,
-          openEnded: openEnded,
-          durationUnits: openEnded
-              ? 0
-              : (item.billingMode == BillingMode.custom
-                  ? 1
-                  : _durationUnits(draft)),
-          customEnd: openEnded || item.billingMode != BillingMode.custom
-              ? null
-              : draft.customEnd,
-        ),
-      );
     }
     return inputs;
   }
@@ -1024,26 +1101,11 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
                   },
                 ),
                 const SizedBox(height: 8),
-                if (selected.requiresUnitIdentity) ...<Widget>[
-                  TextField(
-                    controller: draft.instanceNameController,
-                    decoration: InputDecoration(
-                      labelText: l10n.instanceNameLabel,
-                      hintText: l10n.instanceNameHint,
-                    ),
-                    onChanged: (_) => setState(() {}),
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: draft.shortCodeController,
-                    textCapitalization: TextCapitalization.characters,
-                    decoration: InputDecoration(
-                      labelText: l10n.shortCodeLabel,
-                      hintText: l10n.shortCodeHint,
-                    ),
-                    onChanged: (_) => setState(() {}),
-                  ),
-                ] else
+                _buildQuantityStepper(l10n, index, selected),
+                const SizedBox(height: 8),
+                if (selected.requiresUnitIdentity)
+                  ..._buildIdentityFields(l10n, index, selected)
+                else
                   Text(
                     l10n.labelsAutoAssignedHint,
                     style: Theme.of(context).textTheme.bodySmall,
@@ -1066,7 +1128,7 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
                       l10n.chargeLineAmount(
                         selected.name,
                         formatMoney(
-                          _saleAmountPaise(draft),
+                          _saleAmountPaise(draft) * draft.quantity,
                           currencyCode: selected.currencyCode,
                         ),
                       ),
@@ -1149,7 +1211,7 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
                       l10n.chargeLineAmount(
                         selected.name,
                         formatMoney(
-                          _lineAmount(draft, selected),
+                          _lineAmount(draft, selected) * draft.quantity,
                           currencyCode: selected.currencyCode,
                         ),
                       ),
@@ -1166,5 +1228,99 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
         ),
       ),
     );
+  }
+
+  Widget _buildQuantityStepper(
+    AppLocalizations l10n,
+    int index,
+    InventoryItem selected,
+  ) {
+    final _OrderLineDraft draft = _lines[index];
+    final int remaining = _remainingFor(index, selected);
+    return Row(
+      children: <Widget>[
+        Expanded(
+          child: Text(
+            l10n.quantityLabel,
+            style: Theme.of(context).textTheme.titleSmall,
+          ),
+        ),
+        IconButton(
+          key: ValueKey<String>('qty-dec-$index'),
+          tooltip: l10n.quantityLabel,
+          onPressed: draft.quantity <= 1
+              ? null
+              : () => _setQuantity(index, draft.quantity - 1, selected),
+          icon: const Icon(Icons.remove_circle_outline),
+        ),
+        Text(
+          '${draft.quantity}',
+          key: ValueKey<String>('qty-value-$index'),
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        IconButton(
+          key: ValueKey<String>('qty-inc-$index'),
+          tooltip: l10n.quantityLabel,
+          onPressed: remaining <= draft.quantity
+              ? null
+              : () => _setQuantity(index, draft.quantity + 1, selected),
+          icon: const Icon(Icons.add_circle_outline),
+        ),
+      ],
+    );
+  }
+
+  List<Widget> _buildIdentityFields(
+    AppLocalizations l10n,
+    int index,
+    InventoryItem selected,
+  ) {
+    final _OrderLineDraft draft = _lines[index];
+    final int slots = draft.identities.length < draft.quantity
+        ? draft.identities.length
+        : draft.quantity;
+    final List<Widget> fields = <Widget>[];
+    for (var u = 0; u < slots; u++) {
+      final _UnitIdentityDraft unit = draft.identities[u];
+      if (draft.quantity > 1) {
+        fields.add(
+          Padding(
+            padding: EdgeInsets.only(top: u == 0 ? 0 : 8),
+            child: Text(
+              l10n.labelUnitHeading(selected.name, u + 1),
+              style: Theme.of(context).textTheme.labelLarge,
+            ),
+          ),
+        );
+      }
+      fields.add(
+        Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: TextField(
+            controller: unit.instanceNameController,
+            decoration: InputDecoration(
+              labelText: l10n.instanceNameLabel,
+              hintText: l10n.instanceNameHint,
+            ),
+            onChanged: (_) => setState(() {}),
+          ),
+        ),
+      );
+      fields.add(
+        Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: TextField(
+            controller: unit.shortCodeController,
+            textCapitalization: TextCapitalization.characters,
+            decoration: InputDecoration(
+              labelText: l10n.shortCodeLabel,
+              hintText: l10n.shortCodeHint,
+            ),
+            onChanged: (_) => setState(() {}),
+          ),
+        ),
+      );
+    }
+    return fields;
   }
 }

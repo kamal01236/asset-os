@@ -8,6 +8,7 @@ import '../../core/providers/app_providers.dart';
 import '../../core/reports/report_builder.dart';
 import '../../core/reports/report_models.dart';
 import '../../core/sharing/whatsapp_share.dart';
+import '../../core/widgets/ui_primitives.dart';
 
 /// Generate a text report and share it to the owner's WhatsApp (share-to-self).
 class ShareReportsScreen extends ConsumerStatefulWidget {
@@ -62,11 +63,15 @@ class _ShareReportsScreenState extends ConsumerState<ShareReportsScreen> {
             now: now,
           );
 
+    final bool canShare = whatsApp.isConfigured && !loading && !_sharing;
+
     return Scaffold(
       appBar: AppBar(title: Text(l10n.shareReportsTitle)),
-      body: ListView(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
-        children: <Widget>[
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
           Text(
             l10n.shareReportsSubtitle,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -174,36 +179,39 @@ class _ShareReportsScreenState extends ConsumerState<ShareReportsScreen> {
             style: Theme.of(context).textTheme.titleSmall,
           ),
           const SizedBox(height: 8),
-          Card(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxHeight: 280),
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(14),
-                child: SelectableText(
-                  preview,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    fontFamily: 'monospace',
-                    height: 1.35,
-                  ),
-                ),
-              ),
-            ),
-          ),
+          _StructuredReportPreview(preview: preview),
           const SizedBox(height: 16),
           if (!whatsApp.isConfigured)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: Text(
-                l10n.reportMissingPhone,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.error,
+            Card(
+              color: Theme.of(context).colorScheme.errorContainer,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(14, 12, 8, 12),
+                child: Row(
+                  children: <Widget>[
+                    Icon(
+                      Icons.info_outline,
+                      color: Theme.of(context).colorScheme.onErrorContainer,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        l10n.reportWhatsAppGateBanner,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.onErrorContainer,
+                        ),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: Text(l10n.reportConfigureWhatsAppAction),
+                    ),
+                  ],
                 ),
               ),
             ),
+          if (!whatsApp.isConfigured) const SizedBox(height: 12),
           FilledButton.icon(
-            onPressed: loading || _sharing
-                ? null
-                : () => _share(preview, whatsApp),
+            onPressed: canShare ? () => _share(preview, whatsApp) : null,
             icon: const Icon(Icons.share_outlined),
             label: Text(l10n.shareToMyWhatsApp),
           ),
@@ -224,6 +232,7 @@ class _ShareReportsScreenState extends ConsumerState<ShareReportsScreen> {
             label: Text(l10n.copyReportText),
           ),
         ],
+        ),
       ),
     );
   }
@@ -300,6 +309,88 @@ class _ShareReportsScreenState extends ConsumerState<ShareReportsScreen> {
     final String m = value.month.toString().padLeft(2, '0');
     final String d = value.day.toString().padLeft(2, '0');
     return '$y-$m-$d';
+  }
+}
+
+/// Key-value rows for lines that look like `Label: value`; other lines as text.
+class _StructuredReportPreview extends StatelessWidget {
+  const _StructuredReportPreview({required this.preview});
+
+  final String preview;
+
+  @override
+  Widget build(BuildContext context) {
+    final List<Widget> children = <Widget>[];
+    bool firstHeading = true;
+    for (final String raw in preview.split('\n')) {
+      final String line = raw.trimRight();
+      if (line.trim().isEmpty) {
+        continue;
+      }
+      final int colon = line.indexOf(': ');
+      final String trimmed = line.trimLeft();
+      if (colon > 0 &&
+          !trimmed.startsWith('•') &&
+          !trimmed.startsWith('-')) {
+        final String label = line.substring(0, colon).trim();
+        final String value = line.substring(colon + 2).trim();
+        final bool strong = label.toLowerCase().contains('balance') ||
+            label.toLowerCase() == 'active' ||
+            label.toLowerCase().contains('charges');
+        children.add(
+          MoneyStack(
+            label: label,
+            amount: value,
+            emphasis: strong
+                ? MoneyStackEmphasis.total
+                : MoneyStackEmphasis.normal,
+          ),
+        );
+      } else if (!line.startsWith(' ') &&
+          !trimmed.startsWith('•') &&
+          !trimmed.startsWith('-') &&
+          !line.contains('→') &&
+          line.length < 40) {
+        children.add(
+          Padding(
+            padding: EdgeInsets.only(top: firstHeading ? 0 : 10, bottom: 4),
+            child: Text(
+              line.trim(),
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        );
+        firstHeading = false;
+      } else {
+        children.add(
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 2),
+            child: Text(
+              line,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                height: 1.35,
+              ),
+            ),
+          ),
+        );
+      }
+    }
+
+    return Card(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxHeight: 320),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: children,
+          ),
+        ),
+      ),
+    );
   }
 }
 

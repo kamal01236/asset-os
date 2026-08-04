@@ -41,6 +41,7 @@ class ScopedSearchField extends StatefulWidget {
     this.focusNode,
     this.autofocus = false,
     this.semanticLabel,
+    this.showSuggestionList = true,
     super.key,
   });
 
@@ -54,6 +55,9 @@ class ScopedSearchField extends StatefulWidget {
   final FocusNode? focusNode;
   final bool autofocus;
   final String? semanticLabel;
+
+  /// When false, only the field + min-length helper are shown (inline list filter).
+  final bool showSuggestionList;
 
   @override
   State<ScopedSearchField> createState() => _ScopedSearchFieldState();
@@ -71,10 +75,27 @@ class _ScopedSearchFieldState extends State<ScopedSearchField> {
 
   bool get _meetsMin => _query.length >= kMinMeaningfulTextLength;
 
-  bool get _showSuggestions => _meetsMin;
+  bool get _showSuggestions => _meetsMin && widget.showSuggestionList;
+
+  /// Hint only when focused, or when a short non-empty query is present.
+  bool get _showMinLengthHint =>
+      !_meetsMin && (_fieldFocus.hasFocus || _query.isNotEmpty);
+
+  @override
+  void initState() {
+    super.initState();
+    _fieldFocus.addListener(_onFocusChanged);
+  }
+
+  void _onFocusChanged() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
 
   @override
   void dispose() {
+    _fieldFocus.removeListener(_onFocusChanged);
     if (_ownsController) {
       _controller.dispose();
     }
@@ -152,7 +173,7 @@ class _ScopedSearchFieldState extends State<ScopedSearchField> {
               decoration: InputDecoration(
                 prefixIcon: const Icon(Icons.search),
                 hintText: widget.hintText,
-                helperText: _meetsMin ? null : widget.minLengthHint,
+                helperText: _showMinLengthHint ? widget.minLengthHint : null,
               ),
               onChanged: (String value) {
                 setState(() => _highlightedIndex = -1);

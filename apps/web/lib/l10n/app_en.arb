@@ -797,5 +797,29 @@
   "orderNoteLineLabel": "Link to line",
   "orderNoteWholeOrder": "Whole order",
   "orderNotesEmpty": "No notes yet.",
-  "orderNoteAddedSnack": "Note added"
+  "orderNoteAddedSnack": "Note added",
+  "orderBillAmountLabel": "Bill",
+  "orderDepositShortLabel": "Deposit",
+  "ordersFilterAll": "All",
+  "ordersFilterOpen": "Open",
+  "ordersFilterCompleted": "Completed",
+  "searchOrdersHint": "Search by party, id, or item",
+  "inventoryStockMeta": "{category} · {available}/{total}",
+  "@inventoryStockMeta": {
+    "placeholders": {
+      "category": {"type": "String"},
+      "available": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "moneyLabelBase": "Base",
+  "moneyLabelLate": "Late fee",
+  "moneyLabelTotal": "Total",
+  "moneyLabelDeposit": "Deposit",
+  "moneyLabelWillApply": "Will apply",
+  "moneyLabelRemainingDue": "Remaining due",
+  "moneyLabelLeftover": "Leftover deposit",
+  "moneyLabelNetDue": "Net due",
+  "reportWhatsAppGateBanner": "Set your WhatsApp number in More to share reports.",
+  "reportConfigureWhatsAppAction": "Set WhatsApp"
 }

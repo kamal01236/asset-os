@@ -2413,6 +2413,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Note added'**
   String get orderNoteAddedSnack;
+
+  /// No description provided for @orderBillAmountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Bill'**
+  String get orderBillAmountLabel;
+
+  /// No description provided for @orderDepositShortLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Deposit'**
+  String get orderDepositShortLabel;
+
+  /// No description provided for @ordersFilterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get ordersFilterAll;
+
+  /// No description provided for @ordersFilterOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get ordersFilterOpen;
+
+  /// No description provided for @ordersFilterCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get ordersFilterCompleted;
+
+  /// No description provided for @searchOrdersHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by party, id, or item'**
+  String get searchOrdersHint;
+
+  /// No description provided for @inventoryStockMeta.
+  ///
+  /// In en, this message translates to:
+  /// **'{category} · {available}/{total}'**
+  String inventoryStockMeta(String category, int available, int total);
+
+  /// No description provided for @moneyLabelBase.
+  ///
+  /// In en, this message translates to:
+  /// **'Base'**
+  String get moneyLabelBase;
+
+  /// No description provided for @moneyLabelLate.
+  ///
+  /// In en, this message translates to:
+  /// **'Late fee'**
+  String get moneyLabelLate;
+
+  /// No description provided for @moneyLabelTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get moneyLabelTotal;
+
+  /// No description provided for @moneyLabelDeposit.
+  ///
+  /// In en, this message translates to:
+  /// **'Deposit'**
+  String get moneyLabelDeposit;
+
+  /// No description provided for @moneyLabelWillApply.
+  ///
+  /// In en, this message translates to:
+  /// **'Will apply'**
+  String get moneyLabelWillApply;
+
+  /// No description provided for @moneyLabelRemainingDue.
+  ///
+  /// In en, this message translates to:
+  /// **'Remaining due'**
+  String get moneyLabelRemainingDue;
+
+  /// No description provided for @moneyLabelLeftover.
+  ///
+  /// In en, this message translates to:
+  /// **'Leftover deposit'**
+  String get moneyLabelLeftover;
+
+  /// No description provided for @moneyLabelNetDue.
+  ///
+  /// In en, this message translates to:
+  /// **'Net due'**
+  String get moneyLabelNetDue;
+
+  /// No description provided for @reportWhatsAppGateBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Set your WhatsApp number in More to share reports.'**
+  String get reportWhatsAppGateBanner;
+
+  /// No description provided for @reportConfigureWhatsAppAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Set WhatsApp'**
+  String get reportConfigureWhatsAppAction;
 }
 
 class _AppLocalizationsDelegate

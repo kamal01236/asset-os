@@ -187,7 +187,7 @@ void main() {
 
     await tester.tap(find.text('Orders'));
     await pumpFrames(tester);
-    expect(find.text('REN-3001'), findsOneWidget);
+    expect(find.text('#3001'), findsOneWidget);
     expect(find.textContaining('Drill Kit'), findsOneWidget);
 
     await tester.tap(find.text('Inventory'));
@@ -213,9 +213,13 @@ void main() {
     await _pumpAppShell(tester);
 
     expect(find.text('Search Anything'), findsOneWidget);
-    expect(find.text('Type at least 3 characters'), findsWidgets);
+    expect(find.text('Type at least 3 characters'), findsNothing);
     expect(find.widgetWithText(AppBar, 'Search'), findsNothing);
     expect(find.widgetWithText(AppBar, kAppDisplayName), findsOneWidget);
+
+    await tester.tap(find.byType(TextField).first);
+    await tester.pump();
+    expect(find.text('Type at least 3 characters'), findsOneWidget);
   });
 
   testWidgets('FAB Search opens typeahead bottom sheet', (
@@ -269,6 +273,10 @@ void main() {
       ),
     );
 
+    expect(find.text('Type at least 3 characters'), findsNothing);
+
+    await tester.tap(find.byType(TextField));
+    await tester.pump();
     expect(find.text('Type at least 3 characters'), findsOneWidget);
 
     final TextField field = tester.widget(find.byType(TextField));

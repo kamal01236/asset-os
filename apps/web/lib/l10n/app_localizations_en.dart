@@ -1354,4 +1354,58 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get orderNoteAddedSnack => 'Note added';
+
+  @override
+  String get orderBillAmountLabel => 'Bill';
+
+  @override
+  String get orderDepositShortLabel => 'Deposit';
+
+  @override
+  String get ordersFilterAll => 'All';
+
+  @override
+  String get ordersFilterOpen => 'Open';
+
+  @override
+  String get ordersFilterCompleted => 'Completed';
+
+  @override
+  String get searchOrdersHint => 'Search by party, id, or item';
+
+  @override
+  String inventoryStockMeta(String category, int available, int total) {
+    return '$category · $available/$total';
+  }
+
+  @override
+  String get moneyLabelBase => 'Base';
+
+  @override
+  String get moneyLabelLate => 'Late fee';
+
+  @override
+  String get moneyLabelTotal => 'Total';
+
+  @override
+  String get moneyLabelDeposit => 'Deposit';
+
+  @override
+  String get moneyLabelWillApply => 'Will apply';
+
+  @override
+  String get moneyLabelRemainingDue => 'Remaining due';
+
+  @override
+  String get moneyLabelLeftover => 'Leftover deposit';
+
+  @override
+  String get moneyLabelNetDue => 'Net due';
+
+  @override
+  String get reportWhatsAppGateBanner =>
+      'Set your WhatsApp number in More to share reports.';
+
+  @override
+  String get reportConfigureWhatsAppAction => 'Set WhatsApp';
 }

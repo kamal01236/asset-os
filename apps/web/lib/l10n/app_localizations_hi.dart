@@ -1355,4 +1355,58 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get orderNoteAddedSnack => 'नोट जोड़ा गया';
+
+  @override
+  String get orderBillAmountLabel => 'बिल';
+
+  @override
+  String get orderDepositShortLabel => 'जमा';
+
+  @override
+  String get ordersFilterAll => 'सभी';
+
+  @override
+  String get ordersFilterOpen => 'खुला';
+
+  @override
+  String get ordersFilterCompleted => 'पूर्ण';
+
+  @override
+  String get searchOrdersHint => 'पार्टी, आईडी या आइटम से खोजें';
+
+  @override
+  String inventoryStockMeta(String category, int available, int total) {
+    return '$category · $available/$total';
+  }
+
+  @override
+  String get moneyLabelBase => 'आधार';
+
+  @override
+  String get moneyLabelLate => 'विलंब शुल्क';
+
+  @override
+  String get moneyLabelTotal => 'कुल';
+
+  @override
+  String get moneyLabelDeposit => 'जमा';
+
+  @override
+  String get moneyLabelWillApply => 'लागू होगा';
+
+  @override
+  String get moneyLabelRemainingDue => 'शेष देय';
+
+  @override
+  String get moneyLabelLeftover => 'बचा जमा';
+
+  @override
+  String get moneyLabelNetDue => 'नेट देय';
+
+  @override
+  String get reportWhatsAppGateBanner =>
+      'रिपोर्ट शेयर करने के लिए More में अपना WhatsApp नंबर सेट करें।';
+
+  @override
+  String get reportConfigureWhatsAppAction => 'WhatsApp सेट करें';
 }

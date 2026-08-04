@@ -797,5 +797,29 @@
   "orderNoteLineLabel": "पंक्ति से जोड़ें",
   "orderNoteWholeOrder": "पूरा ऑर्डर",
   "orderNotesEmpty": "अभी कोई नोट नहीं।",
-  "orderNoteAddedSnack": "नोट जोड़ा गया"
+  "orderNoteAddedSnack": "नोट जोड़ा गया",
+  "orderBillAmountLabel": "बिल",
+  "orderDepositShortLabel": "जमा",
+  "ordersFilterAll": "सभी",
+  "ordersFilterOpen": "खुला",
+  "ordersFilterCompleted": "पूर्ण",
+  "searchOrdersHint": "पार्टी, आईडी या आइटम से खोजें",
+  "inventoryStockMeta": "{category} · {available}/{total}",
+  "@inventoryStockMeta": {
+    "placeholders": {
+      "category": {"type": "String"},
+      "available": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "moneyLabelBase": "आधार",
+  "moneyLabelLate": "विलंब शुल्क",
+  "moneyLabelTotal": "कुल",
+  "moneyLabelDeposit": "जमा",
+  "moneyLabelWillApply": "लागू होगा",
+  "moneyLabelRemainingDue": "शेष देय",
+  "moneyLabelLeftover": "बचा जमा",
+  "moneyLabelNetDue": "नेट देय",
+  "reportWhatsAppGateBanner": "रिपोर्ट शेयर करने के लिए More में अपना WhatsApp नंबर सेट करें।",
+  "reportConfigureWhatsAppAction": "WhatsApp सेट करें"
 }

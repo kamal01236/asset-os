@@ -199,7 +199,9 @@ class AppShell extends ConsumerWidget {
   }
 }
 
-class RentalsScreen extends ConsumerWidget {
+enum _OrdersBillScope { all, open, completed }
+
+class RentalsScreen extends ConsumerStatefulWidget {
   const RentalsScreen({
     required this.onOpenRental,
     super.key,
@@ -208,7 +210,82 @@ class RentalsScreen extends ConsumerWidget {
   final ValueChanged<Rental> onOpenRental;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<RentalsScreen> createState() => _RentalsScreenState();
+}
+
+class _RentalsScreenState extends ConsumerState<RentalsScreen> {
+  final TextEditingController _searchController = TextEditingController();
+  String _query = '';
+  _OrdersBillScope _scope = _OrdersBillScope.all;
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  List<Rental> _applyScope(List<Rental> rentals, RentalsListFilter? homeFilter) {
+    if (homeFilter != null) {
+      final DateTime now = DateTime.now();
+      return rentals
+          .where((Rental rental) => rental.statusFor(now) == homeFilter.status)
+          .toList();
+    }
+    switch (_scope) {
+      case _OrdersBillScope.all:
+        return rentals;
+      case _OrdersBillScope.open:
+        return rentals
+            .where((Rental rental) => rental.orderStatus == OrderStatus.open)
+            .toList();
+      case _OrdersBillScope.completed:
+        return rentals
+            .where(
+              (Rental rental) => rental.orderStatus == OrderStatus.completed,
+            )
+            .toList();
+    }
+  }
+
+  List<Rental> _applySearch(
+    List<Rental> rentals,
+    List<Customer> customers,
+  ) {
+    final String q = _query.trim().toLowerCase();
+    if (q.length < kMinMeaningfulTextLength) {
+      return rentals;
+    }
+    return rentals.where((Rental rental) {
+      if (rental.id.toLowerCase().contains(q)) {
+        return true;
+      }
+      final Customer customer = customers.firstWhere(
+        (Customer item) => item.id == rental.customerId,
+        orElse: () => Customer(
+          id: 'unknown',
+          name: '',
+          phone: '',
+          isTrusted: false,
+          qrCode: 'unknown',
+        ),
+      );
+      final String party = rentalPartyLabel(customer, rental).toLowerCase();
+      if (party.contains(q) || customer.phone.toLowerCase().contains(q)) {
+        return true;
+      }
+      for (final RentalLine line in rental.lines) {
+        if (line.displayLabel.toLowerCase().contains(q) ||
+            line.catalogName.toLowerCase().contains(q) ||
+            line.shortCode.toLowerCase().contains(q)) {
+          return true;
+        }
+      }
+      return false;
+    }).toList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final AppLocalizations l10n = context.l10n;
     final AsyncValue<List<Rental>> rentalsAsync = ref.watch(rentalsProvider);
     final AsyncValue<List<Customer>> customersAsync = ref.watch(customersProvider);
@@ -218,8 +295,8 @@ class RentalsScreen extends ConsumerWidget {
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (Object error, StackTrace _) => Center(child: Text('$error')),
       data: (List<Rental> rentals) {
-        final List<Customer> customers = customersAsync.valueOrNull ?? const <Customer>[];
-        final DateTime now = DateTime.now();
+        final List<Customer> customers =
+            customersAsync.valueOrNull ?? const <Customer>[];
         if (rentals.isEmpty) {
           return Padding(
             padding: const EdgeInsets.all(16),
@@ -238,33 +315,65 @@ class RentalsScreen extends ConsumerWidget {
           );
         }
 
-        final List<Rental> visible = listFilter == null
-            ? rentals
-            : rentals
-                .where(
-                  (Rental rental) =>
-                      rental.statusFor(now) == listFilter.status,
-                )
-                .toList();
+        final List<Rental> scoped = _applyScope(rentals, listFilter);
+        final List<Rental> visible = _applySearch(scoped, customers);
         final String? filterLabel = listFilter == null
             ? null
             : _rentalsListFilterLabel(l10n, listFilter);
 
-        return ListView.separated(
+        return ListView(
           padding: const EdgeInsets.all(16),
-          itemBuilder: (BuildContext context, int index) {
-            if (filterLabel != null && index == 0) {
-              return ActiveFilterBar(
+          children: <Widget>[
+            ScopedSearchField(
+              controller: _searchController,
+              hintText: l10n.searchOrdersHint,
+              minLengthHint: l10n.searchTypeMinChars,
+              noResultsText: l10n.searchNoResults,
+              suggestions: const <SearchSuggestion>[],
+              showSuggestionList: false,
+              onQueryChanged: (String value) {
+                setState(() => _query = value);
+              },
+              onSelected: (_) {},
+            ),
+            const SizedBox(height: 12),
+            if (filterLabel != null)
+              ActiveFilterBar(
                 label: filterLabel,
                 onClear: () =>
                     ref.read(rentalsListFilterProvider.notifier).state = null,
-              );
-            }
-            final int rentalIndex = filterLabel == null ? index : index - 1;
-            if (visible.isEmpty) {
-              return EmptyStatePane(
-                title: l10n.homeFilterEmptyTitle,
-                subtitle: l10n.homeFilterEmptyRentalsSubtitle(filterLabel!),
+              )
+            else
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: <Widget>[
+                  ChoiceChip(
+                    label: Text(l10n.ordersFilterAll),
+                    selected: _scope == _OrdersBillScope.all,
+                    onSelected: (_) =>
+                        setState(() => _scope = _OrdersBillScope.all),
+                  ),
+                  ChoiceChip(
+                    label: Text(l10n.ordersFilterOpen),
+                    selected: _scope == _OrdersBillScope.open,
+                    onSelected: (_) =>
+                        setState(() => _scope = _OrdersBillScope.open),
+                  ),
+                  ChoiceChip(
+                    label: Text(l10n.ordersFilterCompleted),
+                    selected: _scope == _OrdersBillScope.completed,
+                    onSelected: (_) =>
+                        setState(() => _scope = _OrdersBillScope.completed),
+                  ),
+                ],
+              ),
+            const SizedBox(height: 12),
+            if (visible.isEmpty)
+              CompactEmptyState(
+                message: filterLabel != null
+                    ? l10n.homeFilterEmptyRentalsSubtitle(filterLabel)
+                    : l10n.homeFilterEmptyTitle,
                 ctaLabel: l10n.actionNewRental,
                 onPressed: () {
                   Navigator.of(context).push(
@@ -273,30 +382,30 @@ class RentalsScreen extends ConsumerWidget {
                     ),
                   );
                 },
-              );
-            }
-            final Rental rental = visible[rentalIndex];
-            final Customer customer = customers.firstWhere(
-              (item) => item.id == rental.customerId,
-              orElse: () => Customer(
-                id: 'unknown',
-                name: l10n.unknownCustomer,
-                phone: '--',
-                isTrusted: false,
-                qrCode: 'unknown',
-              ),
-            );
-            return OrderBillCard(
-              rental: rental,
-              partyLabel: rentalPartyLabel(customer, rental),
-              linesLabel: _rentalLinesLabel(rental),
-              onTap: () => onOpenRental(rental),
-            );
-          },
-          separatorBuilder: (_, _) => const SizedBox(height: 10),
-          itemCount: filterLabel == null
-              ? visible.length
-              : (visible.isEmpty ? 2 : visible.length + 1),
+              )
+            else
+              ...visible.map((Rental rental) {
+                final Customer customer = customers.firstWhere(
+                  (Customer item) => item.id == rental.customerId,
+                  orElse: () => Customer(
+                    id: 'unknown',
+                    name: l10n.unknownCustomer,
+                    phone: '--',
+                    isTrusted: false,
+                    qrCode: 'unknown',
+                  ),
+                );
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: OrderBillCard(
+                    rental: rental,
+                    partyLabel: rentalPartyLabel(customer, rental),
+                    linesLabel: _rentalLinesLabel(rental),
+                    onTap: () => widget.onOpenRental(rental),
+                  ),
+                );
+              }),
+          ],
         );
       },
     );
@@ -459,24 +568,25 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                 final AssetStatus status = item.availableUnits > 0
                     ? AssetStatus.available
                     : AssetStatus.rented;
+                final String categoryLabel = item.isGeneral
+                    ? '${item.category} · ${l10n.itemKindGeneralBadge}'
+                    : item.category;
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 10),
-                  child: EntityCard(
+                  child: ListEntityRow(
                     title: item.name,
-                    subtitle:
-                        '${l10n.inventoryAvailableSubtitle(
-                          item.isGeneral
-                              ? '${item.category} · ${l10n.itemKindGeneralBadge}'
-                              : item.category,
-                          item.availableUnits,
-                          item.totalUnits,
-                        )} · ${l10n.inventoryRateSubtitle(
-                          localizedBillingMode(l10n, item.billingMode),
-                          formatMoney(
-                            item.rateAmount,
-                            currencyCode: item.currencyCode,
-                          ),
-                        )}',
+                    secondary: l10n.inventoryStockMeta(
+                      categoryLabel,
+                      item.availableUnits,
+                      item.totalUnits,
+                    ),
+                    tertiary: l10n.inventoryRateSubtitle(
+                      localizedBillingMode(l10n, item.billingMode),
+                      formatMoney(
+                        item.rateAmount,
+                        currencyCode: item.currencyCode,
+                      ),
+                    ),
                     leadingIcon: Icons.inventory_2_outlined,
                     status: status,
                     trailing: const Icon(Icons.chevron_right),
@@ -607,38 +717,31 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
         ),
         const SizedBox(height: 12),
         ...visible.map((Customer customer) {
-          final String tier =
-              customer.isTrusted ? l10n.customerTrusted : l10n.customerStandard;
           final CustomerBalanceAsOf balance =
               customerBalanceAsOf(customer, rentals, now);
-          final String subtitle = balance.hasActivity
-              ? l10n.customerSubtitleWithBalances(
-                  customer.phone,
-                  tier,
-                  formatMoney(balance.advancePaise),
-                  formatMoney(balance.pendingPaise),
-                  formatMoney(balance.netPaise),
-                )
-              : l10n.customerSubtitle(customer.phone, tier);
+          final ColorScheme scheme = Theme.of(context).colorScheme;
+          final Color netColor = balance.netPaise > 0
+              ? AppTheme.overdue
+              : (balance.netPaise < 0
+                  ? scheme.onSurfaceVariant
+                  : scheme.onSurface);
           return Padding(
             padding: const EdgeInsets.only(bottom: 10),
-            child: EntityCard(
+            child: ListEntityRow(
               title: customer.name,
-              subtitle: subtitle,
+              secondary: customer.phone,
               leadingIcon: Icons.person_outline,
-              status: customer.isTrusted
-                  ? AssetStatus.available
-                  : AssetStatus.archived,
+              pill: TierPill(trusted: customer.isTrusted),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
-                  if (balance.duePaise > 0)
+                  if (balance.hasActivity)
                     Padding(
                       padding: const EdgeInsets.only(right: 4),
                       child: Text(
-                        formatMoney(balance.duePaise),
+                        formatMoney(balance.netPaise),
                         style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          color: AppTheme.overdue,
+                          color: netColor,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -928,10 +1031,25 @@ class _RentalDetailScreenState extends ConsumerState<RentalDetailScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(rental.id),
+        title: Row(
+          children: <Widget>[
+            Flexible(
+              child: Text(
+                shortOrderId(rental.id),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(width: 10),
+            OrderStatusPill(
+              status: rental.orderStatus,
+              urgency: rental.isActive ? rental.statusFor(now) : null,
+            ),
+          ],
+        ),
         actions: <Widget>[
           if (rental.isActive && rental.returnedRentLines.isEmpty)
-            TextButton(
+            IconButton(
+              tooltip: l10n.deleteOrderAction,
               onPressed: () async {
                 final bool done = await _confirmAndCancelOrder(
                   context: context,
@@ -943,25 +1061,28 @@ class _RentalDetailScreenState extends ConsumerState<RentalDetailScreen> {
                   Navigator.of(context).pop();
                 }
               },
-              child: Text(l10n.deleteOrderAction),
+              icon: const Icon(Icons.delete_outline),
             ),
         ],
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: <Widget>[
-          EntityCard(
+          ListEntityRow(
             title: rentalPartyLabel(customer, rental),
-            subtitle: rental.nickname?.trim().isNotEmpty == true
+            secondary: rental.nickname?.trim().isNotEmpty == true
                 ? l10n.rentalNicknameSubtitle(customer.name, customer.phone)
                 : l10n.phoneLabel(customer.phone),
             leadingIcon: Icons.person_outline,
-            status: rental.statusFor(now),
-          ),
-          const SizedBox(height: 8),
-          OrderStatusPill(
-            status: rental.orderStatus,
-            urgency: rental.isActive ? rental.statusFor(now) : null,
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) =>
+                      CustomerDetailScreen(customerId: customer.id),
+                ),
+              );
+            },
           ),
           if (rental.replacedFromRentalId != null) ...<Widget>[
             const SizedBox(height: 8),
@@ -970,31 +1091,6 @@ class _RentalDetailScreenState extends ConsumerState<RentalDetailScreen> {
               style: Theme.of(context).textTheme.bodySmall,
             ),
           ],
-          const SizedBox(height: 10),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(14),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text(
-                    l10n.orderStatusHeading,
-                    style: Theme.of(context).textTheme.titleSmall,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    l10n.orderIssuedSummary(rental.lines.length),
-                  ),
-                  Text(
-                    l10n.orderPendingSummary(openLines.length),
-                  ),
-                  Text(
-                    l10n.orderReturnedSummary(closedLines.length),
-                  ),
-                ],
-              ),
-            ),
-          ),
           const SizedBox(height: 10),
           Card(
             child: Padding(
@@ -1080,32 +1176,33 @@ class _RentalDetailScreenState extends ConsumerState<RentalDetailScreen> {
                       formatMoney(rental.rateAmount),
                     ),
                   ),
-                  Text(
-                    l10n.chargeBaseLabel(
-                      formatMoney(
-                        rental.isOpenEnded && rental.isActive
-                            ? totalShown
-                            : rental.baseAmount,
-                      ),
+                  const SizedBox(height: 8),
+                  MoneyStack(
+                    label: l10n.moneyLabelBase,
+                    amount: formatMoney(
+                      rental.isOpenEnded && rental.isActive
+                          ? totalShown
+                          : rental.baseAmount,
                     ),
                   ),
                   if (lateShown > 0)
-                    Text(l10n.chargeLateLabel(formatMoney(lateShown))),
-                  Text(
-                    l10n.chargeTotalLabel(formatMoney(totalShown)),
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
+                    MoneyStack(
+                      label: l10n.moneyLabelLate,
+                      amount: formatMoney(lateShown),
                     ),
+                  MoneyStack(
+                    label: l10n.moneyLabelTotal,
+                    amount: formatMoney(totalShown),
+                    emphasis: MoneyStackEmphasis.total,
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    l10n.depositAvailableLabel(
-                      formatMoney(
-                        rental.isActive
-                            ? rental.depositRemaining
-                            : rental.depositAmount,
-                      ),
+                  MoneyStack(
+                    label: l10n.moneyLabelDeposit,
+                    amount: formatMoney(
+                      rental.isActive
+                          ? rental.depositRemaining
+                          : rental.depositAmount,
                     ),
+                    emphasis: MoneyStackEmphasis.muted,
                   ),
                   if (rental.isActive) ...<Widget>[
                     Builder(
@@ -1127,22 +1224,22 @@ class _RentalDetailScreenState extends ConsumerState<RentalDetailScreen> {
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
-                            Text(
-                              l10n.depositWillApplyLabel(
-                                formatMoney(willApply),
-                              ),
+                            MoneyStack(
+                              label: l10n.moneyLabelWillApply,
+                              amount: formatMoney(willApply),
+                              emphasis: MoneyStackEmphasis.muted,
                             ),
                             if (remainingDue > 0)
-                              Text(
-                                l10n.depositRemainingDueLabel(
-                                  formatMoney(remainingDue),
-                                ),
+                              MoneyStack(
+                                label: l10n.moneyLabelRemainingDue,
+                                amount: formatMoney(remainingDue),
+                                emphasis: MoneyStackEmphasis.due,
                               )
                             else if (leftover > 0)
-                              Text(
-                                l10n.depositLeftoverLabel(
-                                  formatMoney(leftover),
-                                ),
+                              MoneyStack(
+                                label: l10n.moneyLabelLeftover,
+                                amount: formatMoney(leftover),
+                                emphasis: MoneyStackEmphasis.muted,
                               ),
                           ],
                         );
@@ -1150,15 +1247,17 @@ class _RentalDetailScreenState extends ConsumerState<RentalDetailScreen> {
                     ),
                   ] else ...<Widget>[
                     if (rental.depositApplied > 0)
-                      Text(
-                        l10n.depositAppliedLabel(
-                          formatMoney(rental.depositApplied),
-                        ),
+                      MoneyStack(
+                        label: l10n.moneyLabelDeposit,
+                        amount: formatMoney(rental.depositApplied),
+                        emphasis: MoneyStackEmphasis.muted,
                       ),
-                    Text(
-                      l10n.depositNetDueLabel(
-                        formatMoney(rental.amountDueAfterDeposit),
-                      ),
+                    MoneyStack(
+                      label: l10n.moneyLabelNetDue,
+                      amount: formatMoney(rental.amountDueAfterDeposit),
+                      emphasis: rental.amountDueAfterDeposit > 0
+                          ? MoneyStackEmphasis.due
+                          : MoneyStackEmphasis.normal,
                     ),
                   ],
                 ],
@@ -1752,11 +1851,11 @@ class CustomerDetailScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: <Widget>[
-          EntityCard(
+          ListEntityRow(
             title: customer.name,
-            subtitle: customer.phone,
+            secondary: customer.phone,
             leadingIcon: Icons.person_outline,
-            status: customer.isTrusted ? AssetStatus.available : AssetStatus.archived,
+            pill: TierPill(trusted: customer.isTrusted),
           ),
           const SizedBox(height: 10),
           Card(
