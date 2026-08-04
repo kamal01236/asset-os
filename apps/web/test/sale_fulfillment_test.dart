@@ -21,7 +21,7 @@ void main() {
       expect(item.category, kCategoryGeneral);
       expect(item.defaultItemKind, InventoryItemKind.general);
       expect(item.isGeneral, isTrue);
-      expect(repository.database.schemaVersion, 9);
+      expect(repository.database.schemaVersion, 10);
     });
 
     test('rental item sold with manual amount drops total and closes line',

@@ -1059,6 +1059,78 @@ class LocalRepository {
     return _mapRental(row);
   }
 
+  /// Append an order note (body ≥3 chars). Optional [rentalItemId] must belong
+  /// to this rental. Also records a short timeline event.
+  Future<RentalNote> addRentalNote({
+    required String rentalId,
+    String? rentalItemId,
+    required String body,
+    String kind = 'general',
+  }) async {
+    final String trimmed = body.trim();
+    if (!meetsMinMeaningfulText(trimmed)) {
+      throw ArgumentError(
+        'Note must be at least $kMinMeaningfulTextLength characters',
+      );
+    }
+    final RentalNoteKind parsedKind = RentalNoteKind.parse(kind);
+    final Rental? rental = await _findRental(rentalId);
+    if (rental == null) {
+      throw ArgumentError('Rental not found: $rentalId');
+    }
+    final String? lineId = rentalItemId?.trim();
+    final String? storedLineId =
+        (lineId == null || lineId.isEmpty) ? null : lineId;
+    if (storedLineId != null &&
+        !rental.lines.any((RentalLine line) => line.id == storedLineId)) {
+      throw ArgumentError(
+        'Rental line $storedLineId does not belong to rental $rentalId',
+      );
+    }
+
+    final DateTime now = DateTime.now();
+    final String noteId = nextId('NOTE');
+    final String truncatedBody = trimmed.length > 80
+        ? '${trimmed.substring(0, 80)}…'
+        : trimmed;
+    final String eventSubtitle =
+        '${parsedKind.storageValue}: $truncatedBody';
+
+    await _db.transaction(() async {
+      await _db.into(_db.rentalNotes).insert(
+        RentalNotesCompanion.insert(
+          id: noteId,
+          rentalId: rentalId,
+          rentalItemId: Value<String?>(storedLineId),
+          kind: Value<String>(parsedKind.storageValue),
+          body: trimmed,
+          createdAt: now,
+        ),
+      );
+      await _db.into(_db.rentalEvents).insert(
+        RentalEventsCompanion.insert(
+          rentalId: rentalId,
+          title: 'Note added',
+          subtitle: eventSubtitle,
+          at: now,
+        ),
+      );
+      // Notes/events are not watched by rentalsProvider; nudge the parent row.
+      _db.notifyUpdates(<TableUpdate>{
+        TableUpdate.onTable(_db.rentals, kind: UpdateKind.update),
+      });
+    });
+
+    return RentalNote(
+      id: noteId,
+      rentalId: rentalId,
+      rentalItemId: storedLineId,
+      kind: parsedKind,
+      body: trimmed,
+      createdAt: now,
+    );
+  }
+
   Future<Customer?> customerById(String customerId) async {
     final CustomerRow? row = await (_db.select(_db.customers)
           ..where((t) => t.id.equals(customerId)))
@@ -1627,6 +1699,18 @@ class LocalRepository {
             ),
           );
         }
+        for (final RentalNote note in rental.notes) {
+          await _db.into(_db.rentalNotes).insertOnConflictUpdate(
+            RentalNotesCompanion.insert(
+              id: note.id,
+              rentalId: rental.id,
+              rentalItemId: Value<String?>(note.rentalItemId),
+              kind: Value<String>(note.kind.storageValue),
+              body: note.body,
+              createdAt: note.createdAt,
+            ),
+          );
+        }
       }
     });
   }
@@ -1714,6 +1798,17 @@ class LocalRepository {
     final List<RentalEventRow> events = await eventQuery.get();
     events.sort((a, b) => b.at.compareTo(a.at));
 
+    final List<RentalNoteRow> noteRows = await (_db.select(_db.rentalNotes)
+          ..where((t) => t.rentalId.equals(row.id)))
+        .get();
+    noteRows.sort((a, b) {
+      final int byTime = b.createdAt.compareTo(a.createdAt);
+      if (byTime != 0) {
+        return byTime;
+      }
+      return b.id.compareTo(a.id);
+    });
+
     final List<RentalLine> lines = <RentalLine>[];
     for (final RentalItemRow link in links) {
       final InventoryItemRow? item = await (_db.select(_db.inventoryItems)
@@ -1762,6 +1857,18 @@ class LocalRepository {
               title: event.title,
               subtitle: event.subtitle,
               at: event.at,
+            ),
+          )
+          .toList(),
+      notes: noteRows
+          .map(
+            (RentalNoteRow note) => RentalNote(
+              id: note.id,
+              rentalId: note.rentalId,
+              rentalItemId: note.rentalItemId,
+              kind: RentalNoteKind.parse(note.kind),
+              body: note.body,
+              createdAt: note.createdAt,
             ),
           )
           .toList(),

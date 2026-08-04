@@ -11,7 +11,10 @@ import '../../core/repositories/local_repository.dart';
 import '../../core/validation/text_rules.dart';
 import '../../core/widgets/ui_primitives.dart';
 
-/// New Order flow: customer first, then a compact multi-line order form.
+/// New Order flow: items first (with running total), then customer, then confirm.
+///
+/// When [initialCustomerId] is set for a normal customer, the customer step is
+/// skipped and the flow is items → confirm.
 class NewOrderFlowScreen extends ConsumerStatefulWidget {
   const NewOrderFlowScreen({
     super.key,
@@ -29,7 +32,7 @@ class NewOrderFlowScreen extends ConsumerStatefulWidget {
 /// Back-compat alias for call sites / older tests.
 typedef NewRentalFlowScreen = NewOrderFlowScreen;
 
-enum _OrderPhase { customer, form }
+enum _OrderPhase { form, customer }
 
 class _OrderLineDraft {
   _OrderLineDraft({this.itemId})
@@ -82,7 +85,8 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
   @override
   void initState() {
     super.initState();
-    _phase = _skipCustomerStep ? _OrderPhase.form : _OrderPhase.customer;
+    // Always start on items; [_skipCustomerStep] only omits the customer phase.
+    _phase = _OrderPhase.form;
     if (widget.initialInventoryItemIds.isNotEmpty) {
       for (final String id in widget.initialInventoryItemIds) {
         _lines.add(_OrderLineDraft(itemId: id));
@@ -564,7 +568,7 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
     return (rupees * 100).round();
   }
 
-  Future<void> _continueFromCustomer() async {
+  bool _validateCustomerOrSnack() {
     if (_noPhone) {
       final String name = _nameController.text.trim();
       if (name.isNotEmpty && !meetsMinMeaningfulText(name)) {
@@ -575,9 +579,11 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
             ),
           ),
         );
-        return;
+        return false;
       }
-    } else if (_resolvedCustomer == null &&
+      return true;
+    }
+    if (_resolvedCustomer == null &&
         !meetsMinMeaningfulText(_nameController.text)) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -586,15 +592,22 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
           ),
         ),
       );
-      return;
-    } else if (_phoneController.text.trim().length < 10) {
+      return false;
+    }
+    if (_phoneController.text.trim().length < 10) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(context.l10n.phoneRequiredError)),
       );
+      return false;
+    }
+    return true;
+  }
+
+  Future<void> _confirmFromCustomer(List<InventoryItem> available) async {
+    if (!_validateCustomerOrSnack()) {
       return;
     }
-    setState(() => _phase = _OrderPhase.form);
-    await _seedPrefillLabels();
+    await _generateOrder(available);
   }
 
   Future<void> _generateOrder(List<InventoryItem> available) async {
@@ -682,7 +695,7 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
         inventory.where((InventoryItem item) => item.availableUnits > 0).toList();
 
     final bool onForm = _phase == _OrderPhase.form;
-    final bool formReady = onForm && _formReady(availableItems);
+    final bool formReady = _formReady(availableItems);
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.actionNewRental)),
@@ -691,39 +704,47 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
         children: <Widget>[
           if (!_skipCustomerStep)
             Text(
-              l10n.stepOf(onForm ? 2 : 1, 2),
+              l10n.stepOf(onForm ? 1 : 2, 2),
               style: Theme.of(context).textTheme.labelLarge,
             ),
           if (!_skipCustomerStep) const SizedBox(height: 8),
-          if (!onForm) ..._buildCustomerStep(l10n),
           if (onForm) ..._buildFormStep(l10n, availableItems),
+          if (!onForm) ..._buildCustomerStep(l10n, availableItems),
         ],
       ),
       bottomNavigationBar: SafeArea(
         minimum: const EdgeInsets.fromLTRB(16, 0, 16, 12),
         child: Row(
           children: <Widget>[
-            if (onForm && !_skipCustomerStep)
+            if (!onForm)
               Expanded(
                 child: OutlinedButton(
                   onPressed: _submitting
                       ? null
-                      : () => setState(() => _phase = _OrderPhase.customer),
+                      : () => setState(() => _phase = _OrderPhase.form),
                   child: Text(l10n.back),
                 ),
               ),
-            if (onForm && !_skipCustomerStep) const SizedBox(width: 8),
+            if (!onForm) const SizedBox(width: 8),
             Expanded(
               child: FilledButton(
                 onPressed: _submitting
                     ? null
-                    : (!onForm
-                        ? (_customerReady ? _continueFromCustomer : null)
-                        : (formReady
-                            ? () => _generateOrder(availableItems)
+                    : (onForm
+                        ? (formReady
+                            ? (_skipCustomerStep
+                                ? () => _generateOrder(availableItems)
+                                : () => setState(
+                                      () => _phase = _OrderPhase.customer,
+                                    ))
+                            : null)
+                        : (_customerReady
+                            ? () => _confirmFromCustomer(availableItems)
                             : null)),
                 child: Text(
-                  onForm ? l10n.confirmRental : l10n.continueAction,
+                  onForm && !_skipCustomerStep
+                      ? l10n.continueAction
+                      : l10n.confirmRental,
                 ),
               ),
             ),
@@ -733,8 +754,20 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
     );
   }
 
-  List<Widget> _buildCustomerStep(AppLocalizations l10n) {
+  List<Widget> _buildCustomerStep(
+    AppLocalizations l10n,
+    List<InventoryItem> availableItems,
+  ) {
+    final int depositBalance =
+        (_noPhone ? 0 : (_resolvedCustomer?.depositBalance ?? 0));
     return <Widget>[
+      Text(
+        l10n.orderTotalLabel(formatMoney(_orderTotal(availableItems))),
+        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+      ),
+      const SizedBox(height: 12),
       TextField(
         controller: _nameController,
         textCapitalization: TextCapitalization.words,
@@ -826,6 +859,18 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
           status: AssetStatus.archived,
         ),
       ],
+      const SizedBox(height: 12),
+      Text(l10n.depositBalanceAmount(formatMoney(depositBalance))),
+      const SizedBox(height: 8),
+      TextField(
+        controller: _depositTopUpController,
+        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        decoration: InputDecoration(
+          labelText: l10n.depositTopUpOptionalLabel,
+          hintText: l10n.depositTopUpOptionalHint,
+        ),
+        onChanged: (_) => setState(() {}),
+      ),
     ];
   }
 
@@ -847,26 +892,15 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
         (_noPhone ? 0 : (_resolvedCustomer?.depositBalance ?? 0));
 
     return <Widget>[
-      InputChip(
-        avatar: const Icon(Icons.person_outline, size: 18),
-        label: Text(customerLabel.isEmpty ? l10n.unknownCustomer : customerLabel),
-        onPressed: _skipCustomerStep
-            ? null
-            : () => setState(() => _phase = _OrderPhase.customer),
-        deleteIcon: _skipCustomerStep ? null : const Icon(Icons.edit_outlined),
-        onDeleted: _skipCustomerStep
-            ? null
-            : () => setState(() => _phase = _OrderPhase.customer),
-      ),
-      if (!_skipCustomerStep)
-        Align(
-          alignment: Alignment.centerLeft,
-          child: TextButton(
-            onPressed: () => setState(() => _phase = _OrderPhase.customer),
-            child: Text(l10n.changeCustomerAction),
+      if (_skipCustomerStep) ...<Widget>[
+        InputChip(
+          avatar: const Icon(Icons.person_outline, size: 18),
+          label: Text(
+            customerLabel.isEmpty ? l10n.unknownCustomer : customerLabel,
           ),
         ),
-      const SizedBox(height: 8),
+        const SizedBox(height: 8),
+      ],
       for (var i = 0; i < _lines.length; i++)
         _buildLineCard(l10n, availableItems, i),
       Align(
@@ -884,18 +918,20 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
               fontWeight: FontWeight.w700,
             ),
       ),
-      const SizedBox(height: 8),
-      Text(l10n.depositBalanceAmount(formatMoney(depositBalance))),
-      const SizedBox(height: 8),
-      TextField(
-        controller: _depositTopUpController,
-        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-        decoration: InputDecoration(
-          labelText: l10n.depositTopUpOptionalLabel,
-          hintText: l10n.depositTopUpOptionalHint,
+      if (_skipCustomerStep) ...<Widget>[
+        const SizedBox(height: 8),
+        Text(l10n.depositBalanceAmount(formatMoney(depositBalance))),
+        const SizedBox(height: 8),
+        TextField(
+          controller: _depositTopUpController,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          decoration: InputDecoration(
+            labelText: l10n.depositTopUpOptionalLabel,
+            hintText: l10n.depositTopUpOptionalHint,
+          ),
+          onChanged: (_) => setState(() {}),
         ),
-        onChanged: (_) => setState(() {}),
-      ),
+      ],
     ];
   }
 

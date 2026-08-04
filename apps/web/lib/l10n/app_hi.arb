@@ -765,5 +765,17 @@
   "saleAmountLabel": "बिक्री राशि",
   "saleAmountHint": "राशि रुपये में",
   "saleAmountRequiredError": "शून्य से अधिक बिक्री राशि दर्ज करें।",
-  "soldLineBadge": "बेचा गया"
+  "soldLineBadge": "बेचा गया",
+  "orderNotesHeading": "नोट्स",
+  "addOrderNoteAction": "नोट जोड़ें",
+  "orderNoteBodyLabel": "नोट",
+  "orderNoteBodyHint": "शर्तें, माप, या अन्य विवरण",
+  "orderNoteKindLabel": "प्रकार",
+  "orderNoteKindGeneral": "सामान्य",
+  "orderNoteKindTerms": "शर्तें",
+  "orderNoteKindMeasurement": "माप",
+  "orderNoteLineLabel": "पंक्ति से जोड़ें",
+  "orderNoteWholeOrder": "पूरा ऑर्डर",
+  "orderNotesEmpty": "अभी कोई नोट नहीं।",
+  "orderNoteAddedSnack": "नोट जोड़ा गया"
 }

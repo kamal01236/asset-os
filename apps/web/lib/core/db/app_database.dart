@@ -12,6 +12,7 @@ part 'app_database.g.dart';
     Rentals,
     RentalItems,
     RentalEvents,
+    RentalNotes,
     DepositLedger,
     AppMeta,
   ],
@@ -21,7 +22,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 9;
+  int get schemaVersion => 10;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -248,6 +249,9 @@ class AppDatabase extends _$AppDatabase {
           UPDATE rental_items
           SET fulfillment = COALESCE(fulfillment, 'rent')
         ''');
+      }
+      if (from < 10) {
+        await m.createTable(rentalNotes);
       }
     },
   );

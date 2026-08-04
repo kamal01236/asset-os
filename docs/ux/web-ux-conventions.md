@@ -27,15 +27,17 @@ UI-first conventions for `apps/web` to keep flows fast, clear, and touch-friendl
 - Universal search is in-page on Home (typeahead dropdown under the field) and reachable from any tab via FAB → Search, which opens a modal bottom sheet with the same typeahead — not a separate route. Selecting a hit navigates to Customer / Order / Inventory detail.
 
 ## Form conventions
-- Phone-first customer lookup for order creation, then a compact multi-line order form (inventory → identity → duration → amount per line).
+- New Order is **items-first**: compact multi-line form (inventory → identity → duration → amount per line) with a running order total, then attach customer (phone-first lookup / create, or Unknown / no-phone) before confirm.
+- When issuing from a customer profile (`initialCustomerId`), skip the customer step: items → confirm only.
 - Minimal required fields first; advanced details collapsed by default.
-- Auto-detect existing customer by phone before asking for full profile fields.
+- Auto-detect existing customer by phone when attaching the customer (at end of a blank order, or when issued from a customer).
 - Free-text identity/note fields (customer name, item name, category, instance name, SELF nickname, notes when non-empty) require at least 3 characters; search runs only at ≥3 chars (Home/global = all entities; Inventory tab = inventory; Customers tab = customers + order nicknames).
 
 ## Order return and delete
 - Returns always require an explicit confirm dialog. Show the computed line total (read-only), an editable **final amount to collect** (0…total; remainder shown as discount), deposit preview against that final amount, and an optional note (≥3 chars when set).
 - **Delete order** is available on active orders with no lines already returned. Confirmation settles deposit as amount kept + amount returned (both default 0; sum ≤ wallet balance) plus optional note, then cancels the order and restores stock.
 - Per-line Replace/Change is not offered; do not reintroduce SKU swap from order detail.
+- **Order notes** (order detail only): append-only after create; optional link to one rental line; body ≥3 characters; kinds `general` / `terms` / `measurement`. No edit/delete in MVP.
 
 ## Offline and feedback
 - Use a subtle non-blocking offline banner; never block primary workflows.

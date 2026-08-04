@@ -34,6 +34,36 @@ Future<void> _pumpFlow(
   await pumpFrames(tester);
 }
 
+Future<void> _settle(WidgetTester tester, {int ticks = 15}) async {
+  for (int i = 0; i < ticks; i++) {
+    await tester.pump(const Duration(milliseconds: 20));
+  }
+}
+
+/// Fill prefilled unit-identity lines so Continue / Generate is enabled.
+Future<void> _fillTwoUnitLines(WidgetTester tester) async {
+  final Finder fields = find.byType(TextField);
+  expect(fields.evaluate().length >= 6, isTrue);
+  await tester.enterText(fields.at(0), 'Body A');
+  await tester.enterText(fields.at(1), 'CAM-A1');
+  await tester.enterText(fields.at(2), '1');
+  await tester.enterText(fields.at(3), 'Trip X');
+  await tester.enterText(fields.at(4), 'TRP-X1');
+  await tester.enterText(fields.at(5), '3');
+  await tester.pump();
+  await _settle(tester, ticks: 8);
+}
+
+Future<void> _fillOneUnitLine(WidgetTester tester) async {
+  final Finder fields = find.byType(TextField);
+  expect(fields.evaluate().length >= 3, isTrue);
+  await tester.enterText(fields.at(0), 'Body A');
+  await tester.enterText(fields.at(1), 'CAM-A1');
+  await tester.enterText(fields.at(2), '1');
+  await tester.pump();
+  await _settle(tester, ticks: 8);
+}
+
 void main() {
   driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
 
@@ -63,18 +93,7 @@ void main() {
 
     // requiresUnitIdentity: instance/short/duration per line + optional deposit.
     // Per line also has Rent/Sell; sale amount field is hidden while Rent is selected.
-    final Finder fields = find.byType(TextField);
-    expect(fields.evaluate().length >= 6, isTrue);
-    await tester.enterText(fields.at(0), 'Body A');
-    await tester.enterText(fields.at(1), 'CAM-A1');
-    await tester.enterText(fields.at(2), '1');
-    await tester.enterText(fields.at(3), 'Trip X');
-    await tester.enterText(fields.at(4), 'TRP-X1');
-    await tester.enterText(fields.at(5), '3');
-    await tester.pump();
-    for (int i = 0; i < 8; i++) {
-      await tester.pump(const Duration(milliseconds: 20));
-    }
+    await _fillTwoUnitLines(tester);
 
     final FilledButton generate = tester.widget(
       find.widgetWithText(FilledButton, 'Generate Order'),
@@ -83,9 +102,7 @@ void main() {
 
     await tester.tap(find.widgetWithText(FilledButton, 'Generate Order'));
     await tester.pump();
-    for (int i = 0; i < 20; i++) {
-      await tester.pump(const Duration(milliseconds: 30));
-    }
+    await _settle(tester, ticks: 20);
 
     final List<Rental> rentals = await repo.listRentals();
     final Rental created = rentals.firstWhere(
@@ -105,29 +122,33 @@ void main() {
     await tester.pump(const Duration(milliseconds: 1));
   });
 
-  testWidgets('name and phone customer then form shows Add line', (
+  testWidgets('blank order shows items first then customer then confirm', (
     WidgetTester tester,
   ) async {
     final ProviderContainer container = await bootContainer(seedDemo: true);
+    final LocalRepository repo = container.read(repositoryProvider);
+
+    tester.view.physicalSize = const Size(800, 1600);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
     await _pumpFlow(
       tester,
       container: container,
-      home: const NewOrderFlowScreen(),
+      home: const NewOrderFlowScreen(
+        initialInventoryItemIds: <String>['INV-2001'],
+      ),
     );
 
     expect(find.widgetWithText(AppBar, 'New Order'), findsOneWidget);
     expect(find.text('Step 1 of 2'), findsOneWidget);
-    expect(find.text('Name'), findsOneWidget);
-    expect(find.text('Phone number'), findsOneWidget);
+    expect(find.text('Line 1'), findsOneWidget);
+    expect(find.text('Add line'), findsOneWidget);
+    expect(find.text('Phone number'), findsNothing);
+    expect(find.widgetWithText(FilledButton, 'Continue'), findsOneWidget);
 
-    final Finder fields = find.byType(TextField);
-    await tester.enterText(fields.at(0), 'Priya Patel');
-    await tester.pump();
-    await tester.enterText(fields.at(1), '6666666666');
-    await tester.pump();
-    for (int i = 0; i < 15; i++) {
-      await tester.pump(const Duration(milliseconds: 20));
-    }
+    await _fillOneUnitLine(tester);
 
     final FilledButton continueButton = tester.widget(
       find.widgetWithText(FilledButton, 'Continue'),
@@ -139,9 +160,39 @@ void main() {
     await tester.pump(const Duration(milliseconds: 50));
 
     expect(find.text('Step 2 of 2'), findsOneWidget);
-    expect(find.text('Add line'), findsOneWidget);
-    expect(find.text('Line 1'), findsOneWidget);
+    expect(find.text('Name'), findsOneWidget);
+    expect(find.text('Phone number'), findsOneWidget);
     expect(find.widgetWithText(FilledButton, 'Generate Order'), findsOneWidget);
+    expect(find.widgetWithText(OutlinedButton, 'Back'), findsOneWidget);
+
+    final Finder customerFields = find.byType(TextField);
+    await tester.enterText(customerFields.at(0), 'Priya Patel');
+    await tester.pump();
+    await tester.enterText(customerFields.at(1), '6666666666');
+    await tester.pump();
+    await _settle(tester);
+
+    final FilledButton generate = tester.widget(
+      find.widgetWithText(FilledButton, 'Generate Order'),
+    );
+    expect(generate.onPressed, isNotNull);
+
+    await tester.tap(find.widgetWithText(FilledButton, 'Generate Order'));
+    await tester.pump();
+    await _settle(tester, ticks: 20);
+
+    final List<Rental> rentals = await repo.listRentals();
+    expect(
+      rentals.any(
+        (Rental r) =>
+            r.customerId == 'CUS-1001' &&
+            r.lines.any((RentalLine l) => l.itemId == 'INV-2001'),
+      ),
+      isTrue,
+    );
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(milliseconds: 1));
   });
 
   testWidgets('initialCustomerId skips customer and shows form', (
@@ -164,24 +215,36 @@ void main() {
     expect(find.widgetWithText(FilledButton, 'Generate Order'), findsOneWidget);
   });
 
-  testWidgets('typeahead selects existing customer', (WidgetTester tester) async {
+  testWidgets('typeahead selects existing customer on customer step', (
+    WidgetTester tester,
+  ) async {
     final ProviderContainer container = await bootContainer(seedDemo: true);
     final LocalRepository repo = container.read(repositoryProvider);
     final List<Customer> matches =
         await repo.searchCustomersByNameOrPhone('Pri');
     expect(matches.any((Customer c) => c.name.contains('Priya')), isTrue);
 
+    tester.view.physicalSize = const Size(800, 1600);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
     await _pumpFlow(
       tester,
       container: container,
-      home: const NewOrderFlowScreen(),
+      home: const NewOrderFlowScreen(
+        initialInventoryItemIds: <String>['INV-2001'],
+      ),
     );
+
+    await _fillOneUnitLine(tester);
+    await tester.tap(find.widgetWithText(FilledButton, 'Continue'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
 
     await tester.enterText(find.byType(TextField).first, 'Pri');
     await tester.pump();
-    for (int i = 0; i < 30; i++) {
-      await tester.pump(const Duration(milliseconds: 20));
-    }
+    await _settle(tester, ticks: 30);
 
     // Suggestion row uses name · phone; also accept bare name if layout differs.
     final Finder suggestion = find.textContaining('Priya Patel');
@@ -189,42 +252,68 @@ void main() {
     await tester.tap(suggestion.last);
     await tester.pump();
 
-    final FilledButton continueButton = tester.widget(
-      find.widgetWithText(FilledButton, 'Continue'),
+    final FilledButton generate = tester.widget(
+      find.widgetWithText(FilledButton, 'Generate Order'),
     );
-    expect(continueButton.onPressed, isNotNull);
+    expect(generate.onPressed, isNotNull);
   });
 
-  testWidgets('create new customer requires name and phone', (
+  testWidgets('create new customer requires name and phone on customer step', (
     WidgetTester tester,
   ) async {
     final ProviderContainer container = await bootContainer(seedDemo: true);
+
+    tester.view.physicalSize = const Size(800, 1600);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
     await _pumpFlow(
       tester,
       container: container,
-      home: const NewOrderFlowScreen(),
+      home: const NewOrderFlowScreen(
+        initialInventoryItemIds: <String>['INV-2001'],
+      ),
     );
+
+    await _fillOneUnitLine(tester);
+    await tester.tap(find.widgetWithText(FilledButton, 'Continue'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
 
     final Finder fields = find.byType(TextField);
     await tester.enterText(fields.at(0), 'New Guest');
     await tester.enterText(fields.at(1), '5555512345');
     await tester.pump();
 
-    final FilledButton continueButton = tester.widget(
-      find.widgetWithText(FilledButton, 'Continue'),
+    final FilledButton generate = tester.widget(
+      find.widgetWithText(FilledButton, 'Generate Order'),
     );
-    expect(continueButton.onPressed, isNotNull);
+    expect(generate.onPressed, isNotNull);
   });
 
   testWidgets('no-phone path uses Unknown without requiring name', (
     WidgetTester tester,
   ) async {
     final ProviderContainer container = await bootContainer(seedDemo: true);
+
+    tester.view.physicalSize = const Size(800, 1600);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
     await _pumpFlow(
       tester,
       container: container,
-      home: const NewOrderFlowScreen(),
+      home: const NewOrderFlowScreen(
+        initialInventoryItemIds: <String>['INV-2001'],
+      ),
     );
+
+    await _fillOneUnitLine(tester);
+    await tester.tap(find.widgetWithText(FilledButton, 'Continue'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
 
     await tester.tap(find.byType(CheckboxListTile));
     await tester.pump();
@@ -232,26 +321,20 @@ void main() {
     expect(find.text('Unknown customer'), findsOneWidget);
     expect(find.text('Phone number'), findsNothing);
 
-    FilledButton continueButton = tester.widget(
-      find.widgetWithText(FilledButton, 'Continue'),
+    FilledButton generate = tester.widget(
+      find.widgetWithText(FilledButton, 'Generate Order'),
     );
-    expect(continueButton.onPressed, isNotNull);
+    expect(generate.onPressed, isNotNull);
 
     await tester.enterText(find.byType(TextField).first, 'Raju');
     await tester.pump();
-    continueButton = tester.widget(
-      find.widgetWithText(FilledButton, 'Continue'),
+    generate = tester.widget(
+      find.widgetWithText(FilledButton, 'Generate Order'),
     );
-    expect(continueButton.onPressed, isNotNull);
-
-    await tester.tap(find.widgetWithText(FilledButton, 'Continue'));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 50));
-    expect(find.text('Step 2 of 2'), findsOneWidget);
-    expect(find.textContaining('Raju'), findsWidgets);
+    expect(generate.onPressed, isNotNull);
   });
 
-  testWidgets('Inventory detail Issue CTA opens New Order flow', (
+  testWidgets('Inventory detail Issue CTA opens New Order on items step', (
     WidgetTester tester,
   ) async {
     final ProviderContainer container = await bootContainer(seedDemo: true);
@@ -268,6 +351,9 @@ void main() {
 
     expect(find.widgetWithText(AppBar, 'New Order'), findsOneWidget);
     expect(find.text('Step 1 of 2'), findsOneWidget);
+    expect(find.text('Line 1'), findsOneWidget);
+    expect(find.text('Phone number'), findsNothing);
+    expect(find.widgetWithText(FilledButton, 'Continue'), findsOneWidget);
   });
 
   testWidgets('Customer detail Issue CTA skips customer step', (
@@ -288,5 +374,6 @@ void main() {
     expect(find.widgetWithText(AppBar, 'New Order'), findsOneWidget);
     expect(find.text('Phone number'), findsNothing);
     expect(find.text('Line 1'), findsOneWidget);
+    expect(find.widgetWithText(FilledButton, 'Generate Order'), findsOneWidget);
   });
 }

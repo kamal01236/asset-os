@@ -1283,4 +1283,40 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get soldLineBadge => 'Sold';
+
+  @override
+  String get orderNotesHeading => 'Notes';
+
+  @override
+  String get addOrderNoteAction => 'Add note';
+
+  @override
+  String get orderNoteBodyLabel => 'Note';
+
+  @override
+  String get orderNoteBodyHint => 'Terms, measurements, or other details';
+
+  @override
+  String get orderNoteKindLabel => 'Kind';
+
+  @override
+  String get orderNoteKindGeneral => 'General';
+
+  @override
+  String get orderNoteKindTerms => 'Terms';
+
+  @override
+  String get orderNoteKindMeasurement => 'Measurement';
+
+  @override
+  String get orderNoteLineLabel => 'Link to line';
+
+  @override
+  String get orderNoteWholeOrder => 'Whole order';
+
+  @override
+  String get orderNotesEmpty => 'No notes yet.';
+
+  @override
+  String get orderNoteAddedSnack => 'Note added';
 }

@@ -765,5 +765,17 @@
   "saleAmountLabel": "Sale amount",
   "saleAmountHint": "Amount in rupees",
   "saleAmountRequiredError": "Enter a sale amount greater than zero.",
-  "soldLineBadge": "Sold"
+  "soldLineBadge": "Sold",
+  "orderNotesHeading": "Notes",
+  "addOrderNoteAction": "Add note",
+  "orderNoteBodyLabel": "Note",
+  "orderNoteBodyHint": "Terms, measurements, or other details",
+  "orderNoteKindLabel": "Kind",
+  "orderNoteKindGeneral": "General",
+  "orderNoteKindTerms": "Terms",
+  "orderNoteKindMeasurement": "Measurement",
+  "orderNoteLineLabel": "Link to line",
+  "orderNoteWholeOrder": "Whole order",
+  "orderNotesEmpty": "No notes yet.",
+  "orderNoteAddedSnack": "Note added"
 }

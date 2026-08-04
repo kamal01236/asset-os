@@ -1164,6 +1164,77 @@ class _RentalDetailScreenState extends ConsumerState<RentalDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
+                  Text(
+                    l10n.orderNotesHeading,
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                  const SizedBox(height: 8),
+                  if (rental.notes.isEmpty)
+                    Text(
+                      l10n.orderNotesEmpty,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    )
+                  else
+                    ...rental.notes.map((RentalNote note) {
+                      final RentalLine? linked = note.rentalItemId == null
+                          ? null
+                          : rental.lines
+                              .where(
+                                (RentalLine line) =>
+                                    line.id == note.rentalItemId,
+                              )
+                              .firstOrNull;
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Text(
+                              localizedRentalNoteKind(l10n, note.kind),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleSmall
+                                  ?.copyWith(fontWeight: FontWeight.w700),
+                            ),
+                            if (linked != null)
+                              Text(
+                                linked.displayLabel,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant,
+                                    ),
+                              ),
+                            Text(note.body),
+                            Text(
+                              _dateTime(note.createdAt),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodySmall
+                                  ?.copyWith(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant,
+                                  ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
                   Text(l10n.timelineHeading, style: Theme.of(context).textTheme.titleSmall),
                   const SizedBox(height: 8),
                   RentalTimeline(events: rental.timeline),
@@ -1173,10 +1244,26 @@ class _RentalDetailScreenState extends ConsumerState<RentalDetailScreen> {
           ),
         ],
       ),
-      bottomNavigationBar: rental.isActive
-          ? SafeArea(
-              minimum: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-              child: Row(
+      bottomNavigationBar: SafeArea(
+        minimum: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () => _showAddOrderNoteSheet(
+                  context: context,
+                  ref: ref,
+                  rental: rental,
+                ),
+                icon: const Icon(Icons.note_add_outlined),
+                label: Text(l10n.addOrderNoteAction),
+              ),
+            ),
+            if (rental.isActive) ...<Widget>[
+              const SizedBox(height: 8),
+              Row(
                 children: <Widget>[
                   Expanded(
                     child: OutlinedButton(
@@ -1237,8 +1324,10 @@ class _RentalDetailScreenState extends ConsumerState<RentalDetailScreen> {
                   ),
                 ],
               ),
-            )
-          : null,
+            ],
+          ],
+        ),
+      ),
     );
   }
 }
@@ -2464,6 +2553,150 @@ Widget _balanceLabeledRow(
 
 String _date(DateTime value) {
   return '${value.day.toString().padLeft(2, '0')}/${value.month.toString().padLeft(2, '0')}/${value.year}';
+}
+
+String _dateTime(DateTime value) {
+  return '${_date(value)} ${value.hour.toString().padLeft(2, '0')}:${value.minute.toString().padLeft(2, '0')}';
+}
+
+Future<void> _showAddOrderNoteSheet({
+  required BuildContext context,
+  required WidgetRef ref,
+  required Rental rental,
+}) async {
+  final AppLocalizations l10n = context.l10n;
+  final TextEditingController bodyController = TextEditingController();
+  RentalNoteKind kind = RentalNoteKind.general;
+  String? selectedLineId;
+
+  final bool? saved = await showModalBottomSheet<bool>(
+    context: context,
+    isScrollControlled: true,
+    showDragHandle: true,
+    builder: (BuildContext sheetContext) {
+      return Padding(
+        padding: EdgeInsets.only(
+          left: 16,
+          right: 16,
+          top: 8,
+          bottom: MediaQuery.of(sheetContext).viewInsets.bottom + 16,
+        ),
+        child: StatefulBuilder(
+          builder: (BuildContext context, StateSetter setSheetState) {
+            return SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  Text(
+                    l10n.addOrderNoteAction,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<RentalNoteKind>(
+                    key: ValueKey<RentalNoteKind>(kind),
+                    initialValue: kind,
+                    decoration: InputDecoration(
+                      labelText: l10n.orderNoteKindLabel,
+                    ),
+                    items: RentalNoteKind.values
+                        .map(
+                          (RentalNoteKind value) =>
+                              DropdownMenuItem<RentalNoteKind>(
+                            value: value,
+                            child: Text(localizedRentalNoteKind(l10n, value)),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (RentalNoteKind? value) {
+                      if (value == null) {
+                        return;
+                      }
+                      setSheetState(() => kind = value);
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<String?>(
+                    key: ValueKey<String>('line-${selectedLineId ?? 'all'}'),
+                    initialValue: selectedLineId,
+                    decoration: InputDecoration(
+                      labelText: l10n.orderNoteLineLabel,
+                    ),
+                    items: <DropdownMenuItem<String?>>[
+                      DropdownMenuItem<String?>(
+                        value: null,
+                        child: Text(l10n.orderNoteWholeOrder),
+                      ),
+                      ...rental.lines.map(
+                        (RentalLine line) => DropdownMenuItem<String?>(
+                          value: line.id,
+                          child: Text(line.displayLabel),
+                        ),
+                      ),
+                    ],
+                    onChanged: (String? value) {
+                      setSheetState(() => selectedLineId = value);
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: bodyController,
+                    minLines: 3,
+                    maxLines: 6,
+                    decoration: InputDecoration(
+                      labelText: l10n.orderNoteBodyLabel,
+                      hintText: l10n.orderNoteBodyHint,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  FilledButton(
+                    onPressed: () => Navigator.of(sheetContext).pop(true),
+                    child: Text(l10n.addOrderNoteAction),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      );
+    },
+  );
+
+  final String body = bodyController.text;
+  bodyController.dispose();
+  if (saved != true || !context.mounted) {
+    return;
+  }
+  if (!meetsMinMeaningfulText(body)) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(l10n.minMeaningfulTextError(kMinMeaningfulTextLength)),
+      ),
+    );
+    return;
+  }
+
+  try {
+    await ref.read(repositoryProvider).addRentalNote(
+          rentalId: rental.id,
+          rentalItemId: selectedLineId,
+          body: body,
+          kind: kind.storageValue,
+        );
+    if (!context.mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l10n.orderNoteAddedSnack)),
+    );
+  } on ArgumentError catch (error) {
+    if (!context.mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(error.message?.toString() ?? error.toString())),
+    );
+  }
 }
 
 String _rentalAmountSubtitle(AppLocalizations l10n, Rental rental) {

@@ -2281,6 +2281,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sold'**
   String get soldLineBadge;
+
+  /// No description provided for @orderNotesHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get orderNotesHeading;
+
+  /// No description provided for @addOrderNoteAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Add note'**
+  String get addOrderNoteAction;
+
+  /// No description provided for @orderNoteBodyLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Note'**
+  String get orderNoteBodyLabel;
+
+  /// No description provided for @orderNoteBodyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms, measurements, or other details'**
+  String get orderNoteBodyHint;
+
+  /// No description provided for @orderNoteKindLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Kind'**
+  String get orderNoteKindLabel;
+
+  /// No description provided for @orderNoteKindGeneral.
+  ///
+  /// In en, this message translates to:
+  /// **'General'**
+  String get orderNoteKindGeneral;
+
+  /// No description provided for @orderNoteKindTerms.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms'**
+  String get orderNoteKindTerms;
+
+  /// No description provided for @orderNoteKindMeasurement.
+  ///
+  /// In en, this message translates to:
+  /// **'Measurement'**
+  String get orderNoteKindMeasurement;
+
+  /// No description provided for @orderNoteLineLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Link to line'**
+  String get orderNoteLineLabel;
+
+  /// No description provided for @orderNoteWholeOrder.
+  ///
+  /// In en, this message translates to:
+  /// **'Whole order'**
+  String get orderNoteWholeOrder;
+
+  /// No description provided for @orderNotesEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No notes yet.'**
+  String get orderNotesEmpty;
+
+  /// No description provided for @orderNoteAddedSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Note added'**
+  String get orderNoteAddedSnack;
 }
 
 class _AppLocalizationsDelegate

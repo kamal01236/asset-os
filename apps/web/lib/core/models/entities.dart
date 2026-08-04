@@ -244,6 +244,63 @@ class RentalEvent {
   );
 }
 
+/// Kind for append-only order notes (`general` | `terms` | `measurement`).
+enum RentalNoteKind {
+  general,
+  terms,
+  measurement;
+
+  String get storageValue => name;
+
+  static RentalNoteKind parse(String? raw) {
+    switch (raw) {
+      case 'terms':
+        return RentalNoteKind.terms;
+      case 'measurement':
+        return RentalNoteKind.measurement;
+      default:
+        return RentalNoteKind.general;
+    }
+  }
+}
+
+/// One append-only note on a rental order (optionally linked to a line).
+class RentalNote {
+  const RentalNote({
+    required this.id,
+    required this.rentalId,
+    required this.kind,
+    required this.body,
+    required this.createdAt,
+    this.rentalItemId,
+  });
+
+  final String id;
+  final String rentalId;
+  final String? rentalItemId;
+  final RentalNoteKind kind;
+  final String body;
+  final DateTime createdAt;
+
+  Map<String, dynamic> toJson() => <String, dynamic>{
+    'id': id,
+    'rentalId': rentalId,
+    'rentalItemId': rentalItemId,
+    'kind': kind.storageValue,
+    'body': body,
+    'createdAt': createdAt.toIso8601String(),
+  };
+
+  factory RentalNote.fromJson(Map<String, dynamic> json) => RentalNote(
+    id: json['id'] as String,
+    rentalId: json['rentalId'] as String,
+    rentalItemId: json['rentalItemId'] as String?,
+    kind: RentalNoteKind.parse(json['kind'] as String?),
+    body: json['body'] as String,
+    createdAt: DateTime.parse(json['createdAt'] as String),
+  );
+}
+
 /// Input for issuing one catalog unit with instance labels.
 class RentalLineInput {
   const RentalLineInput({
@@ -541,6 +598,7 @@ class Rental {
     this.depositApplied = 0,
     this.durationUnits = 1,
     this.replacedFromRentalId,
+    this.notes = const <RentalNote>[],
   });
 
   final String id;
@@ -564,6 +622,8 @@ class Rental {
   final int depositApplied;
   final int durationUnits;
   final String? replacedFromRentalId;
+  /// Append-only order notes (newest first when loaded from DB).
+  final List<RentalNote> notes;
 
   List<String> get itemIds =>
       lines.map((RentalLine line) => line.itemId).toList(growable: false);
@@ -644,6 +704,7 @@ class Rental {
     int? durationUnits,
     DateTime? dueAt,
     String? replacedFromRentalId,
+    List<RentalNote>? notes,
   }) => Rental(
     id: id,
     customerId: customerId,
@@ -663,6 +724,7 @@ class Rental {
     depositApplied: depositApplied ?? this.depositApplied,
     durationUnits: durationUnits ?? this.durationUnits,
     replacedFromRentalId: replacedFromRentalId ?? this.replacedFromRentalId,
+    notes: notes ?? this.notes,
   );
 
   Map<String, dynamic> toJson() => <String, dynamic>{
@@ -685,6 +747,7 @@ class Rental {
     'depositApplied': depositApplied,
     'durationUnits': durationUnits,
     'replacedFromRentalId': replacedFromRentalId,
+    'notes': notes.map((RentalNote note) => note.toJson()).toList(),
   };
 
   factory Rental.fromJson(Map<String, dynamic> json) {
@@ -734,6 +797,9 @@ class Rental {
       depositApplied: (json['depositApplied'] as int?) ?? 0,
       durationUnits: (json['durationUnits'] as int?) ?? 1,
       replacedFromRentalId: json['replacedFromRentalId'] as String?,
+      notes: (json['notes'] as List<dynamic>? ?? const <dynamic>[])
+          .map((entry) => RentalNote.fromJson(entry as Map<String, dynamic>))
+          .toList(),
     );
   }
 }

@@ -1284,4 +1284,40 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get soldLineBadge => 'बेचा गया';
+
+  @override
+  String get orderNotesHeading => 'नोट्स';
+
+  @override
+  String get addOrderNoteAction => 'नोट जोड़ें';
+
+  @override
+  String get orderNoteBodyLabel => 'नोट';
+
+  @override
+  String get orderNoteBodyHint => 'शर्तें, माप, या अन्य विवरण';
+
+  @override
+  String get orderNoteKindLabel => 'प्रकार';
+
+  @override
+  String get orderNoteKindGeneral => 'सामान्य';
+
+  @override
+  String get orderNoteKindTerms => 'शर्तें';
+
+  @override
+  String get orderNoteKindMeasurement => 'माप';
+
+  @override
+  String get orderNoteLineLabel => 'पंक्ति से जोड़ें';
+
+  @override
+  String get orderNoteWholeOrder => 'पूरा ऑर्डर';
+
+  @override
+  String get orderNotesEmpty => 'अभी कोई नोट नहीं।';
+
+  @override
+  String get orderNoteAddedSnack => 'नोट जोड़ा गया';
 }

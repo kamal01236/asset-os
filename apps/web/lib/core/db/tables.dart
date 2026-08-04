@@ -110,6 +110,22 @@ class RentalEvents extends Table {
   DateTimeColumn get at => dateTime()();
 }
 
+/// Append-only order notes (`general` | `terms` | `measurement`).
+@DataClassName('RentalNoteRow')
+class RentalNotes extends Table {
+  TextColumn get id => text()();
+  TextColumn get rentalId => text().references(Rentals, #id)();
+  TextColumn get rentalItemId =>
+      text().nullable().references(RentalItems, #id)();
+  /// `general` | `terms` | `measurement`
+  TextColumn get kind => text().withDefault(const Constant('general'))();
+  TextColumn get body => text()();
+  DateTimeColumn get createdAt => dateTime()();
+
+  @override
+  Set<Column<Object>> get primaryKey => <Column<Object>>{id};
+}
+
 /// Append-only deposit wallet ledger (`top_up` | `apply` | `refund` | `adjust`).
 @DataClassName('DepositLedgerRow')
 class DepositLedger extends Table {

@@ -38,3 +38,14 @@ String localizedBillingMode(AppLocalizations l10n, BillingMode mode) {
       return l10n.billingModeCustom;
   }
 }
+
+String localizedRentalNoteKind(AppLocalizations l10n, RentalNoteKind kind) {
+  switch (kind) {
+    case RentalNoteKind.general:
+      return l10n.orderNoteKindGeneral;
+    case RentalNoteKind.terms:
+      return l10n.orderNoteKindTerms;
+    case RentalNoteKind.measurement:
+      return l10n.orderNoteKindMeasurement;
+  }
+}

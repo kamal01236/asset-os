@@ -273,7 +273,7 @@ void main() {
     test('schema v6 includes deposit columns and ledger table', () async {
       final AppDatabase db = AppDatabase(NativeDatabase.memory());
       addTearDown(db.close);
-      expect(db.schemaVersion, 9);
+      expect(db.schemaVersion, 10);
 
       await db.into(db.customers).insert(
         CustomersCompanion.insert(

@@ -3214,6 +3214,418 @@ class RentalEventsCompanion extends UpdateCompanion<RentalEventRow> {
   }
 }
 
+class $RentalNotesTable extends RentalNotes
+    with TableInfo<$RentalNotesTable, RentalNoteRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $RentalNotesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _rentalIdMeta = const VerificationMeta(
+    'rentalId',
+  );
+  @override
+  late final GeneratedColumn<String> rentalId = GeneratedColumn<String>(
+    'rental_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _rentalItemIdMeta = const VerificationMeta(
+    'rentalItemId',
+  );
+  @override
+  late final GeneratedColumn<String> rentalItemId = GeneratedColumn<String>(
+    'rental_item_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _kindMeta = const VerificationMeta('kind');
+  @override
+  late final GeneratedColumn<String> kind = GeneratedColumn<String>(
+    'kind',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('general'),
+  );
+  static const VerificationMeta _bodyMeta = const VerificationMeta('body');
+  @override
+  late final GeneratedColumn<String> body = GeneratedColumn<String>(
+    'body',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    rentalId,
+    rentalItemId,
+    kind,
+    body,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'rental_notes';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<RentalNoteRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('rental_id')) {
+      context.handle(
+        _rentalIdMeta,
+        rentalId.isAcceptableOrUnknown(data['rental_id']!, _rentalIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_rentalIdMeta);
+    }
+    if (data.containsKey('rental_item_id')) {
+      context.handle(
+        _rentalItemIdMeta,
+        rentalItemId.isAcceptableOrUnknown(
+          data['rental_item_id']!,
+          _rentalItemIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('kind')) {
+      context.handle(
+        _kindMeta,
+        kind.isAcceptableOrUnknown(data['kind']!, _kindMeta),
+      );
+    }
+    if (data.containsKey('body')) {
+      context.handle(
+        _bodyMeta,
+        body.isAcceptableOrUnknown(data['body']!, _bodyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_bodyMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  RentalNoteRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return RentalNoteRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      rentalId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}rental_id'],
+      )!,
+      rentalItemId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}rental_item_id'],
+      ),
+      kind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}kind'],
+      )!,
+      body: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}body'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $RentalNotesTable createAlias(String alias) {
+    return $RentalNotesTable(attachedDatabase, alias);
+  }
+}
+
+class RentalNoteRow extends DataClass implements Insertable<RentalNoteRow> {
+  final String id;
+  final String rentalId;
+  final String? rentalItemId;
+
+  /// `general` | `terms` | `measurement`
+  final String kind;
+  final String body;
+  final DateTime createdAt;
+  const RentalNoteRow({
+    required this.id,
+    required this.rentalId,
+    this.rentalItemId,
+    required this.kind,
+    required this.body,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['rental_id'] = Variable<String>(rentalId);
+    if (!nullToAbsent || rentalItemId != null) {
+      map['rental_item_id'] = Variable<String>(rentalItemId);
+    }
+    map['kind'] = Variable<String>(kind);
+    map['body'] = Variable<String>(body);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  RentalNotesCompanion toCompanion(bool nullToAbsent) {
+    return RentalNotesCompanion(
+      id: Value(id),
+      rentalId: Value(rentalId),
+      rentalItemId: rentalItemId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(rentalItemId),
+      kind: Value(kind),
+      body: Value(body),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory RentalNoteRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return RentalNoteRow(
+      id: serializer.fromJson<String>(json['id']),
+      rentalId: serializer.fromJson<String>(json['rentalId']),
+      rentalItemId: serializer.fromJson<String?>(json['rentalItemId']),
+      kind: serializer.fromJson<String>(json['kind']),
+      body: serializer.fromJson<String>(json['body']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'rentalId': serializer.toJson<String>(rentalId),
+      'rentalItemId': serializer.toJson<String?>(rentalItemId),
+      'kind': serializer.toJson<String>(kind),
+      'body': serializer.toJson<String>(body),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  RentalNoteRow copyWith({
+    String? id,
+    String? rentalId,
+    Value<String?> rentalItemId = const Value.absent(),
+    String? kind,
+    String? body,
+    DateTime? createdAt,
+  }) => RentalNoteRow(
+    id: id ?? this.id,
+    rentalId: rentalId ?? this.rentalId,
+    rentalItemId: rentalItemId.present ? rentalItemId.value : this.rentalItemId,
+    kind: kind ?? this.kind,
+    body: body ?? this.body,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  RentalNoteRow copyWithCompanion(RentalNotesCompanion data) {
+    return RentalNoteRow(
+      id: data.id.present ? data.id.value : this.id,
+      rentalId: data.rentalId.present ? data.rentalId.value : this.rentalId,
+      rentalItemId: data.rentalItemId.present
+          ? data.rentalItemId.value
+          : this.rentalItemId,
+      kind: data.kind.present ? data.kind.value : this.kind,
+      body: data.body.present ? data.body.value : this.body,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RentalNoteRow(')
+          ..write('id: $id, ')
+          ..write('rentalId: $rentalId, ')
+          ..write('rentalItemId: $rentalItemId, ')
+          ..write('kind: $kind, ')
+          ..write('body: $body, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, rentalId, rentalItemId, kind, body, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is RentalNoteRow &&
+          other.id == this.id &&
+          other.rentalId == this.rentalId &&
+          other.rentalItemId == this.rentalItemId &&
+          other.kind == this.kind &&
+          other.body == this.body &&
+          other.createdAt == this.createdAt);
+}
+
+class RentalNotesCompanion extends UpdateCompanion<RentalNoteRow> {
+  final Value<String> id;
+  final Value<String> rentalId;
+  final Value<String?> rentalItemId;
+  final Value<String> kind;
+  final Value<String> body;
+  final Value<DateTime> createdAt;
+  final Value<int> rowid;
+  const RentalNotesCompanion({
+    this.id = const Value.absent(),
+    this.rentalId = const Value.absent(),
+    this.rentalItemId = const Value.absent(),
+    this.kind = const Value.absent(),
+    this.body = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  RentalNotesCompanion.insert({
+    required String id,
+    required String rentalId,
+    this.rentalItemId = const Value.absent(),
+    this.kind = const Value.absent(),
+    required String body,
+    required DateTime createdAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       rentalId = Value(rentalId),
+       body = Value(body),
+       createdAt = Value(createdAt);
+  static Insertable<RentalNoteRow> custom({
+    Expression<String>? id,
+    Expression<String>? rentalId,
+    Expression<String>? rentalItemId,
+    Expression<String>? kind,
+    Expression<String>? body,
+    Expression<DateTime>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (rentalId != null) 'rental_id': rentalId,
+      if (rentalItemId != null) 'rental_item_id': rentalItemId,
+      if (kind != null) 'kind': kind,
+      if (body != null) 'body': body,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  RentalNotesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? rentalId,
+    Value<String?>? rentalItemId,
+    Value<String>? kind,
+    Value<String>? body,
+    Value<DateTime>? createdAt,
+    Value<int>? rowid,
+  }) {
+    return RentalNotesCompanion(
+      id: id ?? this.id,
+      rentalId: rentalId ?? this.rentalId,
+      rentalItemId: rentalItemId ?? this.rentalItemId,
+      kind: kind ?? this.kind,
+      body: body ?? this.body,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (rentalId.present) {
+      map['rental_id'] = Variable<String>(rentalId.value);
+    }
+    if (rentalItemId.present) {
+      map['rental_item_id'] = Variable<String>(rentalItemId.value);
+    }
+    if (kind.present) {
+      map['kind'] = Variable<String>(kind.value);
+    }
+    if (body.present) {
+      map['body'] = Variable<String>(body.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RentalNotesCompanion(')
+          ..write('id: $id, ')
+          ..write('rentalId: $rentalId, ')
+          ..write('rentalItemId: $rentalItemId, ')
+          ..write('kind: $kind, ')
+          ..write('body: $body, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $DepositLedgerTable extends DepositLedger
     with TableInfo<$DepositLedgerTable, DepositLedgerRow> {
   @override
@@ -3942,6 +4354,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $RentalsTable rentals = $RentalsTable(this);
   late final $RentalItemsTable rentalItems = $RentalItemsTable(this);
   late final $RentalEventsTable rentalEvents = $RentalEventsTable(this);
+  late final $RentalNotesTable rentalNotes = $RentalNotesTable(this);
   late final $DepositLedgerTable depositLedger = $DepositLedgerTable(this);
   late final $AppMetaTable appMeta = $AppMetaTable(this);
   @override
@@ -3954,6 +4367,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     rentals,
     rentalItems,
     rentalEvents,
+    rentalNotes,
     depositLedger,
     appMeta,
   ];
@@ -5520,6 +5934,227 @@ typedef $$RentalEventsTableProcessedTableManager =
       RentalEventRow,
       PrefetchHooks Function()
     >;
+typedef $$RentalNotesTableCreateCompanionBuilder =
+    RentalNotesCompanion Function({
+      required String id,
+      required String rentalId,
+      Value<String?> rentalItemId,
+      Value<String> kind,
+      required String body,
+      required DateTime createdAt,
+      Value<int> rowid,
+    });
+typedef $$RentalNotesTableUpdateCompanionBuilder =
+    RentalNotesCompanion Function({
+      Value<String> id,
+      Value<String> rentalId,
+      Value<String?> rentalItemId,
+      Value<String> kind,
+      Value<String> body,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
+
+class $$RentalNotesTableFilterComposer
+    extends Composer<_$AppDatabase, $RentalNotesTable> {
+  $$RentalNotesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get rentalId => $composableBuilder(
+    column: $table.rentalId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get rentalItemId => $composableBuilder(
+    column: $table.rentalItemId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get body => $composableBuilder(
+    column: $table.body,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$RentalNotesTableOrderingComposer
+    extends Composer<_$AppDatabase, $RentalNotesTable> {
+  $$RentalNotesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get rentalId => $composableBuilder(
+    column: $table.rentalId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get rentalItemId => $composableBuilder(
+    column: $table.rentalItemId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get body => $composableBuilder(
+    column: $table.body,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$RentalNotesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $RentalNotesTable> {
+  $$RentalNotesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get rentalId =>
+      $composableBuilder(column: $table.rentalId, builder: (column) => column);
+
+  GeneratedColumn<String> get rentalItemId => $composableBuilder(
+    column: $table.rentalItemId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => column);
+
+  GeneratedColumn<String> get body =>
+      $composableBuilder(column: $table.body, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$RentalNotesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $RentalNotesTable,
+          RentalNoteRow,
+          $$RentalNotesTableFilterComposer,
+          $$RentalNotesTableOrderingComposer,
+          $$RentalNotesTableAnnotationComposer,
+          $$RentalNotesTableCreateCompanionBuilder,
+          $$RentalNotesTableUpdateCompanionBuilder,
+          (
+            RentalNoteRow,
+            BaseReferences<_$AppDatabase, $RentalNotesTable, RentalNoteRow>,
+          ),
+          RentalNoteRow,
+          PrefetchHooks Function()
+        > {
+  $$RentalNotesTableTableManager(_$AppDatabase db, $RentalNotesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$RentalNotesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$RentalNotesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$RentalNotesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> rentalId = const Value.absent(),
+                Value<String?> rentalItemId = const Value.absent(),
+                Value<String> kind = const Value.absent(),
+                Value<String> body = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => RentalNotesCompanion(
+                id: id,
+                rentalId: rentalId,
+                rentalItemId: rentalItemId,
+                kind: kind,
+                body: body,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String rentalId,
+                Value<String?> rentalItemId = const Value.absent(),
+                Value<String> kind = const Value.absent(),
+                required String body,
+                required DateTime createdAt,
+                Value<int> rowid = const Value.absent(),
+              }) => RentalNotesCompanion.insert(
+                id: id,
+                rentalId: rentalId,
+                rentalItemId: rentalItemId,
+                kind: kind,
+                body: body,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$RentalNotesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $RentalNotesTable,
+      RentalNoteRow,
+      $$RentalNotesTableFilterComposer,
+      $$RentalNotesTableOrderingComposer,
+      $$RentalNotesTableAnnotationComposer,
+      $$RentalNotesTableCreateCompanionBuilder,
+      $$RentalNotesTableUpdateCompanionBuilder,
+      (
+        RentalNoteRow,
+        BaseReferences<_$AppDatabase, $RentalNotesTable, RentalNoteRow>,
+      ),
+      RentalNoteRow,
+      PrefetchHooks Function()
+    >;
 typedef $$DepositLedgerTableCreateCompanionBuilder =
     DepositLedgerCompanion Function({
       required String id,
@@ -5932,6 +6567,8 @@ class $AppDatabaseManager {
       $$RentalItemsTableTableManager(_db, _db.rentalItems);
   $$RentalEventsTableTableManager get rentalEvents =>
       $$RentalEventsTableTableManager(_db, _db.rentalEvents);
+  $$RentalNotesTableTableManager get rentalNotes =>
+      $$RentalNotesTableTableManager(_db, _db.rentalNotes);
   $$DepositLedgerTableTableManager get depositLedger =>
       $$DepositLedgerTableTableManager(_db, _db.depositLedger);
   $$AppMetaTableTableManager get appMeta =>
