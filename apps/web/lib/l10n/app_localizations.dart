@@ -1562,6 +1562,96 @@ abstract class AppLocalizations {
   /// **'Confirm return'**
   String get confirmReturnAction;
 
+  /// No description provided for @returnFinalAmountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Final amount to collect'**
+  String get returnFinalAmountLabel;
+
+  /// No description provided for @returnFinalAmountHint.
+  ///
+  /// In en, this message translates to:
+  /// **'0 or less than computed total'**
+  String get returnFinalAmountHint;
+
+  /// No description provided for @returnDiscountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Discount {amount}'**
+  String returnDiscountLabel(String amount);
+
+  /// No description provided for @returnNoteLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Note (optional)'**
+  String get returnNoteLabel;
+
+  /// No description provided for @returnNoteHint.
+  ///
+  /// In en, this message translates to:
+  /// **'At least 3 characters when set'**
+  String get returnNoteHint;
+
+  /// No description provided for @deleteOrderAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete order'**
+  String get deleteOrderAction;
+
+  /// No description provided for @deleteOrderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete order'**
+  String get deleteOrderTitle;
+
+  /// No description provided for @confirmDeleteOrderAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete order'**
+  String get confirmDeleteOrderAction;
+
+  /// No description provided for @deleteOrderKeptLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount to keep'**
+  String get deleteOrderKeptLabel;
+
+  /// No description provided for @deleteOrderReturnedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount to return'**
+  String get deleteOrderReturnedLabel;
+
+  /// No description provided for @deleteOrderNoteLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Note (optional)'**
+  String get deleteOrderNoteLabel;
+
+  /// No description provided for @deleteOrderInvalidSettlement.
+  ///
+  /// In en, this message translates to:
+  /// **'Kept + returned cannot exceed deposit balance.'**
+  String get deleteOrderInvalidSettlement;
+
+  /// No description provided for @deleteOrderBlockedPartial.
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot delete an order after items were returned.'**
+  String get deleteOrderBlockedPartial;
+
+  /// No description provided for @deleteOrderFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not delete this order.'**
+  String get deleteOrderFailed;
+
+  /// No description provided for @deleteOrderSuccessSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Order deleted. Deposit balance {balance}.'**
+  String deleteOrderSuccessSnack(String balance);
+
   /// No description provided for @depositReturnSnackApplied.
   ///
   /// In en, this message translates to:

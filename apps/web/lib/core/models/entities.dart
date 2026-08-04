@@ -506,15 +506,19 @@ class RentalReturnResult {
   int get amountDue => (totalAmount - depositApplied).clamp(0, totalAmount);
 }
 
-/// Result of replacing a rental line (return + new rental).
-class RentalReplaceResult {
-  const RentalReplaceResult({
-    required this.returnResult,
-    required this.newRentalId,
+/// Result of cancelling an active order with deposit settlement.
+class OrderCancelResult {
+  const OrderCancelResult({
+    required this.rentalId,
+    required this.amountKeptPaise,
+    required this.amountReturnedPaise,
+    required this.depositBalanceAfter,
   });
 
-  final RentalReturnResult returnResult;
-  final String newRentalId;
+  final String rentalId;
+  final int amountKeptPaise;
+  final int amountReturnedPaise;
+  final int depositBalanceAfter;
 }
 
 class Rental {

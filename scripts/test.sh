@@ -26,8 +26,11 @@ cd "$WEB"
 echo "==> flutter analyze"
 flutter analyze
 
-echo "==> flutter test (concurrency=${TEST_CONCURRENCY:-4})"
-flutter test --concurrency="${TEST_CONCURRENCY:-4}" --reporter=compact
+# Prefer explicit override; else nproc (WSL/Linux). Fallback 4 if nproc missing.
+DEFAULT_CONCURRENCY="$(nproc 2>/dev/null || echo 4)"
+CONCURRENCY="${TEST_CONCURRENCY:-$DEFAULT_CONCURRENCY}"
+echo "==> flutter test (concurrency=${CONCURRENCY})"
+flutter test --concurrency="${CONCURRENCY}" --reporter=compact
 
 echo
 echo "All checks passed."

@@ -855,6 +855,57 @@ class AppLocalizationsEn extends AppLocalizations {
   String get confirmReturnAction => 'Confirm return';
 
   @override
+  String get returnFinalAmountLabel => 'Final amount to collect';
+
+  @override
+  String get returnFinalAmountHint => '0 or less than computed total';
+
+  @override
+  String returnDiscountLabel(String amount) {
+    return 'Discount $amount';
+  }
+
+  @override
+  String get returnNoteLabel => 'Note (optional)';
+
+  @override
+  String get returnNoteHint => 'At least 3 characters when set';
+
+  @override
+  String get deleteOrderAction => 'Delete order';
+
+  @override
+  String get deleteOrderTitle => 'Delete order';
+
+  @override
+  String get confirmDeleteOrderAction => 'Delete order';
+
+  @override
+  String get deleteOrderKeptLabel => 'Amount to keep';
+
+  @override
+  String get deleteOrderReturnedLabel => 'Amount to return';
+
+  @override
+  String get deleteOrderNoteLabel => 'Note (optional)';
+
+  @override
+  String get deleteOrderInvalidSettlement =>
+      'Kept + returned cannot exceed deposit balance.';
+
+  @override
+  String get deleteOrderBlockedPartial =>
+      'Cannot delete an order after items were returned.';
+
+  @override
+  String get deleteOrderFailed => 'Could not delete this order.';
+
+  @override
+  String deleteOrderSuccessSnack(String balance) {
+    return 'Order deleted. Deposit balance $balance.';
+  }
+
+  @override
   String depositReturnSnackApplied(String applied, String balance) {
     return 'Applied $applied from deposit; balance now $balance.';
   }

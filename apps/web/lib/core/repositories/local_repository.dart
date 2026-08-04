@@ -608,12 +608,23 @@ class LocalRepository {
   }
 
   /// Settles selected open lines; closes parent when none remain open.
+  ///
+  /// [chargedTotalPaise] caps the batch total (remainder treated as discount).
+  /// When null, the full computed total is charged.
   Future<RentalReturnResult?> returnRentalLines(
     String rentalId,
-    List<String> lineIds,
-  ) async {
+    List<String> lineIds, {
+    int? chargedTotalPaise,
+    String? note,
+  }) async {
     if (lineIds.isEmpty) {
       return null;
+    }
+    final String? trimmedNote = note?.trim();
+    if (!meetsMinMeaningfulText(trimmedNote, allowEmpty: true)) {
+      throw ArgumentError(
+        'Note must be at least $kMinMeaningfulTextLength characters when set',
+      );
     }
     final DateTime now = DateTime.now();
     final Set<String> wanted = lineIds.toSet();
@@ -644,11 +655,9 @@ class LocalRepository {
           .getSingleOrNull();
       int depositBalance = customer?.depositBalance ?? 0;
 
-      int batchTotal = 0;
-      int batchDeposit = 0;
-      final List<String> returnedIds = <String>[];
-      final Map<String, int> stockBump = <String, int>{};
-
+      final List<({RentalItemRow link, InventoryItemRow? item, int base, int late})>
+          computed =
+          <({RentalItemRow link, InventoryItemRow? item, int base, int late})>[];
       for (final RentalItemRow link in toReturn) {
         final InventoryItemRow? item = await (_db.select(_db.inventoryItems)
               ..where((t) => t.id.equals(link.itemId)))
@@ -671,14 +680,40 @@ class LocalRepository {
             lateFeePerDay: item?.lateFeePerDay ?? 0,
           );
         }
-        final int lineTotal = computeTotalAmount(
-          baseAmount: lineBase,
-          lateAmount: lineLate,
+        computed.add((link: link, item: item, base: lineBase, late: lineLate));
+      }
+
+      final List<int> naturalTotals = computed
+          .map(
+            (row) => computeTotalAmount(baseAmount: row.base, lateAmount: row.late),
+          )
+          .toList();
+      final int naturalSum =
+          naturalTotals.fold<int>(0, (int a, int b) => a + b);
+      final int charged = (chargedTotalPaise ?? naturalSum).clamp(0, naturalSum);
+      final int discount = naturalSum - charged;
+      final List<int> chargedPerLine =
+          _allocateChargedTotals(naturalTotals, charged);
+
+      int batchTotal = 0;
+      int batchDeposit = 0;
+      final List<String> returnedIds = <String>[];
+      final Map<String, int> stockBump = <String, int>{};
+
+      for (int i = 0; i < computed.length; i++) {
+        final row = computed[i];
+        final RentalItemRow link = row.link;
+        final InventoryItemRow? item = row.item;
+        final int lineCharged = chargedPerLine[i];
+        final ({int base, int late}) settled = _applyLineDiscount(
+          naturalBase: row.base,
+          naturalLate: row.late,
+          chargedTotal: lineCharged,
         );
         final int lineDeposit =
-            depositBalance < lineTotal ? depositBalance : lineTotal;
+            depositBalance < lineCharged ? depositBalance : lineCharged;
         depositBalance -= lineDeposit;
-        batchTotal += lineTotal;
+        batchTotal += lineCharged;
         batchDeposit += lineDeposit;
         returnedIds.add(link.id);
 
@@ -686,8 +721,8 @@ class LocalRepository {
             .write(
           RentalItemsCompanion(
             returnedAt: Value<DateTime?>(now),
-            baseAmount: Value<int>(lineBase),
-            lateAmount: Value<int>(lineLate),
+            baseAmount: Value<int>(settled.base),
+            lateAmount: Value<int>(settled.late),
             depositApplied: Value<int>(lineDeposit),
           ),
         );
@@ -771,17 +806,25 @@ class LocalRepository {
         ),
       );
 
-      final String subtitle = allReturned
-          ? (batchTotal > parentBase
-                ? 'All lines returned. Late fee applied.'
-                : 'All lines returned by staff.')
-          : 'Returned ${returnedIds.length} of ${refreshed.length} lines.';
+      final StringBuffer subtitle = StringBuffer(
+        allReturned
+            ? (parentLate > 0
+                  ? 'All lines returned. Late fee applied.'
+                  : 'All lines returned by staff.')
+            : 'Returned ${returnedIds.length} of ${refreshed.length} lines.',
+      );
+      if (discount > 0) {
+        subtitle.write(' Discount ${formatMoney(discount)}.');
+      }
+      if (trimmedNote != null && trimmedNote.isNotEmpty) {
+        subtitle.write(' Note: $trimmedNote');
+      }
 
       await _db.into(_db.rentalEvents).insert(
         RentalEventsCompanion.insert(
           rentalId: rentalId,
           title: allReturned ? 'Returned' : 'Partial return',
-          subtitle: subtitle,
+          subtitle: subtitle.toString(),
           at: now,
         ),
       );
@@ -797,51 +840,213 @@ class LocalRepository {
     });
   }
 
-  /// Return one open line and open a replacement rental for the same customer.
-  Future<RentalReplaceResult?> replaceRentalLine({
+  /// Cancels an active order with no returned lines; restores stock and settles
+  /// deposit (kept vs returned).
+  Future<OrderCancelResult?> cancelOrder({
     required String rentalId,
-    required String lineId,
-    required RentalLineInput newLine,
-    String? nickname,
-    int durationUnits = 1,
-    DateTime? customEnd,
-    BillingMode? billingModeOverride,
+    int amountKeptPaise = 0,
+    int amountReturnedPaise = 0,
+    String? note,
   }) async {
-    final Rental? rental = await _findRental(rentalId);
-    if (rental == null || !rental.isActive) {
-      return null;
+    if (amountKeptPaise < 0 || amountReturnedPaise < 0) {
+      throw ArgumentError('Settlement amounts must be non-negative');
     }
-    final bool hasLine = rental.openLines.any((RentalLine l) => l.id == lineId);
-    if (!hasLine) {
-      return null;
+    final String? trimmedNote = note?.trim();
+    if (!meetsMinMeaningfulText(trimmedNote, allowEmpty: true)) {
+      throw ArgumentError(
+        'Note must be at least $kMinMeaningfulTextLength characters when set',
+      );
     }
+    final DateTime now = DateTime.now();
 
-    final Customer? customer = await customerById(rental.customerId);
-    if (customer == null) {
-      throw ArgumentError('Customer not found: ${rental.customerId}');
+    return _db.transaction(() async {
+      final RentalRow? rental = await (_db.select(_db.rentals)
+            ..where((t) => t.id.equals(rentalId)))
+          .getSingleOrNull();
+      if (rental == null || rental.returnedAt != null) {
+        return null;
+      }
+
+      final List<RentalItemRow> links = await (_db.select(_db.rentalItems)
+            ..where((t) => t.rentalId.equals(rentalId)))
+          .get();
+      if (links.any((RentalItemRow l) => l.returnedAt != null)) {
+        throw StateError('Cannot delete order after partial return');
+      }
+      if (links.isEmpty) {
+        return null;
+      }
+
+      final CustomerRow? customer = await (_db.select(_db.customers)
+            ..where((t) => t.id.equals(rental.customerId)))
+          .getSingleOrNull();
+      final int depositBalance = customer?.depositBalance ?? 0;
+      final int settlement = amountKeptPaise + amountReturnedPaise;
+      if (settlement > depositBalance) {
+        throw ArgumentError('Settlement exceeds deposit balance');
+      }
+
+      final Map<String, int> stockBump = <String, int>{};
+      for (final RentalItemRow link in links) {
+        await (_db.update(_db.rentalItems)..where((t) => t.id.equals(link.id)))
+            .write(
+          RentalItemsCompanion(
+            returnedAt: Value<DateTime?>(now),
+            baseAmount: const Value<int>(0),
+            lateAmount: const Value<int>(0),
+            depositApplied: const Value<int>(0),
+          ),
+        );
+        stockBump[link.itemId] = (stockBump[link.itemId] ?? 0) + 1;
+      }
+
+      for (final MapEntry<String, int> bump in stockBump.entries) {
+        final InventoryItemRow? item = await (_db.select(_db.inventoryItems)
+              ..where((t) => t.id.equals(bump.key)))
+            .getSingleOrNull();
+        if (item == null) {
+          continue;
+        }
+        final int nextAvailable =
+            (item.availableUnits + bump.value).clamp(0, item.totalUnits);
+        await (_db.update(_db.inventoryItems)..where((t) => t.id.equals(item.id)))
+            .write(
+          InventoryItemsCompanion(
+            availableUnits: Value<int>(nextAvailable),
+            status: Value<String>(AssetStatus.available.name),
+          ),
+        );
+      }
+
+      await (_db.update(_db.rentals)..where((t) => t.id.equals(rentalId))).write(
+        RentalsCompanion(
+          returnedAt: Value<DateTime?>(now),
+          baseAmount: const Value<int>(0),
+          lateAmount: const Value<int>(0),
+          totalAmount: const Value<int>(0),
+          depositApplied: const Value<int>(0),
+        ),
+      );
+
+      int balanceAfter = depositBalance;
+      if (customer != null && amountReturnedPaise > 0) {
+        balanceAfter -= amountReturnedPaise;
+        await (_db.update(_db.customers)..where((t) => t.id.equals(customer.id)))
+            .write(
+          CustomersCompanion(depositBalance: Value<int>(balanceAfter)),
+        );
+        await _db.into(_db.depositLedger).insert(
+          DepositLedgerCompanion.insert(
+            id: '${nextId('DEP')}-cancel-refund',
+            customerId: customer.id,
+            rentalId: Value<String?>(rentalId),
+            type: DepositLedgerType.refund.storageValue,
+            amount: -amountReturnedPaise,
+            balanceAfter: balanceAfter,
+            note: Value<String?>(
+              trimmedNote == null || trimmedNote.isEmpty
+                  ? 'Deposit returned on order cancel'
+                  : trimmedNote,
+            ),
+            at: now,
+          ),
+        );
+      }
+      if (customer != null && amountKeptPaise > 0) {
+        balanceAfter -= amountKeptPaise;
+        await (_db.update(_db.customers)..where((t) => t.id.equals(customer.id)))
+            .write(
+          CustomersCompanion(depositBalance: Value<int>(balanceAfter)),
+        );
+        await _db.into(_db.depositLedger).insert(
+          DepositLedgerCompanion.insert(
+            id: '${nextId('DEP')}-cancel-keep',
+            customerId: customer.id,
+            rentalId: Value<String?>(rentalId),
+            type: DepositLedgerType.adjust.storageValue,
+            amount: -amountKeptPaise,
+            balanceAfter: balanceAfter,
+            note: Value<String?>(
+              trimmedNote == null || trimmedNote.isEmpty
+                  ? 'Deposit kept on order cancel'
+                  : trimmedNote,
+            ),
+            at: now,
+          ),
+        );
+      }
+
+      final StringBuffer subtitle = StringBuffer(
+        'Kept ${formatMoney(amountKeptPaise)}; '
+        'returned ${formatMoney(amountReturnedPaise)}.',
+      );
+      if (trimmedNote != null && trimmedNote.isNotEmpty) {
+        subtitle.write(' Note: $trimmedNote');
+      }
+
+      await _db.into(_db.rentalEvents).insert(
+        RentalEventsCompanion.insert(
+          rentalId: rentalId,
+          title: 'Order cancelled',
+          subtitle: subtitle.toString(),
+          at: now,
+        ),
+      );
+
+      return OrderCancelResult(
+        rentalId: rentalId,
+        amountKeptPaise: amountKeptPaise,
+        amountReturnedPaise: amountReturnedPaise,
+        depositBalanceAfter: balanceAfter,
+      );
+    });
+  }
+
+  /// Split [charged] across lines proportional to [naturalTotals]; last line
+  /// absorbs rounding remainder so the batch sums exactly.
+  static List<int> _allocateChargedTotals(List<int> naturalTotals, int charged) {
+    if (naturalTotals.isEmpty) {
+      return const <int>[];
     }
-
-    final RentalReturnResult? returned =
-        await returnRentalLines(rentalId, <String>[lineId]);
-    if (returned == null) {
-      return null;
+    final int sum = naturalTotals.fold<int>(0, (int a, int b) => a + b);
+    if (sum <= 0 || charged <= 0) {
+      return List<int>.filled(naturalTotals.length, 0);
     }
+    if (charged >= sum) {
+      return List<int>.from(naturalTotals);
+    }
+    final List<int> out = List<int>.filled(naturalTotals.length, 0);
+    int allocated = 0;
+    for (int i = 0; i < naturalTotals.length; i++) {
+      if (i == naturalTotals.length - 1) {
+        out[i] = charged - allocated;
+      } else {
+        final int share = (charged * naturalTotals[i]) ~/ sum;
+        out[i] = share;
+        allocated += share;
+      }
+    }
+    return out;
+  }
 
-    final String? nick = nickname ?? rental.nickname;
-    final String newRentalId = await createRental(
-      customer: customer,
-      lines: <RentalLineInput>[newLine],
-      nickname: isUnknownCustomer(customer) ? nick : nickname,
-      durationUnits: durationUnits,
-      customEnd: customEnd,
-      billingModeOverride: billingModeOverride,
-      replacedFromRentalId: rentalId,
-    );
-
-    return RentalReplaceResult(
-      returnResult: returned,
-      newRentalId: newRentalId,
-    );
+  /// Prefer reducing late fees first, then base, to reach [chargedTotal].
+  static ({int base, int late}) _applyLineDiscount({
+    required int naturalBase,
+    required int naturalLate,
+    required int chargedTotal,
+  }) {
+    final int natural = naturalBase + naturalLate;
+    final int target = chargedTotal.clamp(0, natural);
+    int reduce = natural - target;
+    int late = naturalLate;
+    int base = naturalBase;
+    if (reduce > 0) {
+      final int lateCut = reduce > late ? late : reduce;
+      late -= lateCut;
+      reduce -= lateCut;
+      base -= reduce;
+    }
+    return (base: base, late: late);
   }
 
   Future<Rental?> _findRental(String rentalId) async {

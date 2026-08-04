@@ -6,7 +6,7 @@ import 'package:asset_os/core/repositories/local_repository.dart';
 import 'support/test_harness.dart';
 
 void main() {
-  group('partial return and replace', () {
+  group('partial return', () {
     test('four lines return one-by-one; stock restores; last closes', () async {
       final LocalRepository repository = await bootRepo();
       final Customer customer =
@@ -158,71 +158,6 @@ void main() {
       expect(applyEntries, hasLength(2));
     });
 
-    test('replace returns line and opens new rental with link', () async {
-      final LocalRepository repository = await bootRepo();
-      final Customer customer =
-          await ensureCustomer(repository, phone: '7777777777', name: 'Amit Sharma');
-      await repository.topUpDeposit(customer.id, 5000);
-
-      await repository.addInventory(
-        name: 'Replace Kit',
-        category: 'Tools',
-        units: 3,
-        billingMode: BillingMode.fixed,
-        rateAmount: 2000,
-      );
-      final InventoryItem item = (await repository.listInventory())
-          .firstWhere((InventoryItem i) => i.name == 'Replace Kit');
-
-      await repository.createRental(
-        customer: customer,
-        lines: <RentalLineInput>[
-          RentalLineInput(
-            itemId: item.id,
-            instanceName: 'Old unit',
-            shortCode: 'RP-OLD',
-          ),
-          RentalLineInput(
-            itemId: item.id,
-            instanceName: 'Keep unit',
-            shortCode: 'RP-KEEP',
-          ),
-        ],
-      );
-      final Rental original = (await repository.listRentals()).first;
-      final String replaceId = original.openLines
-          .firstWhere((RentalLine l) => l.shortCode == 'RP-OLD')
-          .id;
-
-      final RentalReplaceResult? result = await repository.replaceRentalLine(
-        rentalId: original.id,
-        lineId: replaceId,
-        newLine: RentalLineInput(
-          itemId: item.id,
-          instanceName: 'New unit',
-          shortCode: 'RP-NEW',
-        ),
-      );
-      expect(result, isNotNull);
-      expect(result!.returnResult.rentalClosed, isFalse);
-      expect(result.returnResult.depositApplied, 2000);
-      expect(result.returnResult.depositBalanceAfter, 3000);
-
-      final Rental stillOpen = (await repository.listRentals())
-          .firstWhere((Rental r) => r.id == original.id);
-      expect(stillOpen.isActive, isTrue);
-      expect(stillOpen.openLines, hasLength(1));
-      expect(stillOpen.openLines.first.shortCode, 'RP-KEEP');
-
-      final Rental replacement = (await repository.listRentals())
-          .firstWhere((Rental r) => r.id == result.newRentalId);
-      expect(replacement.customerId, customer.id);
-      expect(replacement.replacedFromRentalId, original.id);
-      expect(replacement.lines, hasLength(1));
-      expect(replacement.lines.first.shortCode, 'RP-NEW');
-      expect(replacement.lines.first.instanceName, 'New unit');
-    });
-
     test('returnRental returns all open lines', () async {
       final LocalRepository repository = await bootRepo();
       final Customer customer =
@@ -307,6 +242,188 @@ void main() {
       final SearchResults byOpen = await repository.search('SR-BETA');
       expect(byOpen.currentRentals, isNotEmpty);
       expect(byOpen.currentRentals.first.id, rental.id);
+    });
+
+    test('chargedTotal below computed stores discount and note on event', () async {
+      final LocalRepository repository = await bootRepo();
+      final Customer customer =
+          await ensureCustomer(repository);
+      await repository.topUpDeposit(customer.id, 10000);
+
+      await repository.addInventory(
+        name: 'Discount Kit',
+        category: 'Tools',
+        units: 2,
+        billingMode: BillingMode.fixed,
+        rateAmount: 5000,
+      );
+      final InventoryItem item = (await repository.listInventory())
+          .firstWhere((InventoryItem i) => i.name == 'Discount Kit');
+
+      await repository.createRental(
+        customer: customer,
+        lines: <RentalLineInput>[
+          RentalLineInput(
+            itemId: item.id,
+            instanceName: 'Unit A',
+            shortCode: 'DK-A',
+          ),
+          RentalLineInput(
+            itemId: item.id,
+            instanceName: 'Unit B',
+            shortCode: 'DK-B',
+          ),
+        ],
+      );
+      final Rental rental = (await repository.listRentals()).first;
+      final List<String> lineIds =
+          rental.openLines.map((RentalLine l) => l.id).toList();
+
+      final RentalReturnResult? result = await repository.returnRentalLines(
+        rental.id,
+        lineIds,
+        chargedTotalPaise: 6000,
+        note: 'Staff goodwill',
+      );
+      expect(result, isNotNull);
+      expect(result!.totalAmount, 6000);
+      expect(result.depositApplied, 6000);
+      expect(result.depositBalanceAfter, 4000);
+      expect(result.rentalClosed, isTrue);
+
+      final Rental closed = (await repository.listRentals())
+          .firstWhere((Rental r) => r.id == rental.id);
+      expect(closed.totalAmount, 6000);
+      expect(closed.baseAmount + closed.lateAmount, 6000);
+
+      final RentalEvent returnEvent = closed.timeline.lastWhere(
+        (RentalEvent e) => e.title == 'Returned',
+      );
+      expect(returnEvent.subtitle, contains('Discount'));
+      expect(returnEvent.subtitle, contains('Staff goodwill'));
+    });
+  });
+
+  group('cancel order', () {
+    test('restores stock and settles kept/returned deposit', () async {
+      final LocalRepository repository = await bootRepo();
+      final Customer customer =
+          await ensureCustomer(repository);
+      await repository.topUpDeposit(customer.id, 10000);
+
+      await repository.addInventory(
+        name: 'Cancel Kit',
+        category: 'Tools',
+        units: 2,
+        billingMode: BillingMode.fixed,
+        rateAmount: 2000,
+      );
+      final InventoryItem item = (await repository.listInventory())
+          .firstWhere((InventoryItem i) => i.name == 'Cancel Kit');
+
+      await repository.createRental(
+        customer: customer,
+        lines: <RentalLineInput>[
+          RentalLineInput(
+            itemId: item.id,
+            instanceName: 'One',
+            shortCode: 'CK-1',
+          ),
+          RentalLineInput(
+            itemId: item.id,
+            instanceName: 'Two',
+            shortCode: 'CK-2',
+          ),
+        ],
+      );
+      final Rental rental = (await repository.listRentals()).first;
+      expect(
+        (await repository.listInventory())
+            .firstWhere((InventoryItem i) => i.id == item.id)
+            .availableUnits,
+        0,
+      );
+
+      final OrderCancelResult? result = await repository.cancelOrder(
+        rentalId: rental.id,
+        amountKeptPaise: 3000,
+        amountReturnedPaise: 2000,
+        note: 'Customer cancelled',
+      );
+      expect(result, isNotNull);
+      expect(result!.amountKeptPaise, 3000);
+      expect(result.amountReturnedPaise, 2000);
+      expect(result.depositBalanceAfter, 5000);
+
+      final Rental closed = (await repository.listRentals())
+          .firstWhere((Rental r) => r.id == rental.id);
+      expect(closed.isActive, isFalse);
+      expect(closed.totalAmount, 0);
+      expect(closed.openLines, isEmpty);
+      expect(closed.timeline.any((RentalEvent e) => e.title == 'Order cancelled'),
+          isTrue);
+
+      final InventoryItem stock = (await repository.listInventory())
+          .firstWhere((InventoryItem i) => i.id == item.id);
+      expect(stock.availableUnits, 2);
+
+      final Customer after =
+          (await repository.listCustomers())
+              .firstWhere((Customer c) => c.id == customer.id);
+      expect(after.depositBalance, 5000);
+
+      final List<DepositLedgerEntry> ledger =
+          await repository.listDepositLedger(customer.id);
+      expect(
+        ledger.any((DepositLedgerEntry e) => e.type == DepositLedgerType.refund),
+        isTrue,
+      );
+      expect(
+        ledger.any((DepositLedgerEntry e) => e.type == DepositLedgerType.adjust),
+        isTrue,
+      );
+    });
+
+    test('blocked after partial return', () async {
+      final LocalRepository repository = await bootRepo();
+      final Customer customer =
+          await ensureCustomer(repository, phone: '8888888888', name: 'Neha Shah');
+
+      await repository.addInventory(
+        name: 'Block Cancel',
+        category: 'Tools',
+        units: 2,
+        billingMode: BillingMode.fixed,
+        rateAmount: 1000,
+      );
+      final InventoryItem item = (await repository.listInventory())
+          .firstWhere((InventoryItem i) => i.name == 'Block Cancel');
+
+      await repository.createRental(
+        customer: customer,
+        lines: <RentalLineInput>[
+          RentalLineInput(
+            itemId: item.id,
+            instanceName: 'Unit A',
+            shortCode: 'BC-A',
+          ),
+          RentalLineInput(
+            itemId: item.id,
+            instanceName: 'Unit B',
+            shortCode: 'BC-B',
+          ),
+        ],
+      );
+      final Rental rental = (await repository.listRentals()).first;
+      await repository.returnRentalLines(
+        rental.id,
+        <String>[rental.openLines.first.id],
+      );
+
+      expect(
+        () => repository.cancelOrder(rentalId: rental.id),
+        throwsA(isA<StateError>()),
+      );
     });
   });
 }

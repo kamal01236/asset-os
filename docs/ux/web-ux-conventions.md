@@ -32,6 +32,11 @@ UI-first conventions for `apps/web` to keep flows fast, clear, and touch-friendl
 - Auto-detect existing customer by phone before asking for full profile fields.
 - Free-text identity/note fields (customer name, item name, category, instance name, SELF nickname, notes when non-empty) require at least 3 characters; search runs only at ≥3 chars (Home/global = all entities; Inventory tab = inventory; Customers tab = customers + order nicknames).
 
+## Order return and delete
+- Returns always require an explicit confirm dialog. Show the computed line total (read-only), an editable **final amount to collect** (0…total; remainder shown as discount), deposit preview against that final amount, and an optional note (≥3 chars when set).
+- **Delete order** is available on active orders with no lines already returned. Confirmation settles deposit as amount kept + amount returned (both default 0; sum ≤ wallet balance) plus optional note, then cancels the order and restores stock.
+- Per-line Replace/Change is not offered; do not reintroduce SKU swap from order detail.
+
 ## Offline and feedback
 - Use a subtle non-blocking offline banner; never block primary workflows.
 - Favor lightweight confirmations (snackbars, status pills) over modal interruptions.

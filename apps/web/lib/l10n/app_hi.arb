@@ -502,6 +502,31 @@
   },
   "returnSettlementTitle": "वापसी निपटान",
   "confirmReturnAction": "वापसी पुष्टि करें",
+  "returnFinalAmountLabel": "अंतिम वसूल राशि",
+  "returnFinalAmountHint": "0 या गणना कुल से कम",
+  "returnDiscountLabel": "छूट {amount}",
+  "@returnDiscountLabel": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "returnNoteLabel": "नोट (वैकल्पिक)",
+  "returnNoteHint": "भरने पर कम से कम 3 अक्षर",
+  "deleteOrderAction": "ऑर्डर हटाएँ",
+  "deleteOrderTitle": "ऑर्डर हटाएँ",
+  "confirmDeleteOrderAction": "ऑर्डर हटाएँ",
+  "deleteOrderKeptLabel": "रखने की राशि",
+  "deleteOrderReturnedLabel": "वापस करने की राशि",
+  "deleteOrderNoteLabel": "नोट (वैकल्पिक)",
+  "deleteOrderInvalidSettlement": "रखे + वापस का योग जमा शेष से अधिक नहीं हो सकता।",
+  "deleteOrderBlockedPartial": "वस्तु वापस होने के बाद ऑर्डर नहीं हटाया जा सकता।",
+  "deleteOrderFailed": "यह ऑर्डर हटाया नहीं जा सका।",
+  "deleteOrderSuccessSnack": "ऑर्डर हटाया गया। जमा शेष {balance}।",
+  "@deleteOrderSuccessSnack": {
+    "placeholders": {
+      "balance": {"type": "String"}
+    }
+  },
   "depositReturnSnackApplied": "जमा से {applied} लागू; शेष अब {balance}।",
   "@depositReturnSnackApplied": {
     "placeholders": {

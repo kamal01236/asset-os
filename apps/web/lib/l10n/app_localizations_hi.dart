@@ -857,6 +857,57 @@ class AppLocalizationsHi extends AppLocalizations {
   String get confirmReturnAction => 'वापसी पुष्टि करें';
 
   @override
+  String get returnFinalAmountLabel => 'अंतिम वसूल राशि';
+
+  @override
+  String get returnFinalAmountHint => '0 या गणना कुल से कम';
+
+  @override
+  String returnDiscountLabel(String amount) {
+    return 'छूट $amount';
+  }
+
+  @override
+  String get returnNoteLabel => 'नोट (वैकल्पिक)';
+
+  @override
+  String get returnNoteHint => 'भरने पर कम से कम 3 अक्षर';
+
+  @override
+  String get deleteOrderAction => 'ऑर्डर हटाएँ';
+
+  @override
+  String get deleteOrderTitle => 'ऑर्डर हटाएँ';
+
+  @override
+  String get confirmDeleteOrderAction => 'ऑर्डर हटाएँ';
+
+  @override
+  String get deleteOrderKeptLabel => 'रखने की राशि';
+
+  @override
+  String get deleteOrderReturnedLabel => 'वापस करने की राशि';
+
+  @override
+  String get deleteOrderNoteLabel => 'नोट (वैकल्पिक)';
+
+  @override
+  String get deleteOrderInvalidSettlement =>
+      'रखे + वापस का योग जमा शेष से अधिक नहीं हो सकता।';
+
+  @override
+  String get deleteOrderBlockedPartial =>
+      'वस्तु वापस होने के बाद ऑर्डर नहीं हटाया जा सकता।';
+
+  @override
+  String get deleteOrderFailed => 'यह ऑर्डर हटाया नहीं जा सका।';
+
+  @override
+  String deleteOrderSuccessSnack(String balance) {
+    return 'ऑर्डर हटाया गया। जमा शेष $balance।';
+  }
+
+  @override
   String depositReturnSnackApplied(String applied, String balance) {
     return 'जमा से $applied लागू; शेष अब $balance।';
   }

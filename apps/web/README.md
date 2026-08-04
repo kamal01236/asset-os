@@ -23,7 +23,7 @@ Use repo-root scripts from WSL (or `.\scripts\wsl.ps1` from Windows):
 ```bash
 ./scripts/setup.sh
 ./scripts/localrun.sh      # Chrome / web-server
-./scripts/test.sh          # analyze + flutter test (concurrency 4, compact)
+./scripts/test.sh          # analyze + flutter test (concurrency = CPU count, compact; override via TEST_CONCURRENCY)
 ./scripts/wsldeploy.sh     # flutter build web
 ```
 

@@ -502,6 +502,31 @@
   },
   "returnSettlementTitle": "Return settlement",
   "confirmReturnAction": "Confirm return",
+  "returnFinalAmountLabel": "Final amount to collect",
+  "returnFinalAmountHint": "0 or less than computed total",
+  "returnDiscountLabel": "Discount {amount}",
+  "@returnDiscountLabel": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "returnNoteLabel": "Note (optional)",
+  "returnNoteHint": "At least 3 characters when set",
+  "deleteOrderAction": "Delete order",
+  "deleteOrderTitle": "Delete order",
+  "confirmDeleteOrderAction": "Delete order",
+  "deleteOrderKeptLabel": "Amount to keep",
+  "deleteOrderReturnedLabel": "Amount to return",
+  "deleteOrderNoteLabel": "Note (optional)",
+  "deleteOrderInvalidSettlement": "Kept + returned cannot exceed deposit balance.",
+  "deleteOrderBlockedPartial": "Cannot delete an order after items were returned.",
+  "deleteOrderFailed": "Could not delete this order.",
+  "deleteOrderSuccessSnack": "Order deleted. Deposit balance {balance}.",
+  "@deleteOrderSuccessSnack": {
+    "placeholders": {
+      "balance": {"type": "String"}
+    }
+  },
   "depositReturnSnackApplied": "Applied {applied} from deposit; balance now {balance}.",
   "@depositReturnSnackApplied": {
     "placeholders": {

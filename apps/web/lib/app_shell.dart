@@ -930,7 +930,26 @@ class _RentalDetailScreenState extends ConsumerState<RentalDetailScreen> {
         _selectedLineIds.where(openIds.contains).toSet();
 
     return Scaffold(
-      appBar: AppBar(title: Text(rental.id)),
+      appBar: AppBar(
+        title: Text(rental.id),
+        actions: <Widget>[
+          if (rental.isActive && closedLines.isEmpty)
+            TextButton(
+              onPressed: () async {
+                final bool done = await _confirmAndCancelOrder(
+                  context: context,
+                  ref: ref,
+                  rental: rental,
+                  customer: customer,
+                );
+                if (done && context.mounted) {
+                  Navigator.of(context).pop();
+                }
+              },
+              child: Text(l10n.deleteOrderAction),
+            ),
+        ],
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: <Widget>[
@@ -1009,19 +1028,6 @@ class _RentalDetailScreenState extends ConsumerState<RentalDetailScreen> {
                         title: Text(line.displayLabel),
                         subtitle: Text(
                           '${l10n.lineOpenLabel} · ${formatMoney(lineTotal)}',
-                        ),
-                        secondary: TextButton(
-                          onPressed: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute<void>(
-                                builder: (_) => ReplaceLineFlowScreen(
-                                  rentalId: rental.id,
-                                  lineId: line.id,
-                                ),
-                              ),
-                            );
-                          },
-                          child: Text(l10n.replaceLineAction),
                         ),
                       );
                     }),
@@ -1936,257 +1942,6 @@ class CustomerDetailScreen extends ConsumerWidget {
   }
 }
 
-class ReplaceLineFlowScreen extends ConsumerStatefulWidget {
-  const ReplaceLineFlowScreen({
-    required this.rentalId,
-    required this.lineId,
-    super.key,
-  });
-
-  final String rentalId;
-  final String lineId;
-
-  @override
-  ConsumerState<ReplaceLineFlowScreen> createState() =>
-      _ReplaceLineFlowScreenState();
-}
-
-class _ReplaceLineFlowScreenState extends ConsumerState<ReplaceLineFlowScreen> {
-  final TextEditingController _instanceNameController = TextEditingController();
-  final TextEditingController _shortCodeController = TextEditingController();
-  final TextEditingController _durationController =
-      TextEditingController(text: '1');
-  String? _selectedItemId;
-  DateTime? _customEnd;
-  bool _submitting = false;
-
-  @override
-  void dispose() {
-    _instanceNameController.dispose();
-    _shortCodeController.dispose();
-    _durationController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final AppLocalizations l10n = context.l10n;
-    final AsyncValue<List<Rental>> rentalsAsync = ref.watch(rentalsProvider);
-    final AsyncValue<List<InventoryItem>> inventoryAsync =
-        ref.watch(inventoryProvider);
-    final AsyncValue<List<Customer>> customersAsync =
-        ref.watch(customersProvider);
-
-    if (rentalsAsync.isLoading ||
-        inventoryAsync.isLoading ||
-        customersAsync.isLoading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    }
-
-    final Rental rental = (rentalsAsync.valueOrNull ?? const <Rental>[])
-        .firstWhere((Rental r) => r.id == widget.rentalId);
-    final RentalLine line = rental.lines.firstWhere(
-      (RentalLine l) => l.id == widget.lineId,
-    );
-    final Customer customer = (customersAsync.valueOrNull ?? const <Customer>[])
-        .firstWhere((Customer c) => c.id == rental.customerId);
-    final List<InventoryItem> available = (inventoryAsync.valueOrNull ??
-            const <InventoryItem>[])
-        .where((InventoryItem i) => i.availableUnits > 0)
-        .toList();
-    final InventoryItem? selected = _selectedItemId == null
-        ? null
-        : available.cast<InventoryItem?>().firstWhere(
-              (InventoryItem? i) => i?.id == _selectedItemId,
-              orElse: () => null,
-            );
-    final DateTime now = DateTime.now();
-    final int oldCharge = line.totalAmountAsOf(rental.startedAt, rental.dueAt, now);
-
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.replaceFlowTitle)),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: <Widget>[
-          Text(l10n.replaceSettlementIntro),
-          const SizedBox(height: 8),
-          Text(
-            l10n.lineChargePreview(line.displayLabel, formatMoney(oldCharge)),
-          ),
-          Text(
-            l10n.depositAvailableLabel(formatMoney(customer.depositBalance)),
-          ),
-          const SizedBox(height: 16),
-          Text(l10n.reviewItemsLabel),
-          const SizedBox(height: 8),
-          ...available.map(
-            (InventoryItem item) => ListTile(
-              leading: Icon(
-                _selectedItemId == item.id
-                    ? Icons.radio_button_checked
-                    : Icons.radio_button_off,
-              ),
-              title: Text(item.name),
-              subtitle: Text(
-                l10n.inventoryAvailableSubtitle(
-                  item.category,
-                  item.availableUnits,
-                  item.totalUnits,
-                ),
-              ),
-              onTap: () => setState(() => _selectedItemId = item.id),
-            ),
-          ),
-          if (selected != null) ...<Widget>[
-            const SizedBox(height: 8),
-            TextField(
-              controller: _instanceNameController,
-              decoration: InputDecoration(
-                labelText: l10n.instanceNameLabel,
-                hintText: l10n.instanceNameHint,
-              ),
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _shortCodeController,
-              decoration: InputDecoration(
-                labelText: l10n.shortCodeLabel,
-                hintText: l10n.shortCodeHint,
-              ),
-            ),
-            const SizedBox(height: 8),
-            if (selected.billingMode == BillingMode.custom)
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(l10n.customEndDateLabel),
-                subtitle: Text(
-                  _customEnd == null ? '—' : _date(_customEnd!),
-                ),
-                trailing: const Icon(Icons.calendar_today_outlined),
-                onTap: () async {
-                  final DateTime today = DateTime.now();
-                  final DateTime? picked = await showDatePicker(
-                    context: context,
-                    initialDate: _customEnd ?? today,
-                    firstDate: today,
-                    lastDate: today.add(const Duration(days: 365 * 2)),
-                  );
-                  if (picked != null) {
-                    setState(() => _customEnd = picked);
-                  }
-                },
-              )
-            else
-              TextField(
-                controller: _durationController,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  labelText: switch (selected.billingMode) {
-                    BillingMode.daily => l10n.durationUnitsDaily,
-                    BillingMode.weekly => l10n.durationUnitsWeekly,
-                    BillingMode.monthly => l10n.durationUnitsMonthly,
-                    BillingMode.fixed => l10n.durationUnitsFixed,
-                    BillingMode.custom => l10n.durationUnitsLabel,
-                  },
-                ),
-              ),
-          ],
-        ],
-      ),
-      bottomNavigationBar: SafeArea(
-        minimum: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-        child: FilledButton(
-          onPressed: _submitting || selected == null
-              ? null
-              : () async {
-                  final String instanceName =
-                      _instanceNameController.text.trim();
-                  final String shortCode =
-                      LocalRepository.normalizeShortCode(
-                    _shortCodeController.text,
-                  );
-                  if (instanceName.isEmpty || shortCode.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(l10n.instanceLabelsRequired)),
-                    );
-                    return;
-                  }
-                  if (selected.billingMode == BillingMode.custom &&
-                      _customEnd == null) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(l10n.customEndRequired)),
-                    );
-                    return;
-                  }
-                  final int units =
-                      int.tryParse(_durationController.text.trim()) ?? 1;
-                  setState(() => _submitting = true);
-                  try {
-                    final String? nick = isUnknownCustomer(customer)
-                        ? rental.nickname
-                        : null;
-                    final RentalReplaceResult? result = await ref
-                        .read(repositoryProvider)
-                        .replaceRentalLine(
-                          rentalId: rental.id,
-                          lineId: line.id,
-                          newLine: RentalLineInput(
-                            itemId: selected.id,
-                            instanceName: instanceName,
-                            shortCode: shortCode,
-                          ),
-                          nickname: nick,
-                          durationUnits: units < 1 ? 1 : units,
-                          customEnd: selected.billingMode == BillingMode.custom
-                              ? _customEnd
-                              : null,
-                          billingModeOverride: selected.billingMode,
-                        );
-                    if (!context.mounted) {
-                      return;
-                    }
-                    if (result == null) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(l10n.rentalReturned(rental.id))),
-                      );
-                      return;
-                    }
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          l10n.replaceSuccessSnack(
-                            result.newRentalId,
-                            formatMoney(
-                              result.returnResult.depositBalanceAfter,
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                    Navigator.of(context).pop();
-                  } on DuplicateActiveShortCodeException catch (error) {
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            l10n.duplicateShortCode(error.shortCode),
-                          ),
-                        ),
-                      );
-                    }
-                  } finally {
-                    if (mounted) {
-                      setState(() => _submitting = false);
-                    }
-                  }
-                },
-          child: Text(l10n.replaceConfirmAction),
-        ),
-      ),
-    );
-  }
-}
-
 class ReturnFlowScreen extends ConsumerWidget {
   const ReturnFlowScreen({super.key});
 
@@ -2777,60 +2532,121 @@ Future<bool> _confirmAndReturnRental({
     return false;
   }
 
-  int total = 0;
+  int computedTotal = 0;
   for (final RentalLine line in targets) {
-    total += line.totalAmountAsOf(rental.startedAt, rental.dueAt, now);
+    computedTotal += line.totalAmountAsOf(rental.startedAt, rental.dueAt, now);
   }
-  final int willApply =
-      customer.depositBalance < total ? customer.depositBalance : total;
-  final int remainingDue = total - willApply;
-  final int leftover = customer.depositBalance - willApply;
+
+  final TextEditingController finalAmountController = TextEditingController(
+    text: paiseToRupeesField(computedTotal),
+  );
+  final TextEditingController noteController = TextEditingController();
 
   final bool? confirmed = await showDialog<bool>(
     context: context,
     builder: (BuildContext dialogContext) {
-      return AlertDialog(
-        title: Text(l10n.returnSettlementTitle),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              ...targets.map(
-                (RentalLine line) => Text(
-                  l10n.lineChargePreview(
-                    line.displayLabel,
-                    formatMoney(line.totalAmountAsOf(rental.startedAt, rental.dueAt, now)),
+      return StatefulBuilder(
+        builder: (BuildContext context, StateSetter setDialogState) {
+          final int parsedFinal = parseRupeesToPaise(finalAmountController.text);
+          final int finalAmount = parsedFinal.clamp(0, computedTotal);
+          final int discount =
+              (computedTotal - finalAmount).clamp(0, computedTotal);
+          final int willApply = customer.depositBalance < finalAmount
+              ? customer.depositBalance
+              : finalAmount;
+          final int remainingDue = finalAmount - willApply;
+          final int leftover = customer.depositBalance - willApply;
+
+          return AlertDialog(
+            title: Text(l10n.returnSettlementTitle),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  ...targets.map(
+                    (RentalLine line) => Text(
+                      l10n.lineChargePreview(
+                        line.displayLabel,
+                        formatMoney(
+                          line.totalAmountAsOf(
+                            rental.startedAt,
+                            rental.dueAt,
+                            now,
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 8),
+                  Text(l10n.chargeTotalLabel(formatMoney(computedTotal))),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: finalAmountController,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    decoration: InputDecoration(
+                      labelText: l10n.returnFinalAmountLabel,
+                      hintText: l10n.returnFinalAmountHint,
+                    ),
+                    onChanged: (_) => setDialogState(() {}),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(l10n.returnDiscountLabel(formatMoney(discount))),
+                  Text(
+                    l10n.depositAvailableLabel(
+                      formatMoney(customer.depositBalance),
+                    ),
+                  ),
+                  Text(l10n.depositWillApplyLabel(formatMoney(willApply))),
+                  if (remainingDue > 0)
+                    Text(
+                      l10n.depositRemainingDueLabel(formatMoney(remainingDue)),
+                    )
+                  else if (leftover > 0)
+                    Text(l10n.depositLeftoverLabel(formatMoney(leftover))),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: noteController,
+                    decoration: InputDecoration(
+                      labelText: l10n.returnNoteLabel,
+                      hintText: l10n.returnNoteHint,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 8),
-              Text(l10n.chargeTotalLabel(formatMoney(total))),
-              Text(
-                l10n.depositAvailableLabel(formatMoney(customer.depositBalance)),
+            ),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(false),
+                child: Text(l10n.cancel),
               ),
-              Text(l10n.depositWillApplyLabel(formatMoney(willApply))),
-              if (remainingDue > 0)
-                Text(l10n.depositRemainingDueLabel(formatMoney(remainingDue)))
-              else if (leftover > 0)
-                Text(l10n.depositLeftoverLabel(formatMoney(leftover))),
+              FilledButton(
+                onPressed: () => Navigator.of(dialogContext).pop(true),
+                child: Text(l10n.confirmReturnAction),
+              ),
             ],
-          ),
-        ),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: Text(l10n.confirmReturnAction),
-          ),
-        ],
+          );
+        },
       );
     },
   );
+
+  final int chargedTotal =
+      parseRupeesToPaise(finalAmountController.text).clamp(0, computedTotal);
+  final String note = noteController.text.trim();
+  finalAmountController.dispose();
+  noteController.dispose();
+
   if (confirmed != true || !context.mounted) {
+    return false;
+  }
+  if (!meetsMinMeaningfulText(note, allowEmpty: true)) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(l10n.minMeaningfulTextError(kMinMeaningfulTextLength)),
+      ),
+    );
     return false;
   }
 
@@ -2839,6 +2655,8 @@ Future<bool> _confirmAndReturnRental({
       .returnRentalLines(
         rental.id,
         targets.map((RentalLine l) => l.id).toList(),
+        chargedTotalPaise: chargedTotal,
+        note: note.isEmpty ? null : note,
       );
   if (!context.mounted) {
     return result != null;
@@ -2857,6 +2675,154 @@ Future<bool> _confirmAndReturnRental({
     SnackBar(content: Text(snack)),
   );
   return true;
+}
+
+Future<bool> _confirmAndCancelOrder({
+  required BuildContext context,
+  required WidgetRef ref,
+  required Rental rental,
+  required Customer customer,
+}) async {
+  final AppLocalizations l10n = context.l10n;
+  final TextEditingController keptController =
+      TextEditingController(text: '0');
+  final TextEditingController returnedController =
+      TextEditingController(text: '0');
+  final TextEditingController noteController = TextEditingController();
+
+  final bool? confirmed = await showDialog<bool>(
+    context: context,
+    builder: (BuildContext dialogContext) {
+      return AlertDialog(
+        title: Text(l10n.deleteOrderTitle),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Text(
+                l10n.depositAvailableLabel(
+                  formatMoney(customer.depositBalance),
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: keptController,
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                decoration: InputDecoration(
+                  labelText: l10n.deleteOrderKeptLabel,
+                  hintText: l10n.depositAmountHint,
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: returnedController,
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                decoration: InputDecoration(
+                  labelText: l10n.deleteOrderReturnedLabel,
+                  hintText: l10n.depositAmountHint,
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: noteController,
+                decoration: InputDecoration(
+                  labelText: l10n.deleteOrderNoteLabel,
+                  hintText: l10n.returnNoteHint,
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(l10n.confirmDeleteOrderAction),
+          ),
+        ],
+      );
+    },
+  );
+
+  final int keptPaise = parseRupeesToPaise(keptController.text);
+  final int returnedPaise = parseRupeesToPaise(returnedController.text);
+  final String note = noteController.text.trim();
+  keptController.dispose();
+  returnedController.dispose();
+  noteController.dispose();
+
+  if (confirmed != true || !context.mounted) {
+    return false;
+  }
+  if (keptPaise < 0 || returnedPaise < 0) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l10n.deleteOrderInvalidSettlement)),
+    );
+    return false;
+  }
+  if (keptPaise + returnedPaise > customer.depositBalance) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l10n.deleteOrderInvalidSettlement)),
+    );
+    return false;
+  }
+  if (!meetsMinMeaningfulText(note, allowEmpty: true)) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(l10n.minMeaningfulTextError(kMinMeaningfulTextLength)),
+      ),
+    );
+    return false;
+  }
+
+  try {
+    final OrderCancelResult? result =
+        await ref.read(repositoryProvider).cancelOrder(
+              rentalId: rental.id,
+              amountKeptPaise: keptPaise,
+              amountReturnedPaise: returnedPaise,
+              note: note.isEmpty ? null : note,
+            );
+    if (!context.mounted) {
+      return result != null;
+    }
+    if (result == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.deleteOrderFailed)),
+      );
+      return false;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          l10n.deleteOrderSuccessSnack(
+            formatMoney(result.depositBalanceAfter),
+          ),
+        ),
+      ),
+    );
+    return true;
+  } on StateError {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.deleteOrderBlockedPartial)),
+      );
+    }
+    return false;
+  } on ArgumentError {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.deleteOrderInvalidSettlement)),
+      );
+    }
+    return false;
+  }
 }
 
 Future<void> _showDepositAmountDialog({
