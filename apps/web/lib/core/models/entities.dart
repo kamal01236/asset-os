@@ -38,6 +38,38 @@ enum LineFulfillment {
   }
 }
 
+/// Order / bill lifecycle (`open` | `completed` | `cancelled`).
+enum OrderStatus {
+  open,
+  completed,
+  cancelled;
+
+  String get storageValue => name;
+
+  static OrderStatus parse(String? raw) {
+    switch (raw) {
+      case 'completed':
+        return OrderStatus.completed;
+      case 'cancelled':
+        return OrderStatus.cancelled;
+      default:
+        return OrderStatus.open;
+    }
+  }
+
+  /// Map to shell status colors: completed → green, cancelled → grey.
+  AssetStatus get billAssetStatus {
+    switch (this) {
+      case OrderStatus.open:
+        return AssetStatus.rented;
+      case OrderStatus.completed:
+        return AssetStatus.available;
+      case OrderStatus.cancelled:
+        return AssetStatus.archived;
+    }
+  }
+}
+
 enum AssetStatus {
   available,
   rented,
@@ -541,7 +573,7 @@ class DepositLedgerEntry {
   final DateTime at;
 }
 
-/// Result of settling a rental return against the customer deposit wallet.
+/// Result of settling a rental return against the order deposit.
 class RentalReturnResult {
   const RentalReturnResult({
     required this.rentalId,
@@ -555,9 +587,10 @@ class RentalReturnResult {
   final String rentalId;
   final int totalAmount;
   final int depositApplied;
+  /// Remaining order deposit after apply (paise).
   final int depositBalanceAfter;
   final List<String> returnedLineIds;
-  /// True when the parent rental has no open lines left.
+  /// True when the parent rental has no open rent lines left.
   final bool rentalClosed;
 
   int get amountDue => (totalAmount - depositApplied).clamp(0, totalAmount);
@@ -575,6 +608,7 @@ class OrderCancelResult {
   final String rentalId;
   final int amountKeptPaise;
   final int amountReturnedPaise;
+  /// Remaining order deposit after settlement (typically 0).
   final int depositBalanceAfter;
 }
 
@@ -596,6 +630,8 @@ class Rental {
     this.lateAmount = 0,
     this.totalAmount = 0,
     this.depositApplied = 0,
+    this.depositAmount = 0,
+    this.orderStatus = OrderStatus.open,
     this.durationUnits = 1,
     this.replacedFromRentalId,
     this.notes = const <RentalNote>[],
@@ -618,8 +654,11 @@ class Rental {
   final int baseAmount;
   final int lateAmount;
   final int totalAmount;
-  /// Deposit applied from wallet at return (paise).
+  /// Deposit applied from order deposit at return (paise).
   final int depositApplied;
+  /// Token/advance on this order (paise); original amount set at create.
+  final int depositAmount;
+  final OrderStatus orderStatus;
   final int durationUnits;
   final String? replacedFromRentalId;
   /// Append-only order notes (newest first when loaded from DB).
@@ -631,10 +670,22 @@ class Rental {
   List<RentalLine> get openLines =>
       lines.where((RentalLine line) => line.isOpen).toList(growable: false);
 
+  List<RentalLine> get openRentLines => openLines
+      .where((RentalLine line) => !line.isSell)
+      .toList(growable: false);
+
   List<RentalLine> get returnedLines =>
       lines.where((RentalLine line) => !line.isOpen).toList(growable: false);
 
-  bool get isActive => returnedAt == null;
+  List<RentalLine> get returnedRentLines => returnedLines
+      .where((RentalLine line) => !line.isSell)
+      .toList(growable: false);
+
+  bool get isActive => orderStatus == OrderStatus.open;
+
+  /// Remaining unapplied order deposit (paise).
+  int get depositRemaining =>
+      (depositAmount - depositApplied).clamp(0, depositAmount);
 
   bool get hasDueDate => dueAt != null;
 
@@ -670,8 +721,31 @@ class Rental {
     return total;
   }
 
+  /// Bill charges for customer net: live accrual when open, else finalized total.
+  int billChargesAsOf(DateTime asOf) {
+    switch (orderStatus) {
+      case OrderStatus.cancelled:
+        return 0;
+      case OrderStatus.completed:
+        return totalAmount;
+      case OrderStatus.open:
+        return totalAmountAsOf(asOf);
+    }
+  }
+
+  /// Signed order net: charges − deposit (cancelled → 0). Positive = owes shop.
+  int orderNetAsOf(DateTime asOf) {
+    if (orderStatus == OrderStatus.cancelled) {
+      return 0;
+    }
+    return billChargesAsOf(asOf) - depositAmount;
+  }
+
   AssetStatus statusFor(DateTime now) {
-    if (!isActive) {
+    if (orderStatus == OrderStatus.completed) {
+      return AssetStatus.available;
+    }
+    if (orderStatus == OrderStatus.cancelled) {
       return AssetStatus.archived;
     }
     final DateTime? due = dueAt;
@@ -701,6 +775,8 @@ class Rental {
     int? lateAmount,
     int? totalAmount,
     int? depositApplied,
+    int? depositAmount,
+    OrderStatus? orderStatus,
     int? durationUnits,
     DateTime? dueAt,
     String? replacedFromRentalId,
@@ -722,6 +798,8 @@ class Rental {
     lateAmount: lateAmount ?? this.lateAmount,
     totalAmount: totalAmount ?? this.totalAmount,
     depositApplied: depositApplied ?? this.depositApplied,
+    depositAmount: depositAmount ?? this.depositAmount,
+    orderStatus: orderStatus ?? this.orderStatus,
     durationUnits: durationUnits ?? this.durationUnits,
     replacedFromRentalId: replacedFromRentalId ?? this.replacedFromRentalId,
     notes: notes ?? this.notes,
@@ -745,6 +823,8 @@ class Rental {
     'lateAmount': lateAmount,
     'totalAmount': totalAmount,
     'depositApplied': depositApplied,
+    'depositAmount': depositAmount,
+    'orderStatus': orderStatus.storageValue,
     'durationUnits': durationUnits,
     'replacedFromRentalId': replacedFromRentalId,
     'notes': notes.map((RentalNote note) => note.toJson()).toList(),
@@ -772,6 +852,12 @@ class Rental {
           )
           .toList();
     }
+    final DateTime? returnedAt = json['returnedAt'] == null
+        ? null
+        : DateTime.parse(json['returnedAt'] as String);
+    final OrderStatus orderStatus = json['orderStatus'] != null
+        ? OrderStatus.parse(json['orderStatus'] as String?)
+        : (returnedAt == null ? OrderStatus.open : OrderStatus.completed);
     return Rental(
       id: json['id'] as String,
       customerId: json['customerId'] as String,
@@ -780,9 +866,7 @@ class Rental {
       dueAt: json['dueAt'] == null
           ? null
           : DateTime.parse(json['dueAt'] as String),
-      returnedAt: json['returnedAt'] == null
-          ? null
-          : DateTime.parse(json['returnedAt'] as String),
+      returnedAt: returnedAt,
       timeline: (json['timeline'] as List<dynamic>)
           .map((entry) => RentalEvent.fromJson(entry as Map<String, dynamic>))
           .toList(),
@@ -795,6 +879,8 @@ class Rental {
       lateAmount: (json['lateAmount'] as int?) ?? 0,
       totalAmount: (json['totalAmount'] as int?) ?? 0,
       depositApplied: (json['depositApplied'] as int?) ?? 0,
+      depositAmount: (json['depositAmount'] as int?) ?? 0,
+      orderStatus: orderStatus,
       durationUnits: (json['durationUnits'] as int?) ?? 1,
       replacedFromRentalId: json['replacedFromRentalId'] as String?,
       notes: (json['notes'] as List<dynamic>? ?? const <dynamic>[])

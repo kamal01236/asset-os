@@ -252,6 +252,16 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 10) {
         await m.createTable(rentalNotes);
+        await m.addColumn(rentals, rentals.depositAmount);
+        await m.addColumn(rentals, rentals.orderStatus);
+        await customStatement('''
+          UPDATE rentals
+          SET deposit_amount = COALESCE(deposit_amount, 0),
+              order_status = CASE
+                WHEN returned_at IS NULL THEN 'open'
+                ELSE 'completed'
+              END
+        ''');
       }
     },
   );

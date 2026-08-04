@@ -518,7 +518,7 @@
   "deleteOrderKeptLabel": "रखने की राशि",
   "deleteOrderReturnedLabel": "वापस करने की राशि",
   "deleteOrderNoteLabel": "नोट (वैकल्पिक)",
-  "deleteOrderInvalidSettlement": "रखे + वापस का योग जमा शेष से अधिक नहीं हो सकता।",
+  "deleteOrderInvalidSettlement": "रखे + वापस का योग ऑर्डर जमा से अधिक नहीं हो सकता।",
   "deleteOrderBlockedPartial": "वस्तु वापस होने के बाद ऑर्डर नहीं हटाया जा सकता।",
   "deleteOrderFailed": "यह ऑर्डर हटाया नहीं जा सका।",
   "deleteOrderSuccessSnack": "ऑर्डर हटाया गया। जमा शेष {balance}।",
@@ -669,6 +669,8 @@
   "balanceAdvanceLabel": "अग्रिम",
   "balancePendingLabel": "लंबित",
   "balanceDueLabel": "देय",
+  "balanceCreditLabel": "जमा शेष",
+  "balanceNetLabel": "नेट",
   "balancesAsOfTodayHeading": "आज तक के शेष",
   "balanceOpenItemsCount": "{count} वस्तु बाहर",
   "@balanceOpenItemsCount": {
@@ -676,16 +678,34 @@
       "count": {"type": "int"}
     }
   },
-  "customerSubtitleWithBalances": "{phone} • {tier} • अग्रिम {advance} · लंबित {pending} · देय {due}",
+  "customerSubtitleWithBalances": "{phone} • {tier} • अग्रिम {advance} · लंबित {pending} · नेट {net}",
   "@customerSubtitleWithBalances": {
     "placeholders": {
       "phone": {"type": "String"},
       "tier": {"type": "String"},
       "advance": {"type": "String"},
       "pending": {"type": "String"},
-      "due": {"type": "String"}
+      "net": {"type": "String"}
     }
   },
+  "orderStatusOpen": "खुला",
+  "orderStatusCompleted": "पूर्ण",
+  "orderStatusCancelled": "रद्द",
+  "orderBillDepositLabel": "जमा {amount}",
+  "@orderBillDepositLabel": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "orderBillTotalLabel": "बिल {amount}",
+  "@orderBillTotalLabel": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "orderDepositLabel": "ऑर्डर जमा",
+  "customerOrdersHeading": "ऑर्डर",
+  "orderDepositSettlementExceeds": "रखी + लौटाई राशि ऑर्डर जमा से अधिक नहीं हो सकती।",
   "requiresUnitIdentityLabel": "यूनिट नाम/आईडी आवश्यक",
   "requiresUnitIdentitySubtitle": "मूल श्रेणी (जैसे उपन्यास) के लिए चालू। व्यक्तिगत वस्तुओं के लिए बंद जिनका एक कैटलॉग नाम साझा है।",
   "quantityLabel": "मात्रा",
@@ -754,8 +774,8 @@
       "amount": {"type": "String"}
     }
   },
-  "depositTopUpOptionalLabel": "जमा टॉप-अप (वैकल्पिक)",
-  "depositTopUpOptionalHint": "राशि रुपये में",
+  "depositTopUpOptionalLabel": "ऑर्डर टोकन / अग्रिम (वैकल्पिक)",
+  "depositTopUpOptionalHint": "इस ऑर्डर पर रखा जाएगा, रुपये में",
   "itemKindDefaultLabel": "डिफ़ॉल्ट ऑर्डर मोड",
   "itemKindRentalLabel": "किराया",
   "itemKindGeneralLabel": "सामान्य",

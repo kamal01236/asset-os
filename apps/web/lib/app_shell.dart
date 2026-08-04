@@ -286,13 +286,10 @@ class RentalsScreen extends ConsumerWidget {
                 qrCode: 'unknown',
               ),
             );
-            return EntityCard(
-              title: _rentalLinesLabel(rental),
-              subtitle:
-                  '${rentalPartyLabel(customer, rental)} · ${_rentalAmountSubtitle(l10n, rental)}',
-              leadingIcon: Icons.assignment_outlined,
-              status: rental.statusFor(now),
-              trailing: const Icon(Icons.chevron_right),
+            return OrderBillCard(
+              rental: rental,
+              partyLabel: rentalPartyLabel(customer, rental),
+              linesLabel: _rentalLinesLabel(rental),
               onTap: () => onOpenRental(rental),
             );
           },
@@ -620,7 +617,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                   tier,
                   formatMoney(balance.advancePaise),
                   formatMoney(balance.pendingPaise),
-                  formatMoney(balance.duePaise),
+                  formatMoney(balance.netPaise),
                 )
               : l10n.customerSubtitle(customer.phone, tier);
           return Padding(
@@ -922,7 +919,7 @@ class _RentalDetailScreenState extends ConsumerState<RentalDetailScreen> {
     final DateTime now = DateTime.now();
     final int lateShown = rental.lateAmountAsOf(now);
     final int totalShown = rental.totalAmountAsOf(now);
-    final List<RentalLine> openLines = rental.openLines;
+    final List<RentalLine> openLines = rental.openRentLines;
     final List<RentalLine> closedLines = rental.returnedLines;
     final Set<String> openIds =
         openLines.map((RentalLine l) => l.id).toSet();
@@ -933,7 +930,7 @@ class _RentalDetailScreenState extends ConsumerState<RentalDetailScreen> {
       appBar: AppBar(
         title: Text(rental.id),
         actions: <Widget>[
-          if (rental.isActive && closedLines.isEmpty)
+          if (rental.isActive && rental.returnedRentLines.isEmpty)
             TextButton(
               onPressed: () async {
                 final bool done = await _confirmAndCancelOrder(
@@ -960,6 +957,11 @@ class _RentalDetailScreenState extends ConsumerState<RentalDetailScreen> {
                 : l10n.phoneLabel(customer.phone),
             leadingIcon: Icons.person_outline,
             status: rental.statusFor(now),
+          ),
+          const SizedBox(height: 8),
+          OrderStatusPill(
+            status: rental.orderStatus,
+            urgency: rental.isActive ? rental.statusFor(now) : null,
           ),
           if (rental.replacedFromRentalId != null) ...<Widget>[
             const SizedBox(height: 8),
@@ -1066,7 +1068,9 @@ class _RentalDetailScreenState extends ConsumerState<RentalDetailScreen> {
                   Text(
                     rental.isOpenEnded
                         ? l10n.reviewOpenEndedLabel
-                        : l10n.reviewDueLabel(_date(rental.dueAt!)),
+                        : (rental.dueAt == null
+                            ? l10n.reviewOpenEndedLabel
+                            : l10n.reviewDueLabel(_date(rental.dueAt!))),
                   ),
                   if (rental.isOpenEnded && rental.isActive)
                     Text(l10n.accruedAmountHint),
@@ -1093,13 +1097,17 @@ class _RentalDetailScreenState extends ConsumerState<RentalDetailScreen> {
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  if (rental.isActive) ...<Widget>[
-                    const SizedBox(height: 6),
-                    Text(
-                      l10n.depositAvailableLabel(
-                        formatMoney(customer.depositBalance),
+                  const SizedBox(height: 6),
+                  Text(
+                    l10n.depositAvailableLabel(
+                      formatMoney(
+                        rental.isActive
+                            ? rental.depositRemaining
+                            : rental.depositAmount,
                       ),
                     ),
+                  ),
+                  if (rental.isActive) ...<Widget>[
                     Builder(
                       builder: (BuildContext context) {
                         final List<RentalLine> settleLines = selectedIds.isEmpty
@@ -1111,11 +1119,11 @@ class _RentalDetailScreenState extends ConsumerState<RentalDetailScreen> {
                         for (final RentalLine line in settleLines) {
                           previewTotal += line.totalAmountAsOf(rental.startedAt, rental.dueAt, now);
                         }
-                        final int willApply = customer.depositBalance < previewTotal
-                            ? customer.depositBalance
+                        final int willApply = rental.depositRemaining < previewTotal
+                            ? rental.depositRemaining
                             : previewTotal;
                         final int remainingDue = previewTotal - willApply;
-                        final int leftover = customer.depositBalance - willApply;
+                        final int leftover = rental.depositRemaining - willApply;
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
@@ -1261,15 +1269,13 @@ class _RentalDetailScreenState extends ConsumerState<RentalDetailScreen> {
                 label: Text(l10n.addOrderNoteAction),
               ),
             ),
-            if (rental.isActive) ...<Widget>[
+            if (rental.isActive && openLines.isNotEmpty) ...<Widget>[
               const SizedBox(height: 8),
               Row(
                 children: <Widget>[
                   Expanded(
                     child: OutlinedButton(
-                      onPressed: openLines.isEmpty
-                          ? null
-                          : () async {
+                      onPressed: () async {
                               final bool done = await _confirmAndReturnRental(
                                 context: context,
                                 ref: ref,
@@ -1728,8 +1734,6 @@ class CustomerDetailScreen extends ConsumerWidget {
     final AppLocalizations l10n = context.l10n;
     final AsyncValue<List<Customer>> customersAsync = ref.watch(customersProvider);
     final AsyncValue<List<Rental>> rentalsAsync = ref.watch(rentalsProvider);
-    final AsyncValue<List<DepositLedgerEntry>> ledgerAsync =
-        ref.watch(depositLedgerProvider(customerId));
 
     if (customersAsync.isLoading || rentalsAsync.isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -1740,8 +1744,6 @@ class CustomerDetailScreen extends ConsumerWidget {
     final Customer customer = customers.firstWhere((entry) => entry.id == customerId);
     final List<Rental> customerRentals =
         rentals.where((entry) => entry.customerId == customer.id).toList();
-    final List<DepositLedgerEntry> ledger =
-        (ledgerAsync.valueOrNull ?? const <DepositLedgerEntry>[]).take(10).toList();
     final CustomerBalanceAsOf balance =
         customerBalanceAsOf(customer, rentals, DateTime.now());
 
@@ -1796,61 +1798,11 @@ class CustomerDetailScreen extends ConsumerWidget {
                   const SizedBox(height: 6),
                   _balanceLabeledRow(
                     context,
-                    label: l10n.balanceDueLabel,
-                    amount: formatMoney(balance.duePaise),
-                    emphasize: balance.duePaise > 0,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 10),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(14),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text(
-                    l10n.depositBalanceLabel,
-                    style: Theme.of(context).textTheme.titleSmall,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    formatMoney(customer.depositBalance),
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: <Widget>[
-                      Expanded(
-                        child: FilledButton(
-                          onPressed: () => _showDepositAmountDialog(
-                            context: context,
-                            ref: ref,
-                            customer: customer,
-                            isTopUp: true,
-                          ),
-                          child: Text(l10n.depositAddAction),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: customer.depositBalance > 0
-                              ? () => _showDepositAmountDialog(
-                                    context: context,
-                                    ref: ref,
-                                    customer: customer,
-                                    isTopUp: false,
-                                  )
-                              : null,
-                          child: Text(l10n.depositRefundAction),
-                        ),
-                      ),
-                    ],
+                    label: balance.netPaise < 0
+                        ? l10n.balanceCreditLabel
+                        : l10n.balanceNetLabel,
+                    amount: formatMoney(balance.netPaise),
+                    emphasize: balance.netPaise != 0,
                   ),
                 ],
               ),
@@ -1886,38 +1838,7 @@ class CustomerDetailScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            l10n.depositLedgerHeading,
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 8),
-          if (ledger.isEmpty)
-            Text(l10n.depositLedgerEmpty)
-          else
-            ...ledger.map(
-              (DepositLedgerEntry entry) => Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Card(
-                  child: ListTile(
-                    title: Text(_depositLedgerTitle(l10n, entry)),
-                    subtitle: Text(
-                      <String>[
-                        l10n.depositLedgerBalanceAfter(
-                          formatMoney(entry.balanceAfter),
-                        ),
-                        if (entry.note != null && entry.note!.isNotEmpty)
-                          entry.note!,
-                        _date(entry.at),
-                      ].join(' · '),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          const SizedBox(height: 10),
-          Text(
-            l10n.activityTimelineHeading,
+            l10n.customerOrdersHeading,
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.w700,
             ),
@@ -1925,7 +1846,7 @@ class CustomerDetailScreen extends ConsumerWidget {
           const SizedBox(height: 8),
           if (customerRentals.isEmpty)
             Text(l10n.activityEmpty)
-          else ..._customerActivitySection(context, l10n, customerRentals),
+          else ..._customerOrdersSection(context, l10n, customerRentals),
         ],
       ),
       bottomNavigationBar: SafeArea(
@@ -1946,88 +1867,40 @@ class CustomerDetailScreen extends ConsumerWidget {
     );
   }
 
-  List<Widget> _customerActivitySection(
+  List<Widget> _customerOrdersSection(
     BuildContext context,
     AppLocalizations l10n,
     List<Rental> customerRentals,
   ) {
     final List<Rental> ordered = List<Rental>.from(customerRentals)
       ..sort((Rental a, Rental b) => b.startedAt.compareTo(a.startedAt));
-    final List<CustomerActivityEntry> activity =
-        buildCustomerActivity(customerRentals);
-    return <Widget>[
-      ...ordered.map((Rental rental) {
-        final RentalOrderStatusSummary summary =
-            RentalOrderStatusSummary.fromRental(rental);
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: EntityCard(
-            title: _rentalLinesLabel(rental),
-            subtitle: l10n.rentalOrderStatusChips(
-              summary.issued,
-              summary.pending,
-              summary.returned,
-            ),
-            leadingIcon: Icons.assignment_outlined,
-            status: rental.statusFor(DateTime.now()),
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (_) => RentalDetailScreen(rentalId: rental.id),
+    return ordered
+        .map(
+          (Rental rental) {
+            final RentalOrderStatusSummary summary =
+                RentalOrderStatusSummary.fromRental(rental);
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: OrderBillCard(
+                rental: rental,
+                partyLabel: _rentalLinesLabel(rental),
+                linesLabel: l10n.rentalOrderStatusChips(
+                  summary.issued,
+                  summary.pending,
+                  summary.returned,
                 ),
-              );
-            },
-          ),
-        );
-      }),
-      const SizedBox(height: 4),
-      if (activity.isEmpty)
-        Text(l10n.activityEmpty)
-      else
-        ...activity.map((CustomerActivityEntry entry) {
-          final String title = switch (entry.kind) {
-            CustomerActivityKind.issued => l10n.activityIssued(entry.subtitle),
-            CustomerActivityKind.returned =>
-              l10n.activityReturned(entry.subtitle),
-            CustomerActivityKind.event => entry.title,
-          };
-          final String? subtitle = entry.kind == CustomerActivityKind.event
-              ? entry.subtitle
-              : entry.rentalId;
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Card(
-              child: ListTile(
-                leading: Icon(
-                  switch (entry.kind) {
-                    CustomerActivityKind.issued => Icons.output_outlined,
-                    CustomerActivityKind.returned => Icons.input_outlined,
-                    CustomerActivityKind.event => Icons.history,
-                  },
-                ),
-                title: Text(title),
-                subtitle: Text(
-                  <String>[
-                    if (subtitle != null && subtitle.isNotEmpty) subtitle,
-                    _date(entry.at),
-                  ].join(' · '),
-                ),
-                onTap: entry.rentalId == null
-                    ? null
-                    : () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute<void>(
-                            builder: (_) => RentalDetailScreen(
-                              rentalId: entry.rentalId!,
-                            ),
-                          ),
-                        );
-                      },
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => RentalDetailScreen(rentalId: rental.id),
+                    ),
+                  );
+                },
               ),
-            ),
-          );
-        }),
-    ];
+            );
+          },
+        )
+        .toList();
   }
 }
 
@@ -2038,14 +1911,16 @@ class ReturnFlowScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final AppLocalizations l10n = context.l10n;
     final AsyncValue<List<Rental>> rentalsAsync = ref.watch(rentalsProvider);
-    final AsyncValue<List<Customer>> customersAsync = ref.watch(customersProvider);
     return rentalsAsync.when(
       loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (Object error, StackTrace _) => Scaffold(body: Center(child: Text('$error'))),
       data: (List<Rental> rentals) {
-        final List<Rental> active = rentals.where((item) => item.isActive).toList();
-        final List<Customer> customers =
-            customersAsync.valueOrNull ?? const <Customer>[];
+        final List<Rental> active = rentals
+            .where(
+              (Rental item) =>
+                  item.isActive && item.openRentLines.isNotEmpty,
+            )
+            .toList();
         return Scaffold(
           appBar: AppBar(title: Text(l10n.actionReturnItem)),
           body: Padding(
@@ -2061,23 +1936,14 @@ class ReturnFlowScreen extends ConsumerWidget {
                     itemBuilder: (BuildContext context, int index) {
                       final Rental rental = active[index];
                       final DateTime now = DateTime.now();
-                      final Customer customer = customers.firstWhere(
-                        (Customer c) => c.id == rental.customerId,
-                        orElse: () => Customer(
-                          id: rental.customerId,
-                          name: l10n.unknownCustomer,
-                          phone: '',
-                          isTrusted: false,
-                          qrCode: '',
-                        ),
-                      );
                       final int total = rental.totalAmountAsOf(now);
-                      final int willApply = customer.depositBalance < total
-                          ? customer.depositBalance
+                      final int willApply = rental.depositRemaining < total
+                          ? rental.depositRemaining
                           : total;
-                      final String openBit = rental.openLines.length < rental.lines.length
+                      final String openBit = rental.openRentLines.length <
+                              rental.lines.length
                           ? l10n.linesOpenCount(
-                              rental.openLines.length,
+                              rental.openRentLines.length,
                               rental.lines.length,
                             )
                           : '';
@@ -2092,7 +1958,7 @@ class ReturnFlowScreen extends ConsumerWidget {
                                 ),
                           if (rental.isOpenEnded) l10n.accruedAmountHint,
                           if (openBit.isNotEmpty) openBit,
-                          if (customer.depositBalance > 0)
+                          if (rental.depositRemaining > 0)
                             l10n.depositWillApplyLabel(formatMoney(willApply)),
                         ].join('\n'),
                         leadingIcon: Icons.assignment_return_outlined,
@@ -2699,32 +2565,6 @@ Future<void> _showAddOrderNoteSheet({
   }
 }
 
-String _rentalAmountSubtitle(AppLocalizations l10n, Rental rental) {
-  final DateTime now = DateTime.now();
-  final String amount = formatMoney(rental.totalAmountAsOf(now));
-  final String base = rental.isOpenEnded
-      ? l10n.rentalAmountOpenEnded(amount)
-      : l10n.rentalAmountSubtitle(_date(rental.dueAt!), amount);
-  if (!rental.isActive && rental.depositApplied > 0) {
-    return '$base · ${l10n.depositAppliedLabel(formatMoney(rental.depositApplied))}';
-  }
-  return base;
-}
-
-String _depositLedgerTitle(AppLocalizations l10n, DepositLedgerEntry entry) {
-  final String amount = formatMoney(entry.amount.abs());
-  switch (entry.type) {
-    case DepositLedgerType.topUp:
-      return l10n.depositLedgerTopUp(amount);
-    case DepositLedgerType.apply:
-      return l10n.depositLedgerApply(amount);
-    case DepositLedgerType.refund:
-      return l10n.depositLedgerRefund(amount);
-    case DepositLedgerType.adjust:
-      return l10n.depositLedgerAdjust(amount);
-  }
-}
-
 String _returnSettlementSnack(AppLocalizations l10n, RentalReturnResult result) {
   if (result.depositApplied <= 0) {
     return l10n.depositReturnSnackNoDeposit(formatMoney(result.totalAmount));
@@ -2752,11 +2592,11 @@ Future<bool> _confirmAndReturnRental({
   final DateTime now = DateTime.now();
   final List<RentalLine> targets;
   if (lineIds == null || lineIds.isEmpty) {
-    targets = rental.openLines;
+    targets = rental.openRentLines;
   } else {
     final Set<String> wanted = lineIds.toSet();
     targets =
-        rental.openLines.where((RentalLine l) => wanted.contains(l.id)).toList();
+        rental.openRentLines.where((RentalLine l) => wanted.contains(l.id)).toList();
   }
   if (targets.isEmpty) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -2784,11 +2624,11 @@ Future<bool> _confirmAndReturnRental({
           final int finalAmount = parsedFinal.clamp(0, computedTotal);
           final int discount =
               (computedTotal - finalAmount).clamp(0, computedTotal);
-          final int willApply = customer.depositBalance < finalAmount
-              ? customer.depositBalance
+          final int willApply = rental.depositRemaining < finalAmount
+              ? rental.depositRemaining
               : finalAmount;
           final int remainingDue = finalAmount - willApply;
-          final int leftover = customer.depositBalance - willApply;
+          final int leftover = rental.depositRemaining - willApply;
 
           return AlertDialog(
             title: Text(l10n.returnSettlementTitle),
@@ -2828,7 +2668,7 @@ Future<bool> _confirmAndReturnRental({
                   Text(l10n.returnDiscountLabel(formatMoney(discount))),
                   Text(
                     l10n.depositAvailableLabel(
-                      formatMoney(customer.depositBalance),
+                      formatMoney(rental.depositRemaining),
                     ),
                   ),
                   Text(l10n.depositWillApplyLabel(formatMoney(willApply))),
@@ -2935,7 +2775,7 @@ Future<bool> _confirmAndCancelOrder({
             children: <Widget>[
               Text(
                 l10n.depositAvailableLabel(
-                  formatMoney(customer.depositBalance),
+                  formatMoney(rental.depositRemaining),
                 ),
               ),
               const SizedBox(height: 8),
@@ -2999,7 +2839,7 @@ Future<bool> _confirmAndCancelOrder({
     );
     return false;
   }
-  if (keptPaise + returnedPaise > customer.depositBalance) {
+  if (keptPaise + returnedPaise > rental.depositRemaining) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(l10n.deleteOrderInvalidSettlement)),
     );
@@ -3055,116 +2895,5 @@ Future<bool> _confirmAndCancelOrder({
       );
     }
     return false;
-  }
-}
-
-Future<void> _showDepositAmountDialog({
-  required BuildContext context,
-  required WidgetRef ref,
-  required Customer customer,
-  required bool isTopUp,
-}) async {
-  final AppLocalizations l10n = context.l10n;
-  final TextEditingController amountController = TextEditingController();
-  final TextEditingController noteController = TextEditingController();
-
-  final bool? confirmed = await showDialog<bool>(
-    context: context,
-    builder: (BuildContext dialogContext) {
-      return AlertDialog(
-        title: Text(isTopUp ? l10n.depositTopUpTitle : l10n.depositRefundTitle),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            TextField(
-              controller: amountController,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              autofocus: true,
-              decoration: InputDecoration(
-                labelText: l10n.depositAmountLabel,
-                hintText: l10n.depositAmountHint,
-              ),
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: noteController,
-              decoration: InputDecoration(
-                labelText: l10n.depositNoteLabel,
-                hintText: l10n.depositNoteHint,
-              ),
-            ),
-          ],
-        ),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: Text(
-              isTopUp ? l10n.depositConfirmTopUp : l10n.depositConfirmRefund,
-            ),
-          ),
-        ],
-      );
-    },
-  );
-
-  final int amountPaise = parseRupeesToPaise(amountController.text);
-  amountController.dispose();
-  final String note = noteController.text.trim();
-  noteController.dispose();
-
-  if (confirmed != true || !context.mounted) {
-    return;
-  }
-  if (amountPaise <= 0) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.depositInvalidAmount)),
-    );
-    return;
-  }
-  if (!isTopUp && amountPaise > customer.depositBalance) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.depositRefundExceeds)),
-    );
-    return;
-  }
-
-  try {
-    final Customer updated = isTopUp
-        ? await ref.read(repositoryProvider).topUpDeposit(
-              customer.id,
-              amountPaise,
-              note: note.isEmpty ? null : note,
-            )
-        : await ref.read(repositoryProvider).refundDeposit(
-              customer.id,
-              amountPaise,
-              note: note.isEmpty ? null : note,
-            );
-    if (!context.mounted) {
-      return;
-    }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          isTopUp
-              ? l10n.depositTopUpSuccess(formatMoney(updated.depositBalance))
-              : l10n.depositRefundSuccess(formatMoney(updated.depositBalance)),
-        ),
-      ),
-    );
-  } on ArgumentError catch (error) {
-    if (!context.mounted) {
-      return;
-    }
-    final String message = error.message == 'Refund cannot exceed deposit balance'
-        ? l10n.depositRefundExceeds
-        : '$error';
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
   }
 }

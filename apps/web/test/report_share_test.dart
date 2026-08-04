@@ -100,6 +100,7 @@ void main() {
       startedAt: now.subtract(const Duration(days: 10)),
       dueAt: now.subtract(const Duration(days: 8)),
       returnedAt: now.subtract(const Duration(days: 7)),
+      orderStatus: OrderStatus.completed,
       timeline: const <RentalEvent>[],
       qrCode: 'rental:3',
     ),

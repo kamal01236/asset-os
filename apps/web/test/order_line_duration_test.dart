@@ -75,7 +75,7 @@ void main() {
       );
     });
 
-    test('depositTopUpPaise credits wallet in same create', () async {
+    test('depositTopUpPaise sets order deposit; wallet unchanged', () async {
       final LocalRepository repository = await bootRepo();
       final Customer customer =
           await ensureCustomer(repository);
@@ -105,10 +105,9 @@ void main() {
       final Customer updated =
           (await repository.listCustomers())
               .firstWhere((Customer c) => c.id == customer.id);
-      expect(updated.depositBalance, 2500);
-      final List<DepositLedgerEntry> ledger =
-          await repository.listDepositLedger(updated.id);
-      expect(ledger.any((DepositLedgerEntry e) => e.amount == 2500), isTrue);
+      expect(updated.depositBalance, 0);
+      final Rental created = (await repository.listRentals()).first;
+      expect(created.depositAmount, 2500);
     });
   });
 }

@@ -758,8 +758,6 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
     AppLocalizations l10n,
     List<InventoryItem> availableItems,
   ) {
-    final int depositBalance =
-        (_noPhone ? 0 : (_resolvedCustomer?.depositBalance ?? 0));
     return <Widget>[
       Text(
         l10n.orderTotalLabel(formatMoney(_orderTotal(availableItems))),
@@ -840,12 +838,7 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
         const SizedBox(height: 8),
         EntityCard(
           title: _resolvedCustomer!.name,
-          subtitle: _resolvedCustomer!.depositBalance > 0
-              ? l10n.existingCustomerWithDeposit(
-                  _resolvedCustomer!.phone,
-                  formatMoney(_resolvedCustomer!.depositBalance),
-                )
-              : l10n.existingCustomerSubtitle(_resolvedCustomer!.phone),
+          subtitle: l10n.existingCustomerSubtitle(_resolvedCustomer!.phone),
           leadingIcon: Icons.verified_user_outlined,
           status: AssetStatus.available,
         ),
@@ -860,7 +853,10 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
         ),
       ],
       const SizedBox(height: 12),
-      Text(l10n.depositBalanceAmount(formatMoney(depositBalance))),
+      Text(
+        l10n.orderDepositLabel,
+        style: Theme.of(context).textTheme.titleSmall,
+      ),
       const SizedBox(height: 8),
       TextField(
         controller: _depositTopUpController,
@@ -888,8 +884,6 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
       customerLabel =
           _resolvedCustomer?.name ?? _nameController.text.trim();
     }
-    final int depositBalance =
-        (_noPhone ? 0 : (_resolvedCustomer?.depositBalance ?? 0));
 
     return <Widget>[
       if (_skipCustomerStep) ...<Widget>[
@@ -920,7 +914,10 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
       ),
       if (_skipCustomerStep) ...<Widget>[
         const SizedBox(height: 8),
-        Text(l10n.depositBalanceAmount(formatMoney(depositBalance))),
+        Text(
+          l10n.orderDepositLabel,
+          style: Theme.of(context).textTheme.titleSmall,
+        ),
         const SizedBox(height: 8),
         TextField(
           controller: _depositTopUpController,

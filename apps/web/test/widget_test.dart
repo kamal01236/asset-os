@@ -187,7 +187,8 @@ void main() {
 
     await tester.tap(find.text('Orders'));
     await pumpFrames(tester);
-    expect(find.text('Drill Kit · Workshop set A (DRL-001)'), findsOneWidget);
+    expect(find.text('REN-3001'), findsOneWidget);
+    expect(find.textContaining('Drill Kit'), findsOneWidget);
 
     await tester.tap(find.text('Inventory'));
     await pumpFrames(tester);

@@ -108,7 +108,6 @@ void main() {
       final LocalRepository repository = await bootRepo();
       final Customer customer =
           await ensureCustomer(repository);
-      await repository.topUpDeposit(customer.id, 1500);
 
       await repository.addInventory(
         name: 'Deposit Partial',
@@ -134,6 +133,7 @@ void main() {
             shortCode: 'DP-B',
           ),
         ],
+        depositTopUpPaise: 1500,
       );
       final Rental rental = (await repository.listRentals()).first;
       final String lineA = rental.openLines.first.id;
@@ -150,12 +150,6 @@ void main() {
       expect(second.amountDue, 500);
       expect(second.depositBalanceAfter, 0);
       expect(second.rentalClosed, isTrue);
-
-      final List<DepositLedgerEntry> applyEntries =
-          (await repository.listDepositLedger(customer.id))
-              .where((DepositLedgerEntry e) => e.type == DepositLedgerType.apply)
-              .toList();
-      expect(applyEntries, hasLength(2));
     });
 
     test('returnRental returns all open lines', () async {
@@ -248,7 +242,6 @@ void main() {
       final LocalRepository repository = await bootRepo();
       final Customer customer =
           await ensureCustomer(repository);
-      await repository.topUpDeposit(customer.id, 10000);
 
       await repository.addInventory(
         name: 'Discount Kit',
@@ -274,6 +267,7 @@ void main() {
             shortCode: 'DK-B',
           ),
         ],
+        depositTopUpPaise: 10000,
       );
       final Rental rental = (await repository.listRentals()).first;
       final List<String> lineIds =
@@ -309,7 +303,6 @@ void main() {
       final LocalRepository repository = await bootRepo();
       final Customer customer =
           await ensureCustomer(repository);
-      await repository.topUpDeposit(customer.id, 10000);
 
       await repository.addInventory(
         name: 'Cancel Kit',
@@ -335,6 +328,7 @@ void main() {
             shortCode: 'CK-2',
           ),
         ],
+        depositTopUpPaise: 10000,
       );
       final Rental rental = (await repository.listRentals()).first;
       expect(
@@ -358,6 +352,7 @@ void main() {
       final Rental closed = (await repository.listRentals())
           .firstWhere((Rental r) => r.id == rental.id);
       expect(closed.isActive, isFalse);
+      expect(closed.orderStatus, OrderStatus.cancelled);
       expect(closed.totalAmount, 0);
       expect(closed.openLines, isEmpty);
       expect(closed.timeline.any((RentalEvent e) => e.title == 'Order cancelled'),
@@ -370,18 +365,7 @@ void main() {
       final Customer after =
           (await repository.listCustomers())
               .firstWhere((Customer c) => c.id == customer.id);
-      expect(after.depositBalance, 5000);
-
-      final List<DepositLedgerEntry> ledger =
-          await repository.listDepositLedger(customer.id);
-      expect(
-        ledger.any((DepositLedgerEntry e) => e.type == DepositLedgerType.refund),
-        isTrue,
-      );
-      expect(
-        ledger.any((DepositLedgerEntry e) => e.type == DepositLedgerType.adjust),
-        isTrue,
-      );
+      expect(after.depositBalance, 0);
     });
 
     test('blocked after partial return', () async {

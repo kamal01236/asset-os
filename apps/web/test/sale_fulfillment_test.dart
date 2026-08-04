@@ -57,6 +57,7 @@ void main() {
 
       final Rental order = (await repository.listRentals()).single;
       expect(order.isActive, isFalse);
+      expect(order.orderStatus, OrderStatus.completed);
       expect(order.returnedAt, isNotNull);
       expect(order.baseAmount, 25000);
       expect(order.lines.single.fulfillment, LineFulfillment.sell);

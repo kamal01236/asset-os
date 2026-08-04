@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../l10n/l10n_ext.dart';
 import '../models/entities.dart';
+import '../pricing/rental_pricing.dart';
 import '../theme/app_theme.dart';
 
 class StatusPill extends StatelessWidget {
@@ -23,6 +24,45 @@ class StatusPill extends StatelessWidget {
       ),
       child: Text(
         localizedStatusLabel(context.l10n, status),
+        style: Theme.of(context).textTheme.labelMedium?.copyWith(
+          color: color,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+}
+
+class OrderStatusPill extends StatelessWidget {
+  const OrderStatusPill({
+    required this.status,
+    this.urgency,
+    super.key,
+  });
+
+  final OrderStatus status;
+  /// When open, optional due-urgency color/label from [AssetStatus].
+  final AssetStatus? urgency;
+
+  @override
+  Widget build(BuildContext context) {
+    final AssetStatus display = status == OrderStatus.open && urgency != null
+        ? urgency!
+        : status.billAssetStatus;
+    final Color color = AppTheme.colorForStatus(display);
+    final String label = status == OrderStatus.open &&
+            urgency != null &&
+            (urgency == AssetStatus.dueToday || urgency == AssetStatus.overdue)
+        ? localizedStatusLabel(context.l10n, urgency!)
+        : localizedOrderStatus(context.l10n, status);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        label,
         style: Theme.of(context).textTheme.labelMedium?.copyWith(
           color: color,
           fontWeight: FontWeight.w700,
@@ -91,6 +131,82 @@ class EntityCard extends StatelessWidget {
                 ),
               ),
               if (trailing case final Widget trailingWidget) trailingWidget,
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Compact bill-style card for an order on Lists / Customer detail.
+class OrderBillCard extends StatelessWidget {
+  const OrderBillCard({
+    required this.rental,
+    required this.partyLabel,
+    required this.linesLabel,
+    this.onTap,
+    super.key,
+  });
+
+  final Rental rental;
+  final String partyLabel;
+  final String linesLabel;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final AppLocalizations l10n = context.l10n;
+    final DateTime now = DateTime.now();
+    final int billTotal = rental.billChargesAsOf(now);
+    final String subtitle = <String>[
+      partyLabel,
+      linesLabel,
+      if (rental.depositAmount > 0)
+        l10n.orderBillDepositLabel(formatMoney(rental.depositAmount)),
+      l10n.orderBillTotalLabel(formatMoney(billTotal)),
+    ].join(' · ');
+
+    return Card(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              CircleAvatar(
+                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                child: const Icon(Icons.receipt_long_outlined),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      rental.id,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    OrderStatusPill(
+                      status: rental.orderStatus,
+                      urgency: rental.isActive ? rental.statusFor(now) : null,
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right),
             ],
           ),
         ),

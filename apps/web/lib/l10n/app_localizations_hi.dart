@@ -893,7 +893,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get deleteOrderInvalidSettlement =>
-      'रखे + वापस का योग जमा शेष से अधिक नहीं हो सकता।';
+      'रखे + वापस का योग ऑर्डर जमा से अधिक नहीं हो सकता।';
 
   @override
   String get deleteOrderBlockedPartial =>
@@ -1151,6 +1151,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get balanceDueLabel => 'देय';
 
   @override
+  String get balanceCreditLabel => 'जमा शेष';
+
+  @override
+  String get balanceNetLabel => 'नेट';
+
+  @override
   String get balancesAsOfTodayHeading => 'आज तक के शेष';
 
   @override
@@ -1164,10 +1170,39 @@ class AppLocalizationsHi extends AppLocalizations {
     String tier,
     String advance,
     String pending,
-    String due,
+    String net,
   ) {
-    return '$phone • $tier • अग्रिम $advance · लंबित $pending · देय $due';
+    return '$phone • $tier • अग्रिम $advance · लंबित $pending · नेट $net';
   }
+
+  @override
+  String get orderStatusOpen => 'खुला';
+
+  @override
+  String get orderStatusCompleted => 'पूर्ण';
+
+  @override
+  String get orderStatusCancelled => 'रद्द';
+
+  @override
+  String orderBillDepositLabel(String amount) {
+    return 'जमा $amount';
+  }
+
+  @override
+  String orderBillTotalLabel(String amount) {
+    return 'बिल $amount';
+  }
+
+  @override
+  String get orderDepositLabel => 'ऑर्डर जमा';
+
+  @override
+  String get customerOrdersHeading => 'ऑर्डर';
+
+  @override
+  String get orderDepositSettlementExceeds =>
+      'रखी + लौटाई राशि ऑर्डर जमा से अधिक नहीं हो सकती।';
 
   @override
   String get requiresUnitIdentityLabel => 'यूनिट नाम/आईडी आवश्यक';
@@ -1250,10 +1285,10 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String get depositTopUpOptionalLabel => 'जमा टॉप-अप (वैकल्पिक)';
+  String get depositTopUpOptionalLabel => 'ऑर्डर टोकन / अग्रिम (वैकल्पिक)';
 
   @override
-  String get depositTopUpOptionalHint => 'राशि रुपये में';
+  String get depositTopUpOptionalHint => 'इस ऑर्डर पर रखा जाएगा, रुपये में';
 
   @override
   String get itemKindDefaultLabel => 'डिफ़ॉल्ट ऑर्डर मोड';

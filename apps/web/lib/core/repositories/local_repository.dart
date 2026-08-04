@@ -299,33 +299,6 @@ class LocalRepository {
             : null;
 
     await _db.transaction(() async {
-      if (depositTopUpPaise > 0) {
-        final CustomerRow? depositRow = await (_db.select(_db.customers)
-              ..where((t) => t.id.equals(customer.id)))
-            .getSingleOrNull();
-        if (depositRow == null) {
-          throw ArgumentError('Customer not found: ${customer.id}');
-        }
-        final int balanceAfter =
-            depositRow.depositBalance + depositTopUpPaise;
-        await (_db.update(_db.customers)
-              ..where((t) => t.id.equals(customer.id)))
-            .write(
-          CustomersCompanion(depositBalance: Value<int>(balanceAfter)),
-        );
-        await _db.into(_db.depositLedger).insert(
-          DepositLedgerCompanion.insert(
-            id: '${nextId('DEP')}-topup',
-            customerId: customer.id,
-            type: DepositLedgerType.topUp.storageValue,
-            amount: depositTopUpPaise,
-            balanceAfter: balanceAfter,
-            note: const Value<String?>('Top-up with order'),
-            at: now,
-          ),
-        );
-      }
-
       for (final RentalLineInput line in normalized) {
         await _assertShortCodeAvailable(line.shortCode);
       }
@@ -433,6 +406,8 @@ class LocalRepository {
       }
 
       final bool allSold = lineIsSell.every((bool v) => v);
+      final OrderStatus orderStatus =
+          allSold ? OrderStatus.completed : OrderStatus.open;
       int snapshotIndex = 0;
       for (var i = 0; i < lineOpenEndedFlags.length; i++) {
         if (lineIsSell[i]) {
@@ -474,6 +449,8 @@ class LocalRepository {
           baseAmount: Value<int>(baseAmount),
           lateAmount: const Value<int>(0),
           totalAmount: Value<int>(baseAmount),
+          depositAmount: Value<int>(depositTopUpPaise),
+          orderStatus: Value<String>(orderStatus.storageValue),
           durationUnits: Value<int>(storedDurationUnits),
           replacedFromRentalId: Value<String?>(replacedFrom),
         ),
@@ -600,7 +577,7 @@ class LocalRepository {
       return null;
     }
     final List<String> openIds =
-        rental.openLines.map((RentalLine l) => l.id).toList();
+        rental.openRentLines.map((RentalLine l) => l.id).toList();
     if (openIds.isEmpty) {
       return null;
     }
@@ -633,7 +610,8 @@ class LocalRepository {
       final RentalRow? rental = await (_db.select(_db.rentals)
             ..where((t) => t.id.equals(rentalId)))
           .getSingleOrNull();
-      if (rental == null || rental.returnedAt != null) {
+      if (rental == null ||
+          OrderStatus.parse(rental.orderStatus) != OrderStatus.open) {
         return null;
       }
 
@@ -643,17 +621,17 @@ class LocalRepository {
       final List<RentalItemRow> toReturn = links
           .where(
             (RentalItemRow link) =>
-                wanted.contains(link.id) && link.returnedAt == null,
+                wanted.contains(link.id) &&
+                link.returnedAt == null &&
+                LineFulfillment.parse(link.fulfillment) != LineFulfillment.sell,
           )
           .toList();
       if (toReturn.isEmpty) {
         return null;
       }
 
-      CustomerRow? customer = await (_db.select(_db.customers)
-            ..where((t) => t.id.equals(rental.customerId)))
-          .getSingleOrNull();
-      int depositBalance = customer?.depositBalance ?? 0;
+      int depositRemaining =
+          (rental.depositAmount - rental.depositApplied).clamp(0, 1 << 30);
 
       final List<({RentalItemRow link, InventoryItemRow? item, int base, int late})>
           computed =
@@ -711,8 +689,8 @@ class LocalRepository {
           chargedTotal: lineCharged,
         );
         final int lineDeposit =
-            depositBalance < lineCharged ? depositBalance : lineCharged;
-        depositBalance -= lineDeposit;
+            depositRemaining < lineCharged ? depositRemaining : lineCharged;
+        depositRemaining -= lineDeposit;
         batchTotal += lineCharged;
         batchDeposit += lineDeposit;
         returnedIds.add(link.id);
@@ -729,26 +707,6 @@ class LocalRepository {
 
         if (item != null) {
           stockBump[item.id] = (stockBump[item.id] ?? 0) + 1;
-        }
-
-        if (customer != null && lineDeposit > 0) {
-          await (_db.update(_db.customers)
-                ..where((t) => t.id.equals(customer.id)))
-              .write(
-            CustomersCompanion(depositBalance: Value<int>(depositBalance)),
-          );
-          await _db.into(_db.depositLedger).insert(
-            DepositLedgerCompanion.insert(
-              id: '${nextId('DEP')}-${link.id}',
-              customerId: customer.id,
-              rentalId: Value<String?>(rentalId),
-              type: DepositLedgerType.apply.storageValue,
-              amount: -lineDeposit,
-              balanceAfter: depositBalance,
-              note: Value<String?>('Applied on return of ${link.shortCode}'),
-              at: now,
-            ),
-          );
         }
       }
 
@@ -773,8 +731,11 @@ class LocalRepository {
       final List<RentalItemRow> refreshed = await (_db.select(_db.rentalItems)
             ..where((t) => t.rentalId.equals(rentalId)))
           .get();
-      final bool allReturned =
-          refreshed.every((RentalItemRow l) => l.returnedAt != null);
+      final bool noOpenRent = refreshed.every(
+        (RentalItemRow l) =>
+            l.returnedAt != null ||
+            LineFulfillment.parse(l.fulfillment) == LineFulfillment.sell,
+      );
 
       int parentBase = 0;
       int parentLate = 0;
@@ -784,7 +745,8 @@ class LocalRepository {
         parentBase += link.baseAmount;
         parentLate += link.lateAmount;
         parentDeposit += link.depositApplied;
-        if (link.returnedAt == null) {
+        if (link.returnedAt == null &&
+            LineFulfillment.parse(link.fulfillment) != LineFulfillment.sell) {
           final InventoryItemRow? item = await (_db.select(_db.inventoryItems)
                 ..where((t) => t.id.equals(link.itemId)))
               .getSingleOrNull();
@@ -792,22 +754,25 @@ class LocalRepository {
         }
       }
       final int parentTotal = parentBase + parentLate;
+      final OrderStatus nextStatus =
+          noOpenRent ? OrderStatus.completed : OrderStatus.open;
 
       await (_db.update(_db.rentals)..where((t) => t.id.equals(rentalId))).write(
         RentalsCompanion(
-          returnedAt: Value<DateTime?>(allReturned ? now : null),
+          returnedAt: Value<DateTime?>(noOpenRent ? now : null),
+          orderStatus: Value<String>(nextStatus.storageValue),
           baseAmount: Value<int>(parentBase),
           lateAmount: Value<int>(parentLate),
           totalAmount: Value<int>(parentTotal),
           depositApplied: Value<int>(parentDeposit),
           lateFeePerDay: Value<int>(
-            allReturned ? rental.lateFeePerDay : openLateFeePerDay,
+            noOpenRent ? rental.lateFeePerDay : openLateFeePerDay,
           ),
         ),
       );
 
       final StringBuffer subtitle = StringBuffer(
-        allReturned
+        noOpenRent
             ? (parentLate > 0
                   ? 'All lines returned. Late fee applied.'
                   : 'All lines returned by staff.')
@@ -823,7 +788,7 @@ class LocalRepository {
       await _db.into(_db.rentalEvents).insert(
         RentalEventsCompanion.insert(
           rentalId: rentalId,
-          title: allReturned ? 'Returned' : 'Partial return',
+          title: noOpenRent ? 'Returned' : 'Partial return',
           subtitle: subtitle.toString(),
           at: now,
         ),
@@ -833,9 +798,10 @@ class LocalRepository {
         rentalId: rentalId,
         totalAmount: batchTotal,
         depositApplied: batchDeposit,
-        depositBalanceAfter: depositBalance,
+        depositBalanceAfter:
+            (rental.depositAmount - parentDeposit).clamp(0, rental.depositAmount),
         returnedLineIds: returnedIds,
-        rentalClosed: allReturned,
+        rentalClosed: noOpenRent,
       );
     });
   }
@@ -863,31 +829,37 @@ class LocalRepository {
       final RentalRow? rental = await (_db.select(_db.rentals)
             ..where((t) => t.id.equals(rentalId)))
           .getSingleOrNull();
-      if (rental == null || rental.returnedAt != null) {
+      if (rental == null ||
+          OrderStatus.parse(rental.orderStatus) != OrderStatus.open) {
         return null;
       }
 
       final List<RentalItemRow> links = await (_db.select(_db.rentalItems)
             ..where((t) => t.rentalId.equals(rentalId)))
           .get();
-      if (links.any((RentalItemRow l) => l.returnedAt != null)) {
+      if (links.any(
+        (RentalItemRow l) =>
+            l.returnedAt != null &&
+            LineFulfillment.parse(l.fulfillment) != LineFulfillment.sell,
+      )) {
         throw StateError('Cannot delete order after partial return');
       }
       if (links.isEmpty) {
         return null;
       }
 
-      final CustomerRow? customer = await (_db.select(_db.customers)
-            ..where((t) => t.id.equals(rental.customerId)))
-          .getSingleOrNull();
-      final int depositBalance = customer?.depositBalance ?? 0;
+      final int depositRemaining =
+          (rental.depositAmount - rental.depositApplied).clamp(0, 1 << 30);
       final int settlement = amountKeptPaise + amountReturnedPaise;
-      if (settlement > depositBalance) {
-        throw ArgumentError('Settlement exceeds deposit balance');
+      if (settlement > depositRemaining) {
+        throw ArgumentError('Settlement exceeds order deposit');
       }
 
       final Map<String, int> stockBump = <String, int>{};
       for (final RentalItemRow link in links) {
+        if (link.returnedAt != null) {
+          continue;
+        }
         await (_db.update(_db.rentalItems)..where((t) => t.id.equals(link.id)))
             .write(
           RentalItemsCompanion(
@@ -921,60 +893,13 @@ class LocalRepository {
       await (_db.update(_db.rentals)..where((t) => t.id.equals(rentalId))).write(
         RentalsCompanion(
           returnedAt: Value<DateTime?>(now),
+          orderStatus: Value<String>(OrderStatus.cancelled.storageValue),
           baseAmount: const Value<int>(0),
           lateAmount: const Value<int>(0),
           totalAmount: const Value<int>(0),
-          depositApplied: const Value<int>(0),
+          depositApplied: Value<int>(rental.depositApplied + settlement),
         ),
       );
-
-      int balanceAfter = depositBalance;
-      if (customer != null && amountReturnedPaise > 0) {
-        balanceAfter -= amountReturnedPaise;
-        await (_db.update(_db.customers)..where((t) => t.id.equals(customer.id)))
-            .write(
-          CustomersCompanion(depositBalance: Value<int>(balanceAfter)),
-        );
-        await _db.into(_db.depositLedger).insert(
-          DepositLedgerCompanion.insert(
-            id: '${nextId('DEP')}-cancel-refund',
-            customerId: customer.id,
-            rentalId: Value<String?>(rentalId),
-            type: DepositLedgerType.refund.storageValue,
-            amount: -amountReturnedPaise,
-            balanceAfter: balanceAfter,
-            note: Value<String?>(
-              trimmedNote == null || trimmedNote.isEmpty
-                  ? 'Deposit returned on order cancel'
-                  : trimmedNote,
-            ),
-            at: now,
-          ),
-        );
-      }
-      if (customer != null && amountKeptPaise > 0) {
-        balanceAfter -= amountKeptPaise;
-        await (_db.update(_db.customers)..where((t) => t.id.equals(customer.id)))
-            .write(
-          CustomersCompanion(depositBalance: Value<int>(balanceAfter)),
-        );
-        await _db.into(_db.depositLedger).insert(
-          DepositLedgerCompanion.insert(
-            id: '${nextId('DEP')}-cancel-keep',
-            customerId: customer.id,
-            rentalId: Value<String?>(rentalId),
-            type: DepositLedgerType.adjust.storageValue,
-            amount: -amountKeptPaise,
-            balanceAfter: balanceAfter,
-            note: Value<String?>(
-              trimmedNote == null || trimmedNote.isEmpty
-                  ? 'Deposit kept on order cancel'
-                  : trimmedNote,
-            ),
-            at: now,
-          ),
-        );
-      }
 
       final StringBuffer subtitle = StringBuffer(
         'Kept ${formatMoney(amountKeptPaise)}; '
@@ -997,7 +922,7 @@ class LocalRepository {
         rentalId: rentalId,
         amountKeptPaise: amountKeptPaise,
         amountReturnedPaise: amountReturnedPaise,
-        depositBalanceAfter: balanceAfter,
+        depositBalanceAfter: depositRemaining - settlement,
       );
     });
   }
@@ -1658,6 +1583,8 @@ class LocalRepository {
             lateAmount: Value<int>(rental.lateAmount),
             totalAmount: Value<int>(rental.totalAmount),
             depositApplied: Value<int>(rental.depositApplied),
+            depositAmount: Value<int>(rental.depositAmount),
+            orderStatus: Value<String>(rental.orderStatus.storageValue),
             durationUnits: Value<int>(rental.durationUnits),
             replacedFromRentalId: Value<String?>(rental.replacedFromRentalId),
           ),
@@ -1849,6 +1776,8 @@ class LocalRepository {
       lateAmount: row.lateAmount,
       totalAmount: row.totalAmount,
       depositApplied: row.depositApplied,
+      depositAmount: row.depositAmount,
+      orderStatus: OrderStatus.parse(row.orderStatus),
       durationUnits: row.durationUnits,
       replacedFromRentalId: row.replacedFromRentalId,
       timeline: events
@@ -2019,6 +1948,7 @@ AppDataSnapshot buildDemoSnapshot({DateTime? now}) {
       ],
       qrCode: 'rental:3002',
       returnedAt: clock.subtract(const Duration(days: 1)),
+      orderStatus: OrderStatus.completed,
     ),
   ];
 

@@ -1631,7 +1631,7 @@ abstract class AppLocalizations {
   /// No description provided for @deleteOrderInvalidSettlement.
   ///
   /// In en, this message translates to:
-  /// **'Kept + returned cannot exceed deposit balance.'**
+  /// **'Kept + returned cannot exceed order deposit.'**
   String get deleteOrderInvalidSettlement;
 
   /// No description provided for @deleteOrderBlockedPartial.
@@ -2066,6 +2066,18 @@ abstract class AppLocalizations {
   /// **'Due'**
   String get balanceDueLabel;
 
+  /// No description provided for @balanceCreditLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit'**
+  String get balanceCreditLabel;
+
+  /// No description provided for @balanceNetLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Net'**
+  String get balanceNetLabel;
+
   /// No description provided for @balancesAsOfTodayHeading.
   ///
   /// In en, this message translates to:
@@ -2081,14 +2093,62 @@ abstract class AppLocalizations {
   /// No description provided for @customerSubtitleWithBalances.
   ///
   /// In en, this message translates to:
-  /// **'{phone} • {tier} • Advance {advance} · Pending {pending} · Due {due}'**
+  /// **'{phone} • {tier} • Advance {advance} · Pending {pending} · Net {net}'**
   String customerSubtitleWithBalances(
     String phone,
     String tier,
     String advance,
     String pending,
-    String due,
+    String net,
   );
+
+  /// No description provided for @orderStatusOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get orderStatusOpen;
+
+  /// No description provided for @orderStatusCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get orderStatusCompleted;
+
+  /// No description provided for @orderStatusCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get orderStatusCancelled;
+
+  /// No description provided for @orderBillDepositLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Deposit {amount}'**
+  String orderBillDepositLabel(String amount);
+
+  /// No description provided for @orderBillTotalLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Bill {amount}'**
+  String orderBillTotalLabel(String amount);
+
+  /// No description provided for @orderDepositLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Order deposit'**
+  String get orderDepositLabel;
+
+  /// No description provided for @customerOrdersHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Orders'**
+  String get customerOrdersHeading;
+
+  /// No description provided for @orderDepositSettlementExceeds.
+  ///
+  /// In en, this message translates to:
+  /// **'Kept + returned cannot exceed order deposit.'**
+  String get orderDepositSettlementExceeds;
 
   /// No description provided for @requiresUnitIdentityLabel.
   ///
@@ -2213,13 +2273,13 @@ abstract class AppLocalizations {
   /// No description provided for @depositTopUpOptionalLabel.
   ///
   /// In en, this message translates to:
-  /// **'Deposit top-up (optional)'**
+  /// **'Order token / advance (optional)'**
   String get depositTopUpOptionalLabel;
 
   /// No description provided for @depositTopUpOptionalHint.
   ///
   /// In en, this message translates to:
-  /// **'Amount in rupees'**
+  /// **'Held on this order, in rupees'**
   String get depositTopUpOptionalHint;
 
   /// No description provided for @itemKindDefaultLabel.

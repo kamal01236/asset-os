@@ -65,8 +65,12 @@ class Rentals extends Table {
   IntColumn get baseAmount => integer().withDefault(const Constant(0))();
   IntColumn get lateAmount => integer().withDefault(const Constant(0))();
   IntColumn get totalAmount => integer().withDefault(const Constant(0))();
-  /// Deposit applied from customer wallet at return (paise).
+  /// Deposit applied from order deposit at return (paise).
   IntColumn get depositApplied => integer().withDefault(const Constant(0))();
+  /// Token/advance held on this order (paise). Original amount; applied tracked separately.
+  IntColumn get depositAmount => integer().withDefault(const Constant(0))();
+  /// `open` | `completed` | `cancelled`
+  TextColumn get orderStatus => text().withDefault(const Constant('open'))();
   /// Chosen duration (e.g. 1 week → 1; fixed due-days still stored here).
   IntColumn get durationUnits => integer().withDefault(const Constant(1))();
   /// Set when this rental was opened as a replacement for a line on another rental.

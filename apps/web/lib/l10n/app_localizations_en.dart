@@ -891,7 +891,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deleteOrderInvalidSettlement =>
-      'Kept + returned cannot exceed deposit balance.';
+      'Kept + returned cannot exceed order deposit.';
 
   @override
   String get deleteOrderBlockedPartial =>
@@ -1149,6 +1149,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get balanceDueLabel => 'Due';
 
   @override
+  String get balanceCreditLabel => 'Credit';
+
+  @override
+  String get balanceNetLabel => 'Net';
+
+  @override
   String get balancesAsOfTodayHeading => 'Balances as of today';
 
   @override
@@ -1162,10 +1168,39 @@ class AppLocalizationsEn extends AppLocalizations {
     String tier,
     String advance,
     String pending,
-    String due,
+    String net,
   ) {
-    return '$phone • $tier • Advance $advance · Pending $pending · Due $due';
+    return '$phone • $tier • Advance $advance · Pending $pending · Net $net';
   }
+
+  @override
+  String get orderStatusOpen => 'Open';
+
+  @override
+  String get orderStatusCompleted => 'Completed';
+
+  @override
+  String get orderStatusCancelled => 'Cancelled';
+
+  @override
+  String orderBillDepositLabel(String amount) {
+    return 'Deposit $amount';
+  }
+
+  @override
+  String orderBillTotalLabel(String amount) {
+    return 'Bill $amount';
+  }
+
+  @override
+  String get orderDepositLabel => 'Order deposit';
+
+  @override
+  String get customerOrdersHeading => 'Orders';
+
+  @override
+  String get orderDepositSettlementExceeds =>
+      'Kept + returned cannot exceed order deposit.';
 
   @override
   String get requiresUnitIdentityLabel => 'Requires unit name/id';
@@ -1248,10 +1283,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get depositTopUpOptionalLabel => 'Deposit top-up (optional)';
+  String get depositTopUpOptionalLabel => 'Order token / advance (optional)';
 
   @override
-  String get depositTopUpOptionalHint => 'Amount in rupees';
+  String get depositTopUpOptionalHint => 'Held on this order, in rupees';
 
   @override
   String get itemKindDefaultLabel => 'Default order mode';

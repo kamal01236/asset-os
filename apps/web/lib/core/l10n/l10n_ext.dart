@@ -24,6 +24,17 @@ String localizedStatusLabel(AppLocalizations l10n, AssetStatus status) {
   }
 }
 
+String localizedOrderStatus(AppLocalizations l10n, OrderStatus status) {
+  switch (status) {
+    case OrderStatus.open:
+      return l10n.orderStatusOpen;
+    case OrderStatus.completed:
+      return l10n.orderStatusCompleted;
+    case OrderStatus.cancelled:
+      return l10n.orderStatusCancelled;
+  }
+}
+
 String localizedBillingMode(AppLocalizations l10n, BillingMode mode) {
   switch (mode) {
     case BillingMode.daily:

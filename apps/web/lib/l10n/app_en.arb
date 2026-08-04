@@ -518,7 +518,7 @@
   "deleteOrderKeptLabel": "Amount to keep",
   "deleteOrderReturnedLabel": "Amount to return",
   "deleteOrderNoteLabel": "Note (optional)",
-  "deleteOrderInvalidSettlement": "Kept + returned cannot exceed deposit balance.",
+  "deleteOrderInvalidSettlement": "Kept + returned cannot exceed order deposit.",
   "deleteOrderBlockedPartial": "Cannot delete an order after items were returned.",
   "deleteOrderFailed": "Could not delete this order.",
   "deleteOrderSuccessSnack": "Order deleted. Deposit balance {balance}.",
@@ -669,6 +669,8 @@
   "balanceAdvanceLabel": "Advance",
   "balancePendingLabel": "Pending",
   "balanceDueLabel": "Due",
+  "balanceCreditLabel": "Credit",
+  "balanceNetLabel": "Net",
   "balancesAsOfTodayHeading": "Balances as of today",
   "balanceOpenItemsCount": "{count} item(s) out",
   "@balanceOpenItemsCount": {
@@ -676,16 +678,34 @@
       "count": {"type": "int"}
     }
   },
-  "customerSubtitleWithBalances": "{phone} • {tier} • Advance {advance} · Pending {pending} · Due {due}",
+  "customerSubtitleWithBalances": "{phone} • {tier} • Advance {advance} · Pending {pending} · Net {net}",
   "@customerSubtitleWithBalances": {
     "placeholders": {
       "phone": {"type": "String"},
       "tier": {"type": "String"},
       "advance": {"type": "String"},
       "pending": {"type": "String"},
-      "due": {"type": "String"}
+      "net": {"type": "String"}
     }
   },
+  "orderStatusOpen": "Open",
+  "orderStatusCompleted": "Completed",
+  "orderStatusCancelled": "Cancelled",
+  "orderBillDepositLabel": "Deposit {amount}",
+  "@orderBillDepositLabel": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "orderBillTotalLabel": "Bill {amount}",
+  "@orderBillTotalLabel": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "orderDepositLabel": "Order deposit",
+  "customerOrdersHeading": "Orders",
+  "orderDepositSettlementExceeds": "Kept + returned cannot exceed order deposit.",
   "requiresUnitIdentityLabel": "Requires unit name/id",
   "requiresUnitIdentitySubtitle": "On for parent categories (e.g. Novels). Off for individual items that share one catalog name.",
   "quantityLabel": "Quantity",
@@ -754,8 +774,8 @@
       "amount": {"type": "String"}
     }
   },
-  "depositTopUpOptionalLabel": "Deposit top-up (optional)",
-  "depositTopUpOptionalHint": "Amount in rupees",
+  "depositTopUpOptionalLabel": "Order token / advance (optional)",
+  "depositTopUpOptionalHint": "Held on this order, in rupees",
   "itemKindDefaultLabel": "Default order mode",
   "itemKindRentalLabel": "Rental",
   "itemKindGeneralLabel": "General",

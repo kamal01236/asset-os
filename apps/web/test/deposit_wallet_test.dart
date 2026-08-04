@@ -69,11 +69,11 @@ void main() {
       expect(refund.balanceAfter, 3000);
     });
 
-    test('returnRental applies min(balance, total) and leftover carries', () async {
+    test('returnRental applies min(orderDeposit, total) and leftover remains',
+        () async {
       final LocalRepository repository = await bootRepo();
       final Customer customer =
           await ensureCustomer(repository);
-      await repository.topUpDeposit(customer.id, 8000);
 
       await repository.addInventory(
         name: 'Deposit Novel',
@@ -95,9 +95,11 @@ void main() {
           ),
         ],
         durationUnits: 1,
+        depositTopUpPaise: 8000,
       );
       final Rental created = (await repository.listRentals()).first;
       expect(created.totalAmount, 5000);
+      expect(created.depositAmount, 8000);
 
       final RentalReturnResult? result =
           await repository.returnRental(created.id);
@@ -110,32 +112,20 @@ void main() {
       final Customer after =
           (await repository.listCustomers())
               .firstWhere((Customer c) => c.id == customer.id);
-      expect(after.depositBalance, 3000);
+      expect(after.depositBalance, 0);
 
       final Rental returned = (await repository.listRentals())
           .firstWhere((Rental r) => r.id == created.id);
       expect(returned.depositApplied, 5000);
       expect(returned.amountDueAfterDeposit, 0);
-
-      final List<DepositLedgerEntry> ledger =
-          await repository.listDepositLedger(customer.id);
-      expect(
-        ledger.any((DepositLedgerEntry e) => e.type == DepositLedgerType.apply),
-        isTrue,
-      );
-      final DepositLedgerEntry apply = ledger.firstWhere(
-        (DepositLedgerEntry e) => e.type == DepositLedgerType.apply,
-      );
-      expect(apply.amount, -5000);
-      expect(apply.rentalId, created.id);
-      expect(apply.balanceAfter, 3000);
+      expect(returned.orderStatus, OrderStatus.completed);
     });
 
-    test('returnRental leaves remaining due when deposit is short', () async {
+    test('returnRental leaves remaining due when order deposit is short',
+        () async {
       final LocalRepository repository = await bootRepo();
       final Customer customer =
           await ensureCustomer(repository, phone: '7777777777', name: 'Amit Sharma');
-      await repository.topUpDeposit(customer.id, 2000);
 
       await repository.addInventory(
         name: 'Short Deposit Item',
@@ -156,6 +146,7 @@ void main() {
             shortCode: 'SHT-01',
           ),
         ],
+        depositTopUpPaise: 2000,
       );
 
       final Rental created = (await repository.listRentals()).first;
@@ -172,11 +163,10 @@ void main() {
       expect(after.depositBalance, 0);
     });
 
-    test('leftover deposit remains for next rental issue', () async {
+    test('order deposit does not carry across separate orders', () async {
       final LocalRepository repository = await bootRepo();
       final Customer customer =
           await ensureCustomer(repository, phone: '9999999999', name: 'Ravi Das');
-      await repository.topUpDeposit(customer.id, 15000);
 
       await repository.addInventory(
         name: 'Carry Forward Kit',
@@ -197,17 +187,16 @@ void main() {
             shortCode: 'CF-01',
           ),
         ],
+        depositTopUpPaise: 15000,
       );
       final String firstId = (await repository.listRentals()).first.id;
-      await repository.returnRental(firstId);
-
-      final Customer mid =
-          (await repository.listCustomers())
-              .firstWhere((Customer c) => c.id == customer.id);
-      expect(mid.depositBalance, 11000);
+      final RentalReturnResult? firstResult =
+          await repository.returnRental(firstId);
+      expect(firstResult!.depositApplied, 4000);
+      expect(firstResult.depositBalanceAfter, 11000);
 
       await repository.createRental(
-        customer: mid,
+        customer: customer,
         lines: <RentalLineInput>[
           RentalLineInput(
             itemId: item.id,
@@ -215,18 +204,15 @@ void main() {
             shortCode: 'CF-02',
           ),
         ],
+        depositTopUpPaise: 0,
       );
-      final Customer still =
-          (await repository.listCustomers())
-              .firstWhere((Customer c) => c.id == customer.id);
-      expect(still.depositBalance, 11000);
-
       final Rental second = (await repository.listRentals())
           .firstWhere((Rental r) => r.isActive);
+      expect(second.depositAmount, 0);
       final RentalReturnResult? result =
           await repository.returnRental(second.id);
-      expect(result!.depositApplied, 4000);
-      expect(result.depositBalanceAfter, 7000);
+      expect(result!.depositApplied, 0);
+      expect(result.depositBalanceAfter, 0);
     });
 
     test('return with zero deposit still finalizes charges', () async {

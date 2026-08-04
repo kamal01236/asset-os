@@ -3,14 +3,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:asset_os/core/models/customer_balance.dart';
 import 'package:asset_os/core/models/entities.dart';
 
-Customer _customer({int depositBalance = 0, String id = 'C-1'}) {
+Customer _customer({String id = 'C-1'}) {
   return Customer(
     id: id,
     name: 'Test',
     phone: '9999999999',
     isTrusted: false,
     qrCode: 'QR-$id',
-    depositBalance: depositBalance,
   );
 }
 
@@ -46,6 +45,8 @@ Rental _rental({
   int baseAmount = 0,
   int lateAmount = 0,
   int totalAmount = 0,
+  int depositAmount = 0,
+  OrderStatus orderStatus = OrderStatus.open,
 }) {
   return Rental(
     id: id,
@@ -62,6 +63,8 @@ Rental _rental({
     baseAmount: baseAmount,
     lateAmount: lateAmount,
     totalAmount: totalAmount,
+    depositAmount: depositAmount,
+    orderStatus: orderStatus,
   );
 }
 
@@ -70,180 +73,176 @@ void main() {
     final DateTime start = DateTime(2026, 8, 1, 10);
     final DateTime asOf = DateTime(2026, 8, 4, 10);
 
-    test('no rentals: advance from deposit, pending and due zero', () {
-      final Customer customer = _customer(depositBalance: 5000);
+    test('no rentals: zero advance/pending/net', () {
+      final Customer customer = _customer();
       final CustomerBalanceAsOf balance =
           customerBalanceAsOf(customer, const <Rental>[], asOf);
-      expect(balance.advancePaise, 5000);
+      expect(balance.advancePaise, 0);
       expect(balance.pendingPaise, 0);
+      expect(balance.netPaise, 0);
       expect(balance.duePaise, 0);
+      expect(balance.creditPaise, 0);
       expect(balance.openItemsCount, 0);
-      expect(balance.hasActivity, isTrue);
-    });
-
-    test('no activity when deposit and rentals are empty', () {
-      final Customer customer = _customer();
-      final CustomerBalanceAsOf balance =
-          customerBalanceAsOf(customer, const <Rental>[], asOf);
       expect(balance.hasActivity, isFalse);
-      expect(balance.duePaise, 0);
     });
 
-    test('dated active rental includes base plus late accrual', () {
-      final Customer customer = _customer();
-      final DateTime due = DateTime(2026, 8, 2, 10);
-      final Rental rental = _rental(
-        id: 'R-1',
-        customerId: customer.id,
-        startedAt: start,
-        dueAt: due,
-        lines: <RentalLine>[
-          _line(
-            id: 'L-1',
-            rateAmount: 10000,
-            baseAmount: 10000,
-            lateFeePerDay: 1000,
-          ),
-        ],
-        baseAmount: 10000,
-      );
-      // asOf is 2 calendar days after due → late = 2 * 1000
-      final CustomerBalanceAsOf balance =
-          customerBalanceAsOf(customer, <Rental>[rental], asOf);
-      expect(balance.pendingPaise, 12000);
-      expect(balance.duePaise, 12000);
-      expect(balance.openItemsCount, 1);
-    });
-
-    test('open-ended accrual grows with elapsed days', () {
+    test('open rental: pending accrues; deposit reduces net', () {
       final Customer customer = _customer();
       final Rental rental = _rental(
         id: 'R-OE',
         customerId: customer.id,
         startedAt: start,
         dueAt: null,
+        depositAmount: 4000,
         lines: <RentalLine>[
           _line(id: 'L-OE', rateAmount: 5000, billingMode: BillingMode.daily),
         ],
       );
-      // start Aug 1 → asOf Aug 4 = 3 days → 15000
+      // 3 days * 5000 = 15000 pending; net = 15000 - 4000 = 11000
       final CustomerBalanceAsOf balance =
           customerBalanceAsOf(customer, <Rental>[rental], asOf);
+      expect(balance.advancePaise, 4000);
       expect(balance.pendingPaise, 15000);
-      expect(balance.duePaise, 15000);
-      expect(balance.openItemsCount, 1);
-    });
-
-    test('deposit larger than pending → due is 0', () {
-      final Customer customer = _customer(depositBalance: 20000);
-      final Rental rental = _rental(
-        id: 'R-OE',
-        customerId: customer.id,
-        startedAt: start,
-        dueAt: null,
-        lines: <RentalLine>[
-          _line(id: 'L-OE', rateAmount: 5000, billingMode: BillingMode.daily),
-        ],
-      );
-      final CustomerBalanceAsOf balance =
-          customerBalanceAsOf(customer, <Rental>[rental], asOf);
-      expect(balance.advancePaise, 20000);
-      expect(balance.pendingPaise, 15000);
-      expect(balance.duePaise, 0);
-    });
-
-    test('deposit smaller than pending → due is the gap', () {
-      final Customer customer = _customer(depositBalance: 4000);
-      final Rental rental = _rental(
-        id: 'R-OE',
-        customerId: customer.id,
-        startedAt: start,
-        dueAt: null,
-        lines: <RentalLine>[
-          _line(id: 'L-OE', rateAmount: 5000, billingMode: BillingMode.daily),
-        ],
-      );
-      final CustomerBalanceAsOf balance =
-          customerBalanceAsOf(customer, <Rental>[rental], asOf);
-      expect(balance.pendingPaise, 15000);
+      expect(balance.netPaise, 11000);
       expect(balance.duePaise, 11000);
+      expect(balance.creditPaise, 0);
+      expect(balance.openItemsCount, 1);
     });
 
-    test('ignores returned rentals and other customers', () {
-      final Customer customer = _customer(depositBalance: 1000);
-      final Rental active = _rental(
-        id: 'R-A',
+    test('deposit larger than charges → credit (negative net)', () {
+      final Customer customer = _customer();
+      final Rental rental = _rental(
+        id: 'R-OE',
         customerId: customer.id,
         startedAt: start,
         dueAt: null,
+        depositAmount: 20000,
         lines: <RentalLine>[
-          _line(id: 'L-A', rateAmount: 5000, billingMode: BillingMode.daily),
+          _line(id: 'L-OE', rateAmount: 5000, billingMode: BillingMode.daily),
         ],
       );
-      final Rental returned = _rental(
-        id: 'R-B',
+      final CustomerBalanceAsOf balance =
+          customerBalanceAsOf(customer, <Rental>[rental], asOf);
+      expect(balance.pendingPaise, 15000);
+      expect(balance.netPaise, -5000);
+      expect(balance.duePaise, 0);
+      expect(balance.creditPaise, 5000);
+    });
+
+    test('completed uses finalized totalAmount', () {
+      final Customer customer = _customer();
+      final Rental rental = _rental(
+        id: 'R-DONE',
         customerId: customer.id,
         startedAt: start,
         dueAt: asOf,
         returnedAt: asOf,
+        depositAmount: 3000,
+        totalAmount: 10000,
+        orderStatus: OrderStatus.completed,
         lines: <RentalLine>[
           _line(
-            id: 'L-B',
+            id: 'L-1',
             rateAmount: 5000,
-            baseAmount: 99999,
+            baseAmount: 10000,
             returnedAt: asOf,
           ),
         ],
-        totalAmount: 99999,
       );
+      final CustomerBalanceAsOf balance =
+          customerBalanceAsOf(customer, <Rental>[rental], asOf);
+      expect(balance.pendingPaise, 10000);
+      expect(balance.advancePaise, 3000);
+      expect(balance.netPaise, 7000);
+      expect(balance.openItemsCount, 0);
+    });
+
+    test('cancelled orders contribute zero', () {
+      final Customer customer = _customer();
+      final Rental cancelled = _rental(
+        id: 'R-X',
+        customerId: customer.id,
+        startedAt: start,
+        depositAmount: 9000,
+        totalAmount: 0,
+        orderStatus: OrderStatus.cancelled,
+        returnedAt: asOf,
+        lines: <RentalLine>[
+          _line(id: 'L-X', rateAmount: 5000, returnedAt: asOf),
+        ],
+      );
+      final Rental open = _rental(
+        id: 'R-OE',
+        customerId: customer.id,
+        startedAt: start,
+        dueAt: null,
+        depositAmount: 1000,
+        lines: <RentalLine>[
+          _line(id: 'L-OE', rateAmount: 5000, billingMode: BillingMode.daily),
+        ],
+      );
+      final CustomerBalanceAsOf balance = customerBalanceAsOf(
+        customer,
+        <Rental>[cancelled, open],
+        asOf,
+      );
+      expect(balance.advancePaise, 1000);
+      expect(balance.pendingPaise, 15000);
+      expect(balance.netPaise, 14000);
+    });
+
+    test('sums signed net across open and completed', () {
+      final Customer customer = _customer();
+      final Rental open = _rental(
+        id: 'R-1',
+        customerId: customer.id,
+        startedAt: start,
+        dueAt: null,
+        depositAmount: 20000,
+        lines: <RentalLine>[
+          _line(id: 'L-1', rateAmount: 5000, billingMode: BillingMode.daily),
+        ],
+      );
+      final Rental done = _rental(
+        id: 'R-2',
+        customerId: customer.id,
+        startedAt: start,
+        returnedAt: asOf,
+        depositAmount: 1000,
+        totalAmount: 8000,
+        orderStatus: OrderStatus.completed,
+        lines: <RentalLine>[
+          _line(id: 'L-2', rateAmount: 2000, baseAmount: 8000, returnedAt: asOf),
+        ],
+      );
+      final CustomerBalanceAsOf balance = customerBalanceAsOf(
+        customer,
+        <Rental>[open, done],
+        asOf,
+      );
+      // open: 15000 - 20000 = -5000; completed: 8000 - 1000 = 7000; net = 2000
+      expect(balance.advancePaise, 21000);
+      expect(balance.pendingPaise, 23000);
+      expect(balance.netPaise, 2000);
+      expect(balance.openItemsCount, 1);
+    });
+
+    test('ignores other customers', () {
+      final Customer customer = _customer();
       final Rental other = _rental(
         id: 'R-C',
         customerId: 'C-OTHER',
         startedAt: start,
         dueAt: null,
+        depositAmount: 99999,
         lines: <RentalLine>[
           _line(id: 'L-C', rateAmount: 5000, billingMode: BillingMode.daily),
         ],
       );
-      final CustomerBalanceAsOf balance = customerBalanceAsOf(
-        customer,
-        <Rental>[active, returned, other],
-        asOf,
-      );
-      expect(balance.pendingPaise, 15000);
-      expect(balance.openItemsCount, 1);
-      expect(balance.duePaise, 14000);
-    });
-
-    test('sums multiple active rentals and open lines', () {
-      final Customer customer = _customer();
-      final Rental first = _rental(
-        id: 'R-1',
-        customerId: customer.id,
-        startedAt: start,
-        dueAt: null,
-        lines: <RentalLine>[
-          _line(id: 'L-1a', rateAmount: 5000, billingMode: BillingMode.daily),
-          _line(id: 'L-1b', rateAmount: 5000, billingMode: BillingMode.daily),
-        ],
-      );
-      final Rental second = _rental(
-        id: 'R-2',
-        customerId: customer.id,
-        startedAt: start,
-        dueAt: null,
-        lines: <RentalLine>[
-          _line(id: 'L-2', rateAmount: 2000, billingMode: BillingMode.daily),
-        ],
-      );
-      final CustomerBalanceAsOf balance = customerBalanceAsOf(
-        customer,
-        <Rental>[first, second],
-        asOf,
-      );
-      // (5000+5000+2000) * 3 days
-      expect(balance.pendingPaise, 36000);
-      expect(balance.openItemsCount, 3);
+      final CustomerBalanceAsOf balance =
+          customerBalanceAsOf(customer, <Rental>[other], asOf);
+      expect(balance.hasActivity, isFalse);
+      expect(balance.netPaise, 0);
     });
   });
 }

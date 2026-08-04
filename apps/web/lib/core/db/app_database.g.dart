@@ -1462,6 +1462,30 @@ class $RentalsTable extends Rentals with TableInfo<$RentalsTable, RentalRow> {
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _depositAmountMeta = const VerificationMeta(
+    'depositAmount',
+  );
+  @override
+  late final GeneratedColumn<int> depositAmount = GeneratedColumn<int>(
+    'deposit_amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _orderStatusMeta = const VerificationMeta(
+    'orderStatus',
+  );
+  @override
+  late final GeneratedColumn<String> orderStatus = GeneratedColumn<String>(
+    'order_status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('open'),
+  );
   static const VerificationMeta _durationUnitsMeta = const VerificationMeta(
     'durationUnits',
   );
@@ -1501,6 +1525,8 @@ class $RentalsTable extends Rentals with TableInfo<$RentalsTable, RentalRow> {
     lateAmount,
     totalAmount,
     depositApplied,
+    depositAmount,
+    orderStatus,
     durationUnits,
     replacedFromRentalId,
   ];
@@ -1617,6 +1643,24 @@ class $RentalsTable extends Rentals with TableInfo<$RentalsTable, RentalRow> {
         ),
       );
     }
+    if (data.containsKey('deposit_amount')) {
+      context.handle(
+        _depositAmountMeta,
+        depositAmount.isAcceptableOrUnknown(
+          data['deposit_amount']!,
+          _depositAmountMeta,
+        ),
+      );
+    }
+    if (data.containsKey('order_status')) {
+      context.handle(
+        _orderStatusMeta,
+        orderStatus.isAcceptableOrUnknown(
+          data['order_status']!,
+          _orderStatusMeta,
+        ),
+      );
+    }
     if (data.containsKey('duration_units')) {
       context.handle(
         _durationUnitsMeta,
@@ -1700,6 +1744,14 @@ class $RentalsTable extends Rentals with TableInfo<$RentalsTable, RentalRow> {
         DriftSqlType.int,
         data['${effectivePrefix}deposit_applied'],
       )!,
+      depositAmount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}deposit_amount'],
+      )!,
+      orderStatus: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}order_status'],
+      )!,
       durationUnits: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}duration_units'],
@@ -1742,8 +1794,14 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
   final int lateAmount;
   final int totalAmount;
 
-  /// Deposit applied from customer wallet at return (paise).
+  /// Deposit applied from order deposit at return (paise).
   final int depositApplied;
+
+  /// Token/advance held on this order (paise). Original amount; applied tracked separately.
+  final int depositAmount;
+
+  /// `open` | `completed` | `cancelled`
+  final String orderStatus;
 
   /// Chosen duration (e.g. 1 week → 1; fixed due-days still stored here).
   final int durationUnits;
@@ -1765,6 +1823,8 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
     required this.lateAmount,
     required this.totalAmount,
     required this.depositApplied,
+    required this.depositAmount,
+    required this.orderStatus,
     required this.durationUnits,
     this.replacedFromRentalId,
   });
@@ -1791,6 +1851,8 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
     map['late_amount'] = Variable<int>(lateAmount);
     map['total_amount'] = Variable<int>(totalAmount);
     map['deposit_applied'] = Variable<int>(depositApplied);
+    map['deposit_amount'] = Variable<int>(depositAmount);
+    map['order_status'] = Variable<String>(orderStatus);
     map['duration_units'] = Variable<int>(durationUnits);
     if (!nullToAbsent || replacedFromRentalId != null) {
       map['replaced_from_rental_id'] = Variable<String>(replacedFromRentalId);
@@ -1820,6 +1882,8 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
       lateAmount: Value(lateAmount),
       totalAmount: Value(totalAmount),
       depositApplied: Value(depositApplied),
+      depositAmount: Value(depositAmount),
+      orderStatus: Value(orderStatus),
       durationUnits: Value(durationUnits),
       replacedFromRentalId: replacedFromRentalId == null && nullToAbsent
           ? const Value.absent()
@@ -1847,6 +1911,8 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
       lateAmount: serializer.fromJson<int>(json['lateAmount']),
       totalAmount: serializer.fromJson<int>(json['totalAmount']),
       depositApplied: serializer.fromJson<int>(json['depositApplied']),
+      depositAmount: serializer.fromJson<int>(json['depositAmount']),
+      orderStatus: serializer.fromJson<String>(json['orderStatus']),
       durationUnits: serializer.fromJson<int>(json['durationUnits']),
       replacedFromRentalId: serializer.fromJson<String?>(
         json['replacedFromRentalId'],
@@ -1871,6 +1937,8 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
       'lateAmount': serializer.toJson<int>(lateAmount),
       'totalAmount': serializer.toJson<int>(totalAmount),
       'depositApplied': serializer.toJson<int>(depositApplied),
+      'depositAmount': serializer.toJson<int>(depositAmount),
+      'orderStatus': serializer.toJson<String>(orderStatus),
       'durationUnits': serializer.toJson<int>(durationUnits),
       'replacedFromRentalId': serializer.toJson<String?>(replacedFromRentalId),
     };
@@ -1891,6 +1959,8 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
     int? lateAmount,
     int? totalAmount,
     int? depositApplied,
+    int? depositAmount,
+    String? orderStatus,
     int? durationUnits,
     Value<String?> replacedFromRentalId = const Value.absent(),
   }) => RentalRow(
@@ -1908,6 +1978,8 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
     lateAmount: lateAmount ?? this.lateAmount,
     totalAmount: totalAmount ?? this.totalAmount,
     depositApplied: depositApplied ?? this.depositApplied,
+    depositAmount: depositAmount ?? this.depositAmount,
+    orderStatus: orderStatus ?? this.orderStatus,
     durationUnits: durationUnits ?? this.durationUnits,
     replacedFromRentalId: replacedFromRentalId.present
         ? replacedFromRentalId.value
@@ -1947,6 +2019,12 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
       depositApplied: data.depositApplied.present
           ? data.depositApplied.value
           : this.depositApplied,
+      depositAmount: data.depositAmount.present
+          ? data.depositAmount.value
+          : this.depositAmount,
+      orderStatus: data.orderStatus.present
+          ? data.orderStatus.value
+          : this.orderStatus,
       durationUnits: data.durationUnits.present
           ? data.durationUnits.value
           : this.durationUnits,
@@ -1973,6 +2051,8 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
           ..write('lateAmount: $lateAmount, ')
           ..write('totalAmount: $totalAmount, ')
           ..write('depositApplied: $depositApplied, ')
+          ..write('depositAmount: $depositAmount, ')
+          ..write('orderStatus: $orderStatus, ')
           ..write('durationUnits: $durationUnits, ')
           ..write('replacedFromRentalId: $replacedFromRentalId')
           ..write(')'))
@@ -1995,6 +2075,8 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
     lateAmount,
     totalAmount,
     depositApplied,
+    depositAmount,
+    orderStatus,
     durationUnits,
     replacedFromRentalId,
   );
@@ -2016,6 +2098,8 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
           other.lateAmount == this.lateAmount &&
           other.totalAmount == this.totalAmount &&
           other.depositApplied == this.depositApplied &&
+          other.depositAmount == this.depositAmount &&
+          other.orderStatus == this.orderStatus &&
           other.durationUnits == this.durationUnits &&
           other.replacedFromRentalId == this.replacedFromRentalId);
 }
@@ -2035,6 +2119,8 @@ class RentalsCompanion extends UpdateCompanion<RentalRow> {
   final Value<int> lateAmount;
   final Value<int> totalAmount;
   final Value<int> depositApplied;
+  final Value<int> depositAmount;
+  final Value<String> orderStatus;
   final Value<int> durationUnits;
   final Value<String?> replacedFromRentalId;
   final Value<int> rowid;
@@ -2053,6 +2139,8 @@ class RentalsCompanion extends UpdateCompanion<RentalRow> {
     this.lateAmount = const Value.absent(),
     this.totalAmount = const Value.absent(),
     this.depositApplied = const Value.absent(),
+    this.depositAmount = const Value.absent(),
+    this.orderStatus = const Value.absent(),
     this.durationUnits = const Value.absent(),
     this.replacedFromRentalId = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -2072,6 +2160,8 @@ class RentalsCompanion extends UpdateCompanion<RentalRow> {
     this.lateAmount = const Value.absent(),
     this.totalAmount = const Value.absent(),
     this.depositApplied = const Value.absent(),
+    this.depositAmount = const Value.absent(),
+    this.orderStatus = const Value.absent(),
     this.durationUnits = const Value.absent(),
     this.replacedFromRentalId = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -2094,6 +2184,8 @@ class RentalsCompanion extends UpdateCompanion<RentalRow> {
     Expression<int>? lateAmount,
     Expression<int>? totalAmount,
     Expression<int>? depositApplied,
+    Expression<int>? depositAmount,
+    Expression<String>? orderStatus,
     Expression<int>? durationUnits,
     Expression<String>? replacedFromRentalId,
     Expression<int>? rowid,
@@ -2113,6 +2205,8 @@ class RentalsCompanion extends UpdateCompanion<RentalRow> {
       if (lateAmount != null) 'late_amount': lateAmount,
       if (totalAmount != null) 'total_amount': totalAmount,
       if (depositApplied != null) 'deposit_applied': depositApplied,
+      if (depositAmount != null) 'deposit_amount': depositAmount,
+      if (orderStatus != null) 'order_status': orderStatus,
       if (durationUnits != null) 'duration_units': durationUnits,
       if (replacedFromRentalId != null)
         'replaced_from_rental_id': replacedFromRentalId,
@@ -2135,6 +2229,8 @@ class RentalsCompanion extends UpdateCompanion<RentalRow> {
     Value<int>? lateAmount,
     Value<int>? totalAmount,
     Value<int>? depositApplied,
+    Value<int>? depositAmount,
+    Value<String>? orderStatus,
     Value<int>? durationUnits,
     Value<String?>? replacedFromRentalId,
     Value<int>? rowid,
@@ -2154,6 +2250,8 @@ class RentalsCompanion extends UpdateCompanion<RentalRow> {
       lateAmount: lateAmount ?? this.lateAmount,
       totalAmount: totalAmount ?? this.totalAmount,
       depositApplied: depositApplied ?? this.depositApplied,
+      depositAmount: depositAmount ?? this.depositAmount,
+      orderStatus: orderStatus ?? this.orderStatus,
       durationUnits: durationUnits ?? this.durationUnits,
       replacedFromRentalId: replacedFromRentalId ?? this.replacedFromRentalId,
       rowid: rowid ?? this.rowid,
@@ -2205,6 +2303,12 @@ class RentalsCompanion extends UpdateCompanion<RentalRow> {
     if (depositApplied.present) {
       map['deposit_applied'] = Variable<int>(depositApplied.value);
     }
+    if (depositAmount.present) {
+      map['deposit_amount'] = Variable<int>(depositAmount.value);
+    }
+    if (orderStatus.present) {
+      map['order_status'] = Variable<String>(orderStatus.value);
+    }
     if (durationUnits.present) {
       map['duration_units'] = Variable<int>(durationUnits.value);
     }
@@ -2236,6 +2340,8 @@ class RentalsCompanion extends UpdateCompanion<RentalRow> {
           ..write('lateAmount: $lateAmount, ')
           ..write('totalAmount: $totalAmount, ')
           ..write('depositApplied: $depositApplied, ')
+          ..write('depositAmount: $depositAmount, ')
+          ..write('orderStatus: $orderStatus, ')
           ..write('durationUnits: $durationUnits, ')
           ..write('replacedFromRentalId: $replacedFromRentalId, ')
           ..write('rowid: $rowid')
@@ -5024,6 +5130,8 @@ typedef $$RentalsTableCreateCompanionBuilder =
       Value<int> lateAmount,
       Value<int> totalAmount,
       Value<int> depositApplied,
+      Value<int> depositAmount,
+      Value<String> orderStatus,
       Value<int> durationUnits,
       Value<String?> replacedFromRentalId,
       Value<int> rowid,
@@ -5044,6 +5152,8 @@ typedef $$RentalsTableUpdateCompanionBuilder =
       Value<int> lateAmount,
       Value<int> totalAmount,
       Value<int> depositApplied,
+      Value<int> depositAmount,
+      Value<String> orderStatus,
       Value<int> durationUnits,
       Value<String?> replacedFromRentalId,
       Value<int> rowid,
@@ -5125,6 +5235,16 @@ class $$RentalsTableFilterComposer
 
   ColumnFilters<int> get depositApplied => $composableBuilder(
     column: $table.depositApplied,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get depositAmount => $composableBuilder(
+    column: $table.depositAmount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get orderStatus => $composableBuilder(
+    column: $table.orderStatus,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5218,6 +5338,16 @@ class $$RentalsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get depositAmount => $composableBuilder(
+    column: $table.depositAmount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get orderStatus => $composableBuilder(
+    column: $table.orderStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get durationUnits => $composableBuilder(
     column: $table.durationUnits,
     builder: (column) => ColumnOrderings(column),
@@ -5298,6 +5428,16 @@ class $$RentalsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<int> get depositAmount => $composableBuilder(
+    column: $table.depositAmount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get orderStatus => $composableBuilder(
+    column: $table.orderStatus,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<int> get durationUnits => $composableBuilder(
     column: $table.durationUnits,
     builder: (column) => column,
@@ -5351,6 +5491,8 @@ class $$RentalsTableTableManager
                 Value<int> lateAmount = const Value.absent(),
                 Value<int> totalAmount = const Value.absent(),
                 Value<int> depositApplied = const Value.absent(),
+                Value<int> depositAmount = const Value.absent(),
+                Value<String> orderStatus = const Value.absent(),
                 Value<int> durationUnits = const Value.absent(),
                 Value<String?> replacedFromRentalId = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -5369,6 +5511,8 @@ class $$RentalsTableTableManager
                 lateAmount: lateAmount,
                 totalAmount: totalAmount,
                 depositApplied: depositApplied,
+                depositAmount: depositAmount,
+                orderStatus: orderStatus,
                 durationUnits: durationUnits,
                 replacedFromRentalId: replacedFromRentalId,
                 rowid: rowid,
@@ -5389,6 +5533,8 @@ class $$RentalsTableTableManager
                 Value<int> lateAmount = const Value.absent(),
                 Value<int> totalAmount = const Value.absent(),
                 Value<int> depositApplied = const Value.absent(),
+                Value<int> depositAmount = const Value.absent(),
+                Value<String> orderStatus = const Value.absent(),
                 Value<int> durationUnits = const Value.absent(),
                 Value<String?> replacedFromRentalId = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -5407,6 +5553,8 @@ class $$RentalsTableTableManager
                 lateAmount: lateAmount,
                 totalAmount: totalAmount,
                 depositApplied: depositApplied,
+                depositAmount: depositAmount,
+                orderStatus: orderStatus,
                 durationUnits: durationUnits,
                 replacedFromRentalId: replacedFromRentalId,
                 rowid: rowid,
