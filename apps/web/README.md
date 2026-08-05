@@ -23,11 +23,15 @@ Use repo-root scripts from WSL (or `.\scripts\wsl.ps1` from Windows):
 ```bash
 ./scripts/setup.sh
 ./scripts/localrun.sh      # Chrome / web-server
-./scripts/test.sh          # analyze + flutter test (concurrency = CPU count, compact; override via TEST_CONCURRENCY)
+./scripts/test.sh          # analyze + all flutter tests
+./scripts/test.sh unit     # focused: unit|widget|integration|orders|pricing|…
 ./scripts/wsldeploy.sh     # flutter build web
 ```
 
+Tags live in `dart_test.yaml` and `@Tags` on each `*_test.dart`. Dependency → suite map: [Test Suites](../../docs/engineering/test-suites.md). Override concurrency with `TEST_CONCURRENCY`; skip analyze with `TEST_SKIP_ANALYZE=1` for tight loops.
+
 Unit tests use `test/support/test_harness.dart` with `seedDemo: false` by default (empty DB + Unknown sentinel). Widget/smoke flows that assert seeded demo names pass `seedDemo: true`. Expect a much faster suite than full demo seed per case.
+
 
 Public preview: push to `main` → GitHub Pages at [https://kamal01236.github.io/asset-os/](https://kamal01236.github.io/asset-os/). See the [repository README](../../README.md) for setup and the full command table.
 

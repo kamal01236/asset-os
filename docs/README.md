@@ -10,6 +10,7 @@ Index for Hando (Asset Handover Platform) documentation.
 4. **[ADR-003: UI Localization](architecture/decisions/ADR-003-localization.md)** — gen-l10n English default + Hindi
 5. **[Web UX Conventions](ux/web-ux-conventions.md)** — touch-friendly interaction rules, status semantics, and shell contracts
 6. **[Phase 5 Extension Stubs](ux/phase5-extension-stubs.md)** — lightweight stubs for voice, templates, and AI suggestions
+7. **[Test Suites](engineering/test-suites.md)** — tagged unit/widget/integration suites and dependency → suite map
 
 ## Document conventions
 

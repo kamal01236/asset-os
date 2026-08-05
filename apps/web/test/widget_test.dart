@@ -1,3 +1,6 @@
+@Tags(['integration', 'shell'])
+library;
+
 import 'package:drift/drift.dart' show driftRuntimeOptions;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';

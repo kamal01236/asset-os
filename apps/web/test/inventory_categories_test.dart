@@ -1,3 +1,6 @@
+@Tags(['unit', 'inventory'])
+library;
+
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:asset_os/core/inventory/inventory_categories.dart';

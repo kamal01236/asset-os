@@ -1,3 +1,6 @@
+@Tags(['unit', 'returns'])
+library;
+
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:asset_os/core/models/customer_activity.dart';

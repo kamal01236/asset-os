@@ -13,7 +13,9 @@ Usage: ./scripts/dev.sh <command> [args...]
 Commands:
   setup       Bootstrap Flutter web tooling and pub get
   localrun    Run the app on Chrome or web-server (extra args → flutter run)
-  test        flutter analyze + flutter test
+  test        flutter analyze + flutter test [suite]
+              Suites: all|unit|widget|integration|orders|pricing|…
+              See docs/engineering/test-suites.md
   wsldeploy   Build web artifacts (build/web) and print serve hints
   servelocal  Serve build/web locally and print the open URL (optional port)
   doctor      flutter doctor -v

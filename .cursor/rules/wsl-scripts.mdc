@@ -10,3 +10,4 @@ alwaysApply: false
 - Web-only messaging; no adb, APK, emulator, or native packaging steps.
 - Public preview is GitHub Pages CI (push to `main`); do not embed deploy secrets in scripts.
 - Prefer extending `_lib.sh` helpers over duplicating Flutter/path logic.
+- Tests: prefer focused suites during feature work (`.\scripts\wsl.ps1 test unit|orders|pricing|…`); full `test` before PR/push. Map: `docs/engineering/test-suites.md`.

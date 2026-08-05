@@ -1,3 +1,6 @@
+@Tags(['unit', 'pricing'])
+library;
+
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter_test/flutter_test.dart';
 

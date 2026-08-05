@@ -1,3 +1,6 @@
+@Tags(['unit', 'pricing'])
+library;
+
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:asset_os/core/models/entities.dart';

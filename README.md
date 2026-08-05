@@ -33,7 +33,8 @@ From the repo root inside WSL:
 ```bash
 ./scripts/setup.sh
 ./scripts/localrun.sh      # Chrome if available, else web-server URL
-./scripts/test.sh
+./scripts/test.sh          # analyze + all tests
+./scripts/test.sh unit     # focused suite (also: widget, orders, pricing, …)
 ./scripts/wsldeploy.sh     # flutter build web → apps/web/build/web
 
 # or one entrypoint
@@ -46,9 +47,13 @@ From Windows PowerShell:
 .\scripts\wsl.ps1 setup
 .\scripts\wsl.ps1 localrun
 .\scripts\wsl.ps1 test
+.\scripts\wsl.ps1 test unit      # focused; see docs/engineering/test-suites.md
+.\scripts\wsl.ps1 test orders
 .\scripts\wsl.ps1 wsldeploy
 .\scripts\wsl.ps1 servelocal
 ```
+
+Suite filters: [Test Suites](docs/engineering/test-suites.md). Prefer focused suites during feature work; full `test` before PR/push.
 
 ### Customer feedback (GitHub Pages)
 

@@ -7,6 +7,8 @@
   .\scripts\wsl.ps1 setup
   .\scripts\wsl.ps1 localrun
   .\scripts\wsl.ps1 test
+  .\scripts\wsl.ps1 test unit
+  .\scripts\wsl.ps1 test orders
   .\scripts\wsl.ps1 wsldeploy
   .\scripts\wsl.ps1 servelocal
   .\scripts\wsl.ps1 doctor
@@ -43,7 +45,12 @@ Usage: .\scripts\wsl.ps1 <command> [args...]
 Commands:
   setup       Bootstrap Flutter web tooling and pub get
   localrun    Run the app on Chrome or web-server
-  test        flutter analyze + flutter test
+  test        flutter analyze + flutter test [suite]
+              Suites: all|unit|widget|integration|orders|pricing|returns|
+                      inventory|customers|deposit|search|shell|reports|notes|labels
+              Examples: .\scripts\wsl.ps1 test unit
+                        .\scripts\wsl.ps1 test orders
+              Docs: docs/engineering/test-suites.md
   wsldeploy   Build web artifacts (build/web)
   servelocal  Serve build/web locally and print the open URL
   doctor      flutter doctor -v

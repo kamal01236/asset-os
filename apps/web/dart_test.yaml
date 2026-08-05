@@ -1,0 +1,21 @@
+# Declared tags for flutter test --tags filtering.
+# See docs/engineering/test-suites.md
+
+tags:
+  # Layer (exactly one per suite file)
+  unit:
+  widget:
+  integration:
+
+  # Domain (one or more)
+  pricing:
+  orders:
+  returns:
+  inventory:
+  customers:
+  deposit:
+  search:
+  shell:
+  reports:
+  notes:
+  labels:
