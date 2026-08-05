@@ -65,11 +65,12 @@ void main() {
     await pumpFrames(tester);
 
     expect(find.textContaining('DSLR #'), findsNWidgets(2));
+    // Qty may exceed shown available — + stays enabled past stock.
     expect(
       tester
           .widget<IconButton>(find.byKey(const ValueKey<String>('qty-inc-0')))
           .onPressed,
-      isNull,
+      isNotNull,
     );
 
     final Finder fields = find.byType(TextField);
@@ -173,7 +174,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 1));
   });
 
-  testWidgets('shared stock caps qty across two lines of same item', (
+  testWidgets('qty can exceed available across two lines of same item', (
     WidgetTester tester,
   ) async {
     final ProviderContainer container = await bootContainer(seedDemo: true);
@@ -204,18 +205,19 @@ void main() {
     await tester.pump();
     await pumpFrames(tester);
 
-    // Stock 3 available: line0 qty 2 + line1 qty 1 uses all; neither can increase.
+    // Available is 3 after units=4 with 1 already rented in demo; order can
+    // still push past that — both + buttons stay enabled.
     expect(
       tester
           .widget<IconButton>(find.byKey(const ValueKey<String>('qty-inc-0')))
           .onPressed,
-      isNull,
+      isNotNull,
     );
     expect(
       tester
           .widget<IconButton>(find.byKey(const ValueKey<String>('qty-inc-1')))
           .onPressed,
-      isNull,
+      isNotNull,
     );
     expect(
       tester.widget<Text>(find.byKey(const ValueKey<String>('qty-value-0'))).data,
@@ -224,6 +226,13 @@ void main() {
     expect(
       tester.widget<Text>(find.byKey(const ValueKey<String>('qty-value-1'))).data,
       '1',
+    );
+
+    await tester.tap(find.byKey(const ValueKey<String>('qty-inc-1')));
+    await tester.pump();
+    expect(
+      tester.widget<Text>(find.byKey(const ValueKey<String>('qty-value-1'))).data,
+      '2',
     );
 
     await tester.pumpWidget(const SizedBox.shrink());
@@ -269,5 +278,54 @@ void main() {
     expect(after.availableUnits, 2);
     final Rental created = (await repo.listRentals()).first;
     expect(created.lines, hasLength(3));
+  });
+
+  test('createRental oversell clamps available to zero', () async {
+    final LocalRepository repo = await bootRepo();
+    await repo.addInventory(
+      name: 'Lenses',
+      category: 'Camera',
+      units: 1,
+      rateAmount: 10000,
+      requiresUnitIdentity: true,
+    );
+    final InventoryItem lenses = (await repo.listInventory())
+        .firstWhere((InventoryItem i) => i.name == 'Lenses');
+    final Customer customer = await ensureCustomer(repo);
+
+    await repo.createRental(
+      customer: customer,
+      lines: <RentalLineInput>[
+        RentalLineInput(
+          itemId: lenses.id,
+          instanceName: 'Lens A',
+          shortCode: 'LEN-A1',
+        ),
+        RentalLineInput(
+          itemId: lenses.id,
+          instanceName: 'Lens B',
+          shortCode: 'LEN-B1',
+        ),
+      ],
+    );
+
+    final InventoryItem after = (await repo.listInventory())
+        .firstWhere((InventoryItem i) => i.id == lenses.id);
+    expect(after.availableUnits, 0);
+    expect(after.totalUnits, 1);
+    expect((await repo.listRentals()).first.lines, hasLength(2));
+
+    // Units remain editable anytime, including after oversell.
+    await repo.updateInventory(
+      id: lenses.id,
+      name: 'Lenses',
+      category: 'Camera',
+      units: 4,
+      requiresUnitIdentity: true,
+    );
+    final InventoryItem edited = (await repo.listInventory())
+        .firstWhere((InventoryItem i) => i.id == lenses.id);
+    expect(edited.totalUnits, 4);
+    expect(edited.availableUnits, 3);
   });
 }

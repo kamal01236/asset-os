@@ -31,11 +31,14 @@ void main() {
       expect(
         options,
         containsAll(<String>[
+          'Boutique',
           'Camera',
           'Event',
           'Farm',
+          'Gym',
           'Library',
           'Office',
+          'Parlour',
           'Tools',
         ]),
       );

@@ -408,7 +408,7 @@ void main() {
     expect(find.widgetWithText(FilledButton, 'Continue'), findsOneWidget);
   });
 
-  testWidgets('summary blocks Generate when stock drops below qty', (
+  testWidgets('summary Generate stays enabled when stock drops below qty', (
     WidgetTester tester,
   ) async {
     final ProviderContainer container = await bootContainer(seedDemo: true);
@@ -459,23 +459,16 @@ void main() {
       units: 2,
       requiresUnitIdentity: true,
     );
-    await pumpFrames(tester, frames: 20);
+    await _settle(tester, ticks: 12);
 
-    expect(
-      find.textContaining('Not enough stock for DSLR'),
-      findsOneWidget,
-    );
-    expect(
-      find.textContaining('need 2, available 1'),
-      findsOneWidget,
-    );
+    expect(find.textContaining('Not enough stock'), findsNothing);
     expect(
       tester
           .widget<FilledButton>(
             find.widgetWithText(FilledButton, 'Generate Order'),
           )
           .onPressed,
-      isNull,
+      isNotNull,
     );
 
     await tester.pumpWidget(const SizedBox.shrink());

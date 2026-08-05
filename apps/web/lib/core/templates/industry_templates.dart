@@ -1,5 +1,5 @@
 import '../home/home_modules.dart';
-import '../pricing/rental_pricing.dart';
+import '../models/entities.dart';
 
 /// Static industry inventory packs for Business Templates (merge-into inventory).
 class TemplateInventoryItem {
@@ -12,6 +12,9 @@ class TemplateInventoryItem {
     this.rateAmount = 0,
     this.lateFeePerDay = 0,
     this.currencyCode = 'INR',
+    this.defaultItemKind = InventoryItemKind.rental,
+    this.requiresUnitIdentity = true,
+    this.dueDateOptional = false,
   });
 
   final String name;
@@ -23,6 +26,9 @@ class TemplateInventoryItem {
   final int rateAmount;
   final int lateFeePerDay;
   final String currencyCode;
+  final InventoryItemKind defaultItemKind;
+  final bool requiresUnitIdentity;
+  final bool dueDateOptional;
 }
 
 class IndustryTemplate {
@@ -278,6 +284,168 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
         defaultUnits: 20,
         billingMode: BillingMode.fixed,
         rateAmount: 5000,
+      ),
+    ],
+  ),
+  IndustryTemplate(
+    id: 'parlour',
+    name: 'Beauty Parlour',
+    description: 'Service packages plus chair and kit rentals.',
+    defaultHomeModules: kLibraryHomeModules,
+    items: <TemplateInventoryItem>[
+      TemplateInventoryItem(
+        name: 'Haircut',
+        category: 'Parlour',
+        defaultUnits: 1,
+        billingMode: BillingMode.fixed,
+        rateAmount: 30000, // ₹300
+        defaultItemKind: InventoryItemKind.general,
+        requiresUnitIdentity: false,
+      ),
+      TemplateInventoryItem(
+        name: 'Facial',
+        category: 'Parlour',
+        defaultUnits: 1,
+        billingMode: BillingMode.fixed,
+        rateAmount: 80000, // ₹800
+        defaultItemKind: InventoryItemKind.general,
+        requiresUnitIdentity: false,
+      ),
+      TemplateInventoryItem(
+        name: 'Manicure',
+        category: 'Parlour',
+        defaultUnits: 1,
+        billingMode: BillingMode.fixed,
+        rateAmount: 40000, // ₹400
+        defaultItemKind: InventoryItemKind.general,
+        requiresUnitIdentity: false,
+      ),
+      TemplateInventoryItem(
+        name: 'Bridal Package',
+        category: 'Parlour',
+        defaultUnits: 1,
+        billingMode: BillingMode.fixed,
+        rateAmount: 1500000, // ₹15,000
+        defaultItemKind: InventoryItemKind.general,
+        requiresUnitIdentity: false,
+      ),
+      TemplateInventoryItem(
+        name: 'Steamer Kit',
+        category: 'Parlour',
+        defaultUnits: 2,
+        billingMode: BillingMode.daily,
+        rateAmount: 20000, // ₹200/day
+        lateFeePerDay: 5000,
+      ),
+      TemplateInventoryItem(
+        name: 'Chair',
+        category: 'Parlour',
+        defaultUnits: 4,
+        billingMode: BillingMode.daily,
+        rateAmount: 50000, // ₹500/day
+      ),
+    ],
+  ),
+  IndustryTemplate(
+    id: 'boutique',
+    name: 'Boutique',
+    description: 'Garment and accessory rental for occasions.',
+    defaultHomeModules: kLibraryHomeModules,
+    items: <TemplateInventoryItem>[
+      TemplateInventoryItem(
+        name: 'Lehenga',
+        category: 'Boutique',
+        defaultUnits: 8,
+        billingMode: BillingMode.weekly,
+        rateAmount: 200000, // ₹2,000/week
+        lateFeePerDay: 20000,
+        requiresUnitIdentity: true,
+      ),
+      TemplateInventoryItem(
+        name: 'Saree',
+        category: 'Boutique',
+        defaultUnits: 12,
+        billingMode: BillingMode.weekly,
+        rateAmount: 80000, // ₹800/week
+        lateFeePerDay: 10000,
+        requiresUnitIdentity: true,
+      ),
+      TemplateInventoryItem(
+        name: 'Suit Set',
+        category: 'Boutique',
+        defaultUnits: 10,
+        billingMode: BillingMode.weekly,
+        rateAmount: 100000, // ₹1,000/week
+        requiresUnitIdentity: true,
+      ),
+      TemplateInventoryItem(
+        name: 'Dupatta',
+        category: 'Boutique',
+        defaultUnits: 15,
+        billingMode: BillingMode.daily,
+        rateAmount: 10000, // ₹100/day
+        requiresUnitIdentity: true,
+      ),
+      TemplateInventoryItem(
+        name: 'Jewellery Set',
+        category: 'Boutique',
+        defaultUnits: 6,
+        billingMode: BillingMode.weekly,
+        rateAmount: 150000, // ₹1,500/week
+        lateFeePerDay: 15000,
+        requiresUnitIdentity: true,
+      ),
+    ],
+  ),
+  IndustryTemplate(
+    id: 'gym',
+    name: 'Gym Membership',
+    description: 'Membership fee products and locker rentals.',
+    defaultHomeModules: kLibraryHomeModules,
+    items: <TemplateInventoryItem>[
+      TemplateInventoryItem(
+        name: 'Monthly Membership',
+        category: 'Gym',
+        defaultUnits: 50,
+        billingMode: BillingMode.monthly,
+        rateAmount: 150000, // ₹1,500/month
+        defaultItemKind: InventoryItemKind.general,
+        requiresUnitIdentity: false,
+      ),
+      TemplateInventoryItem(
+        name: 'Quarterly Membership',
+        category: 'Gym',
+        defaultUnits: 30,
+        billingMode: BillingMode.fixed,
+        rateAmount: 400000, // ₹4,000
+        defaultItemKind: InventoryItemKind.general,
+        requiresUnitIdentity: false,
+      ),
+      TemplateInventoryItem(
+        name: 'Annual Membership',
+        category: 'Gym',
+        defaultUnits: 20,
+        billingMode: BillingMode.fixed,
+        rateAmount: 1200000, // ₹12,000
+        defaultItemKind: InventoryItemKind.general,
+        requiresUnitIdentity: false,
+      ),
+      TemplateInventoryItem(
+        name: 'Day Pass',
+        category: 'Gym',
+        defaultUnits: 100,
+        billingMode: BillingMode.fixed,
+        rateAmount: 30000, // ₹300
+        defaultItemKind: InventoryItemKind.general,
+        requiresUnitIdentity: false,
+      ),
+      TemplateInventoryItem(
+        name: 'Locker',
+        category: 'Gym',
+        defaultUnits: 20,
+        billingMode: BillingMode.monthly,
+        rateAmount: 30000, // ₹300/month
+        requiresUnitIdentity: false,
       ),
     ],
   ),

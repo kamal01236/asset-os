@@ -12,7 +12,10 @@ import '../../core/validation/text_rules.dart';
 import '../../core/widgets/ui_primitives.dart';
 
 /// New Order flow: items first (with running total), then customer, then
-/// order summary (sample bill + live stock gate), then generate.
+/// order summary (sample bill), then generate.
+///
+/// Available unit counts are shown for awareness only — quantity and generate
+/// are not blocked when the order exceeds stock.
 ///
 /// When [initialCustomerId] is set for a normal customer, the customer step is
 /// skipped and the flow is items → summary → generate.
@@ -35,17 +38,8 @@ typedef NewRentalFlowScreen = NewOrderFlowScreen;
 
 enum _OrderPhase { form, customer, summary }
 
-class _StockShortfall {
-  const _StockShortfall({
-    required this.name,
-    required this.need,
-    required this.available,
-  });
-
-  final String name;
-  final int need;
-  final int available;
-}
+/// Soft upper bound for qty stepper (not stock-related).
+const int _kMaxOrderLineQuantity = 999;
 
 class _UnitIdentityDraft {
   _UnitIdentityDraft()
@@ -316,47 +310,18 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
     });
   }
 
-  int _usedCount(String itemId, {int? exceptIndex}) {
-    int count = 0;
-    for (var i = 0; i < _lines.length; i++) {
-      if (exceptIndex == i) {
-        continue;
-      }
-      if (_lines[i].itemId == itemId) {
-        count += _lines[i].quantity;
-      }
-    }
-    return count;
-  }
-
-  int _remainingFor(int index, InventoryItem item) {
-    final int remaining =
-        item.availableUnits - _usedCount(item.id, exceptIndex: index);
-    return remaining < 0 ? 0 : remaining;
-  }
-
   void _setQuantity(int index, int quantity, InventoryItem item) {
     setState(() {
       final _OrderLineDraft draft = _lines[index];
-      final int remaining = _remainingFor(index, item);
-      final int maxQty = remaining < 1 ? 1 : remaining;
-      draft.quantity = quantity.clamp(1, maxQty);
+      draft.quantity = quantity.clamp(1, _kMaxOrderLineQuantity);
       if (item.requiresUnitIdentity) {
         draft.ensureIdentitySlots(draft.quantity);
       }
     });
   }
 
-  List<InventoryItem> _choicesForLine(
-    int index,
-    List<InventoryItem> available,
-  ) {
-    final List<InventoryItem> filtered = available.where((InventoryItem item) {
-      final int used = _usedCount(item.id, exceptIndex: index);
-      final bool current = _lines[index].itemId == item.id;
-      return item.availableUnits > used || current;
-    }).toList();
-    return sortInventoryForOrderPicker(filtered);
+  List<InventoryItem> _choicesForLine(List<InventoryItem> catalog) {
+    return sortInventoryForOrderPicker(catalog);
   }
 
   void _applyAutoLabels(int index, InventoryItem item) {
@@ -367,11 +332,9 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
   }
 
   Future<void> _seedPrefillLabels() async {
-    final List<InventoryItem> available =
-        (await ref.read(repositoryProvider).listInventory())
-            .where((InventoryItem i) => i.availableUnits > 0)
-            .toList();
-    if (!mounted || available.isEmpty) {
+    final List<InventoryItem> catalog =
+        await ref.read(repositoryProvider).listInventory();
+    if (!mounted || catalog.isEmpty) {
       return;
     }
     setState(() {
@@ -380,7 +343,7 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
         if (itemId == null) {
           continue;
         }
-        for (final InventoryItem item in available) {
+        for (final InventoryItem item in catalog) {
           if (item.id == itemId) {
             _lines[i].fulfillment = item.isGeneral
                 ? LineFulfillment.sell
@@ -551,22 +514,18 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
     return _durationComplete(draft, item);
   }
 
-  bool _formReady(List<InventoryItem> available) {
+  bool _formReady(List<InventoryItem> catalog) {
     if (_lines.isEmpty) {
       return false;
     }
     final Set<String> codes = <String>{};
     for (var i = 0; i < _lines.length; i++) {
       final _OrderLineDraft draft = _lines[i];
-      final InventoryItem? item = _itemFor(draft, available);
+      final InventoryItem? item = _itemFor(draft, catalog);
       if (!_lineReady(draft, item)) {
         return false;
       }
-      final int remaining = _remainingFor(i, item!);
-      if (draft.quantity > remaining) {
-        return false;
-      }
-      if (!item.requiresUnitIdentity) {
+      if (!item!.requiresUnitIdentity) {
         continue;
       }
       for (var u = 0; u < draft.quantity; u++) {
@@ -579,40 +538,6 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
       }
     }
     return true;
-  }
-
-  /// Live stock check for summary (and create error mapping). Uses full inventory
-  /// so zero-available items still report a shortfall.
-  List<_StockShortfall> _availabilityShortfalls(List<InventoryItem> inventory) {
-    final Map<String, int> neededByItem = <String, int>{};
-    for (final _OrderLineDraft draft in _lines) {
-      final String? id = draft.itemId;
-      if (id == null) {
-        continue;
-      }
-      neededByItem[id] = (neededByItem[id] ?? 0) + draft.quantity;
-    }
-    final List<_StockShortfall> shortfalls = <_StockShortfall>[];
-    for (final MapEntry<String, int> entry in neededByItem.entries) {
-      InventoryItem? match;
-      for (final InventoryItem item in inventory) {
-        if (item.id == entry.key) {
-          match = item;
-          break;
-        }
-      }
-      final int available = match?.availableUnits ?? 0;
-      if (entry.value > available) {
-        shortfalls.add(
-          _StockShortfall(
-            name: match?.name ?? entry.key,
-            need: entry.value,
-            available: available,
-          ),
-        );
-      }
-    }
-    return shortfalls;
   }
 
   String _customerDisplayLabel(AppLocalizations l10n) {
@@ -757,29 +682,8 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
     setState(() => _phase = _OrderPhase.summary);
   }
 
-  Future<void> _generateOrder(List<InventoryItem> available) async {
-    if (!_formReady(available)) {
-      return;
-    }
-    final List<InventoryItem> liveInventory =
-        ref.read(inventoryProvider).valueOrNull ?? available;
-    final List<_StockShortfall> shortfalls =
-        _availabilityShortfalls(liveInventory);
-    if (shortfalls.isNotEmpty) {
-      if (mounted) {
-        final _StockShortfall first = shortfalls.first;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              context.l10n.orderSummaryUnavailable(
-                first.name,
-                first.need,
-                first.available,
-              ),
-            ),
-          ),
-        );
-      }
+  Future<void> _generateOrder(List<InventoryItem> catalog) async {
+    if (!_formReady(catalog)) {
       return;
     }
     setState(() => _submitting = true);
@@ -810,7 +714,7 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
       }
       await repository.createRental(
         customer: customer,
-        lines: _buildLineInputs(available),
+        lines: _buildLineInputs(catalog),
         nickname: nickname,
         depositTopUpPaise: _depositTopUpPaise(),
       );
@@ -829,21 +733,6 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
           } else if (lower.contains('instance') ||
               lower.contains('short code')) {
             message = l10n.instanceLabelsRequired;
-          } else if (lower.contains('not enough units')) {
-            final List<_StockShortfall> liveShortfalls =
-                _availabilityShortfalls(
-              ref.read(inventoryProvider).valueOrNull ?? available,
-            );
-            if (liveShortfalls.isNotEmpty) {
-              final _StockShortfall first = liveShortfalls.first;
-              message = l10n.orderSummaryUnavailable(
-                first.name,
-                first.need,
-                first.available,
-              );
-            } else {
-              message = raw.isEmpty ? '$error' : raw;
-            }
           } else {
             message = raw.isEmpty ? '$error' : raw;
           }
@@ -874,16 +763,11 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
         ref.watch(inventoryProvider);
     final List<InventoryItem> inventory =
         inventoryAsync.valueOrNull ?? const <InventoryItem>[];
-    final List<InventoryItem> availableItems =
-        inventory.where((InventoryItem item) => item.availableUnits > 0).toList();
 
     final bool onForm = _phase == _OrderPhase.form;
     final bool onCustomer = _phase == _OrderPhase.customer;
     final bool onSummary = _phase == _OrderPhase.summary;
-    final bool formReady = _formReady(availableItems);
-    final List<_StockShortfall> shortfalls =
-        onSummary ? _availabilityShortfalls(inventory) : const <_StockShortfall>[];
-    final bool availabilityOk = shortfalls.isEmpty;
+    final bool formReady = _formReady(inventory);
 
     final int stepCurrent = onForm
         ? 1
@@ -909,8 +793,8 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
       }
     } else {
       primaryLabel = l10n.confirmRental;
-      if (availabilityOk) {
-        primaryAction = () => _generateOrder(availableItems);
+      if (formReady) {
+        primaryAction = () => _generateOrder(inventory);
       }
     }
 
@@ -925,9 +809,9 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
               style: Theme.of(context).textTheme.labelLarge,
             ),
           if (!_skipCustomerStep) const SizedBox(height: 8),
-          if (onForm) ..._buildFormStep(l10n, availableItems),
-          if (onCustomer) ..._buildCustomerStep(l10n, availableItems),
-          if (onSummary) ..._buildSummaryStep(l10n, inventory, shortfalls),
+          if (onForm) ..._buildFormStep(l10n, inventory),
+          if (onCustomer) ..._buildCustomerStep(l10n, inventory),
+          if (onSummary) ..._buildSummaryStep(l10n, inventory),
         ],
       ),
       bottomNavigationBar: SafeArea(
@@ -967,7 +851,6 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
   List<Widget> _buildSummaryStep(
     AppLocalizations l10n,
     List<InventoryItem> inventory,
-    List<_StockShortfall> shortfalls,
   ) {
     final int total = _orderTotal(inventory);
     final int deposit = _depositTopUpPaise();
@@ -1045,26 +928,6 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
         _customerDisplayLabel(l10n),
         style: Theme.of(context).textTheme.titleMedium,
       ),
-      if (shortfalls.isNotEmpty) ...<Widget>[
-        const SizedBox(height: 12),
-        for (final _StockShortfall shortfall in shortfalls)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Text(
-              l10n.orderSummaryUnavailable(
-                shortfall.name,
-                shortfall.need,
-                shortfall.available,
-              ),
-              key: ValueKey<String>(
-                'order-summary-unavailable-${shortfall.name}',
-              ),
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.error,
-                  ),
-            ),
-          ),
-      ],
       const SizedBox(height: 16),
       ...billLines,
       const Divider(),
@@ -1269,8 +1132,7 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
     int index,
   ) {
     final _OrderLineDraft draft = _lines[index];
-    final List<InventoryItem> choices =
-        _choicesForLine(index, availableItems);
+    final List<InventoryItem> choices = _choicesForLine(availableItems);
     final InventoryItem? selected = _itemFor(draft, availableItems);
     final String? value = selected == null
         ? null
@@ -1490,7 +1352,6 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
     InventoryItem selected,
   ) {
     final _OrderLineDraft draft = _lines[index];
-    final int remaining = _remainingFor(index, selected);
     return Row(
       children: <Widget>[
         Expanded(
@@ -1515,7 +1376,7 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
         IconButton(
           key: ValueKey<String>('qty-inc-$index'),
           tooltip: l10n.quantityLabel,
-          onPressed: remaining <= draft.quantity
+          onPressed: draft.quantity >= _kMaxOrderLineQuantity
               ? null
               : () => _setQuantity(index, draft.quantity + 1, selected),
           icon: const Icon(Icons.add_circle_outline),

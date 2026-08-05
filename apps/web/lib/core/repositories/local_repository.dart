@@ -316,12 +316,6 @@ class LocalRepository {
         if (row == null) {
           throw ArgumentError('Inventory item not found: $itemId');
         }
-        if (row.availableUnits < neededByItem[itemId]!) {
-          throw ArgumentError(
-            'Not enough units available for ${row.name} '
-            '(need ${neededByItem[itemId]}, have ${row.availableUnits})',
-          );
-        }
         itemById[itemId] = row;
       }
       for (final RentalLineInput line in normalized) {
@@ -1262,6 +1256,9 @@ class LocalRepository {
                 ? 'INR'
                 : item.currencyCode.trim().toUpperCase(),
           ),
+          dueDateOptional: Value<bool>(item.dueDateOptional),
+          requiresUnitIdentity: Value<bool>(item.requiresUnitIdentity),
+          defaultItemKind: Value<String>(item.defaultItemKind.storageValue),
         ),
       );
       existingNames.add(key);
