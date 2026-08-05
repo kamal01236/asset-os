@@ -216,7 +216,7 @@ class RentalsScreen extends ConsumerStatefulWidget {
 class _RentalsScreenState extends ConsumerState<RentalsScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _query = '';
-  _OrdersBillScope _scope = _OrdersBillScope.all;
+  _OrdersBillScope _scope = _OrdersBillScope.open;
 
   @override
   void dispose() {
@@ -1046,24 +1046,6 @@ class _RentalDetailScreenState extends ConsumerState<RentalDetailScreen> {
             ),
           ],
         ),
-        actions: <Widget>[
-          if (rental.isActive && rental.returnedRentLines.isEmpty)
-            IconButton(
-              tooltip: l10n.deleteOrderAction,
-              onPressed: () async {
-                final bool done = await _confirmAndCancelOrder(
-                  context: context,
-                  ref: ref,
-                  rental: rental,
-                  customer: customer,
-                );
-                if (done && context.mounted) {
-                  Navigator.of(context).pop();
-                }
-              },
-              icon: const Icon(Icons.delete_outline),
-            ),
-        ],
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
@@ -1428,6 +1410,32 @@ class _RentalDetailScreenState extends ConsumerState<RentalDetailScreen> {
                     ),
                   ),
                 ],
+              ),
+            ],
+            if (rental.isActive && rental.returnedRentLines.isEmpty) ...<Widget>[
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Theme.of(context).colorScheme.error,
+                    side: BorderSide(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
+                  onPressed: () async {
+                    final bool done = await _confirmAndCancelOrder(
+                      context: context,
+                      ref: ref,
+                      rental: rental,
+                      customer: customer,
+                    );
+                    if (done && context.mounted) {
+                      Navigator.of(context).pop();
+                    }
+                  },
+                  child: Text(l10n.deleteOrderAction),
+                ),
               ),
             ],
           ],

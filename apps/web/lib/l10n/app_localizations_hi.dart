@@ -874,13 +874,13 @@ class AppLocalizationsHi extends AppLocalizations {
   String get returnNoteHint => 'भरने पर कम से कम 3 अक्षर';
 
   @override
-  String get deleteOrderAction => 'ऑर्डर हटाएँ';
+  String get deleteOrderAction => 'ऑर्डर रद्द करें';
 
   @override
-  String get deleteOrderTitle => 'ऑर्डर हटाएँ';
+  String get deleteOrderTitle => 'ऑर्डर रद्द करें';
 
   @override
-  String get confirmDeleteOrderAction => 'ऑर्डर हटाएँ';
+  String get confirmDeleteOrderAction => 'ऑर्डर रद्द करें';
 
   @override
   String get deleteOrderKeptLabel => 'रखने की राशि';
@@ -897,14 +897,14 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get deleteOrderBlockedPartial =>
-      'वस्तु वापस होने के बाद ऑर्डर नहीं हटाया जा सकता।';
+      'वस्तु वापस होने के बाद ऑर्डर रद्द नहीं किया जा सकता।';
 
   @override
-  String get deleteOrderFailed => 'यह ऑर्डर हटाया नहीं जा सका।';
+  String get deleteOrderFailed => 'यह ऑर्डर रद्द नहीं किया जा सका।';
 
   @override
   String deleteOrderSuccessSnack(String balance) {
-    return 'ऑर्डर हटाया गया। जमा शेष $balance।';
+    return 'ऑर्डर रद्द किया गया। जमा शेष $balance।';
   }
 
   @override

@@ -210,6 +210,58 @@ void main() {
     expect(find.text('Customize Home'), findsOneWidget);
   });
 
+  testWidgets('Orders tab defaults to Open scope; All includes completed', (
+    WidgetTester tester,
+  ) async {
+    await _pumpAppShell(tester);
+
+    await tester.tap(find.text('Orders'));
+    await pumpFrames(tester);
+
+    final ChoiceChip openChip = tester.widget<ChoiceChip>(
+      find.widgetWithText(ChoiceChip, 'Open'),
+    );
+    expect(openChip.selected, isTrue);
+    expect(find.text('#3001'), findsOneWidget);
+    expect(find.text('#3002'), findsNothing);
+
+    await tester.tap(find.widgetWithText(ChoiceChip, 'All'));
+    await pumpFrames(tester);
+
+    final ChoiceChip allChip = tester.widget<ChoiceChip>(
+      find.widgetWithText(ChoiceChip, 'All'),
+    );
+    expect(allChip.selected, isTrue);
+    expect(find.text('#3001'), findsOneWidget);
+    expect(find.text('#3002'), findsOneWidget);
+  });
+
+  testWidgets('open order detail cancel is bottom last action, not app bar', (
+    WidgetTester tester,
+  ) async {
+    await _pumpAppShell(tester);
+
+    await tester.tap(find.text('Orders'));
+    await pumpFrames(tester);
+    await tester.tap(find.text('#3001'));
+    await pumpFrames(tester);
+
+    expect(find.widgetWithText(AppBar, '#3001'), findsOneWidget);
+    expect(find.byIcon(Icons.delete_outline), findsNothing);
+    expect(find.widgetWithText(OutlinedButton, 'Cancel order'), findsOneWidget);
+    expect(find.text('Return all'), findsOneWidget);
+    expect(find.text('Return selected'), findsOneWidget);
+
+    final Finder cancelFinder =
+        find.widgetWithText(OutlinedButton, 'Cancel order');
+    final Finder returnAllFinder =
+        find.widgetWithText(OutlinedButton, 'Return all');
+    expect(
+      tester.getTopLeft(cancelFinder).dy,
+      greaterThan(tester.getTopLeft(returnAllFinder).dy),
+    );
+  });
+
   testWidgets('Home search is inline typeahead without a search route', (
     WidgetTester tester,
   ) async {

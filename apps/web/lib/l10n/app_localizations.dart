@@ -1595,19 +1595,19 @@ abstract class AppLocalizations {
   /// No description provided for @deleteOrderAction.
   ///
   /// In en, this message translates to:
-  /// **'Delete order'**
+  /// **'Cancel order'**
   String get deleteOrderAction;
 
   /// No description provided for @deleteOrderTitle.
   ///
   /// In en, this message translates to:
-  /// **'Delete order'**
+  /// **'Cancel order'**
   String get deleteOrderTitle;
 
   /// No description provided for @confirmDeleteOrderAction.
   ///
   /// In en, this message translates to:
-  /// **'Delete order'**
+  /// **'Cancel order'**
   String get confirmDeleteOrderAction;
 
   /// No description provided for @deleteOrderKeptLabel.
@@ -1637,19 +1637,19 @@ abstract class AppLocalizations {
   /// No description provided for @deleteOrderBlockedPartial.
   ///
   /// In en, this message translates to:
-  /// **'Cannot delete an order after items were returned.'**
+  /// **'Cannot cancel an order after items were returned.'**
   String get deleteOrderBlockedPartial;
 
   /// No description provided for @deleteOrderFailed.
   ///
   /// In en, this message translates to:
-  /// **'Could not delete this order.'**
+  /// **'Could not cancel this order.'**
   String get deleteOrderFailed;
 
   /// No description provided for @deleteOrderSuccessSnack.
   ///
   /// In en, this message translates to:
-  /// **'Order deleted. Deposit balance {balance}.'**
+  /// **'Order cancelled. Deposit balance {balance}.'**
   String deleteOrderSuccessSnack(String balance);
 
   /// No description provided for @depositReturnSnackApplied.

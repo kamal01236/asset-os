@@ -872,13 +872,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get returnNoteHint => 'At least 3 characters when set';
 
   @override
-  String get deleteOrderAction => 'Delete order';
+  String get deleteOrderAction => 'Cancel order';
 
   @override
-  String get deleteOrderTitle => 'Delete order';
+  String get deleteOrderTitle => 'Cancel order';
 
   @override
-  String get confirmDeleteOrderAction => 'Delete order';
+  String get confirmDeleteOrderAction => 'Cancel order';
 
   @override
   String get deleteOrderKeptLabel => 'Amount to keep';
@@ -895,14 +895,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deleteOrderBlockedPartial =>
-      'Cannot delete an order after items were returned.';
+      'Cannot cancel an order after items were returned.';
 
   @override
-  String get deleteOrderFailed => 'Could not delete this order.';
+  String get deleteOrderFailed => 'Could not cancel this order.';
 
   @override
   String deleteOrderSuccessSnack(String balance) {
-    return 'Order deleted. Deposit balance $balance.';
+    return 'Order cancelled. Deposit balance $balance.';
   }
 
   @override
