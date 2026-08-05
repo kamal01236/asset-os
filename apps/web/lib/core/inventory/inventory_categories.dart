@@ -65,11 +65,22 @@ InventoryItemKind defaultKindForCategory(String? selectedCategory) {
   return InventoryItemKind.rental;
 }
 
-/// Sort inventory for New Order picker: general items first, then by name.
+/// Sort inventory for New Order picker: sell/job catalog first, then by name.
 List<InventoryItem> sortInventoryForOrderPicker(List<InventoryItem> items) {
   final List<InventoryItem> sorted = List<InventoryItem>.of(items);
   sorted.sort((InventoryItem a, InventoryItem b) {
-    final int kindCmp = (a.isGeneral ? 0 : 1).compareTo(b.isGeneral ? 0 : 1);
+    int kindRank(InventoryItem item) {
+      switch (item.defaultItemKind) {
+        case InventoryItemKind.general:
+          return 0;
+        case InventoryItemKind.job:
+          return 1;
+        case InventoryItemKind.rental:
+          return 2;
+      }
+    }
+
+    final int kindCmp = kindRank(a).compareTo(kindRank(b));
     if (kindCmp != 0) {
       return kindCmp;
     }

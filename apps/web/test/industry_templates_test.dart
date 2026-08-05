@@ -100,7 +100,7 @@ void main() {
       expect(locker.billingMode, BillingMode.monthly);
     });
 
-    test('parlour pack seeds general services and rental kits', () async {
+    test('parlour pack seeds job services and rental kits', () async {
       final LocalRepository repo = await bootRepo();
       final IndustryTemplate parlour = industryTemplateById('parlour')!;
 
@@ -114,7 +114,7 @@ void main() {
       final InventoryItem steamer =
           inventory.firstWhere((InventoryItem i) => i.name == 'Steamer Kit');
 
-      expect(facial.defaultItemKind, InventoryItemKind.general);
+      expect(facial.defaultItemKind, InventoryItemKind.job);
       expect(facial.requiresUnitIdentity, isFalse);
       expect(steamer.defaultItemKind, InventoryItemKind.rental);
       expect(steamer.requiresUnitIdentity, isTrue);

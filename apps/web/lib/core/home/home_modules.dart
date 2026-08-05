@@ -4,6 +4,7 @@ enum HomeModuleId {
   kpis,
   filterResults,
   needsAttention,
+  pendingJobs,
   quickActions,
   recentActivity,
   suggestions,
@@ -19,6 +20,7 @@ const List<HomeModuleId> kDefaultHomeModules = <HomeModuleId>[
   HomeModuleId.search,
   HomeModuleId.kpis,
   HomeModuleId.needsAttention,
+  HomeModuleId.pendingJobs,
   HomeModuleId.quickActions,
 ];
 
@@ -27,6 +29,7 @@ const List<HomeModuleId> kLibraryHomeModules = <HomeModuleId>[
   HomeModuleId.search,
   HomeModuleId.kpis,
   HomeModuleId.needsAttention,
+  HomeModuleId.pendingJobs,
   HomeModuleId.quickActions,
   HomeModuleId.recentActivity,
 ];
@@ -36,6 +39,7 @@ const List<HomeModuleId> kRemovableHomeModules = <HomeModuleId>[
   HomeModuleId.kpis,
   HomeModuleId.filterResults,
   HomeModuleId.needsAttention,
+  HomeModuleId.pendingJobs,
   HomeModuleId.quickActions,
   HomeModuleId.recentActivity,
   HomeModuleId.suggestions,

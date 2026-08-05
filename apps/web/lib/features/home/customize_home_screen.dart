@@ -65,6 +65,8 @@ String _moduleTitle(AppLocalizations l10n, HomeModuleId id) {
       return l10n.moduleFilterResults;
     case HomeModuleId.needsAttention:
       return l10n.moduleNeedsAttention;
+    case HomeModuleId.pendingJobs:
+      return l10n.modulePendingJobs;
     case HomeModuleId.quickActions:
       return l10n.moduleQuickActions;
     case HomeModuleId.recentActivity:
@@ -84,6 +86,8 @@ String _moduleSubtitle(AppLocalizations l10n, HomeModuleId id) {
       return l10n.moduleFilterResultsSubtitle;
     case HomeModuleId.needsAttention:
       return l10n.moduleNeedsAttentionSubtitle;
+    case HomeModuleId.pendingJobs:
+      return l10n.modulePendingJobsSubtitle;
     case HomeModuleId.quickActions:
       return l10n.moduleQuickActionsSubtitle;
     case HomeModuleId.recentActivity:

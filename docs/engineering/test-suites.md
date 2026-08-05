@@ -49,7 +49,7 @@ Every suite file has exactly one:
 | Tag | Typical coverage |
 |-----|------------------|
 | `pricing` | Rental pricing math, repo persistence, line duration, open-ended |
-| `orders` | New order flow, sale fulfillment, line qty, order bills |
+| `orders` | New order flow, sale fulfillment, job fulfillment, line qty, order bills |
 | `returns` | Partial return, parent-unit issue/return |
 | `inventory` | Inventory categories |
 | `customers` | Customer balance, Unknown customer |

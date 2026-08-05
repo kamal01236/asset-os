@@ -73,6 +73,10 @@ class _OrderLineDraft {
 
   bool get isSell => fulfillment == LineFulfillment.sell;
 
+  bool get isJob => fulfillment == LineFulfillment.job;
+
+  bool get usesManualAmount => isSell || isJob;
+
   void ensureIdentitySlots(int count) {
     final int target = count < 1 ? 1 : count;
     while (identities.length < target) {
@@ -331,6 +335,26 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
     }
   }
 
+  LineFulfillment _defaultFulfillment(InventoryItem item) {
+    switch (item.defaultItemKind) {
+      case InventoryItemKind.general:
+        return LineFulfillment.sell;
+      case InventoryItemKind.job:
+        return LineFulfillment.job;
+      case InventoryItemKind.rental:
+        return LineFulfillment.rent;
+    }
+  }
+
+  void _applyFulfillmentDefaults(_OrderLineDraft draft, InventoryItem item) {
+    draft.fulfillment = _defaultFulfillment(item);
+    if (draft.isJob && item.rateAmount > 0) {
+      draft.saleAmountController.text = paiseToRupeesField(item.rateAmount);
+    } else if (!draft.usesManualAmount) {
+      draft.saleAmountController.clear();
+    }
+  }
+
   Future<void> _seedPrefillLabels() async {
     final List<InventoryItem> catalog =
         await ref.read(repositoryProvider).listInventory();
@@ -345,9 +369,7 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
         }
         for (final InventoryItem item in catalog) {
           if (item.id == itemId) {
-            _lines[i].fulfillment = item.isGeneral
-                ? LineFulfillment.sell
-                : LineFulfillment.rent;
+            _applyFulfillmentDefaults(_lines[i], item);
             _applyAutoLabels(i, item);
             break;
           }
@@ -377,9 +399,7 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
       }
       final InventoryItem item =
           available.firstWhere((InventoryItem i) => i.id == itemId);
-      draft.fulfillment = item.isGeneral
-          ? LineFulfillment.sell
-          : LineFulfillment.rent;
+      _applyFulfillmentDefaults(draft, item);
       _applyAutoLabels(index, item);
     });
   }
@@ -445,7 +465,7 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
   }
 
   int _lineAmount(_OrderLineDraft draft, InventoryItem item) {
-    if (draft.isSell) {
+    if (draft.usesManualAmount) {
       return _saleAmountPaise(draft);
     }
     final DateTime? due = _previewDue(draft, item);
@@ -505,7 +525,7 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
     if (!_labelsReady(draft, item)) {
       return false;
     }
-    if (draft.isSell) {
+    if (draft.usesManualAmount) {
       return _saleAmountPaise(draft) > 0;
     }
     if (item.dueDateOptional) {
@@ -600,6 +620,18 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
               instanceName: instanceName,
               shortCode: shortCode,
               fulfillment: LineFulfillment.sell,
+              manualSaleAmountPaise: _saleAmountPaise(draft),
+            ),
+          );
+          continue;
+        }
+        if (draft.isJob) {
+          inputs.add(
+            RentalLineInput(
+              itemId: item.id,
+              instanceName: instanceName,
+              shortCode: shortCode,
+              fulfillment: LineFulfillment.job,
               manualSaleAmountPaise: _saleAmountPaise(draft),
             ),
           );
@@ -862,9 +894,11 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
       }
       final int unitPaise = _lineAmount(draft, item);
       final int linePaise = unitPaise * draft.quantity;
-      final String fulfillment = draft.isSell
-          ? l10n.lineFulfillmentSell
-          : l10n.lineFulfillmentRent;
+      final String fulfillment = switch (draft.fulfillment) {
+        LineFulfillment.sell => l10n.lineFulfillmentSell,
+        LineFulfillment.job => l10n.lineFulfillmentJob,
+        LineFulfillment.rent => l10n.lineFulfillmentRent,
+      };
       billLines.add(
         Padding(
           padding: const EdgeInsets.only(bottom: 12),
@@ -888,7 +922,7 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
                 ),
                 style: Theme.of(context).textTheme.bodySmall,
               ),
-              if (!draft.isSell &&
+              if (!draft.usesManualAmount &&
                   _durationComplete(draft, item) &&
                   !draft.leaveOpenEnded) ...<Widget>[
                 Text(
@@ -898,7 +932,7 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ],
-              if (!draft.isSell && _lineIsOpenEnded(draft, item))
+              if (!draft.usesManualAmount && _lineIsOpenEnded(draft, item))
                 Text(
                   l10n.reviewOpenEndedLabel,
                   style: Theme.of(context).textTheme.bodySmall,
@@ -1202,14 +1236,24 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
                       value: LineFulfillment.sell,
                       label: Text(l10n.lineFulfillmentSell),
                     ),
+                    ButtonSegment<LineFulfillment>(
+                      value: LineFulfillment.job,
+                      label: Text(l10n.lineFulfillmentJob),
+                    ),
                   ],
                   selected: <LineFulfillment>{draft.fulfillment},
                   onSelectionChanged: (Set<LineFulfillment> selection) {
                     setState(() {
                       draft.fulfillment = selection.first;
-                      if (draft.isSell) {
+                      if (draft.usesManualAmount) {
                         draft.leaveOpenEnded = false;
                         draft.customEnd = null;
+                        if (draft.isJob &&
+                            selected.rateAmount > 0 &&
+                            draft.saleAmountController.text.trim().isEmpty) {
+                          draft.saleAmountController.text =
+                              paiseToRupeesField(selected.rateAmount);
+                        }
                       } else if (draft.durationController.text.isEmpty) {
                         draft.durationController.text = '1';
                       }
@@ -1227,14 +1271,18 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                 const SizedBox(height: 8),
-                if (draft.isSell) ...<Widget>[
+                if (draft.usesManualAmount) ...<Widget>[
                   TextField(
                     controller: draft.saleAmountController,
                     keyboardType:
                         const TextInputType.numberWithOptions(decimal: true),
                     decoration: InputDecoration(
-                      labelText: l10n.saleAmountLabel,
-                      hintText: l10n.saleAmountHint,
+                      labelText: draft.isJob
+                          ? l10n.jobAmountLabel
+                          : l10n.saleAmountLabel,
+                      hintText: draft.isJob
+                          ? l10n.jobAmountHint
+                          : l10n.saleAmountHint,
                     ),
                     onChanged: (_) => setState(() {}),
                   ),

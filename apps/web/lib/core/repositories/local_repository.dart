@@ -314,10 +314,14 @@ class LocalRepository {
       if (!batchCodes.add(shortCode)) {
         throw DuplicateActiveShortCodeException(shortCode);
       }
-      if (line.isSell) {
+      if (line.usesManualAmount) {
         final int saleAmount = line.manualSaleAmountPaise ?? 0;
         if (saleAmount <= 0) {
-          throw ArgumentError('Sale amount must be greater than zero');
+          throw ArgumentError(
+            line.isJob
+                ? 'Job amount must be greater than zero'
+                : 'Sale amount must be greater than zero',
+          );
         }
       }
       normalized.add(
@@ -368,7 +372,7 @@ class LocalRepository {
         itemRows.add(itemById[line.itemId]!);
       }
 
-      final List<bool> lineIsSell = <bool>[];
+      final List<LineFulfillment> lineFulfillments = <LineFulfillment>[];
       final List<bool> lineOpenEndedFlags = <bool>[];
       final List<DateTime?> lineDues = <DateTime?>[];
       final List<int> lineBaseAmounts = <int>[];
@@ -379,10 +383,10 @@ class LocalRepository {
       for (var i = 0; i < normalized.length; i++) {
         final RentalLineInput line = normalized[i];
         final InventoryItemRow row = itemRows[i];
-        final bool sell = line.isSell;
-        lineIsSell.add(sell);
+        final LineFulfillment fulfillment = line.fulfillment;
+        lineFulfillments.add(fulfillment);
 
-        if (sell) {
+        if (line.usesManualAmount) {
           final int saleAmount = line.manualSaleAmountPaise!;
           lineOpenEndedFlags.add(false);
           lineDues.add(null);
@@ -433,7 +437,7 @@ class LocalRepository {
 
       DateTime? dueAt;
       for (var i = 0; i < lineDues.length; i++) {
-        if (lineIsSell[i]) {
+        if (lineFulfillments[i] != LineFulfillment.rent) {
           continue;
         }
         final DateTime? lineDue = lineDues[i];
@@ -445,12 +449,13 @@ class LocalRepository {
         }
       }
 
-      final bool allSold = lineIsSell.every((bool v) => v);
+      final bool allSold =
+          lineFulfillments.every((LineFulfillment f) => f == LineFulfillment.sell);
       final OrderStatus orderStatus =
           allSold ? OrderStatus.completed : OrderStatus.open;
       int snapshotIndex = 0;
       for (var i = 0; i < lineOpenEndedFlags.length; i++) {
-        if (lineIsSell[i]) {
+        if (lineFulfillments[i] != LineFulfillment.rent) {
           continue;
         }
         if (!lineOpenEndedFlags[i]) {
@@ -467,7 +472,10 @@ class LocalRepository {
       final Iterable<MapEntry<int, bool>> rentOpenFlags = lineOpenEndedFlags
           .asMap()
           .entries
-          .where((MapEntry<int, bool> e) => !lineIsSell[e.key]);
+          .where(
+            (MapEntry<int, bool> e) =>
+                lineFulfillments[e.key] == LineFulfillment.rent,
+          );
       final int storedDurationUnits = allSold ||
               (rentOpenFlags.isNotEmpty &&
                   rentOpenFlags.every((MapEntry<int, bool> e) => e.value))
@@ -508,7 +516,11 @@ class LocalRepository {
       for (var i = 0; i < normalized.length; i++) {
         final RentalLineInput line = normalized[i];
         final String lineId = '${nextId('RLI')}-${i.toString().padLeft(2, '0')}';
-        final bool sell = lineIsSell[i];
+        final LineFulfillment fulfillment = lineFulfillments[i];
+        final bool closesAtCreate = fulfillment == LineFulfillment.sell;
+        final bool permanentStock =
+            fulfillment == LineFulfillment.sell ||
+            fulfillment == LineFulfillment.job;
         await _db.into(_db.rentalItems).insert(
           RentalItemsCompanion.insert(
             id: lineId,
@@ -516,21 +528,17 @@ class LocalRepository {
             itemId: line.itemId,
             instanceName: Value<String>(line.instanceName),
             shortCode: Value<String>(line.shortCode),
-            returnedAt: Value<DateTime?>(sell ? now : null),
+            returnedAt: Value<DateTime?>(closesAtCreate ? now : null),
             baseAmount: Value<int>(lineBaseAmounts[i]),
             lateAmount: const Value<int>(0),
-            fulfillment: Value<String>(
-              sell
-                  ? LineFulfillment.sell.storageValue
-                  : LineFulfillment.rent.storageValue,
-            ),
+            fulfillment: Value<String>(fulfillment.storageValue),
           ),
         );
 
         final int nextAvailable =
             (remainingAvailable[line.itemId]! - 1).clamp(0, 1 << 30);
         remainingAvailable[line.itemId] = nextAvailable;
-        if (sell) {
+        if (permanentStock) {
           final int nextTotal =
               (remainingTotal[line.itemId]! - 1).clamp(0, 1 << 30);
           remainingTotal[line.itemId] = nextTotal;
@@ -567,8 +575,12 @@ class LocalRepository {
         }
       }
 
-      final bool hasSell = lineIsSell.any((bool v) => v);
-      final bool hasRent = lineIsSell.any((bool v) => !v);
+      final bool hasSell =
+          lineFulfillments.any((LineFulfillment f) => f == LineFulfillment.sell);
+      final bool hasRent =
+          lineFulfillments.any((LineFulfillment f) => f == LineFulfillment.rent);
+      final bool hasJob =
+          lineFulfillments.any((LineFulfillment f) => f == LineFulfillment.job);
       final String eventTitle;
       final String eventSubtitle;
       if (replacedFrom != null) {
@@ -577,9 +589,12 @@ class LocalRepository {
       } else if (allSold) {
         eventTitle = 'Sale completed';
         eventSubtitle = 'Created from phone-first order flow (sale).';
-      } else if (hasSell && hasRent) {
+      } else if (hasJob && !hasRent && !hasSell) {
+        eventTitle = 'Job opened';
+        eventSubtitle = 'Created from phone-first order flow (job).';
+      } else if (hasSell || hasJob) {
         eventTitle = 'Order opened';
-        eventSubtitle = 'Created from phone-first order flow (rent + sale).';
+        eventSubtitle = 'Created from phone-first order flow (mixed).';
       } else {
         eventTitle = 'Order opened';
         eventSubtitle = 'Created from phone-first order flow.';
@@ -663,7 +678,7 @@ class LocalRepository {
             (RentalItemRow link) =>
                 wanted.contains(link.id) &&
                 link.returnedAt == null &&
-                LineFulfillment.parse(link.fulfillment) != LineFulfillment.sell,
+                LineFulfillment.parse(link.fulfillment) == LineFulfillment.rent,
           )
           .toList();
       if (toReturn.isEmpty) {
@@ -771,7 +786,7 @@ class LocalRepository {
       final List<RentalItemRow> refreshed = await (_db.select(_db.rentalItems)
             ..where((t) => t.rentalId.equals(rentalId)))
           .get();
-      final bool noOpenRent = refreshed.every(
+      final bool noOpenWork = refreshed.every(
         (RentalItemRow l) =>
             l.returnedAt != null ||
             LineFulfillment.parse(l.fulfillment) == LineFulfillment.sell,
@@ -786,7 +801,7 @@ class LocalRepository {
         parentLate += link.lateAmount;
         parentDeposit += link.depositApplied;
         if (link.returnedAt == null &&
-            LineFulfillment.parse(link.fulfillment) != LineFulfillment.sell) {
+            LineFulfillment.parse(link.fulfillment) == LineFulfillment.rent) {
           final InventoryItemRow? item = await (_db.select(_db.inventoryItems)
                 ..where((t) => t.id.equals(link.itemId)))
               .getSingleOrNull();
@@ -795,24 +810,24 @@ class LocalRepository {
       }
       final int parentTotal = parentBase + parentLate;
       final OrderStatus nextStatus =
-          noOpenRent ? OrderStatus.completed : OrderStatus.open;
+          noOpenWork ? OrderStatus.completed : OrderStatus.open;
 
       await (_db.update(_db.rentals)..where((t) => t.id.equals(rentalId))).write(
         RentalsCompanion(
-          returnedAt: Value<DateTime?>(noOpenRent ? now : null),
+          returnedAt: Value<DateTime?>(noOpenWork ? now : null),
           orderStatus: Value<String>(nextStatus.storageValue),
           baseAmount: Value<int>(parentBase),
           lateAmount: Value<int>(parentLate),
           totalAmount: Value<int>(parentTotal),
           depositApplied: Value<int>(parentDeposit),
           lateFeePerDay: Value<int>(
-            noOpenRent ? rental.lateFeePerDay : openLateFeePerDay,
+            noOpenWork ? rental.lateFeePerDay : openLateFeePerDay,
           ),
         ),
       );
 
       final StringBuffer subtitle = StringBuffer(
-        noOpenRent
+        noOpenWork
             ? (parentLate > 0
                   ? 'All lines returned. Late fee applied.'
                   : 'All lines returned by staff.')
@@ -828,7 +843,7 @@ class LocalRepository {
       await _db.into(_db.rentalEvents).insert(
         RentalEventsCompanion.insert(
           rentalId: rentalId,
-          title: noOpenRent ? 'Returned' : 'Partial return',
+          title: noOpenWork ? 'Returned' : 'Partial return',
           subtitle: subtitle.toString(),
           at: now,
         ),
@@ -841,7 +856,121 @@ class LocalRepository {
         depositBalanceAfter:
             (rental.depositAmount - parentDeposit).clamp(0, rental.depositAmount),
         returnedLineIds: returnedIds,
-        rentalClosed: noOpenRent,
+        rentalClosed: noOpenWork,
+      );
+    });
+  }
+
+  /// Marks selected open job lines complete; does not restore stock.
+  Future<RentalReturnResult?> completeJobLines(
+    String rentalId,
+    List<String> lineIds,
+  ) async {
+    if (lineIds.isEmpty) {
+      return null;
+    }
+    final DateTime now = DateTime.now();
+    final Set<String> wanted = lineIds.toSet();
+
+    return _db.transaction(() async {
+      final RentalRow? rental = await (_db.select(_db.rentals)
+            ..where((t) => t.id.equals(rentalId)))
+          .getSingleOrNull();
+      if (rental == null ||
+          OrderStatus.parse(rental.orderStatus) != OrderStatus.open) {
+        return null;
+      }
+
+      final List<RentalItemRow> links = await (_db.select(_db.rentalItems)
+            ..where((t) => t.rentalId.equals(rentalId)))
+          .get();
+      final List<RentalItemRow> toComplete = links
+          .where(
+            (RentalItemRow link) =>
+                wanted.contains(link.id) &&
+                link.returnedAt == null &&
+                LineFulfillment.parse(link.fulfillment) == LineFulfillment.job,
+          )
+          .toList();
+      if (toComplete.isEmpty) {
+        return null;
+      }
+
+      final List<String> completedIds = <String>[];
+      int batchTotal = 0;
+      for (final RentalItemRow link in toComplete) {
+        completedIds.add(link.id);
+        batchTotal += link.baseAmount + link.lateAmount;
+        await (_db.update(_db.rentalItems)..where((t) => t.id.equals(link.id)))
+            .write(
+          RentalItemsCompanion(
+            returnedAt: Value<DateTime?>(now),
+          ),
+        );
+      }
+
+      final List<RentalItemRow> refreshed = await (_db.select(_db.rentalItems)
+            ..where((t) => t.rentalId.equals(rentalId)))
+          .get();
+      final bool noOpenWork = refreshed.every(
+        (RentalItemRow l) =>
+            l.returnedAt != null ||
+            LineFulfillment.parse(l.fulfillment) == LineFulfillment.sell,
+      );
+
+      int parentBase = 0;
+      int parentLate = 0;
+      int parentDeposit = 0;
+      int openLateFeePerDay = 0;
+      for (final RentalItemRow link in refreshed) {
+        parentBase += link.baseAmount;
+        parentLate += link.lateAmount;
+        parentDeposit += link.depositApplied;
+        if (link.returnedAt == null &&
+            LineFulfillment.parse(link.fulfillment) == LineFulfillment.rent) {
+          final InventoryItemRow? item = await (_db.select(_db.inventoryItems)
+                ..where((t) => t.id.equals(link.itemId)))
+              .getSingleOrNull();
+          openLateFeePerDay += item?.lateFeePerDay ?? 0;
+        }
+      }
+      final int parentTotal = parentBase + parentLate;
+      final OrderStatus nextStatus =
+          noOpenWork ? OrderStatus.completed : OrderStatus.open;
+
+      await (_db.update(_db.rentals)..where((t) => t.id.equals(rentalId))).write(
+        RentalsCompanion(
+          returnedAt: Value<DateTime?>(noOpenWork ? now : null),
+          orderStatus: Value<String>(nextStatus.storageValue),
+          baseAmount: Value<int>(parentBase),
+          lateAmount: Value<int>(parentLate),
+          totalAmount: Value<int>(parentTotal),
+          depositApplied: Value<int>(parentDeposit),
+          lateFeePerDay: Value<int>(
+            noOpenWork ? rental.lateFeePerDay : openLateFeePerDay,
+          ),
+        ),
+      );
+
+      await _db.into(_db.rentalEvents).insert(
+        RentalEventsCompanion.insert(
+          rentalId: rentalId,
+          title: noOpenWork ? 'Jobs completed' : 'Job completed',
+          subtitle: noOpenWork
+              ? 'All job lines marked complete.'
+              : 'Completed ${completedIds.length} job line(s).',
+          at: now,
+        ),
+      );
+
+      return RentalReturnResult(
+        rentalId: rentalId,
+        totalAmount: batchTotal,
+        depositApplied: 0,
+        depositBalanceAfter:
+            (rental.depositAmount - parentDeposit).clamp(0, rental.depositAmount),
+        returnedLineIds: completedIds,
+        rentalClosed: noOpenWork,
       );
     });
   }
@@ -895,7 +1024,8 @@ class LocalRepository {
         throw ArgumentError('Settlement exceeds order deposit');
       }
 
-      final Map<String, int> stockBump = <String, int>{};
+      final Map<String, int> availableBump = <String, int>{};
+      final Map<String, int> totalBump = <String, int>{};
       for (final RentalItemRow link in links) {
         if (link.returnedAt != null) {
           continue;
@@ -909,22 +1039,28 @@ class LocalRepository {
             depositApplied: const Value<int>(0),
           ),
         );
-        stockBump[link.itemId] = (stockBump[link.itemId] ?? 0) + 1;
+        availableBump[link.itemId] = (availableBump[link.itemId] ?? 0) + 1;
+        if (LineFulfillment.parse(link.fulfillment) == LineFulfillment.job) {
+          totalBump[link.itemId] = (totalBump[link.itemId] ?? 0) + 1;
+        }
       }
 
-      for (final MapEntry<String, int> bump in stockBump.entries) {
+      for (final MapEntry<String, int> bump in availableBump.entries) {
         final InventoryItemRow? item = await (_db.select(_db.inventoryItems)
               ..where((t) => t.id.equals(bump.key)))
             .getSingleOrNull();
         if (item == null) {
           continue;
         }
+        final int nextTotal =
+            (item.totalUnits + (totalBump[bump.key] ?? 0)).clamp(0, 1 << 30);
         final int nextAvailable =
-            (item.availableUnits + bump.value).clamp(0, item.totalUnits);
+            (item.availableUnits + bump.value).clamp(0, nextTotal);
         await (_db.update(_db.inventoryItems)..where((t) => t.id.equals(item.id)))
             .write(
           InventoryItemsCompanion(
             availableUnits: Value<int>(nextAvailable),
+            totalUnits: Value<int>(nextTotal),
             status: Value<String>(AssetStatus.available.name),
           ),
         );

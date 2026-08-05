@@ -39,16 +39,18 @@ UI-first conventions for `apps/web` to keep flows fast, clear, and touch-friendl
 - Free-text identity/note fields (customer name, item name, category, instance name, SELF nickname, notes when non-empty) require at least 3 characters; search runs only at ≥3 chars (Home/global = all entities; Inventory tab = inventory; Customers tab = customers + order nicknames).
 
 ## Order bills and deposit
-- Orders tab lists orders as bill-style cards. When no Home KPI filter is active, light chips **All / Open / Completed** narrow the list; default scope is **Open** (active / non-completed only). **All** includes open + completed + **cancelled**. Filters (Active / Due today / Overdue) from Home KPIs still narrow among open bills.
+- Orders tab lists orders as bill-style cards. When no Home KPI filter is active, light chips **All / Open / Completed / Pending jobs** narrow the list; default scope is **Open** (active / non-completed only). **Pending jobs** shows open orders with ≥1 unfinished job line. **All** includes open + completed + **cancelled**. Filters (Active / Due today / Overdue) from Home KPIs still narrow among open bills.
 - Bill cards: **party name** as title; item summary + short `#id`; trailing **Bill** / **Deposit** amounts; status pill bottom-left — not a mega concatenated subtitle.
 - Customer detail shows a signed net from all that customer’s orders (positive = owes shop, negative = credit). Advance = sum of order deposits; pending = sum of bill charges. No customer wallet Add/Refund in the profile UI. Customer **list** shows phone + TierPill and signed net only (breakdown stays on detail).
 - Deposit / token / advance lives on the **order** (set at New Order). Return and cancel settle against that order deposit, not a shared customer wallet.
-- Order detail is a full bill: lines, deposit, total, status chip in the app bar. Charges use `MoneyStack` rows. Return only while status is open and ≥1 rent line is still out. **Cancel order** is the last bottom-bar action on open orders with no returned rent lines (not an app-bar icon). Sell-only orders complete at create.
+- Order detail is a full bill: lines, deposit, total, status chip in the app bar. Charges use `MoneyStack` rows. Return only while status is open and ≥1 **rent** line is still out. **Mark complete** closes open **job** lines (no stock restore). **Cancel order** is the last bottom-bar action on open orders with no settled rent/job lines (not an app-bar icon). Sell-only orders complete at create; job-only stay open until marked complete.
+- Inventory catalog kinds: **Rental / General / Job**. Job lines charge the catalog rate (editable override), stay open until Mark complete, and do not restore stock.
 - Share reports: **Share to my WhatsApp** stays disabled until the owner number is configured; preview is structured key-value rows with Copy still producing the same plain text.
 
 ## Order return and cancel
 - Returns always require an explicit confirm dialog. Show the computed line total (read-only), an editable **final amount to collect** (0…total; remainder shown as discount), deposit preview against that final amount (from the order deposit), and an optional note (≥3 chars when set).
-- **Cancel order** is available on open orders with no rent lines already returned, as the last control in the order-detail bottom action bar (danger-styled outline; not the primary filled CTA). Confirmation settles order deposit as amount kept + amount returned (both default 0; sum ≤ order deposit remaining) plus optional note, then cancels the order and restores stock.
+- **Mark complete** (job lines) uses a simple confirm; stock is not restored.
+- **Cancel order** is available on open orders with no rent/job lines already settled, as the last control in the order-detail bottom action bar (danger-styled outline; not the primary filled CTA). Confirmation settles order deposit as amount kept + amount returned (both default 0; sum ≤ order deposit remaining) plus optional note, then cancels the order and restores stock.
 - Per-line Replace/Change is not offered; do not reintroduce SKU swap from order detail.
 - **Order notes** (order detail only): append-only after create; optional link to one rental line; body ≥3 characters; kinds `general` / `terms` / `measurement`. No edit/delete in MVP.
 

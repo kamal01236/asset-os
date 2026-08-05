@@ -1081,6 +1081,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get moduleNeedsAttentionSubtitle => 'Due today and overdue orders';
 
   @override
+  String get modulePendingJobs => 'Pending jobs';
+
+  @override
+  String get modulePendingJobsSubtitle =>
+      'Open orders with unfinished job lines';
+
+  @override
+  String get pendingJobsTitle => 'Pending jobs';
+
+  @override
+  String get pendingJobsEmptySubtitle => 'No open job lines right now.';
+
+  @override
   String get moduleQuickActions => 'Quick actions';
 
   @override
@@ -1337,13 +1350,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get itemKindGeneralLabel => 'General';
 
   @override
+  String get itemKindJobLabel => 'Job';
+
+  @override
   String get itemKindGeneralBadge => 'General';
+
+  @override
+  String get itemKindJobBadge => 'Job';
 
   @override
   String get lineFulfillmentRent => 'Rent';
 
   @override
   String get lineFulfillmentSell => 'Sell';
+
+  @override
+  String get lineFulfillmentJob => 'Job';
 
   @override
   String get saleAmountLabel => 'Sale amount';
@@ -1356,7 +1378,39 @@ class AppLocalizationsEn extends AppLocalizations {
       'Enter a sale amount greater than zero.';
 
   @override
+  String get jobAmountLabel => 'Job charge';
+
+  @override
+  String get jobAmountHint => 'Amount in rupees';
+
+  @override
+  String get jobAmountRequiredError => 'Enter a job charge greater than zero.';
+
+  @override
   String get soldLineBadge => 'Sold';
+
+  @override
+  String get completedJobLineBadge => 'Completed';
+
+  @override
+  String get selectLinesToComplete => 'Select job lines to mark complete';
+
+  @override
+  String get markCompleteAllAction => 'Mark all complete';
+
+  @override
+  String get markCompleteSelectedAction => 'Mark complete';
+
+  @override
+  String get confirmCompleteJobsTitle => 'Mark jobs complete?';
+
+  @override
+  String confirmCompleteJobsBody(int count) {
+    return 'Close $count job line(s). Stock is not restored.';
+  }
+
+  @override
+  String get jobsCompletedSnack => 'Jobs marked complete';
 
   @override
   String get orderNotesHeading => 'Notes';
@@ -1408,6 +1462,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ordersFilterCompleted => 'Completed';
+
+  @override
+  String get ordersFilterPendingJobs => 'Pending jobs';
 
   @override
   String get searchOrdersHint => 'Search by party, id, or item';

@@ -299,7 +299,7 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
         defaultUnits: 1,
         billingMode: BillingMode.fixed,
         rateAmount: 30000, // ₹300
-        defaultItemKind: InventoryItemKind.general,
+        defaultItemKind: InventoryItemKind.job,
         requiresUnitIdentity: false,
       ),
       TemplateInventoryItem(
@@ -308,7 +308,7 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
         defaultUnits: 1,
         billingMode: BillingMode.fixed,
         rateAmount: 80000, // ₹800
-        defaultItemKind: InventoryItemKind.general,
+        defaultItemKind: InventoryItemKind.job,
         requiresUnitIdentity: false,
       ),
       TemplateInventoryItem(
@@ -317,7 +317,7 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
         defaultUnits: 1,
         billingMode: BillingMode.fixed,
         rateAmount: 40000, // ₹400
-        defaultItemKind: InventoryItemKind.general,
+        defaultItemKind: InventoryItemKind.job,
         requiresUnitIdentity: false,
       ),
       TemplateInventoryItem(
@@ -326,7 +326,7 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
         defaultUnits: 1,
         billingMode: BillingMode.fixed,
         rateAmount: 1500000, // ₹15,000
-        defaultItemKind: InventoryItemKind.general,
+        defaultItemKind: InventoryItemKind.job,
         requiresUnitIdentity: false,
       ),
       TemplateInventoryItem(

@@ -4,10 +4,11 @@ import '../pricing/rental_pricing.dart';
 
 export '../pricing/rental_pricing.dart' show BillingMode;
 
-/// Catalog default for New Order Rent/Sell (`rental` | `general`).
+/// Catalog default for New Order Rent/Sell/Job (`rental` | `general` | `job`).
 enum InventoryItemKind {
   rental,
-  general;
+  general,
+  job;
 
   String get storageValue => name;
 
@@ -15,16 +16,19 @@ enum InventoryItemKind {
     switch (raw) {
       case 'general':
         return InventoryItemKind.general;
+      case 'job':
+        return InventoryItemKind.job;
       default:
         return InventoryItemKind.rental;
     }
   }
 }
 
-/// How a rental line was issued (`rent` | `sell`).
+/// How a rental line was issued (`rent` | `sell` | `job`).
 enum LineFulfillment {
   rent,
-  sell;
+  sell,
+  job;
 
   String get storageValue => name;
 
@@ -32,6 +36,8 @@ enum LineFulfillment {
     switch (raw) {
       case 'sell':
         return LineFulfillment.sell;
+      case 'job':
+        return LineFulfillment.job;
       default:
         return LineFulfillment.rent;
     }
@@ -180,10 +186,12 @@ class InventoryItem {
   final bool dueDateOptional;
   /// Parent catalog (e.g. Novels): each unit needs name/id at issue.
   final bool requiresUnitIdentity;
-  /// Default Rent/Sell mode when adding this item to an order.
+  /// Default Rent/Sell/Job mode when adding this item to an order.
   final InventoryItemKind defaultItemKind;
 
   bool get isGeneral => defaultItemKind == InventoryItemKind.general;
+
+  bool get isJob => defaultItemKind == InventoryItemKind.job;
 
   InventoryItem copyWith({
     int? availableUnits,
@@ -359,13 +367,17 @@ class RentalLineInput {
   /// When set, overrides parent open-ended flag for this line.
   final bool? openEnded;
 
-  /// Rent (duration) or Sell (manual amount, auto-closed).
+  /// Rent (duration), Sell (manual amount, auto-closed), or Job (manual amount, stays open).
   final LineFulfillment fulfillment;
 
-  /// Required when [fulfillment] is [LineFulfillment.sell] (paise, > 0).
+  /// Required when [fulfillment] is sell or job (paise, > 0).
   final int? manualSaleAmountPaise;
 
   bool get isSell => fulfillment == LineFulfillment.sell;
+
+  bool get isJob => fulfillment == LineFulfillment.job;
+
+  bool get usesManualAmount => isSell || isJob;
 }
 
 /// One issued unit on a rental: catalog type + instance name/code.
@@ -406,6 +418,10 @@ class RentalLine {
   bool get isOpen => returnedAt == null;
 
   bool get isSell => fulfillment == LineFulfillment.sell;
+
+  bool get isJob => fulfillment == LineFulfillment.job;
+
+  bool get isRent => fulfillment == LineFulfillment.rent;
 
   int get totalAmount => baseAmount + lateAmount;
 
@@ -670,16 +686,26 @@ class Rental {
   List<RentalLine> get openLines =>
       lines.where((RentalLine line) => line.isOpen).toList(growable: false);
 
-  List<RentalLine> get openRentLines => openLines
-      .where((RentalLine line) => !line.isSell)
-      .toList(growable: false);
+  List<RentalLine> get openRentLines =>
+      openLines.where((RentalLine line) => line.isRent).toList(growable: false);
+
+  List<RentalLine> get openJobLines =>
+      openLines.where((RentalLine line) => line.isJob).toList(growable: false);
 
   List<RentalLine> get returnedLines =>
       lines.where((RentalLine line) => !line.isOpen).toList(growable: false);
 
   List<RentalLine> get returnedRentLines => returnedLines
-      .where((RentalLine line) => !line.isSell)
+      .where((RentalLine line) => line.isRent)
       .toList(growable: false);
+
+  /// Open order with ≥1 unfinished job line.
+  bool get hasPendingJobs => isActive && openJobLines.isNotEmpty;
+
+  /// True when any rent/job line was already settled (blocks cancel).
+  bool get hasSettledWorkLines => lines.any(
+        (RentalLine line) => !line.isOpen && !line.isSell,
+      );
 
   bool get isActive => orderStatus == OrderStatus.open;
 

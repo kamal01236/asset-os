@@ -126,6 +126,15 @@ class HomeScreen extends ConsumerWidget {
           customers: customers,
           onOpenRental: onOpenRental,
         );
+      case HomeModuleId.pendingJobs:
+        if (filter != null) {
+          return null;
+        }
+        return HomePendingJobsSection(
+          rentals: rentals,
+          customers: customers,
+          onOpenRental: onOpenRental,
+        );
       case HomeModuleId.quickActions:
         return HomeQuickActionsSection(
           onNewRental: onNewRental,
@@ -365,6 +374,48 @@ class HomeNeedsAttentionSection extends StatelessWidget {
         if (limited.isEmpty)
           CompactEmptyState(
             message: l10n.needsAttentionEmptySubtitle,
+          )
+        else
+          ..._rentalCards(context, limited, customers, onOpenRental),
+      ],
+    );
+  }
+}
+
+class HomePendingJobsSection extends StatelessWidget {
+  const HomePendingJobsSection({
+    required this.rentals,
+    required this.customers,
+    required this.onOpenRental,
+    super.key,
+  });
+
+  final List<Rental> rentals;
+  final List<Customer> customers;
+  final ValueChanged<Rental> onOpenRental;
+
+  @override
+  Widget build(BuildContext context) {
+    final AppLocalizations l10n = context.l10n;
+    final List<Rental> pending = rentals
+        .where((Rental rental) => rental.hasPendingJobs)
+        .toList()
+      ..sort((Rental a, Rental b) => b.startedAt.compareTo(a.startedAt));
+    final List<Rental> limited = pending.take(5).toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Text(
+          l10n.pendingJobsTitle,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 8),
+        if (limited.isEmpty)
+          CompactEmptyState(
+            message: l10n.pendingJobsEmptySubtitle,
           )
         else
           ..._rentalCards(context, limited, customers, onOpenRental),

@@ -401,7 +401,7 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingTemplateSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'We'll add starter inventory for your industry. You can add more later from More → Business Templates.'**
+  /// **'We\'ll add starter inventory for your industry. You can add more later from More → Business Templates.'**
   String get onboardingTemplateSubtitle;
 
   /// No description provided for @onboardingTemplateConfirm.
@@ -1940,6 +1940,30 @@ abstract class AppLocalizations {
   /// **'Due today and overdue orders'**
   String get moduleNeedsAttentionSubtitle;
 
+  /// No description provided for @modulePendingJobs.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending jobs'**
+  String get modulePendingJobs;
+
+  /// No description provided for @modulePendingJobsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Open orders with unfinished job lines'**
+  String get modulePendingJobsSubtitle;
+
+  /// No description provided for @pendingJobsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending jobs'**
+  String get pendingJobsTitle;
+
+  /// No description provided for @pendingJobsEmptySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No open job lines right now.'**
+  String get pendingJobsEmptySubtitle;
+
   /// No description provided for @moduleQuickActions.
   ///
   /// In en, this message translates to:
@@ -2360,11 +2384,23 @@ abstract class AppLocalizations {
   /// **'General'**
   String get itemKindGeneralLabel;
 
+  /// No description provided for @itemKindJobLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Job'**
+  String get itemKindJobLabel;
+
   /// No description provided for @itemKindGeneralBadge.
   ///
   /// In en, this message translates to:
   /// **'General'**
   String get itemKindGeneralBadge;
+
+  /// No description provided for @itemKindJobBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Job'**
+  String get itemKindJobBadge;
 
   /// No description provided for @lineFulfillmentRent.
   ///
@@ -2377,6 +2413,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sell'**
   String get lineFulfillmentSell;
+
+  /// No description provided for @lineFulfillmentJob.
+  ///
+  /// In en, this message translates to:
+  /// **'Job'**
+  String get lineFulfillmentJob;
 
   /// No description provided for @saleAmountLabel.
   ///
@@ -2396,11 +2438,71 @@ abstract class AppLocalizations {
   /// **'Enter a sale amount greater than zero.'**
   String get saleAmountRequiredError;
 
+  /// No description provided for @jobAmountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Job charge'**
+  String get jobAmountLabel;
+
+  /// No description provided for @jobAmountHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount in rupees'**
+  String get jobAmountHint;
+
+  /// No description provided for @jobAmountRequiredError.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a job charge greater than zero.'**
+  String get jobAmountRequiredError;
+
   /// No description provided for @soldLineBadge.
   ///
   /// In en, this message translates to:
   /// **'Sold'**
   String get soldLineBadge;
+
+  /// No description provided for @completedJobLineBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get completedJobLineBadge;
+
+  /// No description provided for @selectLinesToComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Select job lines to mark complete'**
+  String get selectLinesToComplete;
+
+  /// No description provided for @markCompleteAllAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark all complete'**
+  String get markCompleteAllAction;
+
+  /// No description provided for @markCompleteSelectedAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark complete'**
+  String get markCompleteSelectedAction;
+
+  /// No description provided for @confirmCompleteJobsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark jobs complete?'**
+  String get confirmCompleteJobsTitle;
+
+  /// No description provided for @confirmCompleteJobsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Close {count} job line(s). Stock is not restored.'**
+  String confirmCompleteJobsBody(int count);
+
+  /// No description provided for @jobsCompletedSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Jobs marked complete'**
+  String get jobsCompletedSnack;
 
   /// No description provided for @orderNotesHeading.
   ///
@@ -2503,6 +2605,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Completed'**
   String get ordersFilterCompleted;
+
+  /// No description provided for @ordersFilterPendingJobs.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending jobs'**
+  String get ordersFilterPendingJobs;
 
   /// No description provided for @searchOrdersHint.
   ///

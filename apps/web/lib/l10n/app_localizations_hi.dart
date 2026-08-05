@@ -1083,6 +1083,18 @@ class AppLocalizationsHi extends AppLocalizations {
   String get moduleNeedsAttentionSubtitle => 'आज देय और अतिदेय ऑर्डर';
 
   @override
+  String get modulePendingJobs => 'लंबित जॉब';
+
+  @override
+  String get modulePendingJobsSubtitle => 'अधूरे जॉब लाइन वाले खुले ऑर्डर';
+
+  @override
+  String get pendingJobsTitle => 'लंबित जॉब';
+
+  @override
+  String get pendingJobsEmptySubtitle => 'अभी कोई खुली जॉब लाइन नहीं।';
+
+  @override
   String get moduleQuickActions => 'त्वरित कार्रवाई';
 
   @override
@@ -1339,13 +1351,22 @@ class AppLocalizationsHi extends AppLocalizations {
   String get itemKindGeneralLabel => 'सामान्य';
 
   @override
+  String get itemKindJobLabel => 'जॉब';
+
+  @override
   String get itemKindGeneralBadge => 'सामान्य';
+
+  @override
+  String get itemKindJobBadge => 'जॉब';
 
   @override
   String get lineFulfillmentRent => 'किराया';
 
   @override
   String get lineFulfillmentSell => 'बेचें';
+
+  @override
+  String get lineFulfillmentJob => 'जॉब';
 
   @override
   String get saleAmountLabel => 'बिक्री राशि';
@@ -1357,7 +1378,39 @@ class AppLocalizationsHi extends AppLocalizations {
   String get saleAmountRequiredError => 'शून्य से अधिक बिक्री राशि दर्ज करें।';
 
   @override
+  String get jobAmountLabel => 'जॉब शुल्क';
+
+  @override
+  String get jobAmountHint => 'राशि रुपये में';
+
+  @override
+  String get jobAmountRequiredError => 'शून्य से अधिक जॉब शुल्क दर्ज करें।';
+
+  @override
   String get soldLineBadge => 'बेचा गया';
+
+  @override
+  String get completedJobLineBadge => 'पूर्ण';
+
+  @override
+  String get selectLinesToComplete => 'पूर्ण करने के लिए जॉब लाइन चुनें';
+
+  @override
+  String get markCompleteAllAction => 'सभी पूर्ण करें';
+
+  @override
+  String get markCompleteSelectedAction => 'पूर्ण करें';
+
+  @override
+  String get confirmCompleteJobsTitle => 'जॉब पूर्ण करें?';
+
+  @override
+  String confirmCompleteJobsBody(int count) {
+    return '$count जॉब लाइन बंद करें। स्टॉक वापस नहीं होगा।';
+  }
+
+  @override
+  String get jobsCompletedSnack => 'जॉब पूर्ण चिह्नित';
 
   @override
   String get orderNotesHeading => 'नोट्स';
@@ -1409,6 +1462,9 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get ordersFilterCompleted => 'पूर्ण';
+
+  @override
+  String get ordersFilterPendingJobs => 'लंबित जॉब';
 
   @override
   String get searchOrdersHint => 'पार्टी, आईडी या आइटम से खोजें';
