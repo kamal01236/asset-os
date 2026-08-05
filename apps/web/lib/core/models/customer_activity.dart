@@ -1,3 +1,5 @@
+import '../l10n/l10n_ext.dart';
+import '../l10n/timeline_l10n.dart';
 import 'entities.dart';
 
 enum CustomerActivityKind { issued, returned, event }
@@ -46,7 +48,10 @@ class RentalOrderStatusSummary {
 ///
 /// Includes issue (at [Rental.startedAt]), each line return (at
 /// [RentalLine.returnedAt]), and stored [RentalEvent] rows.
-List<CustomerActivityEntry> buildCustomerActivity(List<Rental> rentals) {
+List<CustomerActivityEntry> buildCustomerActivity(
+  List<Rental> rentals,
+  AppLocalizations l10n,
+) {
   final List<CustomerActivityEntry> entries = <CustomerActivityEntry>[];
 
   for (final Rental rental in rentals) {
@@ -57,7 +62,7 @@ List<CustomerActivityEntry> buildCustomerActivity(List<Rental> rentals) {
       CustomerActivityEntry(
         at: rental.startedAt,
         kind: CustomerActivityKind.issued,
-        title: 'Issued',
+        title: l10n.timelineTitleIssued,
         subtitle: labels.isEmpty ? rental.id : labels,
         rentalId: rental.id,
       ),
@@ -72,7 +77,7 @@ List<CustomerActivityEntry> buildCustomerActivity(List<Rental> rentals) {
         CustomerActivityEntry(
           at: returnedAt,
           kind: CustomerActivityKind.returned,
-          title: 'Returned',
+          title: l10n.timelineTitleReturned,
           subtitle: line.displayLabel,
           rentalId: rental.id,
         ),
@@ -84,8 +89,8 @@ List<CustomerActivityEntry> buildCustomerActivity(List<Rental> rentals) {
         CustomerActivityEntry(
           at: event.at,
           kind: CustomerActivityKind.event,
-          title: event.title,
-          subtitle: event.subtitle,
+          title: localizeTimelineTitle(l10n, event.title),
+          subtitle: localizeTimelineSubtitle(l10n, event.subtitle),
           rentalId: rental.id,
         ),
       );

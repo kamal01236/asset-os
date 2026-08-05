@@ -1,15 +1,22 @@
 @Tags(['unit', 'returns'])
 library;
 
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:asset_os/core/models/customer_activity.dart';
 import 'package:asset_os/core/models/entities.dart';
 import 'package:asset_os/core/repositories/local_repository.dart';
+import 'package:asset_os/l10n/app_localizations.dart';
 
 import 'support/test_harness.dart';
 
 void main() {
+  late AppLocalizations l10n;
+
+  setUpAll(() async {
+    l10n = await AppLocalizations.delegate.load(const Locale('en'));
+  });
   test('requiresUnitIdentity persists on add and update', () async {
     final LocalRepository repository = await bootRepo();
     await repository.addInventory(
@@ -266,7 +273,7 @@ void main() {
     );
 
     final List<CustomerActivityEntry> activity =
-        buildCustomerActivity(<Rental>[rental]);
+        buildCustomerActivity(<Rental>[rental], l10n);
     expect(activity, isNotEmpty);
 
     final List<CustomerActivityEntry> issueReturn = activity

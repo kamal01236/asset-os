@@ -3,6 +3,7 @@ library;
 
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:asset_os/core/l10n/timeline_l10n.dart';
 import 'package:asset_os/core/models/entities.dart';
 import 'package:asset_os/core/repositories/local_repository.dart';
 
@@ -294,9 +295,10 @@ void main() {
       expect(closed.baseAmount + closed.lateAmount, 6000);
 
       final RentalEvent returnEvent = closed.timeline.lastWhere(
-        (RentalEvent e) => e.title == 'Returned',
+        (RentalEvent e) => e.title == TimelineTitleKey.returned,
       );
-      expect(returnEvent.subtitle, contains('Discount'));
+      expect(returnEvent.subtitle, startsWith(TimelineSubtitleKey.allLinesReturned));
+      expect(returnEvent.subtitle, contains('d:'));
       expect(returnEvent.subtitle, contains('Staff goodwill'));
     });
   });
@@ -358,8 +360,12 @@ void main() {
       expect(closed.orderStatus, OrderStatus.cancelled);
       expect(closed.totalAmount, 0);
       expect(closed.openLines, isEmpty);
-      expect(closed.timeline.any((RentalEvent e) => e.title == 'Order cancelled'),
-          isTrue);
+      expect(
+        closed.timeline.any(
+          (RentalEvent e) => e.title == TimelineTitleKey.orderCancelled,
+        ),
+        isTrue,
+      );
 
       final InventoryItem stock = (await repository.listInventory())
           .firstWhere((InventoryItem i) => i.id == item.id);

@@ -1,8 +1,10 @@
 import 'package:drift/drift.dart';
+import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../db/app_database.dart';
 import '../home/home_modules.dart';
+import '../l10n/timeline_l10n.dart';
 import '../models/entities.dart';
 import '../models/unknown_customer.dart';
 import '../pricing/rental_pricing.dart';
@@ -135,8 +137,13 @@ class LocalRepository {
   }
 
   /// Import the full template pack, apply its Home modules, and persist the choice.
-  Future<void> completeIndustryOnboarding(IndustryTemplate template) async {
-    await importTemplateInventory(template.items);
+  ///
+  /// [locale] selects which catalog language is written into inventory name/category.
+  Future<void> completeIndustryOnboarding(
+    IndustryTemplate template, {
+    Locale locale = const Locale('en'),
+  }) async {
+    await importTemplateInventory(template.items, locale: locale);
     await _setHomeModules(template.defaultHomeModules);
     await _db.into(_db.appMeta).insertOnConflictUpdate(
       AppMetaCompanion.insert(
@@ -584,20 +591,31 @@ class LocalRepository {
       final String eventTitle;
       final String eventSubtitle;
       if (replacedFrom != null) {
-        eventTitle = 'Replacement opened';
-        eventSubtitle = 'Replacement for $replacedFrom.';
+        eventTitle = TimelineTitleKey.replacementOpened;
+        eventSubtitle = encodeTimelineSubtitle(
+          TimelineSubtitleKey.replacementFor,
+          args: <String>[replacedFrom],
+        );
       } else if (allSold) {
-        eventTitle = 'Sale completed';
-        eventSubtitle = 'Created from phone-first order flow (sale).';
+        eventTitle = TimelineTitleKey.saleCompleted;
+        eventSubtitle = encodeTimelineSubtitle(
+          TimelineSubtitleKey.createdOrderFlowSale,
+        );
       } else if (hasJob && !hasRent && !hasSell) {
-        eventTitle = 'Job opened';
-        eventSubtitle = 'Created from phone-first order flow (job).';
+        eventTitle = TimelineTitleKey.jobOpened;
+        eventSubtitle = encodeTimelineSubtitle(
+          TimelineSubtitleKey.createdOrderFlowJob,
+        );
       } else if (hasSell || hasJob) {
-        eventTitle = 'Order opened';
-        eventSubtitle = 'Created from phone-first order flow (mixed).';
+        eventTitle = TimelineTitleKey.orderOpened;
+        eventSubtitle = encodeTimelineSubtitle(
+          TimelineSubtitleKey.createdOrderFlowMixed,
+        );
       } else {
-        eventTitle = 'Order opened';
-        eventSubtitle = 'Created from phone-first order flow.';
+        eventTitle = TimelineTitleKey.orderOpened;
+        eventSubtitle = encodeTimelineSubtitle(
+          TimelineSubtitleKey.createdOrderFlow,
+        );
       }
       await _db.into(_db.rentalEvents).insert(
         RentalEventsCompanion.insert(
@@ -826,25 +844,31 @@ class LocalRepository {
         ),
       );
 
-      final StringBuffer subtitle = StringBuffer(
-        noOpenWork
-            ? (parentLate > 0
-                  ? 'All lines returned. Late fee applied.'
-                  : 'All lines returned by staff.')
-            : 'Returned ${returnedIds.length} of ${refreshed.length} lines.',
+      final String subtitleKey = noOpenWork
+          ? (parentLate > 0
+                ? TimelineSubtitleKey.allLinesReturnedLate
+                : TimelineSubtitleKey.allLinesReturned)
+          : TimelineSubtitleKey.partialReturnLines;
+      final List<String> subtitleArgs = noOpenWork
+          ? const <String>[]
+          : <String>[
+              '${returnedIds.length}',
+              '${refreshed.length}',
+            ];
+      final String subtitle = encodeTimelineSubtitle(
+        subtitleKey,
+        args: subtitleArgs,
+        discountFormatted: discount > 0 ? formatMoney(discount) : null,
+        note: trimmedNote,
       );
-      if (discount > 0) {
-        subtitle.write(' Discount ${formatMoney(discount)}.');
-      }
-      if (trimmedNote != null && trimmedNote.isNotEmpty) {
-        subtitle.write(' Note: $trimmedNote');
-      }
 
       await _db.into(_db.rentalEvents).insert(
         RentalEventsCompanion.insert(
           rentalId: rentalId,
-          title: noOpenWork ? 'Returned' : 'Partial return',
-          subtitle: subtitle.toString(),
+          title: noOpenWork
+              ? TimelineTitleKey.returned
+              : TimelineTitleKey.partialReturn,
+          subtitle: subtitle,
           at: now,
         ),
       );
@@ -955,10 +979,15 @@ class LocalRepository {
       await _db.into(_db.rentalEvents).insert(
         RentalEventsCompanion.insert(
           rentalId: rentalId,
-          title: noOpenWork ? 'Jobs completed' : 'Job completed',
+          title: noOpenWork
+              ? TimelineTitleKey.jobsCompleted
+              : TimelineTitleKey.jobCompleted,
           subtitle: noOpenWork
-              ? 'All job lines marked complete.'
-              : 'Completed ${completedIds.length} job line(s).',
+              ? encodeTimelineSubtitle(TimelineSubtitleKey.allJobsComplete)
+              : encodeTimelineSubtitle(
+                  TimelineSubtitleKey.jobsCompletedCount,
+                  args: <String>['${completedIds.length}'],
+                ),
           at: now,
         ),
       );
@@ -1077,19 +1106,20 @@ class LocalRepository {
         ),
       );
 
-      final StringBuffer subtitle = StringBuffer(
-        'Kept ${formatMoney(amountKeptPaise)}; '
-        'returned ${formatMoney(amountReturnedPaise)}.',
+      final String subtitle = encodeTimelineSubtitle(
+        TimelineSubtitleKey.cancelSettlement,
+        args: <String>[
+          formatMoney(amountKeptPaise),
+          formatMoney(amountReturnedPaise),
+        ],
+        note: trimmedNote,
       );
-      if (trimmedNote != null && trimmedNote.isNotEmpty) {
-        subtitle.write(' Note: $trimmedNote');
-      }
 
       await _db.into(_db.rentalEvents).insert(
         RentalEventsCompanion.insert(
           rentalId: rentalId,
-          title: 'Order cancelled',
-          subtitle: subtitle.toString(),
+          title: TimelineTitleKey.orderCancelled,
+          subtitle: subtitle,
           at: now,
         ),
       );
@@ -1194,8 +1224,10 @@ class LocalRepository {
     final String truncatedBody = trimmed.length > 80
         ? '${trimmed.substring(0, 80)}…'
         : trimmed;
-    final String eventSubtitle =
-        '${parsedKind.storageValue}: $truncatedBody';
+    final String eventSubtitle = encodeTimelineSubtitle(
+      TimelineSubtitleKey.noteBody,
+      args: <String>[parsedKind.storageValue, truncatedBody],
+    );
 
     await _db.transaction(() async {
       await _db.into(_db.rentalNotes).insert(
@@ -1211,7 +1243,7 @@ class LocalRepository {
       await _db.into(_db.rentalEvents).insert(
         RentalEventsCompanion.insert(
           rentalId: rentalId,
-          title: 'Note added',
+          title: TimelineTitleKey.noteAdded,
           subtitle: eventSubtitle,
           at: now,
         ),
@@ -1395,9 +1427,14 @@ class LocalRepository {
   }
 
   /// Merge selected template items into inventory. Same name (case-insensitive) is skipped.
+  ///
+  /// When [locale] is Hindi (`hi`), stores [TemplateInventoryItem.nameHi] /
+  /// [TemplateInventoryItem.categoryHi]; otherwise English fields. Dedup uses the
+  /// resolved name.
   Future<TemplateImportResult> importTemplateInventory(
-    List<TemplateInventoryItem> selected,
-  ) async {
+    List<TemplateInventoryItem> selected, {
+    Locale locale = const Locale('en'),
+  }) async {
     if (selected.isEmpty) {
       return const TemplateImportResult(added: 0, skipped: 0);
     }
@@ -1410,7 +1447,8 @@ class LocalRepository {
     int added = 0;
     int skipped = 0;
 
-    for (final TemplateInventoryItem item in selected) {
+    for (final TemplateInventoryItem raw in selected) {
+      final TemplateInventoryItem item = raw.resolvedForLocale(locale);
       final String key = item.name.trim().toLowerCase();
       if (key.isEmpty || existingNames.contains(key)) {
         skipped += 1;
@@ -2077,13 +2115,15 @@ AppDataSnapshot buildDemoSnapshot({DateTime? now}) {
       durationUnits: 2,
       timeline: <RentalEvent>[
         RentalEvent(
-          title: 'Due today',
-          subtitle: 'Auto reminder generated.',
+          title: TimelineTitleKey.dueToday,
+          subtitle: encodeTimelineSubtitle(TimelineSubtitleKey.autoReminder),
           at: clock.subtract(const Duration(hours: 2)),
         ),
         RentalEvent(
-          title: 'Rental opened',
-          subtitle: '1 item checked out by staff.',
+          title: TimelineTitleKey.rentalOpened,
+          subtitle: encodeTimelineSubtitle(
+            TimelineSubtitleKey.checkedOutByStaff,
+          ),
           at: clock.subtract(const Duration(days: 2)),
         ),
       ],
@@ -2115,13 +2155,15 @@ AppDataSnapshot buildDemoSnapshot({DateTime? now}) {
       durationUnits: 4,
       timeline: <RentalEvent>[
         RentalEvent(
-          title: 'Returned',
-          subtitle: 'Closed at counter.',
+          title: TimelineTitleKey.returned,
+          subtitle: encodeTimelineSubtitle(
+            TimelineSubtitleKey.closedAtCounter,
+          ),
           at: clock.subtract(const Duration(days: 1)),
         ),
         RentalEvent(
-          title: 'Rental opened',
-          subtitle: 'Manual walk-in checkout.',
+          title: TimelineTitleKey.rentalOpened,
+          subtitle: encodeTimelineSubtitle(TimelineSubtitleKey.manualWalkIn),
           at: clock.subtract(const Duration(days: 5)),
         ),
       ],

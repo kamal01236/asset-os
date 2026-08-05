@@ -879,5 +879,194 @@
   "moneyLabelLeftover": "Leftover advance",
   "moneyLabelNetDue": "Net due",
   "reportWhatsAppGateBanner": "Set your WhatsApp number in More to share reports.",
-  "reportConfigureWhatsAppAction": "Set WhatsApp"
+  "reportConfigureWhatsAppAction": "Set WhatsApp",
+
+  "timelineEmpty": "No rental events yet.",
+  "timelineTitleOrderOpened": "Order opened",
+  "timelineTitleReplacementOpened": "Replacement opened",
+  "timelineTitleSaleCompleted": "Sale completed",
+  "timelineTitleJobOpened": "Job opened",
+  "timelineTitleReturned": "Returned",
+  "timelineTitlePartialReturn": "Partial return",
+  "timelineTitleJobsCompleted": "Jobs completed",
+  "timelineTitleJobCompleted": "Job completed",
+  "timelineTitleOrderCancelled": "Order cancelled",
+  "timelineTitleNoteAdded": "Note added",
+  "timelineTitleDueToday": "Due today",
+  "timelineTitleRentalOpened": "Rental opened",
+  "timelineTitleIssued": "Issued",
+
+  "timelineSubtitleCreatedOrderFlow": "Created from phone-first order flow.",
+  "timelineSubtitleCreatedOrderFlowSale": "Created from phone-first order flow (sale).",
+  "timelineSubtitleCreatedOrderFlowJob": "Created from phone-first order flow (job).",
+  "timelineSubtitleCreatedOrderFlowMixed": "Created from phone-first order flow (mixed).",
+  "timelineSubtitleReplacementFor": "Replacement for {orderId}.",
+  "@timelineSubtitleReplacementFor": {
+    "placeholders": {
+      "orderId": {"type": "String"}
+    }
+  },
+  "timelineSubtitleAllLinesReturned": "All lines returned by staff.",
+  "timelineSubtitleAllLinesReturnedLate": "All lines returned. Late fee applied.",
+  "timelineSubtitlePartialReturnLines": "Returned {returned} of {total} lines.",
+  "@timelineSubtitlePartialReturnLines": {
+    "placeholders": {
+      "returned": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "timelineSubtitleAllJobsComplete": "All job lines marked complete.",
+  "timelineSubtitleJobsCompletedCount": "Completed {count} job line(s).",
+  "@timelineSubtitleJobsCompletedCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "timelineSubtitleCancelSettlement": "Kept {kept}; returned {returned}.",
+  "@timelineSubtitleCancelSettlement": {
+    "placeholders": {
+      "kept": {"type": "String"},
+      "returned": {"type": "String"}
+    }
+  },
+  "timelineSubtitleNoteBody": "{kind}: {body}",
+  "@timelineSubtitleNoteBody": {
+    "placeholders": {
+      "kind": {"type": "String"},
+      "body": {"type": "String"}
+    }
+  },
+  "timelineSubtitleAutoReminder": "Auto reminder generated.",
+  "timelineSubtitleCheckedOutByStaff": "1 item checked out by staff.",
+  "timelineSubtitleClosedAtCounter": "Closed at counter.",
+  "timelineSubtitleManualWalkIn": "Manual walk-in checkout.",
+  "timelineSubtitleDiscountBit": "Discount {amount}.",
+  "@timelineSubtitleDiscountBit": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "timelineSubtitleNoteBit": "Note: {note}",
+  "@timelineSubtitleNoteBit": {
+    "placeholders": {
+      "note": {"type": "String"}
+    }
+  },
+
+  "reportHeader": "{appName} report",
+  "@reportHeader": {
+    "placeholders": {
+      "appName": {"type": "String"}
+    }
+  },
+  "reportActiveCount": "Active: {count}",
+  "@reportActiveCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "reportOpenedCount": "Opened: {count}",
+  "@reportOpenedCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "reportReturnedCount": "Returned: {count}",
+  "@reportReturnedCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "reportOverdueCount": "Overdue: {count}",
+  "@reportOverdueCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "reportChargesOpened": "Charges (opened in range): {amount}",
+  "@reportChargesOpened": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "reportChargesReturned": "Charges (returned in range): {amount}",
+  "@reportChargesReturned": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "reportDepositAppliedRange": "Deposit applied (returned in range): {amount}",
+  "@reportDepositAppliedRange": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "reportBalanceDueReturned": "Balance due after deposit (returned): {amount}",
+  "@reportBalanceDueReturned": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "reportNoRentalsInRange": "(no rentals in range)",
+  "reportNoInventory": "(no inventory)",
+  "reportCustomerWithDeposit": "{header} | deposit {amount}",
+  "@reportCustomerWithDeposit": {
+    "placeholders": {
+      "header": {"type": "String"},
+      "amount": {"type": "String"}
+    }
+  },
+  "reportStatusReturnedBit": "[returned]",
+  "reportLinesPartialBit": " | lines {open} open/{returned} returned",
+  "@reportLinesPartialBit": {
+    "placeholders": {
+      "open": {"type": "int"},
+      "returned": {"type": "int"}
+    }
+  },
+  "reportDepositDueBit": " | deposit {deposit} | due {due}",
+  "@reportDepositDueBit": {
+    "placeholders": {
+      "deposit": {"type": "String"},
+      "due": {"type": "String"}
+    }
+  },
+  "reportOpenEnded": "open-ended",
+  "reportDueDateBit": "due {date}",
+  "@reportDueDateBit": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "reportCustomerRentalLine": "  • {prefix}{rentalId}: {items} | {dueBit} | {status} | {amount}{partialBit}{depositBit}",
+  "@reportCustomerRentalLine": {
+    "placeholders": {
+      "prefix": {"type": "String"},
+      "rentalId": {"type": "String"},
+      "items": {"type": "String"},
+      "dueBit": {"type": "String"},
+      "status": {"type": "String"},
+      "amount": {"type": "String"},
+      "partialBit": {"type": "String"},
+      "depositBit": {"type": "String"}
+    }
+  },
+  "reportInventoryItemLine": "• {name}: rented {rented}× | out {out} | avail {available}/{total} | {billing} {rate}",
+  "@reportInventoryItemLine": {
+    "placeholders": {
+      "name": {"type": "String"},
+      "rented": {"type": "int"},
+      "out": {"type": "int"},
+      "available": {"type": "int"},
+      "total": {"type": "int"},
+      "billing": {"type": "String"},
+      "rate": {"type": "String"}
+    }
+  },
+  "reportTruncatedSuffix": "\n…(truncated — open {appName} for full)",
+  "@reportTruncatedSuffix": {
+    "placeholders": {
+      "appName": {"type": "String"}
+    }
+  }
 }

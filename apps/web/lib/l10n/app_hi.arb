@@ -879,5 +879,194 @@
   "moneyLabelLeftover": "बचा अग्रिम",
   "moneyLabelNetDue": "नेट देय",
   "reportWhatsAppGateBanner": "रिपोर्ट शेयर करने के लिए More में अपना WhatsApp नंबर सेट करें।",
-  "reportConfigureWhatsAppAction": "WhatsApp सेट करें"
+  "reportConfigureWhatsAppAction": "WhatsApp सेट करें",
+
+  "timelineEmpty": "अभी कोई किराया इवेंट नहीं।",
+  "timelineTitleOrderOpened": "ऑर्डर खोला गया",
+  "timelineTitleReplacementOpened": "प्रतिस्थापन खोला गया",
+  "timelineTitleSaleCompleted": "बिक्री पूर्ण",
+  "timelineTitleJobOpened": "जॉब खोला गया",
+  "timelineTitleReturned": "वापस किया",
+  "timelineTitlePartialReturn": "आंशिक वापसी",
+  "timelineTitleJobsCompleted": "जॉब पूर्ण",
+  "timelineTitleJobCompleted": "जॉब पूर्ण हुआ",
+  "timelineTitleOrderCancelled": "ऑर्डर रद्द",
+  "timelineTitleNoteAdded": "नोट जोड़ा गया",
+  "timelineTitleDueToday": "आज देय",
+  "timelineTitleRentalOpened": "किराया खोला गया",
+  "timelineTitleIssued": "जारी",
+
+  "timelineSubtitleCreatedOrderFlow": "फ़ोन-फ़र्स्ट ऑर्डर फ़्लो से बनाया गया।",
+  "timelineSubtitleCreatedOrderFlowSale": "फ़ोन-फ़र्स्ट ऑर्डर फ़्लो से बनाया गया (बिक्री)।",
+  "timelineSubtitleCreatedOrderFlowJob": "फ़ोन-फ़र्स्ट ऑर्डर फ़्लो से बनाया गया (जॉब)।",
+  "timelineSubtitleCreatedOrderFlowMixed": "फ़ोन-फ़र्स्ट ऑर्डर फ़्लो से बनाया गया (मिश्रित)।",
+  "timelineSubtitleReplacementFor": "{orderId} का प्रतिस्थापन।",
+  "@timelineSubtitleReplacementFor": {
+    "placeholders": {
+      "orderId": {"type": "String"}
+    }
+  },
+  "timelineSubtitleAllLinesReturned": "सभी पंक्तियाँ स्टाफ़ द्वारा वापस की गईं।",
+  "timelineSubtitleAllLinesReturnedLate": "सभी पंक्तियाँ वापस। विलंब शुल्क लागू।",
+  "timelineSubtitlePartialReturnLines": "{total} में से {returned} पंक्तियाँ वापस।",
+  "@timelineSubtitlePartialReturnLines": {
+    "placeholders": {
+      "returned": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "timelineSubtitleAllJobsComplete": "सभी जॉब पंक्तियाँ पूर्ण चिह्नित।",
+  "timelineSubtitleJobsCompletedCount": "{count} जॉब पंक्ति(याँ) पूर्ण।",
+  "@timelineSubtitleJobsCompletedCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "timelineSubtitleCancelSettlement": "रखा {kept}; वापस {returned}।",
+  "@timelineSubtitleCancelSettlement": {
+    "placeholders": {
+      "kept": {"type": "String"},
+      "returned": {"type": "String"}
+    }
+  },
+  "timelineSubtitleNoteBody": "{kind}: {body}",
+  "@timelineSubtitleNoteBody": {
+    "placeholders": {
+      "kind": {"type": "String"},
+      "body": {"type": "String"}
+    }
+  },
+  "timelineSubtitleAutoReminder": "स्वतः रिमाइंडर बनाया गया।",
+  "timelineSubtitleCheckedOutByStaff": "1 वस्तु स्टाफ़ द्वारा जारी।",
+  "timelineSubtitleClosedAtCounter": "काउंटर पर बंद।",
+  "timelineSubtitleManualWalkIn": "मैनुअल वॉक-इन चेकआउट।",
+  "timelineSubtitleDiscountBit": "छूट {amount}।",
+  "@timelineSubtitleDiscountBit": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "timelineSubtitleNoteBit": "नोट: {note}",
+  "@timelineSubtitleNoteBit": {
+    "placeholders": {
+      "note": {"type": "String"}
+    }
+  },
+
+  "reportHeader": "{appName} रिपोर्ट",
+  "@reportHeader": {
+    "placeholders": {
+      "appName": {"type": "String"}
+    }
+  },
+  "reportActiveCount": "सक्रिय: {count}",
+  "@reportActiveCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "reportOpenedCount": "खोले: {count}",
+  "@reportOpenedCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "reportReturnedCount": "वापस: {count}",
+  "@reportReturnedCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "reportOverdueCount": "अतिदेय: {count}",
+  "@reportOverdueCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "reportChargesOpened": "शुल्क (रेंज में खोले): {amount}",
+  "@reportChargesOpened": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "reportChargesReturned": "शुल्क (रेंज में वापस): {amount}",
+  "@reportChargesReturned": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "reportDepositAppliedRange": "अग्रिम लागू (रेंज में वापस): {amount}",
+  "@reportDepositAppliedRange": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "reportBalanceDueReturned": "अग्रिम के बाद शेष देय (वापस): {amount}",
+  "@reportBalanceDueReturned": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "reportNoRentalsInRange": "(रेंज में कोई किराया नहीं)",
+  "reportNoInventory": "(कोई इन्वेंटरी नहीं)",
+  "reportCustomerWithDeposit": "{header} | अग्रिम {amount}",
+  "@reportCustomerWithDeposit": {
+    "placeholders": {
+      "header": {"type": "String"},
+      "amount": {"type": "String"}
+    }
+  },
+  "reportStatusReturnedBit": "[वापस]",
+  "reportLinesPartialBit": " | पंक्तियाँ {open} खुली/{returned} वापस",
+  "@reportLinesPartialBit": {
+    "placeholders": {
+      "open": {"type": "int"},
+      "returned": {"type": "int"}
+    }
+  },
+  "reportDepositDueBit": " | अग्रिम {deposit} | देय {due}",
+  "@reportDepositDueBit": {
+    "placeholders": {
+      "deposit": {"type": "String"},
+      "due": {"type": "String"}
+    }
+  },
+  "reportOpenEnded": "खुला-समाप्त",
+  "reportDueDateBit": "देय {date}",
+  "@reportDueDateBit": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "reportCustomerRentalLine": "  • {prefix}{rentalId}: {items} | {dueBit} | {status} | {amount}{partialBit}{depositBit}",
+  "@reportCustomerRentalLine": {
+    "placeholders": {
+      "prefix": {"type": "String"},
+      "rentalId": {"type": "String"},
+      "items": {"type": "String"},
+      "dueBit": {"type": "String"},
+      "status": {"type": "String"},
+      "amount": {"type": "String"},
+      "partialBit": {"type": "String"},
+      "depositBit": {"type": "String"}
+    }
+  },
+  "reportInventoryItemLine": "• {name}: किराए {rented}× | बाहर {out} | उपलब्ध {available}/{total} | {billing} {rate}",
+  "@reportInventoryItemLine": {
+    "placeholders": {
+      "name": {"type": "String"},
+      "rented": {"type": "int"},
+      "out": {"type": "int"},
+      "available": {"type": "int"},
+      "total": {"type": "int"},
+      "billing": {"type": "String"},
+      "rate": {"type": "String"}
+    }
+  },
+  "reportTruncatedSuffix": "\n…(काटा गया — पूरी रिपोर्ट के लिए {appName} खोलें)",
+  "@reportTruncatedSuffix": {
+    "placeholders": {
+      "appName": {"type": "String"}
+    }
+  }
 }

@@ -55,6 +55,7 @@ class _ShareReportsScreenState extends ConsumerState<ShareReportsScreen> {
     final String preview = loading
         ? '…'
         : const ReportBuilder().build(
+            l10n: l10n,
             type: _type,
             range: range,
             customers: customers,

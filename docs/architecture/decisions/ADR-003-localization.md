@@ -20,7 +20,10 @@ Hando's web client targets Indian operators. Chrome UI must be localizable witho
 - Supported locales now: `en` (default), `hi`.
 - Persist the user's choice in SharedPreferences (`asset_os_locale`) via `localeProvider`.
 - Brand display name (`kAppDisplayName`) stays an untranslated constant.
-- Seeded entity names, phones, IDs, and industry pack item names stay as data — only UI chrome is ARB-backed.
+- **UI chrome** (tabs, buttons, empty states, report headings, timeline titles/subtitles) is ARB-backed and localized at display (or report build) time.
+- **Timeline / report chrome:** repositories write stable event keys (e.g. `returned`, `note_added`); UI and reports resolve them via `AppLocalizations`. Legacy English titles already in Drift are mapped for backwards compatibility.
+- **Industry template catalog:** packs carry `en` + `hi` labels; import stores name/category in the **active UI locale**. Switching language later does not rewrite existing inventory rows.
+- **Entity rows** (customer names, phones, IDs, inventory names already in the DB, user-entered notes) remain plain stored strings — not rewritten on language change.
 - Language picker lives on the More tab.
 
 ### Adding another Indian language (e.g. Tamil / Marathi / Bengali)
@@ -28,7 +31,8 @@ Hando's web client targets Indian operators. Chrome UI must be localizable witho
 1. Copy `app_en.arb` → `app_<code>.arb` and translate values.
 2. Register `Locale('<code>')` in `AppLocalizations.supportedLocales` (regenerated from ARBs) and in `LocaleNotifier.supportedLanguageCodes`.
 3. Add a radio option on More using the language's native name.
-4. No database or repository changes for UI chrome.
+4. Extend industry template `*Hi`-style fields (or a locale map) if catalog seeds should import in that language.
+5. No database or repository schema changes for UI chrome.
 
 ---
 
@@ -36,4 +40,4 @@ Hando's web client targets Indian operators. Chrome UI must be localizable witho
 
 - All new user-visible chrome strings must be added to ARBs first.
 - Widget tests must include `AppLocalizations` delegates (or pump `MainApp`).
-- Timeline / seed narrative text may remain English until treated as content localization separately.
+- Tests that assert stored timeline titles should expect stable keys, not English display copy.

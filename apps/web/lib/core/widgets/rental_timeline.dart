@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/l10n_ext.dart';
+import '../l10n/timeline_l10n.dart';
 import '../models/entities.dart';
 
 class RentalTimeline extends StatelessWidget {
@@ -12,9 +14,10 @@ class RentalTimeline extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations l10n = context.l10n;
     if (events.isEmpty) {
       return Text(
-        'No rental events yet.',
+        l10n.timelineEmpty,
         style: Theme.of(context).textTheme.bodyMedium,
       );
     }
@@ -41,13 +44,13 @@ class RentalTimeline extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Text(
-                    event.title,
+                    localizeTimelineTitle(l10n, event.title),
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                   const SizedBox(height: 2),
-                  Text(event.subtitle),
+                  Text(localizeTimelineSubtitle(l10n, event.subtitle)),
                   Text(
                     _formatDate(event.at),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(

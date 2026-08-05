@@ -1,4 +1,5 @@
 import '../config/app_branding.dart';
+import '../l10n/l10n_ext.dart';
 import '../models/entities.dart';
 import '../pricing/rental_pricing.dart';
 import 'report_models.dart';
@@ -17,6 +18,7 @@ class ReportBuilder {
   final int maxChars;
 
   String build({
+    required AppLocalizations l10n,
     required ReportType type,
     required ReportDateRange range,
     required List<Customer> customers,
@@ -28,18 +30,23 @@ class ReportBuilder {
     final String body;
     switch (type) {
       case ReportType.summary:
-        body = _buildSummary(range, rentals, clock);
+        body = _buildSummary(l10n, range, rentals, clock);
       case ReportType.customerWise:
-        body = _buildCustomerWise(range, customers, inventory, rentals, clock);
+        body = _buildCustomerWise(l10n, range, customers, inventory, rentals, clock);
       case ReportType.inventoryWise:
-        body = _buildInventoryWise(range, inventory, rentals);
+        body = _buildInventoryWise(l10n, range, inventory, rentals);
     }
     final String header =
-        '$appName report\n${_formatDate(range.start)} → ${_formatDate(range.end)}\n';
-    return _truncate('$header\n$body'.trimRight());
+        '${l10n.reportHeader(appName)}\n${_formatDate(range.start)} → ${_formatDate(range.end)}\n';
+    return _truncate(l10n, '$header\n$body'.trimRight());
   }
 
-  String _buildSummary(ReportDateRange range, List<Rental> rentals, DateTime clock) {
+  String _buildSummary(
+    AppLocalizations l10n,
+    ReportDateRange range,
+    List<Rental> rentals,
+    DateTime clock,
+  ) {
     final int active = rentals.where((Rental r) => r.isActive).length;
     final int opened = rentals
         .where((Rental r) => _inRange(r.startedAt, range))
@@ -54,15 +61,19 @@ class ReportBuilder {
         .length;
 
     return <String>[
-      'Summary',
-      'Active: $active',
-      'Opened: $opened',
-      'Returned: $returned',
-      'Overdue: $overdue',
-      'Charges (opened in range): ${formatMoney(_sumOpenedCharges(rentals, range))}',
-      'Charges (returned in range): ${formatMoney(_sumReturnedCharges(rentals, range))}',
-      'Deposit applied (returned in range): ${formatMoney(_sumDepositApplied(rentals, range))}',
-      'Balance due after deposit (returned): ${formatMoney(_sumBalanceDue(rentals, range))}',
+      l10n.reportTypeSummary,
+      l10n.reportActiveCount(active),
+      l10n.reportOpenedCount(opened),
+      l10n.reportReturnedCount(returned),
+      l10n.reportOverdueCount(overdue),
+      l10n.reportChargesOpened(formatMoney(_sumOpenedCharges(rentals, range))),
+      l10n.reportChargesReturned(
+        formatMoney(_sumReturnedCharges(rentals, range)),
+      ),
+      l10n.reportDepositAppliedRange(
+        formatMoney(_sumDepositApplied(rentals, range)),
+      ),
+      l10n.reportBalanceDueReturned(formatMoney(_sumBalanceDue(rentals, range))),
     ].join('\n');
   }
 
@@ -107,6 +118,7 @@ class ReportBuilder {
   }
 
   String _buildCustomerWise(
+    AppLocalizations l10n,
     ReportDateRange range,
     List<Customer> customers,
     List<InventoryItem> inventory,
@@ -140,10 +152,10 @@ class ReportBuilder {
     }
 
     if (byCustomer.isEmpty) {
-      return 'Customer-wise\n(no rentals in range)';
+      return '${l10n.reportTypeCustomerWise}\n${l10n.reportNoRentalsInRange}';
     }
 
-    final List<String> lines = <String>['Customer-wise'];
+    final List<String> lines = <String>[l10n.reportTypeCustomerWise];
     final List<String> customerIds = byCustomer.keys.toList()..sort();
     for (final String customerId in customerIds) {
       final Customer? customer = byId[customerId];
@@ -154,13 +166,14 @@ class ReportBuilder {
       final int deposit = customer?.depositBalance ?? 0;
       lines.add(
         deposit > 0
-            ? '$header | deposit ${formatMoney(deposit)}'
+            ? l10n.reportCustomerWithDeposit(header, formatMoney(deposit))
             : header,
       );
       for (final Rental rental in byCustomer[customerId]!) {
         final String itemNames = rental.lines
             .map((RentalLine line) {
-              final String statusBit = line.isOpen ? '' : ' [returned]';
+              final String statusBit =
+                  line.isOpen ? '' : ' ${l10n.reportStatusReturnedBit}';
               if (line.catalogName.trim().isEmpty) {
                 final String fallback =
                     itemsById[line.itemId]?.name ?? line.itemId;
@@ -184,16 +197,28 @@ class ReportBuilder {
         final int openCount = rental.openLines.length;
         final int returnedCount = rental.returnedLines.length;
         final String partialBit = rental.isActive && returnedCount > 0
-            ? ' | lines $openCount open/$returnedCount returned'
+            ? l10n.reportLinesPartialBit(openCount, returnedCount)
             : '';
         final String depositBit = rental.depositApplied > 0
-            ? ' | deposit ${formatMoney(rental.depositApplied)} | due ${formatMoney(rental.amountDueAfterDeposit)}'
+            ? l10n.reportDepositDueBit(
+                formatMoney(rental.depositApplied),
+                formatMoney(rental.amountDueAfterDeposit),
+              )
             : '';
         final String dueBit = rental.dueAt == null
-            ? 'open-ended'
-            : 'due ${_formatDate(rental.dueAt!)}';
+            ? l10n.reportOpenEnded
+            : l10n.reportDueDateBit(_formatDate(rental.dueAt!));
         lines.add(
-          '  • $prefix${rental.id}: $itemNames | $dueBit | ${status.label} | ${formatMoney(amount)}$partialBit$depositBit',
+          l10n.reportCustomerRentalLine(
+            prefix,
+            rental.id,
+            itemNames,
+            dueBit,
+            localizedStatusLabel(l10n, status),
+            formatMoney(amount),
+            partialBit,
+            depositBit,
+          ),
         );
       }
     }
@@ -201,6 +226,7 @@ class ReportBuilder {
   }
 
   String _buildInventoryWise(
+    AppLocalizations l10n,
     ReportDateRange range,
     List<InventoryItem> inventory,
     List<Rental> rentals,
@@ -235,17 +261,25 @@ class ReportBuilder {
     }
 
     if (inventory.isEmpty) {
-      return 'Inventory-wise\n(no inventory)';
+      return '${l10n.reportTypeInventoryWise}\n${l10n.reportNoInventory}';
     }
 
-    final List<String> lines = <String>['Inventory-wise'];
+    final List<String> lines = <String>[l10n.reportTypeInventoryWise];
     final List<InventoryItem> sorted = List<InventoryItem>.from(inventory)
       ..sort((InventoryItem a, InventoryItem b) => a.name.compareTo(b.name));
     for (final InventoryItem item in sorted) {
       final int rented = rentCount[item.id] ?? 0;
       final int out = unitsOut[item.id] ?? 0;
       lines.add(
-        '• ${item.name}: rented $rented× | out $out | avail ${item.availableUnits}/${item.totalUnits} | ${item.billingMode.name} ${formatMoney(item.rateAmount, currencyCode: item.currencyCode)}',
+        l10n.reportInventoryItemLine(
+          item.name,
+          rented,
+          out,
+          item.availableUnits,
+          item.totalUnits,
+          localizedBillingMode(l10n, item.billingMode),
+          formatMoney(item.rateAmount, currencyCode: item.currencyCode),
+        ),
       );
       final List<String> labels = activeLabels[item.id] ?? const <String>[];
       for (final String label in labels) {
@@ -266,11 +300,11 @@ class ReportBuilder {
     return '$y-$m-$d';
   }
 
-  String _truncate(String text) {
+  String _truncate(AppLocalizations l10n, String text) {
     if (text.length <= maxChars) {
       return text;
     }
-    final String suffix = '\n…(truncated — open $appName for full)';
+    final String suffix = l10n.reportTruncatedSuffix(appName);
     final int keep = maxChars - suffix.length;
     if (keep <= 0) {
       return suffix.trim();

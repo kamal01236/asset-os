@@ -1510,4 +1510,230 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get reportConfigureWhatsAppAction => 'WhatsApp सेट करें';
+
+  @override
+  String get timelineEmpty => 'अभी कोई किराया इवेंट नहीं।';
+
+  @override
+  String get timelineTitleOrderOpened => 'ऑर्डर खोला गया';
+
+  @override
+  String get timelineTitleReplacementOpened => 'प्रतिस्थापन खोला गया';
+
+  @override
+  String get timelineTitleSaleCompleted => 'बिक्री पूर्ण';
+
+  @override
+  String get timelineTitleJobOpened => 'जॉब खोला गया';
+
+  @override
+  String get timelineTitleReturned => 'वापस किया';
+
+  @override
+  String get timelineTitlePartialReturn => 'आंशिक वापसी';
+
+  @override
+  String get timelineTitleJobsCompleted => 'जॉब पूर्ण';
+
+  @override
+  String get timelineTitleJobCompleted => 'जॉब पूर्ण हुआ';
+
+  @override
+  String get timelineTitleOrderCancelled => 'ऑर्डर रद्द';
+
+  @override
+  String get timelineTitleNoteAdded => 'नोट जोड़ा गया';
+
+  @override
+  String get timelineTitleDueToday => 'आज देय';
+
+  @override
+  String get timelineTitleRentalOpened => 'किराया खोला गया';
+
+  @override
+  String get timelineTitleIssued => 'जारी';
+
+  @override
+  String get timelineSubtitleCreatedOrderFlow =>
+      'फ़ोन-फ़र्स्ट ऑर्डर फ़्लो से बनाया गया।';
+
+  @override
+  String get timelineSubtitleCreatedOrderFlowSale =>
+      'फ़ोन-फ़र्स्ट ऑर्डर फ़्लो से बनाया गया (बिक्री)।';
+
+  @override
+  String get timelineSubtitleCreatedOrderFlowJob =>
+      'फ़ोन-फ़र्स्ट ऑर्डर फ़्लो से बनाया गया (जॉब)।';
+
+  @override
+  String get timelineSubtitleCreatedOrderFlowMixed =>
+      'फ़ोन-फ़र्स्ट ऑर्डर फ़्लो से बनाया गया (मिश्रित)।';
+
+  @override
+  String timelineSubtitleReplacementFor(String orderId) {
+    return '$orderId का प्रतिस्थापन।';
+  }
+
+  @override
+  String get timelineSubtitleAllLinesReturned =>
+      'सभी पंक्तियाँ स्टाफ़ द्वारा वापस की गईं।';
+
+  @override
+  String get timelineSubtitleAllLinesReturnedLate =>
+      'सभी पंक्तियाँ वापस। विलंब शुल्क लागू।';
+
+  @override
+  String timelineSubtitlePartialReturnLines(int returned, int total) {
+    return '$total में से $returned पंक्तियाँ वापस।';
+  }
+
+  @override
+  String get timelineSubtitleAllJobsComplete =>
+      'सभी जॉब पंक्तियाँ पूर्ण चिह्नित।';
+
+  @override
+  String timelineSubtitleJobsCompletedCount(int count) {
+    return '$count जॉब पंक्ति(याँ) पूर्ण।';
+  }
+
+  @override
+  String timelineSubtitleCancelSettlement(String kept, String returned) {
+    return 'रखा $kept; वापस $returned।';
+  }
+
+  @override
+  String timelineSubtitleNoteBody(String kind, String body) {
+    return '$kind: $body';
+  }
+
+  @override
+  String get timelineSubtitleAutoReminder => 'स्वतः रिमाइंडर बनाया गया।';
+
+  @override
+  String get timelineSubtitleCheckedOutByStaff => '1 वस्तु स्टाफ़ द्वारा जारी।';
+
+  @override
+  String get timelineSubtitleClosedAtCounter => 'काउंटर पर बंद।';
+
+  @override
+  String get timelineSubtitleManualWalkIn => 'मैनुअल वॉक-इन चेकआउट।';
+
+  @override
+  String timelineSubtitleDiscountBit(String amount) {
+    return 'छूट $amount।';
+  }
+
+  @override
+  String timelineSubtitleNoteBit(String note) {
+    return 'नोट: $note';
+  }
+
+  @override
+  String reportHeader(String appName) {
+    return '$appName रिपोर्ट';
+  }
+
+  @override
+  String reportActiveCount(int count) {
+    return 'सक्रिय: $count';
+  }
+
+  @override
+  String reportOpenedCount(int count) {
+    return 'खोले: $count';
+  }
+
+  @override
+  String reportReturnedCount(int count) {
+    return 'वापस: $count';
+  }
+
+  @override
+  String reportOverdueCount(int count) {
+    return 'अतिदेय: $count';
+  }
+
+  @override
+  String reportChargesOpened(String amount) {
+    return 'शुल्क (रेंज में खोले): $amount';
+  }
+
+  @override
+  String reportChargesReturned(String amount) {
+    return 'शुल्क (रेंज में वापस): $amount';
+  }
+
+  @override
+  String reportDepositAppliedRange(String amount) {
+    return 'अग्रिम लागू (रेंज में वापस): $amount';
+  }
+
+  @override
+  String reportBalanceDueReturned(String amount) {
+    return 'अग्रिम के बाद शेष देय (वापस): $amount';
+  }
+
+  @override
+  String get reportNoRentalsInRange => '(रेंज में कोई किराया नहीं)';
+
+  @override
+  String get reportNoInventory => '(कोई इन्वेंटरी नहीं)';
+
+  @override
+  String reportCustomerWithDeposit(String header, String amount) {
+    return '$header | अग्रिम $amount';
+  }
+
+  @override
+  String get reportStatusReturnedBit => '[वापस]';
+
+  @override
+  String reportLinesPartialBit(int open, int returned) {
+    return ' | पंक्तियाँ $open खुली/$returned वापस';
+  }
+
+  @override
+  String reportDepositDueBit(String deposit, String due) {
+    return ' | अग्रिम $deposit | देय $due';
+  }
+
+  @override
+  String get reportOpenEnded => 'खुला-समाप्त';
+
+  @override
+  String reportDueDateBit(String date) {
+    return 'देय $date';
+  }
+
+  @override
+  String reportCustomerRentalLine(
+    String prefix,
+    String rentalId,
+    String items,
+    String dueBit,
+    String status,
+    String amount,
+    String partialBit,
+    String depositBit,
+  ) {
+    return '  • $prefix$rentalId: $items | $dueBit | $status | $amount$partialBit$depositBit';
+  }
+
+  @override
+  String reportInventoryItemLine(
+    String name,
+    int rented,
+    int out,
+    int available,
+    int total,
+    String billing,
+    String rate,
+  ) {
+    return '• $name: किराए $rented× | बाहर $out | उपलब्ध $available/$total | $billing $rate';
+  }
+
+  @override
+  String reportTruncatedSuffix(String appName) {
+    return '\n…(काटा गया — पूरी रिपोर्ट के लिए $appName खोलें)';
+  }
 }

@@ -2695,6 +2695,335 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Set WhatsApp'**
   String get reportConfigureWhatsAppAction;
+
+  /// No description provided for @timelineEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No rental events yet.'**
+  String get timelineEmpty;
+
+  /// No description provided for @timelineTitleOrderOpened.
+  ///
+  /// In en, this message translates to:
+  /// **'Order opened'**
+  String get timelineTitleOrderOpened;
+
+  /// No description provided for @timelineTitleReplacementOpened.
+  ///
+  /// In en, this message translates to:
+  /// **'Replacement opened'**
+  String get timelineTitleReplacementOpened;
+
+  /// No description provided for @timelineTitleSaleCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Sale completed'**
+  String get timelineTitleSaleCompleted;
+
+  /// No description provided for @timelineTitleJobOpened.
+  ///
+  /// In en, this message translates to:
+  /// **'Job opened'**
+  String get timelineTitleJobOpened;
+
+  /// No description provided for @timelineTitleReturned.
+  ///
+  /// In en, this message translates to:
+  /// **'Returned'**
+  String get timelineTitleReturned;
+
+  /// No description provided for @timelineTitlePartialReturn.
+  ///
+  /// In en, this message translates to:
+  /// **'Partial return'**
+  String get timelineTitlePartialReturn;
+
+  /// No description provided for @timelineTitleJobsCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Jobs completed'**
+  String get timelineTitleJobsCompleted;
+
+  /// No description provided for @timelineTitleJobCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Job completed'**
+  String get timelineTitleJobCompleted;
+
+  /// No description provided for @timelineTitleOrderCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Order cancelled'**
+  String get timelineTitleOrderCancelled;
+
+  /// No description provided for @timelineTitleNoteAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Note added'**
+  String get timelineTitleNoteAdded;
+
+  /// No description provided for @timelineTitleDueToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Due today'**
+  String get timelineTitleDueToday;
+
+  /// No description provided for @timelineTitleRentalOpened.
+  ///
+  /// In en, this message translates to:
+  /// **'Rental opened'**
+  String get timelineTitleRentalOpened;
+
+  /// No description provided for @timelineTitleIssued.
+  ///
+  /// In en, this message translates to:
+  /// **'Issued'**
+  String get timelineTitleIssued;
+
+  /// No description provided for @timelineSubtitleCreatedOrderFlow.
+  ///
+  /// In en, this message translates to:
+  /// **'Created from phone-first order flow.'**
+  String get timelineSubtitleCreatedOrderFlow;
+
+  /// No description provided for @timelineSubtitleCreatedOrderFlowSale.
+  ///
+  /// In en, this message translates to:
+  /// **'Created from phone-first order flow (sale).'**
+  String get timelineSubtitleCreatedOrderFlowSale;
+
+  /// No description provided for @timelineSubtitleCreatedOrderFlowJob.
+  ///
+  /// In en, this message translates to:
+  /// **'Created from phone-first order flow (job).'**
+  String get timelineSubtitleCreatedOrderFlowJob;
+
+  /// No description provided for @timelineSubtitleCreatedOrderFlowMixed.
+  ///
+  /// In en, this message translates to:
+  /// **'Created from phone-first order flow (mixed).'**
+  String get timelineSubtitleCreatedOrderFlowMixed;
+
+  /// No description provided for @timelineSubtitleReplacementFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Replacement for {orderId}.'**
+  String timelineSubtitleReplacementFor(String orderId);
+
+  /// No description provided for @timelineSubtitleAllLinesReturned.
+  ///
+  /// In en, this message translates to:
+  /// **'All lines returned by staff.'**
+  String get timelineSubtitleAllLinesReturned;
+
+  /// No description provided for @timelineSubtitleAllLinesReturnedLate.
+  ///
+  /// In en, this message translates to:
+  /// **'All lines returned. Late fee applied.'**
+  String get timelineSubtitleAllLinesReturnedLate;
+
+  /// No description provided for @timelineSubtitlePartialReturnLines.
+  ///
+  /// In en, this message translates to:
+  /// **'Returned {returned} of {total} lines.'**
+  String timelineSubtitlePartialReturnLines(int returned, int total);
+
+  /// No description provided for @timelineSubtitleAllJobsComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'All job lines marked complete.'**
+  String get timelineSubtitleAllJobsComplete;
+
+  /// No description provided for @timelineSubtitleJobsCompletedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed {count} job line(s).'**
+  String timelineSubtitleJobsCompletedCount(int count);
+
+  /// No description provided for @timelineSubtitleCancelSettlement.
+  ///
+  /// In en, this message translates to:
+  /// **'Kept {kept}; returned {returned}.'**
+  String timelineSubtitleCancelSettlement(String kept, String returned);
+
+  /// No description provided for @timelineSubtitleNoteBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{kind}: {body}'**
+  String timelineSubtitleNoteBody(String kind, String body);
+
+  /// No description provided for @timelineSubtitleAutoReminder.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto reminder generated.'**
+  String get timelineSubtitleAutoReminder;
+
+  /// No description provided for @timelineSubtitleCheckedOutByStaff.
+  ///
+  /// In en, this message translates to:
+  /// **'1 item checked out by staff.'**
+  String get timelineSubtitleCheckedOutByStaff;
+
+  /// No description provided for @timelineSubtitleClosedAtCounter.
+  ///
+  /// In en, this message translates to:
+  /// **'Closed at counter.'**
+  String get timelineSubtitleClosedAtCounter;
+
+  /// No description provided for @timelineSubtitleManualWalkIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Manual walk-in checkout.'**
+  String get timelineSubtitleManualWalkIn;
+
+  /// No description provided for @timelineSubtitleDiscountBit.
+  ///
+  /// In en, this message translates to:
+  /// **'Discount {amount}.'**
+  String timelineSubtitleDiscountBit(String amount);
+
+  /// No description provided for @timelineSubtitleNoteBit.
+  ///
+  /// In en, this message translates to:
+  /// **'Note: {note}'**
+  String timelineSubtitleNoteBit(String note);
+
+  /// No description provided for @reportHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'{appName} report'**
+  String reportHeader(String appName);
+
+  /// No description provided for @reportActiveCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Active: {count}'**
+  String reportActiveCount(int count);
+
+  /// No description provided for @reportOpenedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Opened: {count}'**
+  String reportOpenedCount(int count);
+
+  /// No description provided for @reportReturnedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Returned: {count}'**
+  String reportReturnedCount(int count);
+
+  /// No description provided for @reportOverdueCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Overdue: {count}'**
+  String reportOverdueCount(int count);
+
+  /// No description provided for @reportChargesOpened.
+  ///
+  /// In en, this message translates to:
+  /// **'Charges (opened in range): {amount}'**
+  String reportChargesOpened(String amount);
+
+  /// No description provided for @reportChargesReturned.
+  ///
+  /// In en, this message translates to:
+  /// **'Charges (returned in range): {amount}'**
+  String reportChargesReturned(String amount);
+
+  /// No description provided for @reportDepositAppliedRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Deposit applied (returned in range): {amount}'**
+  String reportDepositAppliedRange(String amount);
+
+  /// No description provided for @reportBalanceDueReturned.
+  ///
+  /// In en, this message translates to:
+  /// **'Balance due after deposit (returned): {amount}'**
+  String reportBalanceDueReturned(String amount);
+
+  /// No description provided for @reportNoRentalsInRange.
+  ///
+  /// In en, this message translates to:
+  /// **'(no rentals in range)'**
+  String get reportNoRentalsInRange;
+
+  /// No description provided for @reportNoInventory.
+  ///
+  /// In en, this message translates to:
+  /// **'(no inventory)'**
+  String get reportNoInventory;
+
+  /// No description provided for @reportCustomerWithDeposit.
+  ///
+  /// In en, this message translates to:
+  /// **'{header} | deposit {amount}'**
+  String reportCustomerWithDeposit(String header, String amount);
+
+  /// No description provided for @reportStatusReturnedBit.
+  ///
+  /// In en, this message translates to:
+  /// **'[returned]'**
+  String get reportStatusReturnedBit;
+
+  /// No description provided for @reportLinesPartialBit.
+  ///
+  /// In en, this message translates to:
+  /// **' | lines {open} open/{returned} returned'**
+  String reportLinesPartialBit(int open, int returned);
+
+  /// No description provided for @reportDepositDueBit.
+  ///
+  /// In en, this message translates to:
+  /// **' | deposit {deposit} | due {due}'**
+  String reportDepositDueBit(String deposit, String due);
+
+  /// No description provided for @reportOpenEnded.
+  ///
+  /// In en, this message translates to:
+  /// **'open-ended'**
+  String get reportOpenEnded;
+
+  /// No description provided for @reportDueDateBit.
+  ///
+  /// In en, this message translates to:
+  /// **'due {date}'**
+  String reportDueDateBit(String date);
+
+  /// No description provided for @reportCustomerRentalLine.
+  ///
+  /// In en, this message translates to:
+  /// **'  • {prefix}{rentalId}: {items} | {dueBit} | {status} | {amount}{partialBit}{depositBit}'**
+  String reportCustomerRentalLine(
+    String prefix,
+    String rentalId,
+    String items,
+    String dueBit,
+    String status,
+    String amount,
+    String partialBit,
+    String depositBit,
+  );
+
+  /// No description provided for @reportInventoryItemLine.
+  ///
+  /// In en, this message translates to:
+  /// **'• {name}: rented {rented}× | out {out} | avail {available}/{total} | {billing} {rate}'**
+  String reportInventoryItemLine(
+    String name,
+    int rented,
+    int out,
+    int available,
+    int total,
+    String billing,
+    String rate,
+  );
+
+  /// No description provided for @reportTruncatedSuffix.
+  ///
+  /// In en, this message translates to:
+  /// **'\n…(truncated — open {appName} for full)'**
+  String reportTruncatedSuffix(String appName);
 }
 
 class _AppLocalizationsDelegate

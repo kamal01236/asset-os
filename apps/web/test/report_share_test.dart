@@ -1,6 +1,7 @@
 @Tags(['unit', 'reports'])
 library;
 
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -11,8 +12,15 @@ import 'package:asset_os/core/models/unknown_customer.dart';
 import 'package:asset_os/core/reports/report_builder.dart';
 import 'package:asset_os/core/reports/report_models.dart';
 import 'package:asset_os/core/sharing/whatsapp_share.dart';
+import 'package:asset_os/l10n/app_localizations.dart';
 
 void main() {
+  late AppLocalizations l10n;
+
+  setUpAll(() async {
+    l10n = await AppLocalizations.delegate.load(const Locale('en'));
+  });
+
   final DateTime now = DateTime(2026, 8, 2, 15, 30);
 
   final List<Customer> customers = <Customer>[
@@ -159,6 +167,7 @@ void main() {
         now: now,
       );
       final String text = builder.build(
+        l10n: l10n,
         type: ReportType.summary,
         range: range,
         customers: customers,
@@ -166,12 +175,12 @@ void main() {
         rentals: rentals,
         now: now,
       );
-      expect(text, contains('$kAppDisplayName report'));
-      expect(text, contains('Summary'));
-      expect(text, contains('Active: 2'));
-      expect(text, contains('Opened: 2'));
-      expect(text, contains('Returned: 1'));
-      expect(text, contains('Overdue: 1'));
+      expect(text, contains(l10n.reportHeader(kAppDisplayName)));
+      expect(text, contains(l10n.reportTypeSummary));
+      expect(text, contains(l10n.reportActiveCount(2)));
+      expect(text, contains(l10n.reportOpenedCount(2)));
+      expect(text, contains(l10n.reportReturnedCount(1)));
+      expect(text, contains(l10n.reportOverdueCount(1)));
       expect(text, contains('Charges (opened in range):'));
       expect(text, contains('Charges (returned in range):'));
       expect(text, contains('Deposit applied (returned in range):'));
@@ -184,6 +193,7 @@ void main() {
         now: now,
       );
       final String text = builder.build(
+        l10n: l10n,
         type: ReportType.customerWise,
         range: range,
         customers: customers,
@@ -191,7 +201,7 @@ void main() {
         rentals: rentals,
         now: now,
       );
-      expect(text, contains('Customer-wise'));
+      expect(text, contains(l10n.reportTypeCustomerWise));
       expect(text, contains('Priya Patel'));
       expect(text, contains('Tripod · Floor stand (TRP-001)'));
       expect(text, contains('Amit Shah'));
@@ -226,6 +236,7 @@ void main() {
         now: now,
       );
       final String text = builder.build(
+        l10n: l10n,
         type: ReportType.customerWise,
         range: range,
         customers: unknownCustomers,
@@ -243,6 +254,7 @@ void main() {
         now: now,
       );
       final String text = builder.build(
+        l10n: l10n,
         type: ReportType.inventoryWise,
         range: range,
         customers: customers,
@@ -250,7 +262,7 @@ void main() {
         rentals: rentals,
         now: now,
       );
-      expect(text, contains('Inventory-wise'));
+      expect(text, contains(l10n.reportTypeInventoryWise));
       expect(text, contains('DSLR'));
       expect(text, contains('Tripod'));
       expect(text, contains('Floor stand (TRP-001)'));
@@ -264,6 +276,7 @@ void main() {
         now: now,
       );
       final String text = short.build(
+        l10n: l10n,
         type: ReportType.customerWise,
         range: range,
         customers: customers,

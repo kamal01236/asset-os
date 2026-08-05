@@ -1510,4 +1510,230 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reportConfigureWhatsAppAction => 'Set WhatsApp';
+
+  @override
+  String get timelineEmpty => 'No rental events yet.';
+
+  @override
+  String get timelineTitleOrderOpened => 'Order opened';
+
+  @override
+  String get timelineTitleReplacementOpened => 'Replacement opened';
+
+  @override
+  String get timelineTitleSaleCompleted => 'Sale completed';
+
+  @override
+  String get timelineTitleJobOpened => 'Job opened';
+
+  @override
+  String get timelineTitleReturned => 'Returned';
+
+  @override
+  String get timelineTitlePartialReturn => 'Partial return';
+
+  @override
+  String get timelineTitleJobsCompleted => 'Jobs completed';
+
+  @override
+  String get timelineTitleJobCompleted => 'Job completed';
+
+  @override
+  String get timelineTitleOrderCancelled => 'Order cancelled';
+
+  @override
+  String get timelineTitleNoteAdded => 'Note added';
+
+  @override
+  String get timelineTitleDueToday => 'Due today';
+
+  @override
+  String get timelineTitleRentalOpened => 'Rental opened';
+
+  @override
+  String get timelineTitleIssued => 'Issued';
+
+  @override
+  String get timelineSubtitleCreatedOrderFlow =>
+      'Created from phone-first order flow.';
+
+  @override
+  String get timelineSubtitleCreatedOrderFlowSale =>
+      'Created from phone-first order flow (sale).';
+
+  @override
+  String get timelineSubtitleCreatedOrderFlowJob =>
+      'Created from phone-first order flow (job).';
+
+  @override
+  String get timelineSubtitleCreatedOrderFlowMixed =>
+      'Created from phone-first order flow (mixed).';
+
+  @override
+  String timelineSubtitleReplacementFor(String orderId) {
+    return 'Replacement for $orderId.';
+  }
+
+  @override
+  String get timelineSubtitleAllLinesReturned => 'All lines returned by staff.';
+
+  @override
+  String get timelineSubtitleAllLinesReturnedLate =>
+      'All lines returned. Late fee applied.';
+
+  @override
+  String timelineSubtitlePartialReturnLines(int returned, int total) {
+    return 'Returned $returned of $total lines.';
+  }
+
+  @override
+  String get timelineSubtitleAllJobsComplete =>
+      'All job lines marked complete.';
+
+  @override
+  String timelineSubtitleJobsCompletedCount(int count) {
+    return 'Completed $count job line(s).';
+  }
+
+  @override
+  String timelineSubtitleCancelSettlement(String kept, String returned) {
+    return 'Kept $kept; returned $returned.';
+  }
+
+  @override
+  String timelineSubtitleNoteBody(String kind, String body) {
+    return '$kind: $body';
+  }
+
+  @override
+  String get timelineSubtitleAutoReminder => 'Auto reminder generated.';
+
+  @override
+  String get timelineSubtitleCheckedOutByStaff =>
+      '1 item checked out by staff.';
+
+  @override
+  String get timelineSubtitleClosedAtCounter => 'Closed at counter.';
+
+  @override
+  String get timelineSubtitleManualWalkIn => 'Manual walk-in checkout.';
+
+  @override
+  String timelineSubtitleDiscountBit(String amount) {
+    return 'Discount $amount.';
+  }
+
+  @override
+  String timelineSubtitleNoteBit(String note) {
+    return 'Note: $note';
+  }
+
+  @override
+  String reportHeader(String appName) {
+    return '$appName report';
+  }
+
+  @override
+  String reportActiveCount(int count) {
+    return 'Active: $count';
+  }
+
+  @override
+  String reportOpenedCount(int count) {
+    return 'Opened: $count';
+  }
+
+  @override
+  String reportReturnedCount(int count) {
+    return 'Returned: $count';
+  }
+
+  @override
+  String reportOverdueCount(int count) {
+    return 'Overdue: $count';
+  }
+
+  @override
+  String reportChargesOpened(String amount) {
+    return 'Charges (opened in range): $amount';
+  }
+
+  @override
+  String reportChargesReturned(String amount) {
+    return 'Charges (returned in range): $amount';
+  }
+
+  @override
+  String reportDepositAppliedRange(String amount) {
+    return 'Deposit applied (returned in range): $amount';
+  }
+
+  @override
+  String reportBalanceDueReturned(String amount) {
+    return 'Balance due after deposit (returned): $amount';
+  }
+
+  @override
+  String get reportNoRentalsInRange => '(no rentals in range)';
+
+  @override
+  String get reportNoInventory => '(no inventory)';
+
+  @override
+  String reportCustomerWithDeposit(String header, String amount) {
+    return '$header | deposit $amount';
+  }
+
+  @override
+  String get reportStatusReturnedBit => '[returned]';
+
+  @override
+  String reportLinesPartialBit(int open, int returned) {
+    return ' | lines $open open/$returned returned';
+  }
+
+  @override
+  String reportDepositDueBit(String deposit, String due) {
+    return ' | deposit $deposit | due $due';
+  }
+
+  @override
+  String get reportOpenEnded => 'open-ended';
+
+  @override
+  String reportDueDateBit(String date) {
+    return 'due $date';
+  }
+
+  @override
+  String reportCustomerRentalLine(
+    String prefix,
+    String rentalId,
+    String items,
+    String dueBit,
+    String status,
+    String amount,
+    String partialBit,
+    String depositBit,
+  ) {
+    return '  • $prefix$rentalId: $items | $dueBit | $status | $amount$partialBit$depositBit';
+  }
+
+  @override
+  String reportInventoryItemLine(
+    String name,
+    int rented,
+    int out,
+    int available,
+    int total,
+    String billing,
+    String rate,
+  ) {
+    return '• $name: rented $rented× | out $out | avail $available/$total | $billing $rate';
+  }
+
+  @override
+  String reportTruncatedSuffix(String appName) {
+    return '\n…(truncated — open $appName for full)';
+  }
 }

@@ -1,3 +1,5 @@
+import 'package:flutter/widgets.dart';
+
 import '../models/entities.dart';
 import '../templates/industry_templates.dart';
 
@@ -7,14 +9,16 @@ const String kCategoryOther = '__other__';
 /// First-class General (non-rental) category; always top of the dropdown.
 const String kCategoryGeneral = 'General';
 
-/// Unique category labels from industry template seed items.
-final List<String> kPresetInventoryCategories = _collectPresetCategories();
+/// Unique English category labels from industry template seed items.
+final List<String> kPresetInventoryCategories =
+    presetInventoryCategories(const Locale('en'));
 
-List<String> _collectPresetCategories() {
+/// Unique category labels from templates for [locale] (Hindi when `hi`).
+List<String> presetInventoryCategories(Locale locale) {
   final Set<String> categories = <String>{};
   for (final IndustryTemplate template in kIndustryTemplates) {
     for (final TemplateInventoryItem item in template.items) {
-      final String category = item.category.trim();
+      final String category = item.localizedCategory(locale).trim();
       if (category.isNotEmpty) {
         categories.add(category);
       }
@@ -28,8 +32,14 @@ List<String> _collectPresetCategories() {
 ///
 /// [kCategoryGeneral] is always first. [kCategoryOther] is always last. Other named
 /// options are sorted case-insensitively with no duplicates.
-List<String> buildCategoryOptions(List<InventoryItem> inventory) {
-  final Set<String> categories = <String>{...kPresetInventoryCategories};
+/// Template presets follow [locale] so Hindi UI matches imported Hindi categories.
+List<String> buildCategoryOptions(
+  List<InventoryItem> inventory, {
+  Locale locale = const Locale('en'),
+}) {
+  final Set<String> categories = <String>{
+    ...presetInventoryCategories(locale),
+  };
   for (final InventoryItem item in inventory) {
     final String category = item.category.trim();
     if (category.isNotEmpty) {

@@ -25,16 +25,18 @@ class _TemplateOnboardingScreenState
       return;
     }
     final AppLocalizations l10n = context.l10n;
+    final Locale locale = Localizations.localeOf(context);
+    final String templateName = template.localizedName(locale);
     final bool? confirmed = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text(template.name),
+          title: Text(templateName),
           content: Text(
             l10n.onboardingTemplateConfirmBody(
               template.items.length,
-              template.name,
+              templateName,
             ),
           ),
           actions: <Widget>[
@@ -56,7 +58,10 @@ class _TemplateOnboardingScreenState
 
     setState(() => _submitting = true);
     try {
-      await ref.read(repositoryProvider).completeIndustryOnboarding(template);
+      await ref.read(repositoryProvider).completeIndustryOnboarding(
+            template,
+            locale: locale,
+          );
       await ref
           .read(homeModulesProvider.notifier)
           .applyTemplateDefaults(template.defaultHomeModules);
@@ -72,6 +77,7 @@ class _TemplateOnboardingScreenState
   Widget build(BuildContext context) {
     final AppLocalizations l10n = context.l10n;
     final ThemeData theme = Theme.of(context);
+    final Locale locale = Localizations.localeOf(context);
     return Scaffold(
       body: SafeArea(
         child: Stack(
@@ -104,9 +110,9 @@ class _TemplateOnboardingScreenState
                   (IndustryTemplate template) => Padding(
                     padding: const EdgeInsets.only(bottom: 10),
                     child: EntityCard(
-                      title: template.name,
+                      title: template.localizedName(locale),
                       subtitle: l10n.templateCardSubtitle(
-                        template.description,
+                        template.localizedDescription(locale),
                         template.items.length,
                       ),
                       leadingIcon: Icons.storefront_outlined,

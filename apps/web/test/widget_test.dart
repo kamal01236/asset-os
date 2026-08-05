@@ -12,6 +12,7 @@ import 'package:asset_os/app_shell.dart';
 import 'package:asset_os/core/config/app_branding.dart';
 import 'package:asset_os/core/db/app_database.dart';
 import 'package:asset_os/core/l10n/l10n_ext.dart';
+import 'package:asset_os/core/l10n/timeline_l10n.dart';
 import 'package:asset_os/core/models/entities.dart';
 import 'package:asset_os/core/providers/app_providers.dart';
 import 'package:asset_os/core/repositories/local_repository.dart';
@@ -593,7 +594,10 @@ void main() {
     final Rental returned =
         (await repo.listRentals()).firstWhere((item) => item.id == created.id);
     expect(returned.isActive, isFalse);
-    expect(returned.timeline.map((e) => e.title), contains('Returned'));
+    expect(
+      returned.timeline.map((e) => e.title),
+      contains(TimelineTitleKey.returned),
+    );
 
     final InventoryItem afterReturn = (await repo.listInventory())
         .firstWhere((item) => item.id == 'INV-2001');

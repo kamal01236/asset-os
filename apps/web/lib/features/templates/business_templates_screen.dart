@@ -27,25 +27,29 @@ class BusinessTemplatesScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 14),
           ...kIndustryTemplates.map(
-            (IndustryTemplate template) => Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: EntityCard(
-                title: template.name,
-                subtitle: l10n.templateCardSubtitle(
-                  template.description,
-                  template.items.length,
+            (IndustryTemplate template) {
+              final Locale locale = Localizations.localeOf(context);
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: EntityCard(
+                  title: template.localizedName(locale),
+                  subtitle: l10n.templateCardSubtitle(
+                    template.localizedDescription(locale),
+                    template.items.length,
+                  ),
+                  leadingIcon: Icons.dashboard_customize_outlined,
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) =>
+                            TemplateItemPickerScreen(template: template),
+                      ),
+                    );
+                  },
                 ),
-                leadingIcon: Icons.dashboard_customize_outlined,
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => TemplateItemPickerScreen(template: template),
-                    ),
-                  );
-                },
-              ),
-            ),
+              );
+            },
           ),
         ],
       ),
@@ -95,12 +99,14 @@ class _TemplateItemPickerScreenState extends ConsumerState<TemplateItemPickerScr
       return;
     }
     final AppLocalizations l10n = context.l10n;
+    final Locale locale = Localizations.localeOf(context);
     final List<TemplateInventoryItem> selected = _selected
         .map((int index) => widget.template.items[index])
         .toList();
     setState(() => _submitting = true);
-    final TemplateImportResult result =
-        await ref.read(repositoryProvider).importTemplateInventory(selected);
+    final TemplateImportResult result = await ref
+        .read(repositoryProvider)
+        .importTemplateInventory(selected, locale: locale);
     if (!mounted) {
       return;
     }
@@ -165,14 +171,15 @@ class _TemplateItemPickerScreenState extends ConsumerState<TemplateItemPickerScr
   @override
   Widget build(BuildContext context) {
     final AppLocalizations l10n = context.l10n;
+    final Locale locale = Localizations.localeOf(context);
     final IndustryTemplate template = widget.template;
     return Scaffold(
-      appBar: AppBar(title: Text(template.name)),
+      appBar: AppBar(title: Text(template.localizedName(locale))),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: <Widget>[
           Text(
-            template.description,
+            template.localizedDescription(locale),
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
@@ -199,9 +206,12 @@ class _TemplateItemPickerScreenState extends ConsumerState<TemplateItemPickerScr
             return CheckboxListTile(
               value: checked,
               contentPadding: EdgeInsets.zero,
-              title: Text(item.name),
+              title: Text(item.localizedName(locale)),
               subtitle: Text(
-                l10n.templateItemSubtitle(item.category, unitsLabel),
+                l10n.templateItemSubtitle(
+                  item.localizedCategory(locale),
+                  unitsLabel,
+                ),
               ),
               onChanged: (bool? value) {
                 setState(() {
