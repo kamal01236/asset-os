@@ -2244,7 +2244,7 @@ class _AddInventoryFlowScreenState extends ConsumerState<AddInventoryFlowScreen>
   late String _selectedCategory;
   BillingMode _billingMode = BillingMode.weekly;
   bool _dueDateOptional = false;
-  bool _requiresUnitIdentity = true;
+  bool _requiresUnitIdentity = false;
   InventoryItemKind _defaultItemKind = InventoryItemKind.rental;
   bool _submitting = false;
 

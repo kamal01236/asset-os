@@ -23,7 +23,7 @@ UI-first conventions for `apps/web` to keep flows fast, clear, and touch-friendl
 ## Home (attention-first)
 - **First launch:** empty DB shows a required industry-template picker (full pack seeds inventory + Home modules) before the shell. More → Business Templates remains for later merges.
 - Home KPI status chips are compact and tappable: tap navigates to the matching tab with that list filter applied (Active / Due today / Overdue → Orders; Available → Inventory). Clear the filter chip on the destination tab to restore the full list.
-- Home is modular (`search`, `kpis`, `filterResults`, `needsAttention`, `quickActions`, `recentActivity`, `suggestions`). Defaults are `search`, `kpis`, `needsAttention`, `quickActions` — no in-place `filterResults` under KPIs. Business templates may add `recentActivity` / `suggestions`; More → Customize Home lets users show/hide removable modules (including optional `filterResults`). Search is always on.
+- Home is modular (`search`, `kpis`, `filterResults`, `needsAttention`, `pendingJobs`, `quickActions`, `recentActivity`, `suggestions`). Defaults are `search`, `kpis`, `needsAttention` — no Quick Actions or Pending jobs on the default stack (FAB covers New Order / Return; both modules stay available via Customize Home). No in-place `filterResults` under KPIs. Business templates may add `recentActivity` / `suggestions`; More → Customize Home lets users show/hide removable modules (including optional `filterResults`). Search is always on.
 - Prefer overdue/due lists and status filters over chart dashboards.
 
 ## Universal navigation contract
@@ -32,17 +32,17 @@ UI-first conventions for `apps/web` to keep flows fast, clear, and touch-friendl
 - Universal search is in-page on Home (typeahead dropdown under the field) and reachable from any tab via FAB → Search, which opens a modal bottom sheet with the same typeahead — not a separate route. Selecting a hit navigates to Customer / Order / Inventory detail.
 
 ## Form conventions
-- New Order is **items-first**: compact multi-line form (inventory → identity → duration → amount per line) with a running order total, then attach customer (phone-first lookup / create, or Unknown / no-phone) before confirm.
+- New Order is **items-first**: compact multi-line form with a running order total. Happy path per line is item → qty → days (rent) or amount (sell); fulfillment (Rent/Sell/Job), open-ended, custom end date, and billing readout sit under **More options**. Then attach customer (**phone-first** lookup / create, or Unknown / no-phone) before confirm. Advance is a collapsed optional field on the customer/summary step.
 - When issuing from a customer profile (`initialCustomerId`), skip the customer step: items → confirm only.
-- Minimal required fields first; advanced details collapsed by default.
+- Minimal required fields first; advanced details collapsed by default. Unit identity fields are optional unless the catalog item requires them; otherwise short codes auto-assign at submit (optional “Add unit labels”).
 - Auto-detect existing customer by phone when attaching the customer (at end of a blank order, or when issued from a customer).
 - Free-text identity/note fields (customer name, item name, category, instance name, SELF nickname, notes when non-empty) require at least 3 characters; search runs only at ≥3 chars (Home/global = all entities; Inventory tab = inventory; Customers tab = customers + order nicknames).
 
 ## Order bills and deposit
 - Orders tab lists orders as bill-style cards. When no Home KPI filter is active, light chips **All / Open / Completed / Pending jobs** narrow the list; default scope is **Open** (active / non-completed only). **Pending jobs** shows open orders with ≥1 unfinished job line. **All** includes open + completed + **cancelled**. Filters (Active / Due today / Overdue) from Home KPIs still narrow among open bills.
-- Bill cards: **party name** as title; item summary + short `#id`; trailing **Bill** / **Deposit** amounts; status pill bottom-left — not a mega concatenated subtitle.
+- Bill cards: **party name** as title; item summary + short `#id`; trailing **Bill** / **Advance** amounts; status pill bottom-left — not a mega concatenated subtitle.
 - Customer detail shows a signed net from all that customer’s orders (positive = owes shop, negative = credit). Advance = sum of order deposits; pending = sum of bill charges. No customer wallet Add/Refund in the profile UI. Customer **list** shows phone + TierPill and signed net only (breakdown stays on detail).
-- Deposit / token / advance lives on the **order** (set at New Order). Return and cancel settle against that order deposit, not a shared customer wallet.
+- Advance lives on the **order** (set at New Order). Return and cancel settle against that order advance, not a shared customer wallet.
 - Order detail is a full bill: lines, deposit, total, status chip in the app bar. Charges use `MoneyStack` rows. Return only while status is open and ≥1 **rent** line is still out. **Mark complete** closes open **job** lines (no stock restore). **Cancel order** is the last bottom-bar action on open orders with no settled rent/job lines (not an app-bar icon). Sell-only orders complete at create; job-only stay open until marked complete.
 - Inventory catalog kinds: **Rental / General / Job**. Job lines charge the catalog rate (editable override), stay open until Mark complete, and do not restore stock.
 - Share reports: **Share to my WhatsApp** stays disabled until the owner number is configured; preview is structured key-value rows with Copy still producing the same plain text.

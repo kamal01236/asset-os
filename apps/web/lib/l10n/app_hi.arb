@@ -212,11 +212,11 @@
   },
   "labelInstancesHeading": "प्रत्येक वस्तु का नाम दें",
   "labelInstancesHint": "उपन्यास/उपकरणों के लिए: इस प्रति का नाम और छोटा कोड दर्ज करें।",
-  "instanceNameLabel": "उदाहरण नाम",
+  "instanceNameLabel": "इकाई का नाम",
   "instanceNameHint": "जैसे हैरी पॉटर",
   "shortCodeLabel": "छोटा कोड",
   "shortCodeHint": "जैसे NOV-042",
-  "instanceLabelsRequired": "प्रत्येक वस्तु के लिए उदाहरण नाम और छोटा कोड दर्ज करें।",
+  "instanceLabelsRequired": "प्रत्येक वस्तु के लिए इकाई का नाम और छोटा कोड दर्ज करें।",
   "duplicateShortCode": "छोटा कोड {code} पहले से किसी सक्रिय ऑर्डर पर उपयोग में है।",
   "@duplicateShortCode": {
     "placeholders": {
@@ -707,7 +707,7 @@
   "orderStatusOpen": "खुला",
   "orderStatusCompleted": "पूर्ण",
   "orderStatusCancelled": "रद्द",
-  "orderBillDepositLabel": "जमा {amount}",
+  "orderBillDepositLabel": "अग्रिम {amount}",
   "@orderBillDepositLabel": {
     "placeholders": {
       "amount": {"type": "String"}
@@ -719,9 +719,9 @@
       "amount": {"type": "String"}
     }
   },
-  "orderDepositLabel": "ऑर्डर जमा",
+  "orderDepositLabel": "ऑर्डर अग्रिम",
   "customerOrdersHeading": "ऑर्डर",
-  "orderDepositSettlementExceeds": "रखी + लौटाई राशि ऑर्डर जमा से अधिक नहीं हो सकती।",
+  "orderDepositSettlementExceeds": "रखी + लौटाई राशि ऑर्डर अग्रिम से अधिक नहीं हो सकती।",
   "requiresUnitIdentityLabel": "यूनिट नाम/आईडी आवश्यक",
   "requiresUnitIdentitySubtitle": "मूल श्रेणी (जैसे उपन्यास) के लिए चालू। व्यक्तिगत वस्तुओं के लिए बंद जिनका एक कैटलॉग नाम साझा है।",
   "quantityLabel": "मात्रा",
@@ -811,8 +811,10 @@
       "amount": {"type": "String"}
     }
   },
-  "depositTopUpOptionalLabel": "ऑर्डर टोकन / अग्रिम (वैकल्पिक)",
+  "depositTopUpOptionalLabel": "अग्रिम (वैकल्पिक)",
   "depositTopUpOptionalHint": "इस ऑर्डर पर रखा जाएगा, रुपये में",
+  "moreOptions": "और विकल्प",
+  "addUnitLabelsAction": "यूनिट लेबल जोड़ें",
   "itemKindDefaultLabel": "डिफ़ॉल्ट ऑर्डर मोड",
   "itemKindRentalLabel": "किराया",
   "itemKindGeneralLabel": "सामान्य",
@@ -854,7 +856,7 @@
   "orderNotesEmpty": "अभी कोई नोट नहीं।",
   "orderNoteAddedSnack": "नोट जोड़ा गया",
   "orderBillAmountLabel": "बिल",
-  "orderDepositShortLabel": "जमा",
+  "orderDepositShortLabel": "अग्रिम",
   "ordersFilterAll": "सभी",
   "ordersFilterOpen": "खुला",
   "ordersFilterCompleted": "पूर्ण",
@@ -871,10 +873,10 @@
   "moneyLabelBase": "आधार",
   "moneyLabelLate": "विलंब शुल्क",
   "moneyLabelTotal": "कुल",
-  "moneyLabelDeposit": "जमा",
+  "moneyLabelDeposit": "अग्रिम",
   "moneyLabelWillApply": "लागू होगा",
   "moneyLabelRemainingDue": "शेष देय",
-  "moneyLabelLeftover": "बचा जमा",
+  "moneyLabelLeftover": "बचा अग्रिम",
   "moneyLabelNetDue": "नेट देय",
   "reportWhatsAppGateBanner": "रिपोर्ट शेयर करने के लिए More में अपना WhatsApp नंबर सेट करें।",
   "reportConfigureWhatsAppAction": "WhatsApp सेट करें"

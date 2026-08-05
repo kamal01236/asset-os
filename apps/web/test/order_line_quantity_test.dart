@@ -74,11 +74,11 @@ void main() {
     );
 
     final Finder fields = find.byType(TextField);
-    await tester.enterText(fields.at(0), 'Body A');
-    await tester.enterText(fields.at(1), 'CAM-A1');
-    await tester.enterText(fields.at(2), 'Body B');
-    await tester.enterText(fields.at(3), 'CAM-B1');
-    await tester.enterText(fields.at(4), '1');
+    await tester.enterText(fields.at(0), '1');
+    await tester.enterText(fields.at(1), 'Body A');
+    await tester.enterText(fields.at(2), 'CAM-A1');
+    await tester.enterText(fields.at(3), 'Body B');
+    await tester.enterText(fields.at(4), 'CAM-B1');
     await tester.pump();
     await pumpFrames(tester);
 

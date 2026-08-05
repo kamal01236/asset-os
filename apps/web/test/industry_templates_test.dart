@@ -117,7 +117,7 @@ void main() {
       expect(facial.defaultItemKind, InventoryItemKind.job);
       expect(facial.requiresUnitIdentity, isFalse);
       expect(steamer.defaultItemKind, InventoryItemKind.rental);
-      expect(steamer.requiresUnitIdentity, isTrue);
+      expect(steamer.requiresUnitIdentity, isFalse);
     });
   });
 }

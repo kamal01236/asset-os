@@ -408,7 +408,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'For novels/tools: enter this copy’s name and a short code.';
 
   @override
-  String get instanceNameLabel => 'Instance name';
+  String get instanceNameLabel => 'Unit name';
 
   @override
   String get instanceNameHint => 'e.g. Harry Potter';
@@ -421,7 +421,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get instanceLabelsRequired =>
-      'Enter an instance name and short code for each item.';
+      'Enter a unit name and short code for each item.';
 
   @override
   String duplicateShortCode(String code) {
@@ -1218,7 +1218,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String orderBillDepositLabel(String amount) {
-    return 'Deposit $amount';
+    return 'Advance $amount';
   }
 
   @override
@@ -1227,14 +1227,14 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get orderDepositLabel => 'Order deposit';
+  String get orderDepositLabel => 'Order advance';
 
   @override
   String get customerOrdersHeading => 'Orders';
 
   @override
   String get orderDepositSettlementExceeds =>
-      'Kept + returned cannot exceed order deposit.';
+      'Kept + returned cannot exceed order advance.';
 
   @override
   String get requiresUnitIdentityLabel => 'Requires unit name/id';
@@ -1335,10 +1335,16 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get depositTopUpOptionalLabel => 'Order token / advance (optional)';
+  String get depositTopUpOptionalLabel => 'Advance (optional)';
 
   @override
   String get depositTopUpOptionalHint => 'Held on this order, in rupees';
+
+  @override
+  String get moreOptions => 'More options';
+
+  @override
+  String get addUnitLabelsAction => 'Add unit labels';
 
   @override
   String get itemKindDefaultLabel => 'Default order mode';
@@ -1452,7 +1458,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get orderBillAmountLabel => 'Bill';
 
   @override
-  String get orderDepositShortLabel => 'Deposit';
+  String get orderDepositShortLabel => 'Advance';
 
   @override
   String get ordersFilterAll => 'All';
@@ -1484,7 +1490,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get moneyLabelTotal => 'Total';
 
   @override
-  String get moneyLabelDeposit => 'Deposit';
+  String get moneyLabelDeposit => 'Advance';
 
   @override
   String get moneyLabelWillApply => 'Will apply';
@@ -1493,7 +1499,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get moneyLabelRemainingDue => 'Remaining due';
 
   @override
-  String get moneyLabelLeftover => 'Leftover deposit';
+  String get moneyLabelLeftover => 'Leftover advance';
 
   @override
   String get moneyLabelNetDue => 'Net due';

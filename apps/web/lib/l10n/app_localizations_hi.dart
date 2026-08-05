@@ -409,7 +409,7 @@ class AppLocalizationsHi extends AppLocalizations {
       'उपन्यास/उपकरणों के लिए: इस प्रति का नाम और छोटा कोड दर्ज करें।';
 
   @override
-  String get instanceNameLabel => 'उदाहरण नाम';
+  String get instanceNameLabel => 'इकाई का नाम';
 
   @override
   String get instanceNameHint => 'जैसे हैरी पॉटर';
@@ -422,7 +422,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get instanceLabelsRequired =>
-      'प्रत्येक वस्तु के लिए उदाहरण नाम और छोटा कोड दर्ज करें।';
+      'प्रत्येक वस्तु के लिए इकाई का नाम और छोटा कोड दर्ज करें।';
 
   @override
   String duplicateShortCode(String code) {
@@ -1219,7 +1219,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String orderBillDepositLabel(String amount) {
-    return 'जमा $amount';
+    return 'अग्रिम $amount';
   }
 
   @override
@@ -1228,14 +1228,14 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String get orderDepositLabel => 'ऑर्डर जमा';
+  String get orderDepositLabel => 'ऑर्डर अग्रिम';
 
   @override
   String get customerOrdersHeading => 'ऑर्डर';
 
   @override
   String get orderDepositSettlementExceeds =>
-      'रखी + लौटाई राशि ऑर्डर जमा से अधिक नहीं हो सकती।';
+      'रखी + लौटाई राशि ऑर्डर अग्रिम से अधिक नहीं हो सकती।';
 
   @override
   String get requiresUnitIdentityLabel => 'यूनिट नाम/आईडी आवश्यक';
@@ -1336,10 +1336,16 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String get depositTopUpOptionalLabel => 'ऑर्डर टोकन / अग्रिम (वैकल्पिक)';
+  String get depositTopUpOptionalLabel => 'अग्रिम (वैकल्पिक)';
 
   @override
   String get depositTopUpOptionalHint => 'इस ऑर्डर पर रखा जाएगा, रुपये में';
+
+  @override
+  String get moreOptions => 'और विकल्प';
+
+  @override
+  String get addUnitLabelsAction => 'यूनिट लेबल जोड़ें';
 
   @override
   String get itemKindDefaultLabel => 'डिफ़ॉल्ट ऑर्डर मोड';
@@ -1452,7 +1458,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get orderBillAmountLabel => 'बिल';
 
   @override
-  String get orderDepositShortLabel => 'जमा';
+  String get orderDepositShortLabel => 'अग्रिम';
 
   @override
   String get ordersFilterAll => 'सभी';
@@ -1484,7 +1490,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get moneyLabelTotal => 'कुल';
 
   @override
-  String get moneyLabelDeposit => 'जमा';
+  String get moneyLabelDeposit => 'अग्रिम';
 
   @override
   String get moneyLabelWillApply => 'लागू होगा';
@@ -1493,7 +1499,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get moneyLabelRemainingDue => 'शेष देय';
 
   @override
-  String get moneyLabelLeftover => 'बचा जमा';
+  String get moneyLabelLeftover => 'बचा अग्रिम';
 
   @override
   String get moneyLabelNetDue => 'नेट देय';

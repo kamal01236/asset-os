@@ -815,7 +815,7 @@ abstract class AppLocalizations {
   /// No description provided for @instanceNameLabel.
   ///
   /// In en, this message translates to:
-  /// **'Instance name'**
+  /// **'Unit name'**
   String get instanceNameLabel;
 
   /// No description provided for @instanceNameHint.
@@ -839,7 +839,7 @@ abstract class AppLocalizations {
   /// No description provided for @instanceLabelsRequired.
   ///
   /// In en, this message translates to:
-  /// **'Enter an instance name and short code for each item.'**
+  /// **'Enter a unit name and short code for each item.'**
   String get instanceLabelsRequired;
 
   /// No description provided for @duplicateShortCode.
@@ -2183,7 +2183,7 @@ abstract class AppLocalizations {
   /// No description provided for @orderBillDepositLabel.
   ///
   /// In en, this message translates to:
-  /// **'Deposit {amount}'**
+  /// **'Advance {amount}'**
   String orderBillDepositLabel(String amount);
 
   /// No description provided for @orderBillTotalLabel.
@@ -2195,7 +2195,7 @@ abstract class AppLocalizations {
   /// No description provided for @orderDepositLabel.
   ///
   /// In en, this message translates to:
-  /// **'Order deposit'**
+  /// **'Order advance'**
   String get orderDepositLabel;
 
   /// No description provided for @customerOrdersHeading.
@@ -2207,7 +2207,7 @@ abstract class AppLocalizations {
   /// No description provided for @orderDepositSettlementExceeds.
   ///
   /// In en, this message translates to:
-  /// **'Kept + returned cannot exceed order deposit.'**
+  /// **'Kept + returned cannot exceed order advance.'**
   String get orderDepositSettlementExceeds;
 
   /// No description provided for @requiresUnitIdentityLabel.
@@ -2357,7 +2357,7 @@ abstract class AppLocalizations {
   /// No description provided for @depositTopUpOptionalLabel.
   ///
   /// In en, this message translates to:
-  /// **'Order token / advance (optional)'**
+  /// **'Advance (optional)'**
   String get depositTopUpOptionalLabel;
 
   /// No description provided for @depositTopUpOptionalHint.
@@ -2365,6 +2365,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Held on this order, in rupees'**
   String get depositTopUpOptionalHint;
+
+  /// No description provided for @moreOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'More options'**
+  String get moreOptions;
+
+  /// No description provided for @addUnitLabelsAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Add unit labels'**
+  String get addUnitLabelsAction;
 
   /// No description provided for @itemKindDefaultLabel.
   ///
@@ -2585,7 +2597,7 @@ abstract class AppLocalizations {
   /// No description provided for @orderDepositShortLabel.
   ///
   /// In en, this message translates to:
-  /// **'Deposit'**
+  /// **'Advance'**
   String get orderDepositShortLabel;
 
   /// No description provided for @ordersFilterAll.
@@ -2645,7 +2657,7 @@ abstract class AppLocalizations {
   /// No description provided for @moneyLabelDeposit.
   ///
   /// In en, this message translates to:
-  /// **'Deposit'**
+  /// **'Advance'**
   String get moneyLabelDeposit;
 
   /// No description provided for @moneyLabelWillApply.
@@ -2663,7 +2675,7 @@ abstract class AppLocalizations {
   /// No description provided for @moneyLabelLeftover.
   ///
   /// In en, this message translates to:
-  /// **'Leftover deposit'**
+  /// **'Leftover advance'**
   String get moneyLabelLeftover;
 
   /// No description provided for @moneyLabelNetDue.

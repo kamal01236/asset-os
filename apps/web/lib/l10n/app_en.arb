@@ -212,11 +212,11 @@
   },
   "labelInstancesHeading": "Name each item",
   "labelInstancesHint": "For novels/tools: enter this copy’s name and a short code.",
-  "instanceNameLabel": "Instance name",
+  "instanceNameLabel": "Unit name",
   "instanceNameHint": "e.g. Harry Potter",
   "shortCodeLabel": "Short code",
   "shortCodeHint": "e.g. NOV-042",
-  "instanceLabelsRequired": "Enter an instance name and short code for each item.",
+  "instanceLabelsRequired": "Enter a unit name and short code for each item.",
   "duplicateShortCode": "Short code {code} is already in use on an active order.",
   "@duplicateShortCode": {
     "placeholders": {
@@ -707,7 +707,7 @@
   "orderStatusOpen": "Open",
   "orderStatusCompleted": "Completed",
   "orderStatusCancelled": "Cancelled",
-  "orderBillDepositLabel": "Deposit {amount}",
+  "orderBillDepositLabel": "Advance {amount}",
   "@orderBillDepositLabel": {
     "placeholders": {
       "amount": {"type": "String"}
@@ -719,9 +719,9 @@
       "amount": {"type": "String"}
     }
   },
-  "orderDepositLabel": "Order deposit",
+  "orderDepositLabel": "Order advance",
   "customerOrdersHeading": "Orders",
-  "orderDepositSettlementExceeds": "Kept + returned cannot exceed order deposit.",
+  "orderDepositSettlementExceeds": "Kept + returned cannot exceed order advance.",
   "requiresUnitIdentityLabel": "Requires unit name/id",
   "requiresUnitIdentitySubtitle": "On for parent categories (e.g. Novels). Off for individual items that share one catalog name.",
   "quantityLabel": "Quantity",
@@ -811,8 +811,10 @@
       "amount": {"type": "String"}
     }
   },
-  "depositTopUpOptionalLabel": "Order token / advance (optional)",
+  "depositTopUpOptionalLabel": "Advance (optional)",
   "depositTopUpOptionalHint": "Held on this order, in rupees",
+  "moreOptions": "More options",
+  "addUnitLabelsAction": "Add unit labels",
   "itemKindDefaultLabel": "Default order mode",
   "itemKindRentalLabel": "Rental",
   "itemKindGeneralLabel": "General",
@@ -854,7 +856,7 @@
   "orderNotesEmpty": "No notes yet.",
   "orderNoteAddedSnack": "Note added",
   "orderBillAmountLabel": "Bill",
-  "orderDepositShortLabel": "Deposit",
+  "orderDepositShortLabel": "Advance",
   "ordersFilterAll": "All",
   "ordersFilterOpen": "Open",
   "ordersFilterCompleted": "Completed",
@@ -871,10 +873,10 @@
   "moneyLabelBase": "Base",
   "moneyLabelLate": "Late fee",
   "moneyLabelTotal": "Total",
-  "moneyLabelDeposit": "Deposit",
+  "moneyLabelDeposit": "Advance",
   "moneyLabelWillApply": "Will apply",
   "moneyLabelRemainingDue": "Remaining due",
-  "moneyLabelLeftover": "Leftover deposit",
+  "moneyLabelLeftover": "Leftover advance",
   "moneyLabelNetDue": "Net due",
   "reportWhatsAppGateBanner": "Set your WhatsApp number in More to share reports.",
   "reportConfigureWhatsAppAction": "Set WhatsApp"

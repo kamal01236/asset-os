@@ -15,13 +15,12 @@ const String kHomeModulesCustomizedKey = 'asset_os_home_modules_customized';
 
 /// Default enabled set for Generic / Camera-style templates.
 /// KPIs navigate to filtered Rentals/Inventory tabs; in-place filterResults
-/// stays optional via Customize Home.
+/// stays optional via Customize Home. Quick actions and pending jobs stay
+/// available via Customize Home (FAB covers New Order / Return).
 const List<HomeModuleId> kDefaultHomeModules = <HomeModuleId>[
   HomeModuleId.search,
   HomeModuleId.kpis,
   HomeModuleId.needsAttention,
-  HomeModuleId.pendingJobs,
-  HomeModuleId.quickActions,
 ];
 
 /// Library template adds recent activity for borrow/return tracking feel.
@@ -29,8 +28,6 @@ const List<HomeModuleId> kLibraryHomeModules = <HomeModuleId>[
   HomeModuleId.search,
   HomeModuleId.kpis,
   HomeModuleId.needsAttention,
-  HomeModuleId.pendingJobs,
-  HomeModuleId.quickActions,
   HomeModuleId.recentActivity,
 ];
 

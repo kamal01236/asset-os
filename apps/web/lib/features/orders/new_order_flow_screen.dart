@@ -70,6 +70,8 @@ class _OrderLineDraft {
   final TextEditingController saleAmountController;
   DateTime? customEnd;
   bool leaveOpenEnded = false;
+  /// Optional unit labels when catalog does not require identity.
+  bool showUnitLabels = false;
 
   bool get isSell => fulfillment == LineFulfillment.sell;
 
@@ -318,7 +320,7 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
     setState(() {
       final _OrderLineDraft draft = _lines[index];
       draft.quantity = quantity.clamp(1, _kMaxOrderLineQuantity);
-      if (item.requiresUnitIdentity) {
+      if (item.requiresUnitIdentity || draft.showUnitLabels) {
         draft.ensureIdentitySlots(draft.quantity);
       }
     });
@@ -387,6 +389,7 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
       final _OrderLineDraft draft = _lines[index];
       draft.itemId = itemId;
       draft.quantity = 1;
+      draft.showUnitLabels = false;
       draft.ensureIdentitySlots(1);
       draft.clearIdentityFields();
       draft.saleAmountController.clear();
@@ -602,15 +605,32 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
           shortCode = unit.shortCodeController.text.trim();
           usedCodes.add(LocalRepository.normalizeShortCode(shortCode));
         } else {
-          final int nextIndex = (autoIndexByItem[item.id] ?? 0) + 1;
-          autoIndexByItem[item.id] = nextIndex;
-          instanceName = item.name;
-          shortCode = LocalRepository.generateAutoShortCode(
-            catalogName: item.name,
-            index: nextIndex,
-            usedCodes: usedCodes,
-          );
-          usedCodes.add(LocalRepository.normalizeShortCode(shortCode));
+          String? optionalName;
+          String? optionalCode;
+          if (draft.showUnitLabels && u < draft.identities.length) {
+            final _UnitIdentityDraft unit = draft.identities[u];
+            final String name = unit.instanceNameController.text.trim();
+            final String code = unit.shortCodeController.text.trim();
+            if (name.isNotEmpty && code.isNotEmpty) {
+              optionalName = name;
+              optionalCode = code;
+            }
+          }
+          if (optionalName != null && optionalCode != null) {
+            instanceName = optionalName;
+            shortCode = optionalCode;
+            usedCodes.add(LocalRepository.normalizeShortCode(shortCode));
+          } else {
+            final int nextIndex = (autoIndexByItem[item.id] ?? 0) + 1;
+            autoIndexByItem[item.id] = nextIndex;
+            instanceName = item.name;
+            shortCode = LocalRepository.generateAutoShortCode(
+              catalogName: item.name,
+              index: nextIndex,
+              usedCodes: usedCodes,
+            );
+            usedCodes.add(LocalRepository.normalizeShortCode(shortCode));
+          }
         }
 
         if (draft.isSell) {
@@ -852,26 +872,32 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
           children: <Widget>[
             if (!onForm)
               Expanded(
-                child: OutlinedButton(
-                  onPressed: _submitting
-                      ? null
-                      : () => setState(() {
-                            if (onSummary) {
-                              _phase = _skipCustomerStep
-                                  ? _OrderPhase.form
-                                  : _OrderPhase.customer;
-                            } else {
-                              _phase = _OrderPhase.form;
-                            }
-                          }),
-                  child: Text(l10n.back),
+                child: SizedBox(
+                  height: 48,
+                  child: OutlinedButton(
+                    onPressed: _submitting
+                        ? null
+                        : () => setState(() {
+                              if (onSummary) {
+                                _phase = _skipCustomerStep
+                                    ? _OrderPhase.form
+                                    : _OrderPhase.customer;
+                              } else {
+                                _phase = _OrderPhase.form;
+                              }
+                            }),
+                    child: Text(l10n.back),
+                  ),
                 ),
               ),
             if (!onForm) const SizedBox(width: 8),
             Expanded(
-              child: FilledButton(
-                onPressed: _submitting ? null : primaryAction,
-                child: Text(primaryLabel),
+              child: SizedBox(
+                height: 48,
+                child: FilledButton(
+                  onPressed: _submitting ? null : primaryAction,
+                  child: Text(primaryLabel),
+                ),
               ),
             ),
           ],
@@ -994,6 +1020,17 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
             ),
       ),
       const SizedBox(height: 12),
+      if (!_noPhone)
+        TextField(
+          controller: _phoneController,
+          keyboardType: TextInputType.phone,
+          decoration: InputDecoration(
+            labelText: l10n.phoneNumberLabel,
+            hintText: l10n.phoneNumberHint,
+          ),
+          onChanged: (_) => _onCustomerFieldsChanged(),
+        ),
+      if (!_noPhone) const SizedBox(height: 8),
       TextField(
         controller: _nameController,
         textCapitalization: TextCapitalization.words,
@@ -1007,17 +1044,6 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
         onChanged: (_) => _onCustomerFieldsChanged(),
       ),
       const SizedBox(height: 8),
-      if (!_noPhone)
-        TextField(
-          controller: _phoneController,
-          keyboardType: TextInputType.phone,
-          decoration: InputDecoration(
-            labelText: l10n.phoneNumberLabel,
-            hintText: l10n.phoneNumberHint,
-          ),
-          onChanged: (_) => _onCustomerFieldsChanged(),
-        ),
-      if (!_noPhone) const SizedBox(height: 8),
       CheckboxListTile(
         contentPadding: EdgeInsets.zero,
         title: Text(l10n.noPhoneNumberLabel),
@@ -1080,22 +1106,28 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
           status: AssetStatus.archived,
         ),
       ],
-      const SizedBox(height: 12),
-      Text(
-        l10n.orderDepositLabel,
-        style: Theme.of(context).textTheme.titleSmall,
-      ),
       const SizedBox(height: 8),
-      TextField(
-        controller: _depositTopUpController,
-        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-        decoration: InputDecoration(
-          labelText: l10n.depositTopUpOptionalLabel,
-          hintText: l10n.depositTopUpOptionalHint,
-        ),
-        onChanged: (_) => setState(() {}),
-      ),
+      _buildOptionalAdvanceTile(l10n),
     ];
+  }
+
+  Widget _buildOptionalAdvanceTile(AppLocalizations l10n) {
+    return ExpansionTile(
+      tilePadding: EdgeInsets.zero,
+      childrenPadding: EdgeInsets.zero,
+      title: Text(l10n.depositTopUpOptionalLabel),
+      children: <Widget>[
+        TextField(
+          controller: _depositTopUpController,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          decoration: InputDecoration(
+            labelText: l10n.orderDepositLabel,
+            hintText: l10n.depositTopUpOptionalHint,
+          ),
+          onChanged: (_) => setState(() {}),
+        ),
+      ],
+    );
   }
 
   List<Widget> _buildFormStep(
@@ -1142,20 +1174,7 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
       ),
       if (_skipCustomerStep) ...<Widget>[
         const SizedBox(height: 8),
-        Text(
-          l10n.orderDepositLabel,
-          style: Theme.of(context).textTheme.titleSmall,
-        ),
-        const SizedBox(height: 8),
-        TextField(
-          controller: _depositTopUpController,
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          decoration: InputDecoration(
-            labelText: l10n.depositTopUpOptionalLabel,
-            hintText: l10n.depositTopUpOptionalHint,
-          ),
-          onChanged: (_) => setState(() {}),
-        ),
+        _buildOptionalAdvanceTile(l10n),
       ],
     ];
   }
@@ -1226,50 +1245,7 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
               ),
               if (selected != null) ...<Widget>[
                 const SizedBox(height: 8),
-                SegmentedButton<LineFulfillment>(
-                  segments: <ButtonSegment<LineFulfillment>>[
-                    ButtonSegment<LineFulfillment>(
-                      value: LineFulfillment.rent,
-                      label: Text(l10n.lineFulfillmentRent),
-                    ),
-                    ButtonSegment<LineFulfillment>(
-                      value: LineFulfillment.sell,
-                      label: Text(l10n.lineFulfillmentSell),
-                    ),
-                    ButtonSegment<LineFulfillment>(
-                      value: LineFulfillment.job,
-                      label: Text(l10n.lineFulfillmentJob),
-                    ),
-                  ],
-                  selected: <LineFulfillment>{draft.fulfillment},
-                  onSelectionChanged: (Set<LineFulfillment> selection) {
-                    setState(() {
-                      draft.fulfillment = selection.first;
-                      if (draft.usesManualAmount) {
-                        draft.leaveOpenEnded = false;
-                        draft.customEnd = null;
-                        if (draft.isJob &&
-                            selected.rateAmount > 0 &&
-                            draft.saleAmountController.text.trim().isEmpty) {
-                          draft.saleAmountController.text =
-                              paiseToRupeesField(selected.rateAmount);
-                        }
-                      } else if (draft.durationController.text.isEmpty) {
-                        draft.durationController.text = '1';
-                      }
-                    });
-                  },
-                ),
-                const SizedBox(height: 8),
                 _buildQuantityStepper(l10n, index, selected),
-                const SizedBox(height: 8),
-                if (selected.requiresUnitIdentity)
-                  ..._buildIdentityFields(l10n, index, selected)
-                else
-                  Text(
-                    l10n.labelsAutoAssignedHint,
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
                 const SizedBox(height: 8),
                 if (draft.usesManualAmount) ...<Widget>[
                   TextField(
@@ -1299,70 +1275,22 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
                     ),
                   ],
                 ] else ...<Widget>[
-                  Text(
-                    localizedBillingMode(l10n, selected.billingMode),
-                    style: Theme.of(context).textTheme.labelLarge,
-                  ),
-                  const SizedBox(height: 8),
-                  if (selected.dueDateOptional)
-                    SwitchListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(l10n.openEndedLabel),
-                      subtitle: Text(l10n.openEndedDurationHint),
-                      value: draft.leaveOpenEnded,
-                      onChanged: (bool value) {
-                        setState(() {
-                          draft.leaveOpenEnded = value;
-                          if (value) {
-                            draft.durationController.clear();
-                            draft.customEnd = null;
-                          } else if (draft.durationController.text.isEmpty) {
-                            draft.durationController.text = '1';
-                          }
-                        });
-                      },
-                    ),
-                  if (!draft.leaveOpenEnded) ...<Widget>[
-                    if (selected.billingMode == BillingMode.custom)
-                      ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        title: Text(l10n.customEndDateLabel),
-                        subtitle: Text(
-                          draft.customEnd == null
-                              ? '—'
-                              : _formatDate(draft.customEnd!),
-                        ),
-                        trailing: const Icon(Icons.calendar_today_outlined),
-                        onTap: () async {
-                          final DateTime now = DateTime.now();
-                          final DateTime? picked = await showDatePicker(
-                            context: context,
-                            initialDate: draft.customEnd ??
-                                now.add(const Duration(days: 1)),
-                            firstDate: DateTime(now.year, now.month, now.day),
-                            lastDate: now.add(const Duration(days: 365 * 2)),
-                          );
-                          if (picked != null) {
-                            setState(() => draft.customEnd = picked);
-                          }
+                  if (!draft.leaveOpenEnded &&
+                      selected.billingMode != BillingMode.custom)
+                    TextField(
+                      controller: draft.durationController,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText: switch (selected.billingMode) {
+                          BillingMode.daily => l10n.durationUnitsDaily,
+                          BillingMode.weekly => l10n.durationUnitsWeekly,
+                          BillingMode.monthly => l10n.durationUnitsMonthly,
+                          BillingMode.fixed => l10n.durationUnitsFixed,
+                          BillingMode.custom => l10n.durationUnitsLabel,
                         },
-                      )
-                    else
-                      TextField(
-                        controller: draft.durationController,
-                        keyboardType: TextInputType.number,
-                        decoration: InputDecoration(
-                          labelText: switch (selected.billingMode) {
-                            BillingMode.daily => l10n.durationUnitsDaily,
-                            BillingMode.weekly => l10n.durationUnitsWeekly,
-                            BillingMode.monthly => l10n.durationUnitsMonthly,
-                            BillingMode.fixed => l10n.durationUnitsFixed,
-                            BillingMode.custom => l10n.durationUnitsLabel,
-                          },
-                        ),
-                        onChanged: (_) => setState(() {}),
                       ),
-                  ],
+                      onChanged: (_) => setState(() {}),
+                    ),
                   if (_durationComplete(draft, selected) &&
                       !draft.leaveOpenEnded) ...<Widget>[
                     const SizedBox(height: 8),
@@ -1386,6 +1314,126 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
                     Text(l10n.reviewOpenEndedLabel),
                   ],
                 ],
+                const SizedBox(height: 8),
+                if (selected.requiresUnitIdentity)
+                  ..._buildIdentityFields(l10n, index, selected)
+                else ...<Widget>[
+                  Text(
+                    l10n.labelsAutoAssignedHint,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  if (!draft.showUnitLabels)
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton(
+                        onPressed: () {
+                          setState(() {
+                            draft.showUnitLabels = true;
+                            draft.ensureIdentitySlots(draft.quantity);
+                          });
+                        },
+                        child: Text(l10n.addUnitLabelsAction),
+                      ),
+                    )
+                  else
+                    ..._buildIdentityFields(l10n, index, selected),
+                ],
+                ExpansionTile(
+                  tilePadding: EdgeInsets.zero,
+                  childrenPadding: EdgeInsets.zero,
+                  title: Text(l10n.moreOptions),
+                  children: <Widget>[
+                    SegmentedButton<LineFulfillment>(
+                      segments: <ButtonSegment<LineFulfillment>>[
+                        ButtonSegment<LineFulfillment>(
+                          value: LineFulfillment.rent,
+                          label: Text(l10n.lineFulfillmentRent),
+                        ),
+                        ButtonSegment<LineFulfillment>(
+                          value: LineFulfillment.sell,
+                          label: Text(l10n.lineFulfillmentSell),
+                        ),
+                        ButtonSegment<LineFulfillment>(
+                          value: LineFulfillment.job,
+                          label: Text(l10n.lineFulfillmentJob),
+                        ),
+                      ],
+                      selected: <LineFulfillment>{draft.fulfillment},
+                      onSelectionChanged: (Set<LineFulfillment> selection) {
+                        setState(() {
+                          draft.fulfillment = selection.first;
+                          if (draft.usesManualAmount) {
+                            draft.leaveOpenEnded = false;
+                            draft.customEnd = null;
+                            if (draft.isJob &&
+                                selected.rateAmount > 0 &&
+                                draft.saleAmountController.text.trim().isEmpty) {
+                              draft.saleAmountController.text =
+                                  paiseToRupeesField(selected.rateAmount);
+                            }
+                          } else if (draft.durationController.text.isEmpty) {
+                            draft.durationController.text = '1';
+                          }
+                        });
+                      },
+                    ),
+                    if (!draft.usesManualAmount) ...<Widget>[
+                      const SizedBox(height: 8),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          localizedBillingMode(l10n, selected.billingMode),
+                          style: Theme.of(context).textTheme.labelLarge,
+                        ),
+                      ),
+                      if (selected.dueDateOptional)
+                        SwitchListTile(
+                          contentPadding: EdgeInsets.zero,
+                          title: Text(l10n.openEndedLabel),
+                          subtitle: Text(l10n.openEndedDurationHint),
+                          value: draft.leaveOpenEnded,
+                          onChanged: (bool value) {
+                            setState(() {
+                              draft.leaveOpenEnded = value;
+                              if (value) {
+                                draft.durationController.clear();
+                                draft.customEnd = null;
+                              } else if (draft.durationController.text.isEmpty) {
+                                draft.durationController.text = '1';
+                              }
+                            });
+                          },
+                        ),
+                      if (!draft.leaveOpenEnded &&
+                          selected.billingMode == BillingMode.custom)
+                        ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          title: Text(l10n.customEndDateLabel),
+                          subtitle: Text(
+                            draft.customEnd == null
+                                ? '—'
+                                : _formatDate(draft.customEnd!),
+                          ),
+                          trailing: const Icon(Icons.calendar_today_outlined),
+                          onTap: () async {
+                            final DateTime now = DateTime.now();
+                            final DateTime? picked = await showDatePicker(
+                              context: context,
+                              initialDate: draft.customEnd ??
+                                  now.add(const Duration(days: 1)),
+                              firstDate:
+                                  DateTime(now.year, now.month, now.day),
+                              lastDate:
+                                  now.add(const Duration(days: 365 * 2)),
+                            );
+                            if (picked != null) {
+                              setState(() => draft.customEnd = picked);
+                            }
+                          },
+                        ),
+                    ],
+                  ],
+                ),
               ],
             ],
           ),
@@ -1411,6 +1459,7 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
         IconButton(
           key: ValueKey<String>('qty-dec-$index'),
           tooltip: l10n.quantityLabel,
+          constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
           onPressed: draft.quantity <= 1
               ? null
               : () => _setQuantity(index, draft.quantity - 1, selected),
@@ -1424,6 +1473,7 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
         IconButton(
           key: ValueKey<String>('qty-inc-$index'),
           tooltip: l10n.quantityLabel,
+          constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
           onPressed: draft.quantity >= _kMaxOrderLineQuantity
               ? null
               : () => _setQuantity(index, draft.quantity + 1, selected),

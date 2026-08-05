@@ -13,7 +13,7 @@ class TemplateInventoryItem {
     this.lateFeePerDay = 0,
     this.currencyCode = 'INR',
     this.defaultItemKind = InventoryItemKind.rental,
-    this.requiresUnitIdentity = true,
+    this.requiresUnitIdentity = false,
     this.dueDateOptional = false,
   });
 

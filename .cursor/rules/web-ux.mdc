@@ -14,4 +14,5 @@ Follow `docs/ux/web-ux-conventions.md` (source of truth). Digest:
 - Status colors: Available green, Rented blue, Due Today orange, Overdue red, Archived grey.
 - Offline: subtle non-blocking banner only. More-tab offline toggle is demo/simulation, not product positioning.
 - Appearance: Dark/Light only; default Dark; More-tab segmented toggle; theme-aware colors via ColorScheme (no light-only hardcodes).
-- Forms: items-first New Order (running total), then phone-first customer attach; skip customer when issuing from a profile; minimal required fields first; advanced details collapsed.
+- Forms: items-first New Order (running total; days/amount happy path; Rent/Sell/Job under More options), then phone-first customer attach with optional collapsed Advance; skip customer when issuing from a profile; unit identity optional unless catalog requires it.
+- Home defaults: search + KPIs + needsAttention (Quick Actions / Pending jobs via Customize Home; FAB for New Order / Return).

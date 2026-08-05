@@ -1351,7 +1351,7 @@ class LocalRepository {
     int lateFeePerDay = 0,
     String currencyCode = 'INR',
     bool dueDateOptional = false,
-    bool requiresUnitIdentity = true,
+    bool requiresUnitIdentity = false,
     InventoryItemKind defaultItemKind = InventoryItemKind.rental,
   }) async {
     final String trimmedName = name.trim();

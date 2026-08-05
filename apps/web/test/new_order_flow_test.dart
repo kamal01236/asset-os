@@ -44,15 +44,16 @@ Future<void> _settle(WidgetTester tester, {int ticks = 15}) async {
 }
 
 /// Fill prefilled unit-identity lines so Continue / Generate is enabled.
+/// Field order per line: duration, instance name, short code.
 Future<void> _fillTwoUnitLines(WidgetTester tester) async {
   final Finder fields = find.byType(TextField);
   expect(fields.evaluate().length >= 6, isTrue);
-  await tester.enterText(fields.at(0), 'Body A');
-  await tester.enterText(fields.at(1), 'CAM-A1');
-  await tester.enterText(fields.at(2), '1');
-  await tester.enterText(fields.at(3), 'Trip X');
-  await tester.enterText(fields.at(4), 'TRP-X1');
-  await tester.enterText(fields.at(5), '3');
+  await tester.enterText(fields.at(0), '1');
+  await tester.enterText(fields.at(1), 'Body A');
+  await tester.enterText(fields.at(2), 'CAM-A1');
+  await tester.enterText(fields.at(3), '3');
+  await tester.enterText(fields.at(4), 'Trip X');
+  await tester.enterText(fields.at(5), 'TRP-X1');
   await tester.pump();
   await _settle(tester, ticks: 8);
 }
@@ -60,9 +61,9 @@ Future<void> _fillTwoUnitLines(WidgetTester tester) async {
 Future<void> _fillOneUnitLine(WidgetTester tester) async {
   final Finder fields = find.byType(TextField);
   expect(fields.evaluate().length >= 3, isTrue);
-  await tester.enterText(fields.at(0), 'Body A');
-  await tester.enterText(fields.at(1), 'CAM-A1');
-  await tester.enterText(fields.at(2), '1');
+  await tester.enterText(fields.at(0), '1');
+  await tester.enterText(fields.at(1), 'Body A');
+  await tester.enterText(fields.at(2), 'CAM-A1');
   await tester.pump();
   await _settle(tester, ticks: 8);
 }
@@ -101,8 +102,8 @@ void main() {
     expect(find.text('Line 1'), findsOneWidget);
     expect(find.text('Line 2'), findsOneWidget);
 
-    // requiresUnitIdentity: instance/short/duration per line + optional deposit.
-    // Per line also has Rent/Sell; sale amount field is hidden while Rent is selected.
+    // requiresUnitIdentity: duration then instance/short per line; advance collapsed.
+    // Rent/Sell/Job live under More options; sale amount hidden while Rent is selected.
     await _fillTwoUnitLines(tester);
 
     final FilledButton continueBtn = tester.widget(
@@ -187,9 +188,9 @@ void main() {
     expect(find.widgetWithText(OutlinedButton, 'Back'), findsOneWidget);
 
     final Finder customerFields = find.byType(TextField);
-    await tester.enterText(customerFields.at(0), 'Priya Patel');
+    await tester.enterText(customerFields.at(0), '6666666666');
     await tester.pump();
-    await tester.enterText(customerFields.at(1), '6666666666');
+    await tester.enterText(customerFields.at(1), 'Priya Patel');
     await tester.pump();
     await _settle(tester);
 
@@ -273,7 +274,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 50));
 
-    await tester.enterText(find.byType(TextField).first, 'Pri');
+    await tester.enterText(find.byType(TextField).at(1), 'Pri');
     await tester.pump();
     await _settle(tester, ticks: 30);
 
@@ -313,8 +314,8 @@ void main() {
     await tester.pump(const Duration(milliseconds: 50));
 
     final Finder fields = find.byType(TextField);
-    await tester.enterText(fields.at(0), 'New Guest');
-    await tester.enterText(fields.at(1), '5555512345');
+    await tester.enterText(fields.at(0), '5555512345');
+    await tester.enterText(fields.at(1), 'New Guest');
     await tester.pump();
 
     final FilledButton continueBtn = tester.widget(
@@ -433,11 +434,11 @@ void main() {
     await pumpFrames(tester);
 
     final Finder fields = find.byType(TextField);
-    await tester.enterText(fields.at(0), 'Body A');
-    await tester.enterText(fields.at(1), 'CAM-A1');
-    await tester.enterText(fields.at(2), 'Body B');
-    await tester.enterText(fields.at(3), 'CAM-B1');
-    await tester.enterText(fields.at(4), '1');
+    await tester.enterText(fields.at(0), '1');
+    await tester.enterText(fields.at(1), 'Body A');
+    await tester.enterText(fields.at(2), 'CAM-A1');
+    await tester.enterText(fields.at(3), 'Body B');
+    await tester.enterText(fields.at(4), 'CAM-B1');
     await tester.pump();
     await _settle(tester, ticks: 8);
 

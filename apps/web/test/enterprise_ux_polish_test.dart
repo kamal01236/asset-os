@@ -74,7 +74,7 @@ void main() {
     expect(find.text('#9001'), findsOneWidget);
     expect(find.text('REN-9001'), findsNothing);
     expect(find.text('Bill'), findsOneWidget);
-    expect(find.text('Deposit'), findsOneWidget);
+    expect(find.text('Advance'), findsOneWidget);
   });
 
   testWidgets('customer list uses TierPill not Available/Archived for tier', (
