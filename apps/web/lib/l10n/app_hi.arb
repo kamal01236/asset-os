@@ -68,6 +68,18 @@
   "voiceSearchStubSubtitle": "इंटेंट-आधारित खोज कमांड के लिए प्लेसहोल्डर।",
   "businessTemplatesTitle": "व्यवसाय टेम्पलेट",
   "businessTemplatesSubtitle": "उद्योग के अनुसार स्टार्टर इन्वेंटरी आयात करें (मर्ज)।",
+  "onboardingTemplateTitle": "अपना व्यवसाय प्रकार चुनें",
+  "onboardingTemplateSubtitle": "हम आपके उद्योग के लिए स्टार्टर इन्वेंटरी जोड़ेंगे। बाद में और → व्यवसाय टेम्पलेट से और जोड़ सकते हैं।",
+  "onboardingTemplateConfirm": "यह टेम्पलेट उपयोग करें",
+  "onboardingTemplateCancel": "वापस",
+  "onboardingTemplateConfirmBody": "{name} के सभी {count} स्टार्टर आइटम जोड़ें और अनुशंसित होम लेआउट सेट करें?",
+  "@onboardingTemplateConfirmBody": {
+    "placeholders": {
+      "count": {"type": "int"},
+      "name": {"type": "String"}
+    }
+  },
+  "onboardingTemplateBusy": "सेटअप हो रहा है…",
   "phoneLabel": "फ़ोन: {phone}",
   "@phoneLabel": {
     "placeholders": {

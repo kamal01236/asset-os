@@ -21,6 +21,7 @@ UI-first conventions for `apps/web` to keep flows fast, clear, and touch-friendl
 - Archived = grey
 
 ## Home (attention-first)
+- **First launch:** empty DB shows a required industry-template picker (full pack seeds inventory + Home modules) before the shell. More → Business Templates remains for later merges.
 - Home KPI status chips are compact and tappable: tap navigates to the matching tab with that list filter applied (Active / Due today / Overdue → Orders; Available → Inventory). Clear the filter chip on the destination tab to restore the full list.
 - Home is modular (`search`, `kpis`, `filterResults`, `needsAttention`, `quickActions`, `recentActivity`, `suggestions`). Defaults are `search`, `kpis`, `needsAttention`, `quickActions` — no in-place `filterResults` under KPIs. Business templates may add `recentActivity` / `suggestions`; More → Customize Home lets users show/hide removable modules (including optional `filterResults`). Search is always on.
 - Prefer overdue/due lists and status filters over chart dashboards.

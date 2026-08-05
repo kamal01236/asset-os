@@ -392,6 +392,42 @@ abstract class AppLocalizations {
   /// **'Import starter inventory by industry (merge).'**
   String get businessTemplatesSubtitle;
 
+  /// No description provided for @onboardingTemplateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your business type'**
+  String get onboardingTemplateTitle;
+
+  /// No description provided for @onboardingTemplateSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'We'll add starter inventory for your industry. You can add more later from More → Business Templates.'**
+  String get onboardingTemplateSubtitle;
+
+  /// No description provided for @onboardingTemplateConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Use this template'**
+  String get onboardingTemplateConfirm;
+
+  /// No description provided for @onboardingTemplateCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get onboardingTemplateCancel;
+
+  /// No description provided for @onboardingTemplateConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Add all {count} starter items for {name} and set the recommended Home layout?'**
+  String onboardingTemplateConfirmBody(int count, String name);
+
+  /// No description provided for @onboardingTemplateBusy.
+  ///
+  /// In en, this message translates to:
+  /// **'Setting up…'**
+  String get onboardingTemplateBusy;
+
   /// No description provided for @phoneLabel.
   ///
   /// In en, this message translates to:

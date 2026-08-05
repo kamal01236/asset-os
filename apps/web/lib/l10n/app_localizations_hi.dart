@@ -168,6 +168,27 @@ class AppLocalizationsHi extends AppLocalizations {
       'उद्योग के अनुसार स्टार्टर इन्वेंटरी आयात करें (मर्ज)।';
 
   @override
+  String get onboardingTemplateTitle => 'अपना व्यवसाय प्रकार चुनें';
+
+  @override
+  String get onboardingTemplateSubtitle =>
+      'हम आपके उद्योग के लिए स्टार्टर इन्वेंटरी जोड़ेंगे। बाद में और → व्यवसाय टेम्पलेट से और जोड़ सकते हैं।';
+
+  @override
+  String get onboardingTemplateConfirm => 'यह टेम्पलेट उपयोग करें';
+
+  @override
+  String get onboardingTemplateCancel => 'वापस';
+
+  @override
+  String onboardingTemplateConfirmBody(int count, String name) {
+    return '$name के सभी $count स्टार्टर आइटम जोड़ें और अनुशंसित होम लेआउट सेट करें?';
+  }
+
+  @override
+  String get onboardingTemplateBusy => 'सेटअप हो रहा है…';
+
+  @override
   String phoneLabel(String phone) {
     return 'फ़ोन: $phone';
   }

@@ -34,11 +34,14 @@ Future<ProviderContainer> bootContainer({
     preferences: preferences,
     seedDemo: seedDemo,
   );
+  // Empty harness boots need the template gate; demo seed skips it.
+  final bool needsOnboarding = !seedDemo;
   final ProviderContainer container = ProviderContainer(
     overrides: <Override>[
       sharedPreferencesProvider.overrideWithValue(preferences),
       databaseProvider.overrideWithValue(db),
       repositoryProvider.overrideWithValue(repository),
+      needsIndustryOnboardingProvider.overrideWith((ref) => needsOnboarding),
     ],
   );
   addTearDown(container.dispose);

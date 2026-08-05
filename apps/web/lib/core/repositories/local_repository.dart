@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../db/app_database.dart';
+import '../home/home_modules.dart';
 import '../models/entities.dart';
 import '../models/unknown_customer.dart';
 import '../pricing/rental_pricing.dart';
@@ -69,6 +70,7 @@ class LocalRepository {
 
   static const String snapshotKey = 'asset_os_snapshot_v1';
   static const String _migrationMetaKey = 'prefs_snapshot_migrated_v1';
+  static const String industryTemplateMetaKey = 'industry_template_id';
 
   final AppDatabase _db;
   final SharedPreferences _preferences;
@@ -77,9 +79,11 @@ class LocalRepository {
 
   /// Open DB, migrate SharedPreferences snapshot once, or seed demo data.
   ///
-  /// When [seedDemo] is false and the DB is empty with no snapshot, only the
-  /// Unknown sentinel is ensured (lean path for unit tests).
-  Future<void> initialize({bool seedDemo = true}) async {
+  /// Production boots use [seedDemo] false: empty DB gets only the Unknown
+  /// sentinel; industry sample inventory comes from onboarding.
+  /// Pass [seedDemo] true only from the test harness for widget smokes that
+  /// assert legacy Priya/DSLR demo names.
+  Future<void> initialize({bool seedDemo = false}) async {
     final bool alreadyMigrated = await _isMigrationComplete();
     final List<CustomerRow> existingCustomers = await _db.select(_db.customers).get();
 
@@ -106,6 +110,48 @@ class LocalRepository {
     }
     await _markMigrationComplete();
     await ensureUnknownCustomer();
+  }
+
+  /// Chosen industry template id from first-load onboarding, if any.
+  Future<String?> selectedIndustryTemplateId() async {
+    final AppMetaRow? row = await (_db.select(_db.appMeta)
+          ..where((t) => t.key.equals(industryTemplateMetaKey)))
+        .getSingleOrNull();
+    final String? value = row?.value.trim();
+    if (value == null || value.isEmpty) {
+      return null;
+    }
+    return value;
+  }
+
+  /// True when no template has been chosen and inventory is still empty.
+  /// Existing DBs with inventory are not forced through onboarding.
+  Future<bool> needsIndustryOnboarding() async {
+    if (await selectedIndustryTemplateId() != null) {
+      return false;
+    }
+    final List<InventoryItem> inventory = await listInventory();
+    return inventory.isEmpty;
+  }
+
+  /// Import the full template pack, apply its Home modules, and persist the choice.
+  Future<void> completeIndustryOnboarding(IndustryTemplate template) async {
+    await importTemplateInventory(template.items);
+    await _setHomeModules(template.defaultHomeModules);
+    await _db.into(_db.appMeta).insertOnConflictUpdate(
+      AppMetaCompanion.insert(
+        key: industryTemplateMetaKey,
+        value: template.id,
+      ),
+    );
+  }
+
+  Future<void> _setHomeModules(List<HomeModuleId> modules) async {
+    await _preferences.setString(
+      kHomeModulesPrefsKey,
+      encodeHomeModules(modules),
+    );
+    await _preferences.setBool(kHomeModulesCustomizedKey, false);
   }
 
   /// Inserts the fixed Unknown sentinel if missing; migrates legacy CUS-SELF.

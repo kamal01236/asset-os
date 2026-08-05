@@ -68,6 +68,18 @@
   "voiceSearchStubSubtitle": "Placeholder for intent-based search commands.",
   "businessTemplatesTitle": "Business Templates",
   "businessTemplatesSubtitle": "Import starter inventory by industry (merge).",
+  "onboardingTemplateTitle": "Choose your business type",
+  "onboardingTemplateSubtitle": "We'll add starter inventory for your industry. You can add more later from More → Business Templates.",
+  "onboardingTemplateConfirm": "Use this template",
+  "onboardingTemplateCancel": "Back",
+  "onboardingTemplateConfirmBody": "Add all {count} starter items for {name} and set the recommended Home layout?",
+  "@onboardingTemplateConfirmBody": {
+    "placeholders": {
+      "count": {"type": "int"},
+      "name": {"type": "String"}
+    }
+  },
+  "onboardingTemplateBusy": "Setting up…",
   "phoneLabel": "Phone: {phone}",
   "@phoneLabel": {
     "placeholders": {

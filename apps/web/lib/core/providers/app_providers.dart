@@ -260,10 +260,16 @@ int summaryCount({
   }
 }
 
+/// Whether first-load industry template onboarding is still required.
+/// Bootstrapped in [main] / [bootContainer]; flipped false after template pick.
+final needsIndustryOnboardingProvider = StateProvider<bool>((ref) => false);
+
+/// App bootstrap: no legacy demo snapshot. Tests that need Priya/DSLR pass
+/// [seedDemo] true via [bootContainer] / [bootRepo].
 Future<LocalRepository> bootstrapRepository({
   AppDatabase? database,
   SharedPreferences? preferences,
-  bool seedDemo = true,
+  bool seedDemo = false,
 }) async {
   final SharedPreferences prefs = preferences ?? await SharedPreferences.getInstance();
   final AppDatabase db = database ?? AppDatabase();

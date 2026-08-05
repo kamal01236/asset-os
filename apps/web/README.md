@@ -6,7 +6,7 @@ Flutter shell for Hando (web for local validation and GitHub Pages feedback). Na
 
 - **Source of truth:** Drift (SQLite). On web, `sqlite3.wasm` and `drift_worker.js` live under `web/`.
 - **State:** Riverpod providers watch repository streams; UI screens are `ConsumerWidget`s.
-- **Migration:** One-time import from SharedPreferences `asset_os_snapshot_v1` when the DB is empty; otherwise demo seed on first empty boot.
+- **Migration:** One-time import from SharedPreferences `asset_os_snapshot_v1` when the DB is empty. Production first boot does **not** load the Priya/DSLR demo snapshot — only the Unknown customer sentinel, then a required industry-template picker seeds inventory.
 - **Sync / encryption:** Not implemented yet — see [ADR-002](../../docs/architecture/decisions/ADR-002-local-first-foundation.md).
 
 After dependency or schema changes:
@@ -35,6 +35,10 @@ Unit tests use `test/support/test_harness.dart` with `seedDemo: false` by defaul
 
 Public preview: push to `main` → GitHub Pages at [https://kamal01236.github.io/asset-os/](https://kamal01236.github.io/asset-os/). See the [repository README](../../README.md) for setup and the full command table.
 
+## First launch
+
+On an empty database, Hando asks you to **choose a business type** (industry template). That packs all starter inventory items and applies the template’s Home layout. There is no skip-empty path in this pass.
+
 ## Business Templates
 
-**More → Business Templates** → pick an industry → select starter items → **Add selected to inventory** (merge; same-name items are skipped). Edit existing rows from Inventory detail.
+After onboarding, **More → Business Templates** still lets you merge additional packs (pick an industry → multi-select starter items → **Add selected to inventory**; same-name items are skipped). Edit existing rows from Inventory detail.

@@ -167,6 +167,27 @@ class AppLocalizationsEn extends AppLocalizations {
       'Import starter inventory by industry (merge).';
 
   @override
+  String get onboardingTemplateTitle => 'Choose your business type';
+
+  @override
+  String get onboardingTemplateSubtitle =>
+      'We\'ll add starter inventory for your industry. You can add more later from More → Business Templates.';
+
+  @override
+  String get onboardingTemplateConfirm => 'Use this template';
+
+  @override
+  String get onboardingTemplateCancel => 'Back';
+
+  @override
+  String onboardingTemplateConfirmBody(int count, String name) {
+    return 'Add all $count starter items for $name and set the recommended Home layout?';
+  }
+
+  @override
+  String get onboardingTemplateBusy => 'Setting up…';
+
+  @override
   String phoneLabel(String phone) {
     return 'Phone: $phone';
   }

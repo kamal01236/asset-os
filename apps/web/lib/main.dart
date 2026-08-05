@@ -9,6 +9,7 @@ import 'core/l10n/l10n_ext.dart';
 import 'core/providers/app_providers.dart';
 import 'core/repositories/local_repository.dart';
 import 'core/theme/app_theme.dart';
+import 'features/onboarding/template_onboarding_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,7 +18,9 @@ Future<void> main() async {
   final LocalRepository repository = await bootstrapRepository(
     database: database,
     preferences: preferences,
+    seedDemo: false,
   );
+  final bool needsOnboarding = await repository.needsIndustryOnboarding();
 
   runApp(
     ProviderScope(
@@ -25,6 +28,7 @@ Future<void> main() async {
         sharedPreferencesProvider.overrideWithValue(preferences),
         databaseProvider.overrideWithValue(database),
         repositoryProvider.overrideWithValue(repository),
+        needsIndustryOnboardingProvider.overrideWith((ref) => needsOnboarding),
       ],
       child: const MainApp(),
     ),
@@ -38,6 +42,7 @@ class MainApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final Locale locale = ref.watch(localeProvider);
     final ThemeMode themeMode = ref.watch(themeModeProvider);
+    final bool needsOnboarding = ref.watch(needsIndustryOnboardingProvider);
     return MaterialApp(
       title: kAppDisplayName,
       debugShowCheckedModeBanner: false,
@@ -47,7 +52,9 @@ class MainApp extends ConsumerWidget {
       locale: locale,
       supportedLocales: AppLocalizations.supportedLocales,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
-      home: const AppShell(),
+      home: needsOnboarding
+          ? const TemplateOnboardingScreen()
+          : const AppShell(),
     );
   }
 }

@@ -552,7 +552,7 @@ void main() {
     SharedPreferences.setMockInitialValues(<String, Object>{});
     final SharedPreferences preferences = await SharedPreferences.getInstance();
     final LocalRepository repo = LocalRepository(db, preferences);
-    await repo.initialize();
+    await repo.initialize(seedDemo: true);
 
     final Customer existing = (await repo.customerByPhone('6666666666'))!;
     expect(existing.name, 'Priya Patel');
