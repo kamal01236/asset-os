@@ -929,6 +929,21 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
       ),
     ],
   ),
+  IndustryTemplate(
+    id: 'money_lending',
+    name: 'Money Lending',
+    nameHi: 'कर्ज / उधार',
+    description:
+        'Cash loans given and taken with interest calculator and dated payments.',
+    descriptionHi:
+        'दिए और लिए गए नकद कर्ज, ब्याज कैलकुलेटर और दिनांकित भुगतान।',
+    defaultHomeModules: kMoneyLendingHomeModules,
+    defaultReportWidgets: kMoneyLendingReportWidgets,
+    enabledResourceTypesOverride: <ResourceType>[
+      ResourceType.financial,
+    ],
+    items: <TemplateInventoryItem>[],
+  ),
 ];
 
 IndustryTemplate? industryTemplateById(String id) {

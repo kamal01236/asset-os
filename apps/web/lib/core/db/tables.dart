@@ -161,3 +161,49 @@ class AppMeta extends Table {
   @override
   Set<Column<Object>> get primaryKey => <Column<Object>>{key};
 }
+
+/// Cash loan ledger (not physical [ResourceType.loan]).
+@DataClassName('MoneyLoanRow')
+class MoneyLoans extends Table {
+  TextColumn get id => text()();
+  TextColumn get customerId => text().references(Customers, #id)();
+  /// `given` | `taken`
+  TextColumn get direction => text()();
+  /// Principal in paise.
+  IntColumn get principalPaise => integer()();
+  TextColumn get currencyCode => text().withDefault(const Constant('INR'))();
+  /// `simple` | `compound`
+  TextColumn get interestKind => text().withDefault(const Constant('simple'))();
+  /// Rate in basis points (100 bps = 1%).
+  IntColumn get rateBps => integer().withDefault(const Constant(0))();
+  /// `monthly` | `yearly`
+  TextColumn get ratePeriod => text().withDefault(const Constant('monthly'))();
+  /// Date money was first given / interest clock start.
+  DateTimeColumn get interestStartedAt => dateTime()();
+  /// Optional due / maturity; caps accrual when before as-of.
+  DateTimeColumn get interestEndedAt => dateTime().nullable()();
+  /// `pending` | `closed` | `cancelled`
+  TextColumn get status => text().withDefault(const Constant('pending'))();
+  DateTimeColumn get closedAt => dateTime().nullable()();
+  TextColumn get note => text().nullable()();
+  DateTimeColumn get createdAt => dateTime()();
+
+  @override
+  Set<Column<Object>> get primaryKey => <Column<Object>>{id};
+}
+
+/// Dated payments and adjustments on a cash loan.
+@DataClassName('MoneyLoanEntryRow')
+class MoneyLoanEntries extends Table {
+  TextColumn get id => text()();
+  TextColumn get loanId => text().references(MoneyLoans, #id)();
+  DateTimeColumn get entryAt => dateTime()();
+  /// Payment: positive amount toward the loan. Adjustment: signed correction.
+  IntColumn get amountPaise => integer()();
+  /// `payment` | `adjustment`
+  TextColumn get kind => text()();
+  TextColumn get note => text().nullable()();
+
+  @override
+  Set<Column<Object>> get primaryKey => <Column<Object>>{id};
+}

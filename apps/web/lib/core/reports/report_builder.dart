@@ -2,6 +2,8 @@ import 'package:flutter/widgets.dart';
 
 import '../config/app_branding.dart';
 import '../l10n/l10n_ext.dart';
+import '../loans/loan_balance.dart';
+import '../loans/loan_models.dart';
 import '../models/entities.dart';
 import '../pricing/rental_pricing.dart';
 import 'report_models.dart';
@@ -31,6 +33,7 @@ class ReportBuilder {
     DateTime? now,
     List<ReportWidgetId>? widgets,
     Locale locale = const Locale('en'),
+    List<MoneyLoan> moneyLoans = const <MoneyLoan>[],
   }) {
     final DateTime clock = now ?? range.end;
     final String body;
@@ -44,6 +47,7 @@ class ReportBuilder {
           customers: customers,
           inventory: inventory,
           rentals: rentals,
+          moneyLoans: moneyLoans,
           now: clock,
           includeTypeHeading: true,
         );
@@ -68,6 +72,7 @@ class ReportBuilder {
     DateTime? now,
     Locale locale = const Locale('en'),
     bool includeTypeHeading = false,
+    List<MoneyLoan> moneyLoans = const <MoneyLoan>[],
   }) {
     final DateTime clock = now ?? range.end;
     final List<String> sections = <String>[];
@@ -83,6 +88,7 @@ class ReportBuilder {
         customers: customers,
         inventory: inventory,
         rentals: rentals,
+        moneyLoans: moneyLoans,
         clock: clock,
       );
       if (section.trim().isNotEmpty) {
@@ -100,6 +106,7 @@ class ReportBuilder {
     required List<Customer> customers,
     required List<InventoryItem> inventory,
     required List<Rental> rentals,
+    required List<MoneyLoan> moneyLoans,
     required DateTime clock,
   }) {
     final ReportWidgetDef? def = reportWidgetDefById(id);
@@ -129,11 +136,15 @@ class ReportBuilder {
                   r.returnedAt != null && _inRange(r.returnedAt!, range),
             )
             .length;
+        final int pendingLoans = moneyLoans
+            .where((MoneyLoan l) => l.status == MoneyLoanStatus.pending)
+            .length;
         return <String>[
           title,
           l10n.reportActiveCount(active),
           l10n.reportOpenedCount(opened),
           l10n.reportReturnedCount(returned),
+          if (moneyLoans.isNotEmpty) l10n.reportPendingLoansCount(pendingLoans),
         ].join('\n');
       case ReportWidgetId.overdue:
         final int overdue = rentals
@@ -160,7 +171,67 @@ class ReportBuilder {
           inventory: inventory,
           rentals: rentals,
         );
+      case ReportWidgetId.outstandingLoansGiven:
+        return _buildOutstandingLoans(
+          title: title,
+          l10n: l10n,
+          customers: customers,
+          moneyLoans: moneyLoans,
+          direction: MoneyLoanDirection.given,
+          clock: clock,
+        );
+      case ReportWidgetId.outstandingLoansTaken:
+        return _buildOutstandingLoans(
+          title: title,
+          l10n: l10n,
+          customers: customers,
+          moneyLoans: moneyLoans,
+          direction: MoneyLoanDirection.taken,
+          clock: clock,
+        );
     }
+  }
+
+  String _buildOutstandingLoans({
+    required String title,
+    required AppLocalizations l10n,
+    required List<Customer> customers,
+    required List<MoneyLoan> moneyLoans,
+    required MoneyLoanDirection direction,
+    required DateTime clock,
+  }) {
+    final Map<String, Customer> byId = <String, Customer>{
+      for (final Customer c in customers) c.id: c,
+    };
+    final List<MoneyLoan> pending = moneyLoans
+        .where(
+          (MoneyLoan l) =>
+              l.status == MoneyLoanStatus.pending && l.direction == direction,
+        )
+        .toList();
+    if (pending.isEmpty) {
+      return '$title\n${l10n.reportNoOutstandingLoans}';
+    }
+    int totalPending = 0;
+    final List<String> lines = <String>[title];
+    for (final MoneyLoan loan in pending) {
+      final LoanScenario scenario =
+          computeLoanScenario(loan: loan, now: clock);
+      totalPending += scenario.pendingPaise;
+      final Customer? customer = byId[loan.customerId];
+      final String name = customer?.name ?? loan.customerId;
+      lines.add(
+        '• $name: ${formatMoney(scenario.pendingPaise, currencyCode: loan.currencyCode)}',
+      );
+    }
+    lines.insert(
+      1,
+      l10n.reportOutstandingLoansTotal(
+        formatMoney(totalPending),
+        pending.length,
+      ),
+    );
+    return lines.join('\n');
   }
 
   String _buildTopCustomers({

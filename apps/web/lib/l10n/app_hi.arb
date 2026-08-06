@@ -1117,5 +1117,138 @@
     "placeholders": {
       "appName": {"type": "String"}
     }
+  },
+  "loansTitle": "कर्ज",
+  "loansMoreSubtitle": "दिए और लिए गए नकद कर्ज",
+  "loanCreateTitle": "नया कर्ज",
+  "loanCreateAction": "नया कर्ज",
+  "loanDetailTitle": "कर्ज कैलकुलेटर",
+  "loanNotFound": "कर्ज नहीं मिला",
+  "loanStatusPending": "लंबित",
+  "loanStatusClosed": "बंद",
+  "loanStatusCancelled": "रद्द",
+  "loansPendingEmpty": "कोई लंबित कर्ज नहीं।",
+  "loansClosedEmpty": "अभी कोई बंद कर्ज नहीं।",
+  "loanDirectionLabel": "दिशा",
+  "loanDirectionGiven": "दिया (उधार दिया)",
+  "loanDirectionTaken": "लिया (उधार लिया)",
+  "loanCustomerLabel": "ग्राहक",
+  "loanCustomerHint": "ग्राहक चुनें",
+  "loanCustomerRequired": "ग्राहक चुनें",
+  "loanPrincipalLabel": "मूलधन",
+  "loanPrincipalRequired": "मूलधन राशि दर्ज करें",
+  "loanMoneyGivenOnLabel": "पैसे दिए गए दिन",
+  "loanDueOptionalLabel": "देय / समाप्ति (वैकल्पिक)",
+  "loanDueNone": "कोई देय तिथि नहीं",
+  "loanInterestKindLabel": "ब्याज",
+  "loanInterestSimple": "सरल",
+  "loanInterestCompound": "चक्रवृद्धि",
+  "loanRatePercentLabel": "दर",
+  "loanRatePeriodLabel": "अवधि",
+  "loanRateMonthly": "मासिक",
+  "loanRateYearly": "वार्षिक",
+  "loanRateInvalid": "मान्य दर दर्ज करें",
+  "loanNoteOptionalLabel": "नोट (वैकल्पिक)",
+  "loanSaving": "सहेजा जा रहा है…",
+  "loanPendingNowLabel": "अभी लंबित",
+  "loanInterestToDateLabel": "अब तक का ब्याज",
+  "loanPaidLabel": "भुगतान",
+  "loanAdjustmentsLabel": "समायोजन",
+  "loanTimelineHeading": "समयरेखा",
+  "loanAddPayment": "भुगतान जोड़ें",
+  "loanAddAdjustment": "समायोजन जोड़ें",
+  "loanEntryDateLabel": "तारीख",
+  "loanPaymentAmountLabel": "भुगतान राशि",
+  "loanAdjustmentAmountLabel": "समायोजन राशि",
+  "loanAdjustmentHint": "धनात्मक शेष माफ करता है; ऋणात्मक मूलधन बढ़ाता है",
+  "loanSaveEntry": "सहेजें",
+  "loanCancel": "रद्द",
+  "loanKeepPending": "लंबित रखें",
+  "loanKeepPendingHint": "कर्ज तब तक खुला रहता है जब तक आप बंद नहीं करते।",
+  "loanMarkClosed": "बंद करें",
+  "loanReopen": "फिर खोलें",
+  "loanClosedSnack": "कर्ज बंद किया गया",
+  "loanCloseWithPendingTitle": "शेष के साथ बंद करें?",
+  "loanCloseWithPendingBody": "अभी भी {amount} लंबित है। फिर भी बंद करें, या पहले समायोजन जोड़ें?",
+  "@loanCloseWithPendingBody": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "loanEditSetupTooltip": "तिथियाँ संपादित करें",
+  "loanEditSetupTitle": "कर्ज तिथियाँ संपादित करें",
+  "loanSetupSummary": "शुरू {start} · देय {due} · {rate} {period} · {kind}",
+  "@loanSetupSummary": {
+    "placeholders": {
+      "start": {"type": "String"},
+      "due": {"type": "String"},
+      "rate": {"type": "String"},
+      "period": {"type": "String"},
+      "kind": {"type": "String"}
+    }
+  },
+  "loanTimelineStart": "{date} — कर्ज शुरू · {amount}",
+  "@loanTimelineStart": {
+    "placeholders": {
+      "date": {"type": "String"},
+      "amount": {"type": "String"}
+    }
+  },
+  "loanTimelineInterest": "{from} – {to} — {principal} पर ब्याज · {amount}",
+  "@loanTimelineInterest": {
+    "placeholders": {
+      "from": {"type": "String"},
+      "to": {"type": "String"},
+      "principal": {"type": "String"},
+      "amount": {"type": "String"}
+    }
+  },
+  "loanTimelinePayment": "{date} — भुगतान {amount} · {interest} ब्याज, {principal} मूलधन",
+  "@loanTimelinePayment": {
+    "placeholders": {
+      "date": {"type": "String"},
+      "amount": {"type": "String"},
+      "interest": {"type": "String"},
+      "principal": {"type": "String"}
+    }
+  },
+  "loanTimelineAdjustment": "{date} — समायोजन {amount}",
+  "@loanTimelineAdjustment": {
+    "placeholders": {
+      "date": {"type": "String"},
+      "amount": {"type": "String"}
+    }
+  },
+  "loanTimelinePending": "{date} — लंबित {amount}",
+  "@loanTimelinePending": {
+    "placeholders": {
+      "date": {"type": "String"},
+      "amount": {"type": "String"}
+    }
+  },
+  "modulePendingLoans": "लंबित कर्ज",
+  "modulePendingLoansSubtitle": "अभी भी बकाया खुले नकद कर्ज",
+  "pendingLoansTitle": "लंबित कर्ज",
+  "pendingLoansEmptySubtitle": "अभी कोई लंबित कर्ज नहीं।",
+  "moduleDueLoans": "देय कर्ज",
+  "moduleDueLoansSubtitle": "देय तिथि पर या उसके बाद के लंबित कर्ज",
+  "dueLoansTitle": "देय कर्ज",
+  "dueLoansEmptySubtitle": "अभी कोई देय कर्ज नहीं।",
+  "customerLoansHeading": "कर्ज",
+  "customerLoansEmpty": "इस ग्राहक के कोई कर्ज नहीं।",
+  "customerLoansViewAll": "सभी कर्ज देखें",
+  "reportPendingLoansCount": "लंबित कर्ज: {count}",
+  "@reportPendingLoansCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "reportNoOutstandingLoans": "कोई बकाया कर्ज नहीं।",
+  "reportOutstandingLoansTotal": "कुल {amount} — {count} कर्ज",
+  "@reportOutstandingLoansTotal": {
+    "placeholders": {
+      "amount": {"type": "String"},
+      "count": {"type": "int"}
+    }
   }
 }

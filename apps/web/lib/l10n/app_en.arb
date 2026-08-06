@@ -1117,5 +1117,138 @@
     "placeholders": {
       "appName": {"type": "String"}
     }
+  },
+  "loansTitle": "Loans",
+  "loansMoreSubtitle": "Cash loans given and taken",
+  "loanCreateTitle": "New loan",
+  "loanCreateAction": "New loan",
+  "loanDetailTitle": "Loan calculator",
+  "loanNotFound": "Loan not found",
+  "loanStatusPending": "Pending",
+  "loanStatusClosed": "Closed",
+  "loanStatusCancelled": "Cancelled",
+  "loansPendingEmpty": "No pending loans.",
+  "loansClosedEmpty": "No closed loans yet.",
+  "loanDirectionLabel": "Direction",
+  "loanDirectionGiven": "Given (lent out)",
+  "loanDirectionTaken": "Taken (borrowed)",
+  "loanCustomerLabel": "Customer",
+  "loanCustomerHint": "Select customer",
+  "loanCustomerRequired": "Select a customer",
+  "loanPrincipalLabel": "Principal",
+  "loanPrincipalRequired": "Enter a principal amount",
+  "loanMoneyGivenOnLabel": "Money given on",
+  "loanDueOptionalLabel": "Due / end (optional)",
+  "loanDueNone": "No due date",
+  "loanInterestKindLabel": "Interest",
+  "loanInterestSimple": "Simple",
+  "loanInterestCompound": "Compound",
+  "loanRatePercentLabel": "Rate",
+  "loanRatePeriodLabel": "Period",
+  "loanRateMonthly": "Monthly",
+  "loanRateYearly": "Yearly",
+  "loanRateInvalid": "Enter a valid rate",
+  "loanNoteOptionalLabel": "Note (optional)",
+  "loanSaving": "Saving…",
+  "loanPendingNowLabel": "Pending now",
+  "loanInterestToDateLabel": "Interest to date",
+  "loanPaidLabel": "Paid",
+  "loanAdjustmentsLabel": "Adjustments",
+  "loanTimelineHeading": "Timeline",
+  "loanAddPayment": "Add payment",
+  "loanAddAdjustment": "Add adjustment",
+  "loanEntryDateLabel": "Date",
+  "loanPaymentAmountLabel": "Payment amount",
+  "loanAdjustmentAmountLabel": "Adjustment amount",
+  "loanAdjustmentHint": "Positive forgives remaining; negative increases principal",
+  "loanSaveEntry": "Save",
+  "loanCancel": "Cancel",
+  "loanKeepPending": "Keep pending",
+  "loanKeepPendingHint": "Loan stays open until you mark it closed.",
+  "loanMarkClosed": "Mark closed",
+  "loanReopen": "Reopen loan",
+  "loanClosedSnack": "Loan marked closed",
+  "loanCloseWithPendingTitle": "Close with balance pending?",
+  "loanCloseWithPendingBody": "Still pending {amount}. Close anyway, or add an adjustment first?",
+  "@loanCloseWithPendingBody": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "loanEditSetupTooltip": "Edit dates",
+  "loanEditSetupTitle": "Edit loan dates",
+  "loanSetupSummary": "Start {start} · Due {due} · {rate} {period} · {kind}",
+  "@loanSetupSummary": {
+    "placeholders": {
+      "start": {"type": "String"},
+      "due": {"type": "String"},
+      "rate": {"type": "String"},
+      "period": {"type": "String"},
+      "kind": {"type": "String"}
+    }
+  },
+  "loanTimelineStart": "{date} — Loan started · {amount}",
+  "@loanTimelineStart": {
+    "placeholders": {
+      "date": {"type": "String"},
+      "amount": {"type": "String"}
+    }
+  },
+  "loanTimelineInterest": "{from} – {to} — Interest on {principal} · {amount}",
+  "@loanTimelineInterest": {
+    "placeholders": {
+      "from": {"type": "String"},
+      "to": {"type": "String"},
+      "principal": {"type": "String"},
+      "amount": {"type": "String"}
+    }
+  },
+  "loanTimelinePayment": "{date} — Payment {amount} · {interest} interest, {principal} principal",
+  "@loanTimelinePayment": {
+    "placeholders": {
+      "date": {"type": "String"},
+      "amount": {"type": "String"},
+      "interest": {"type": "String"},
+      "principal": {"type": "String"}
+    }
+  },
+  "loanTimelineAdjustment": "{date} — Adjustment {amount}",
+  "@loanTimelineAdjustment": {
+    "placeholders": {
+      "date": {"type": "String"},
+      "amount": {"type": "String"}
+    }
+  },
+  "loanTimelinePending": "{date} — Pending {amount}",
+  "@loanTimelinePending": {
+    "placeholders": {
+      "date": {"type": "String"},
+      "amount": {"type": "String"}
+    }
+  },
+  "modulePendingLoans": "Pending loans",
+  "modulePendingLoansSubtitle": "Open cash loans still outstanding",
+  "pendingLoansTitle": "Pending loans",
+  "pendingLoansEmptySubtitle": "No pending loans right now.",
+  "moduleDueLoans": "Due loans",
+  "moduleDueLoansSubtitle": "Pending loans at or past their due date",
+  "dueLoansTitle": "Due loans",
+  "dueLoansEmptySubtitle": "No due loans right now.",
+  "customerLoansHeading": "Loans",
+  "customerLoansEmpty": "No loans for this customer.",
+  "customerLoansViewAll": "View all loans",
+  "reportPendingLoansCount": "Pending loans: {count}",
+  "@reportPendingLoansCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "reportNoOutstandingLoans": "No outstanding loans.",
+  "reportOutstandingLoansTotal": "Total {amount} across {count} loan(s)",
+  "@reportOutstandingLoansTotal": {
+    "placeholders": {
+      "amount": {"type": "String"},
+      "count": {"type": "int"}
+    }
   }
 }

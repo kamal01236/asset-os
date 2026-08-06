@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../db/app_database.dart';
 import '../home/home_modules.dart';
 import '../l10n/timeline_l10n.dart';
+import '../loans/loan_models.dart';
 import '../models/entities.dart';
 import '../models/unknown_customer.dart';
 import '../pricing/rental_pricing.dart';
@@ -14,6 +15,9 @@ import '../templates/field_defs.dart';
 import '../templates/industry_templates.dart';
 import '../templates/workflows.dart';
 import '../validation/text_rules.dart';
+export '../loans/loan_models.dart';
+export '../loans/loan_balance.dart'
+    show computeLoanScenario, accrueInterestPaise, LoanScenario, LoanTimelineEvent, LoanTimelineKind;
 
 class TemplateImportResult {
   const TemplateImportResult({
@@ -1642,6 +1646,368 @@ class LocalRepository {
       ..limit(limit);
     final List<DepositLedgerRow> rows = await query.get();
     return rows.map(_mapDepositLedger).toList(growable: false);
+  }
+
+  // --- Cash money loans (not physical ResourceType.loan) ---
+
+  Stream<List<MoneyLoan>> watchMoneyLoans({String? customerId}) {
+    final query = _db.select(_db.moneyLoans);
+    if (customerId != null) {
+      query.where((t) => t.customerId.equals(customerId));
+    }
+    query.orderBy([
+      (t) => OrderingTerm.desc(t.createdAt),
+    ]);
+    return query.watch().asyncMap((List<MoneyLoanRow> rows) async {
+      final List<MoneyLoan> loans = <MoneyLoan>[];
+      for (final MoneyLoanRow row in rows) {
+        loans.add(await _mapMoneyLoan(row));
+      }
+      return loans;
+    });
+  }
+
+  Future<List<MoneyLoan>> listMoneyLoans({
+    String? customerId,
+    MoneyLoanStatus? status,
+  }) async {
+    final List<MoneyLoan> all = await watchMoneyLoans(customerId: customerId).first;
+    if (status == null) {
+      return all;
+    }
+    return all.where((MoneyLoan l) => l.status == status).toList();
+  }
+
+  Future<MoneyLoan?> getMoneyLoan(String loanId) async {
+    final MoneyLoanRow? row = await (_db.select(_db.moneyLoans)
+          ..where((t) => t.id.equals(loanId)))
+        .getSingleOrNull();
+    if (row == null) {
+      return null;
+    }
+    return _mapMoneyLoan(row);
+  }
+
+  Future<String> createMoneyLoan({
+    required String customerId,
+    required MoneyLoanDirection direction,
+    required int principalPaise,
+    required DateTime interestStartedAt,
+    MoneyInterestKind interestKind = MoneyInterestKind.simple,
+    int rateBps = 0,
+    MoneyRatePeriod ratePeriod = MoneyRatePeriod.monthly,
+    DateTime? interestEndedAt,
+    String? note,
+    String currencyCode = 'INR',
+  }) async {
+    if (principalPaise <= 0) {
+      throw ArgumentError('Principal must be positive');
+    }
+    if (rateBps < 0) {
+      throw ArgumentError('Rate cannot be negative');
+    }
+    final DateTime start = DateTime(
+      interestStartedAt.year,
+      interestStartedAt.month,
+      interestStartedAt.day,
+    );
+    final DateTime? ended = interestEndedAt == null
+        ? null
+        : DateTime(
+            interestEndedAt.year,
+            interestEndedAt.month,
+            interestEndedAt.day,
+          );
+    if (ended != null && ended.isBefore(start)) {
+      throw ArgumentError('Due date must be on or after interest start');
+    }
+    final String? trimmedNote = note?.trim();
+    final String id = nextId('MLN');
+    final DateTime now = DateTime.now();
+    await _db.into(_db.moneyLoans).insert(
+      MoneyLoansCompanion.insert(
+        id: id,
+        customerId: customerId,
+        direction: direction.name,
+        principalPaise: principalPaise,
+        currencyCode: Value<String>(
+          currencyCode.trim().isEmpty ? 'INR' : currencyCode.trim().toUpperCase(),
+        ),
+        interestKind: Value<String>(interestKind.name),
+        rateBps: Value<int>(rateBps),
+        ratePeriod: Value<String>(ratePeriod.name),
+        interestStartedAt: start,
+        interestEndedAt: Value<DateTime?>(ended),
+        status: Value<String>(MoneyLoanStatus.pending.name),
+        note: Value<String?>(
+          (trimmedNote == null || trimmedNote.isEmpty) ? null : trimmedNote,
+        ),
+        createdAt: now,
+      ),
+    );
+    return id;
+  }
+
+  Future<void> updateMoneyLoan({
+    required String loanId,
+    MoneyLoanDirection? direction,
+    int? principalPaise,
+    MoneyInterestKind? interestKind,
+    int? rateBps,
+    MoneyRatePeriod? ratePeriod,
+    DateTime? interestStartedAt,
+    DateTime? interestEndedAt,
+    bool clearInterestEndedAt = false,
+    String? note,
+    bool clearNote = false,
+    String? currencyCode,
+  }) async {
+    final MoneyLoan? existing = await getMoneyLoan(loanId);
+    if (existing == null) {
+      throw StateError('Loan not found: $loanId');
+    }
+    if (existing.status != MoneyLoanStatus.pending) {
+      throw StateError('Only pending loans can be edited');
+    }
+    final int nextPrincipal = principalPaise ?? existing.principalPaise;
+    if (nextPrincipal <= 0) {
+      throw ArgumentError('Principal must be positive');
+    }
+    final int nextRate = rateBps ?? existing.rateBps;
+    if (nextRate < 0) {
+      throw ArgumentError('Rate cannot be negative');
+    }
+    final DateTime start = interestStartedAt == null
+        ? existing.interestStartedAt
+        : DateTime(
+            interestStartedAt.year,
+            interestStartedAt.month,
+            interestStartedAt.day,
+          );
+    DateTime? ended = existing.interestEndedAt;
+    if (clearInterestEndedAt) {
+      ended = null;
+    } else if (interestEndedAt != null) {
+      ended = DateTime(
+        interestEndedAt.year,
+        interestEndedAt.month,
+        interestEndedAt.day,
+      );
+    }
+    if (ended != null && ended.isBefore(start)) {
+      throw ArgumentError('Due date must be on or after interest start');
+    }
+    String? nextNote = existing.note;
+    if (clearNote) {
+      nextNote = null;
+    } else if (note != null) {
+      final String trimmed = note.trim();
+      nextNote = trimmed.isEmpty ? null : trimmed;
+    }
+
+    await (_db.update(_db.moneyLoans)..where((t) => t.id.equals(loanId))).write(
+      MoneyLoansCompanion(
+        direction: Value<String>((direction ?? existing.direction).name),
+        principalPaise: Value<int>(nextPrincipal),
+        currencyCode: Value<String>(
+          currencyCode?.trim().isNotEmpty == true
+              ? currencyCode!.trim().toUpperCase()
+              : existing.currencyCode,
+        ),
+        interestKind: Value<String>((interestKind ?? existing.interestKind).name),
+        rateBps: Value<int>(nextRate),
+        ratePeriod: Value<String>((ratePeriod ?? existing.ratePeriod).name),
+        interestStartedAt: Value<DateTime>(start),
+        interestEndedAt: Value<DateTime?>(ended),
+        note: Value<String?>(nextNote),
+      ),
+    );
+  }
+
+  Future<String> addMoneyLoanEntry({
+    required String loanId,
+    required DateTime entryAt,
+    required int amountPaise,
+    required MoneyLoanEntryKind kind,
+    String? note,
+  }) async {
+    final MoneyLoan? loan = await getMoneyLoan(loanId);
+    if (loan == null) {
+      throw StateError('Loan not found: $loanId');
+    }
+    if (loan.status != MoneyLoanStatus.pending) {
+      throw StateError('Entries can only be added to pending loans');
+    }
+    if (kind == MoneyLoanEntryKind.payment && amountPaise <= 0) {
+      throw ArgumentError('Payment amount must be positive');
+    }
+    if (kind == MoneyLoanEntryKind.adjustment && amountPaise == 0) {
+      throw ArgumentError('Adjustment amount cannot be zero');
+    }
+    final DateTime at = DateTime(entryAt.year, entryAt.month, entryAt.day);
+    final DateTime today = DateTime.now();
+    final DateTime todayOnly = DateTime(today.year, today.month, today.day);
+    if (at.isAfter(todayOnly)) {
+      throw ArgumentError('Entry date cannot be after today');
+    }
+    final String? trimmedNote = note?.trim();
+    final String id = nextId('MLE');
+    await _db.into(_db.moneyLoanEntries).insert(
+      MoneyLoanEntriesCompanion.insert(
+        id: id,
+        loanId: loanId,
+        entryAt: at,
+        amountPaise: amountPaise,
+        kind: kind.name,
+        note: Value<String?>(
+          (trimmedNote == null || trimmedNote.isEmpty) ? null : trimmedNote,
+        ),
+      ),
+    );
+    return id;
+  }
+
+  Future<void> updateMoneyLoanEntry({
+    required String entryId,
+    DateTime? entryAt,
+    int? amountPaise,
+    MoneyLoanEntryKind? kind,
+    String? note,
+    bool clearNote = false,
+  }) async {
+    final MoneyLoanEntryRow? row = await (_db.select(_db.moneyLoanEntries)
+          ..where((t) => t.id.equals(entryId)))
+        .getSingleOrNull();
+    if (row == null) {
+      throw StateError('Entry not found: $entryId');
+    }
+    final MoneyLoan? loan = await getMoneyLoan(row.loanId);
+    if (loan == null || loan.status != MoneyLoanStatus.pending) {
+      throw StateError('Only pending loan entries can be edited');
+    }
+    final MoneyLoanEntryKind nextKind =
+        kind ?? MoneyLoanEntryKind.parse(row.kind);
+    final int nextAmount = amountPaise ?? row.amountPaise;
+    if (nextKind == MoneyLoanEntryKind.payment && nextAmount <= 0) {
+      throw ArgumentError('Payment amount must be positive');
+    }
+    if (nextKind == MoneyLoanEntryKind.adjustment && nextAmount == 0) {
+      throw ArgumentError('Adjustment amount cannot be zero');
+    }
+    DateTime at = row.entryAt;
+    if (entryAt != null) {
+      at = DateTime(entryAt.year, entryAt.month, entryAt.day);
+      final DateTime today = DateTime.now();
+      final DateTime todayOnly = DateTime(today.year, today.month, today.day);
+      if (at.isAfter(todayOnly)) {
+        throw ArgumentError('Entry date cannot be after today');
+      }
+    }
+    String? nextNote = row.note;
+    if (clearNote) {
+      nextNote = null;
+    } else if (note != null) {
+      final String trimmed = note.trim();
+      nextNote = trimmed.isEmpty ? null : trimmed;
+    }
+    await (_db.update(_db.moneyLoanEntries)..where((t) => t.id.equals(entryId)))
+        .write(
+      MoneyLoanEntriesCompanion(
+        entryAt: Value<DateTime>(at),
+        amountPaise: Value<int>(nextAmount),
+        kind: Value<String>(nextKind.name),
+        note: Value<String?>(nextNote),
+      ),
+    );
+  }
+
+  Future<void> deleteMoneyLoanEntry(String entryId) async {
+    final MoneyLoanEntryRow? row = await (_db.select(_db.moneyLoanEntries)
+          ..where((t) => t.id.equals(entryId)))
+        .getSingleOrNull();
+    if (row == null) {
+      return;
+    }
+    final MoneyLoan? loan = await getMoneyLoan(row.loanId);
+    if (loan == null || loan.status != MoneyLoanStatus.pending) {
+      throw StateError('Only pending loan entries can be deleted');
+    }
+    await (_db.delete(_db.moneyLoanEntries)..where((t) => t.id.equals(entryId)))
+        .go();
+  }
+
+  /// Explicit close — never auto-closes on payment.
+  Future<void> closeMoneyLoan(String loanId, {DateTime? closedAt}) async {
+    final MoneyLoan? loan = await getMoneyLoan(loanId);
+    if (loan == null) {
+      throw StateError('Loan not found: $loanId');
+    }
+    if (loan.status == MoneyLoanStatus.closed) {
+      return;
+    }
+    if (loan.status == MoneyLoanStatus.cancelled) {
+      throw StateError('Cancelled loans cannot be closed');
+    }
+    final DateTime at = closedAt ?? DateTime.now();
+    final DateTime closed = DateTime(at.year, at.month, at.day);
+    await (_db.update(_db.moneyLoans)..where((t) => t.id.equals(loanId))).write(
+      MoneyLoansCompanion(
+        status: Value<String>(MoneyLoanStatus.closed.name),
+        closedAt: Value<DateTime>(closed),
+      ),
+    );
+  }
+
+  Future<void> reopenMoneyLoan(String loanId) async {
+    final MoneyLoan? loan = await getMoneyLoan(loanId);
+    if (loan == null) {
+      throw StateError('Loan not found: $loanId');
+    }
+    if (loan.status != MoneyLoanStatus.closed) {
+      throw StateError('Only closed loans can be reopened');
+    }
+    await (_db.update(_db.moneyLoans)..where((t) => t.id.equals(loanId))).write(
+      const MoneyLoansCompanion(
+        status: Value<String>('pending'),
+        closedAt: Value<DateTime?>(null),
+      ),
+    );
+  }
+
+  Future<MoneyLoan> _mapMoneyLoan(MoneyLoanRow row) async {
+    final List<MoneyLoanEntryRow> entryRows = await (_db.select(
+      _db.moneyLoanEntries,
+    )..where((t) => t.loanId.equals(row.id))
+      ..orderBy([(t) => OrderingTerm.asc(t.entryAt)]))
+        .get();
+    return MoneyLoan(
+      id: row.id,
+      customerId: row.customerId,
+      direction: MoneyLoanDirection.parse(row.direction),
+      principalPaise: row.principalPaise,
+      currencyCode: row.currencyCode,
+      interestKind: MoneyInterestKind.parse(row.interestKind),
+      rateBps: row.rateBps,
+      ratePeriod: MoneyRatePeriod.parse(row.ratePeriod),
+      interestStartedAt: row.interestStartedAt,
+      interestEndedAt: row.interestEndedAt,
+      status: MoneyLoanStatus.parse(row.status),
+      closedAt: row.closedAt,
+      note: row.note,
+      createdAt: row.createdAt,
+      entries: entryRows.map(_mapMoneyLoanEntry).toList(growable: false),
+    );
+  }
+
+  MoneyLoanEntry _mapMoneyLoanEntry(MoneyLoanEntryRow row) {
+    return MoneyLoanEntry(
+      id: row.id,
+      loanId: row.loanId,
+      entryAt: row.entryAt,
+      amountPaise: row.amountPaise,
+      kind: MoneyLoanEntryKind.parse(row.kind),
+      note: row.note,
+    );
   }
 
   Future<void> addInventory({

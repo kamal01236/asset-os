@@ -3246,6 +3246,466 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'\n…(truncated — open {appName} for full)'**
   String reportTruncatedSuffix(String appName);
+
+  /// No description provided for @loansTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Loans'**
+  String get loansTitle;
+
+  /// No description provided for @loansMoreSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash loans given and taken'**
+  String get loansMoreSubtitle;
+
+  /// No description provided for @loanCreateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New loan'**
+  String get loanCreateTitle;
+
+  /// No description provided for @loanCreateAction.
+  ///
+  /// In en, this message translates to:
+  /// **'New loan'**
+  String get loanCreateAction;
+
+  /// No description provided for @loanDetailTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Loan calculator'**
+  String get loanDetailTitle;
+
+  /// No description provided for @loanNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Loan not found'**
+  String get loanNotFound;
+
+  /// No description provided for @loanStatusPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get loanStatusPending;
+
+  /// No description provided for @loanStatusClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'Closed'**
+  String get loanStatusClosed;
+
+  /// No description provided for @loanStatusCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get loanStatusCancelled;
+
+  /// No description provided for @loansPendingEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No pending loans.'**
+  String get loansPendingEmpty;
+
+  /// No description provided for @loansClosedEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No closed loans yet.'**
+  String get loansClosedEmpty;
+
+  /// No description provided for @loanDirectionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Direction'**
+  String get loanDirectionLabel;
+
+  /// No description provided for @loanDirectionGiven.
+  ///
+  /// In en, this message translates to:
+  /// **'Given (lent out)'**
+  String get loanDirectionGiven;
+
+  /// No description provided for @loanDirectionTaken.
+  ///
+  /// In en, this message translates to:
+  /// **'Taken (borrowed)'**
+  String get loanDirectionTaken;
+
+  /// No description provided for @loanCustomerLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer'**
+  String get loanCustomerLabel;
+
+  /// No description provided for @loanCustomerHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Select customer'**
+  String get loanCustomerHint;
+
+  /// No description provided for @loanCustomerRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a customer'**
+  String get loanCustomerRequired;
+
+  /// No description provided for @loanPrincipalLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Principal'**
+  String get loanPrincipalLabel;
+
+  /// No description provided for @loanPrincipalRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a principal amount'**
+  String get loanPrincipalRequired;
+
+  /// No description provided for @loanMoneyGivenOnLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Money given on'**
+  String get loanMoneyGivenOnLabel;
+
+  /// No description provided for @loanDueOptionalLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Due / end (optional)'**
+  String get loanDueOptionalLabel;
+
+  /// No description provided for @loanDueNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No due date'**
+  String get loanDueNone;
+
+  /// No description provided for @loanInterestKindLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Interest'**
+  String get loanInterestKindLabel;
+
+  /// No description provided for @loanInterestSimple.
+  ///
+  /// In en, this message translates to:
+  /// **'Simple'**
+  String get loanInterestSimple;
+
+  /// No description provided for @loanInterestCompound.
+  ///
+  /// In en, this message translates to:
+  /// **'Compound'**
+  String get loanInterestCompound;
+
+  /// No description provided for @loanRatePercentLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate'**
+  String get loanRatePercentLabel;
+
+  /// No description provided for @loanRatePeriodLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Period'**
+  String get loanRatePeriodLabel;
+
+  /// No description provided for @loanRateMonthly.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly'**
+  String get loanRateMonthly;
+
+  /// No description provided for @loanRateYearly.
+  ///
+  /// In en, this message translates to:
+  /// **'Yearly'**
+  String get loanRateYearly;
+
+  /// No description provided for @loanRateInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid rate'**
+  String get loanRateInvalid;
+
+  /// No description provided for @loanNoteOptionalLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Note (optional)'**
+  String get loanNoteOptionalLabel;
+
+  /// No description provided for @loanSaving.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving…'**
+  String get loanSaving;
+
+  /// No description provided for @loanPendingNowLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending now'**
+  String get loanPendingNowLabel;
+
+  /// No description provided for @loanInterestToDateLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Interest to date'**
+  String get loanInterestToDateLabel;
+
+  /// No description provided for @loanPaidLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid'**
+  String get loanPaidLabel;
+
+  /// No description provided for @loanAdjustmentsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjustments'**
+  String get loanAdjustmentsLabel;
+
+  /// No description provided for @loanTimelineHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Timeline'**
+  String get loanTimelineHeading;
+
+  /// No description provided for @loanAddPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Add payment'**
+  String get loanAddPayment;
+
+  /// No description provided for @loanAddAdjustment.
+  ///
+  /// In en, this message translates to:
+  /// **'Add adjustment'**
+  String get loanAddAdjustment;
+
+  /// No description provided for @loanEntryDateLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get loanEntryDateLabel;
+
+  /// No description provided for @loanPaymentAmountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment amount'**
+  String get loanPaymentAmountLabel;
+
+  /// No description provided for @loanAdjustmentAmountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjustment amount'**
+  String get loanAdjustmentAmountLabel;
+
+  /// No description provided for @loanAdjustmentHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Positive forgives remaining; negative increases principal'**
+  String get loanAdjustmentHint;
+
+  /// No description provided for @loanSaveEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get loanSaveEntry;
+
+  /// No description provided for @loanCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get loanCancel;
+
+  /// No description provided for @loanKeepPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep pending'**
+  String get loanKeepPending;
+
+  /// No description provided for @loanKeepPendingHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Loan stays open until you mark it closed.'**
+  String get loanKeepPendingHint;
+
+  /// No description provided for @loanMarkClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark closed'**
+  String get loanMarkClosed;
+
+  /// No description provided for @loanReopen.
+  ///
+  /// In en, this message translates to:
+  /// **'Reopen loan'**
+  String get loanReopen;
+
+  /// No description provided for @loanClosedSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Loan marked closed'**
+  String get loanClosedSnack;
+
+  /// No description provided for @loanCloseWithPendingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Close with balance pending?'**
+  String get loanCloseWithPendingTitle;
+
+  /// No description provided for @loanCloseWithPendingBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Still pending {amount}. Close anyway, or add an adjustment first?'**
+  String loanCloseWithPendingBody(String amount);
+
+  /// No description provided for @loanEditSetupTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit dates'**
+  String get loanEditSetupTooltip;
+
+  /// No description provided for @loanEditSetupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit loan dates'**
+  String get loanEditSetupTitle;
+
+  /// No description provided for @loanSetupSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Start {start} · Due {due} · {rate} {period} · {kind}'**
+  String loanSetupSummary(
+    String start,
+    String due,
+    String rate,
+    String period,
+    String kind,
+  );
+
+  /// No description provided for @loanTimelineStart.
+  ///
+  /// In en, this message translates to:
+  /// **'{date} — Loan started · {amount}'**
+  String loanTimelineStart(String date, String amount);
+
+  /// No description provided for @loanTimelineInterest.
+  ///
+  /// In en, this message translates to:
+  /// **'{from} – {to} — Interest on {principal} · {amount}'**
+  String loanTimelineInterest(
+    String from,
+    String to,
+    String principal,
+    String amount,
+  );
+
+  /// No description provided for @loanTimelinePayment.
+  ///
+  /// In en, this message translates to:
+  /// **'{date} — Payment {amount} · {interest} interest, {principal} principal'**
+  String loanTimelinePayment(
+    String date,
+    String amount,
+    String interest,
+    String principal,
+  );
+
+  /// No description provided for @loanTimelineAdjustment.
+  ///
+  /// In en, this message translates to:
+  /// **'{date} — Adjustment {amount}'**
+  String loanTimelineAdjustment(String date, String amount);
+
+  /// No description provided for @loanTimelinePending.
+  ///
+  /// In en, this message translates to:
+  /// **'{date} — Pending {amount}'**
+  String loanTimelinePending(String date, String amount);
+
+  /// No description provided for @modulePendingLoans.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending loans'**
+  String get modulePendingLoans;
+
+  /// No description provided for @modulePendingLoansSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Open cash loans still outstanding'**
+  String get modulePendingLoansSubtitle;
+
+  /// No description provided for @pendingLoansTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending loans'**
+  String get pendingLoansTitle;
+
+  /// No description provided for @pendingLoansEmptySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No pending loans right now.'**
+  String get pendingLoansEmptySubtitle;
+
+  /// No description provided for @moduleDueLoans.
+  ///
+  /// In en, this message translates to:
+  /// **'Due loans'**
+  String get moduleDueLoans;
+
+  /// No description provided for @moduleDueLoansSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending loans at or past their due date'**
+  String get moduleDueLoansSubtitle;
+
+  /// No description provided for @dueLoansTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Due loans'**
+  String get dueLoansTitle;
+
+  /// No description provided for @dueLoansEmptySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No due loans right now.'**
+  String get dueLoansEmptySubtitle;
+
+  /// No description provided for @customerLoansHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loans'**
+  String get customerLoansHeading;
+
+  /// No description provided for @customerLoansEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No loans for this customer.'**
+  String get customerLoansEmpty;
+
+  /// No description provided for @customerLoansViewAll.
+  ///
+  /// In en, this message translates to:
+  /// **'View all loans'**
+  String get customerLoansViewAll;
+
+  /// No description provided for @reportPendingLoansCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending loans: {count}'**
+  String reportPendingLoansCount(int count);
+
+  /// No description provided for @reportNoOutstandingLoans.
+  ///
+  /// In en, this message translates to:
+  /// **'No outstanding loans.'**
+  String get reportNoOutstandingLoans;
+
+  /// No description provided for @reportOutstandingLoansTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total {amount} across {count} loan(s)'**
+  String reportOutstandingLoansTotal(String amount, int count);
 }
 
 class _AppLocalizationsDelegate

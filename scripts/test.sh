@@ -37,6 +37,7 @@ KNOWN_SUITES=(
   reports
   notes
   labels
+  loans
 )
 
 usage() {
@@ -50,7 +51,7 @@ Suites (analyze first unless TEST_SKIP_ANALYZE=1):
   widget         --tags widget
   integration    --tags integration
   pricing orders returns inventory customers deposit
-  search shell reports notes labels
+  search shell reports notes labels loans
 
 See docs/engineering/test-suites.md for dependency → suite map.
 EOF

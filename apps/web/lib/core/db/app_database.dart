@@ -15,6 +15,8 @@ part 'app_database.g.dart';
     RentalNotes,
     DepositLedger,
     AppMeta,
+    MoneyLoans,
+    MoneyLoanEntries,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -22,10 +24,13 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 13;
+  int get schemaVersion => 14;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
+    onCreate: (Migrator m) async {
+      await m.createAll();
+    },
     onUpgrade: (Migrator m, int from, int to) async {
       if (from < 2) {
         await m.addColumn(rentals, rentals.nickname);
@@ -277,6 +282,10 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 13) {
         await m.addColumn(inventoryItems, inventoryItems.metadata);
+      }
+      if (from < 14) {
+        await m.createTable(moneyLoans);
+        await m.createTable(moneyLoanEntries);
       }
     },
   );

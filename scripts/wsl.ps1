@@ -47,7 +47,7 @@ Commands:
   localrun    Run the app on Chrome or web-server
   test        flutter analyze + flutter test [suite]
               Suites: all|unit|widget|integration|orders|pricing|returns|
-                      inventory|customers|deposit|search|shell|reports|notes|labels
+                      inventory|customers|deposit|search|shell|reports|notes|labels|loans
               Examples: .\scripts\wsl.ps1 test unit
                         .\scripts\wsl.ps1 test orders
               Docs: docs/engineering/test-suites.md

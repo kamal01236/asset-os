@@ -5,6 +5,8 @@ enum HomeModuleId {
   filterResults,
   needsAttention,
   pendingJobs,
+  pendingLoans,
+  dueLoans,
   quickActions,
   recentActivity,
   suggestions,
@@ -50,12 +52,21 @@ const List<HomeModuleId> kMembershipHomeModules = <HomeModuleId>[
   HomeModuleId.recentActivity,
 ];
 
+/// Money lending: pending + due cash loans (no rental KPIs required).
+const List<HomeModuleId> kMoneyLendingHomeModules = <HomeModuleId>[
+  HomeModuleId.search,
+  HomeModuleId.pendingLoans,
+  HomeModuleId.dueLoans,
+];
+
 /// Modules the user can toggle in Customize Home (search stays locked on).
 const List<HomeModuleId> kRemovableHomeModules = <HomeModuleId>[
   HomeModuleId.kpis,
   HomeModuleId.filterResults,
   HomeModuleId.needsAttention,
   HomeModuleId.pendingJobs,
+  HomeModuleId.pendingLoans,
+  HomeModuleId.dueLoans,
   HomeModuleId.quickActions,
   HomeModuleId.recentActivity,
   HomeModuleId.suggestions,

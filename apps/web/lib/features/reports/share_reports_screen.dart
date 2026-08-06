@@ -35,6 +35,7 @@ class _ShareReportsScreenState extends ConsumerState<ShareReportsScreen> {
     final AsyncValue<List<InventoryItem>> inventoryAsync =
         ref.watch(inventoryProvider);
     final AsyncValue<List<Rental>> rentalsAsync = ref.watch(rentalsProvider);
+    final AsyncValue<List<MoneyLoan>> loansAsync = ref.watch(moneyLoansProvider);
 
     final bool loading = customersAsync.isLoading ||
         inventoryAsync.isLoading ||
@@ -45,6 +46,8 @@ class _ShareReportsScreenState extends ConsumerState<ShareReportsScreen> {
     final List<InventoryItem> inventory =
         inventoryAsync.valueOrNull ?? const <InventoryItem>[];
     final List<Rental> rentals = rentalsAsync.valueOrNull ?? const <Rental>[];
+    final List<MoneyLoan> moneyLoans =
+        loansAsync.valueOrNull ?? const <MoneyLoan>[];
 
     final DateTime now = DateTime.now();
     final ReportDateRange range = ReportDateRange.resolve(
@@ -64,6 +67,7 @@ class _ShareReportsScreenState extends ConsumerState<ShareReportsScreen> {
             customers: customers,
             inventory: inventory,
             rentals: rentals,
+            moneyLoans: moneyLoans,
             now: now,
             widgets: reportWidgets,
             locale: locale,

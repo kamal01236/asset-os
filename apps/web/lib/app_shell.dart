@@ -24,6 +24,8 @@ import 'core/widgets/scoped_search_field.dart';
 import 'core/widgets/ui_primitives.dart';
 import 'features/home/customize_home_screen.dart';
 import 'features/home/home_screen.dart';
+import 'features/loans/loan_detail_screen.dart';
+import 'features/loans/loans_list_screen.dart';
 import 'features/orders/new_order_flow_screen.dart';
 import 'features/reports/share_reports_screen.dart';
 import 'features/templates/business_templates_screen.dart';
@@ -866,6 +868,18 @@ class MoreScreen extends ConsumerWidget {
         ),
         const SizedBox(height: 10),
         const MyWhatsAppSettingsCard(),
+        const SizedBox(height: 10),
+        EntityCard(
+          title: l10n.loansTitle,
+          subtitle: l10n.loansMoreSubtitle,
+          leadingIcon: Icons.account_balance_wallet_outlined,
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(builder: (_) => const LoansListScreen()),
+            );
+          },
+        ),
         const SizedBox(height: 10),
         EntityCard(
           title: l10n.shareReportsTitle,
@@ -2149,6 +2163,8 @@ class CustomerDetailScreen extends ConsumerWidget {
     final AppLocalizations l10n = context.l10n;
     final AsyncValue<List<Customer>> customersAsync = ref.watch(customersProvider);
     final AsyncValue<List<Rental>> rentalsAsync = ref.watch(rentalsProvider);
+    final AsyncValue<List<MoneyLoan>> loansAsync =
+        ref.watch(moneyLoansForCustomerProvider(customerId));
 
     if (customersAsync.isLoading || rentalsAsync.isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -2161,6 +2177,12 @@ class CustomerDetailScreen extends ConsumerWidget {
         rentals.where((entry) => entry.customerId == customer.id).toList();
     final CustomerBalanceAsOf balance =
         customerBalanceAsOf(customer, rentals, DateTime.now());
+    final List<MoneyLoan> customerLoans =
+        loansAsync.valueOrNull ?? const <MoneyLoan>[];
+    final bool showLoans = ref.watch(enabledResourceTypesProvider).contains(
+          ResourceType.financial,
+        ) ||
+        customerLoans.isNotEmpty;
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.customerProfileTitle)),
@@ -2251,6 +2273,67 @@ class CustomerDetailScreen extends ConsumerWidget {
               ],
             ),
           ),
+          if (showLoans) ...<Widget>[
+            const SizedBox(height: 14),
+            Row(
+              children: <Widget>[
+                Expanded(
+                  child: Text(
+                    l10n.customerLoansHeading,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => LoansListScreen(
+                          initialCustomerId: customer.id,
+                        ),
+                      ),
+                    );
+                  },
+                  child: Text(l10n.customerLoansViewAll),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            if (customerLoans.isEmpty)
+              Text(l10n.customerLoansEmpty)
+            else
+              ...customerLoans.take(5).map((MoneyLoan loan) {
+                final LoanScenario scenario =
+                    computeLoanScenario(loan: loan, now: DateTime.now());
+                final String direction =
+                    loan.direction == MoneyLoanDirection.given
+                        ? l10n.loanDirectionGiven
+                        : l10n.loanDirectionTaken;
+                final String status = loan.status == MoneyLoanStatus.pending
+                    ? l10n.loanStatusPending
+                    : l10n.loanStatusClosed;
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: EntityCard(
+                    title: '$direction · $status',
+                    subtitle: formatMoney(
+                      scenario.pendingPaise,
+                      currencyCode: loan.currencyCode,
+                    ),
+                    leadingIcon: Icons.account_balance_wallet_outlined,
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => LoanDetailScreen(loanId: loan.id),
+                        ),
+                      );
+                    },
+                  ),
+                );
+              }),
+          ],
           const SizedBox(height: 10),
           Text(
             l10n.customerOrdersHeading,

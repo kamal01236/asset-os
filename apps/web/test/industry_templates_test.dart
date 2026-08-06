@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:asset_os/core/home/home_modules.dart';
 import 'package:asset_os/core/models/entities.dart';
+import 'package:asset_os/core/reports/report_widgets.dart';
 import 'package:asset_os/core/repositories/local_repository.dart';
 import 'package:asset_os/core/templates/industry_templates.dart';
 
@@ -225,6 +226,18 @@ void main() {
         library.enabledResourceTypes,
         <ResourceType>[ResourceType.rental, ResourceType.loan],
       );
+    });
+
+    test('money_lending enables financial with loan home/report presets', () {
+      final IndustryTemplate pack = industryTemplateById('money_lending')!;
+      expect(pack.name, 'Money Lending');
+      expect(pack.defaultHomeModules, kMoneyLendingHomeModules);
+      expect(pack.defaultReportWidgets, kMoneyLendingReportWidgets);
+      expect(
+        pack.enabledResourceTypes,
+        <ResourceType>[ResourceType.financial],
+      );
+      expect(pack.items, isEmpty);
     });
 
     test('returns null for unknown id', () {

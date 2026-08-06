@@ -8,6 +8,8 @@ import '../../core/pricing/rental_pricing.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/widgets/global_search_typeahead.dart';
 import '../../core/widgets/ui_primitives.dart';
+import '../loans/loan_detail_screen.dart';
+import '../loans/loans_list_screen.dart';
 
 /// Composes Home from enabled modules (search always present).
 class HomeScreen extends ConsumerWidget {
@@ -35,6 +37,8 @@ class HomeScreen extends ConsumerWidget {
     final AsyncValue<List<Rental>> rentalsAsync = ref.watch(rentalsProvider);
     final AsyncValue<List<Customer>> customersAsync =
         ref.watch(customersProvider);
+    final AsyncValue<List<MoneyLoan>> loansAsync =
+        ref.watch(moneyLoansProvider);
 
     if (inventoryAsync.isLoading || rentalsAsync.isLoading) {
       return const Center(child: CircularProgressIndicator());
@@ -48,6 +52,8 @@ class HomeScreen extends ConsumerWidget {
         rentalsAsync.valueOrNull ?? const <Rental>[];
     final List<Customer> customers =
         customersAsync.valueOrNull ?? const <Customer>[];
+    final List<MoneyLoan> moneyLoans =
+        loansAsync.valueOrNull ?? const <MoneyLoan>[];
 
     final List<Widget> children = <Widget>[];
     for (final HomeModuleId id in _orderedModules(modules)) {
@@ -59,6 +65,7 @@ class HomeScreen extends ConsumerWidget {
         inventory: inventory,
         rentals: rentals,
         customers: customers,
+        moneyLoans: moneyLoans,
       );
       if (section != null) {
         if (children.isNotEmpty) {
@@ -87,6 +94,7 @@ class HomeScreen extends ConsumerWidget {
     required List<InventoryItem> inventory,
     required List<Rental> rentals,
     required List<Customer> customers,
+    required List<MoneyLoan> moneyLoans,
   }) {
     switch (id) {
       case HomeModuleId.search:
@@ -134,6 +142,22 @@ class HomeScreen extends ConsumerWidget {
           rentals: rentals,
           customers: customers,
           onOpenRental: onOpenRental,
+        );
+      case HomeModuleId.pendingLoans:
+        if (filter != null) {
+          return null;
+        }
+        return HomePendingLoansSection(
+          moneyLoans: moneyLoans,
+          customers: customers,
+        );
+      case HomeModuleId.dueLoans:
+        if (filter != null) {
+          return null;
+        }
+        return HomeDueLoansSection(
+          moneyLoans: moneyLoans,
+          customers: customers,
         );
       case HomeModuleId.quickActions:
         return HomeQuickActionsSection(
@@ -419,6 +443,158 @@ class HomePendingJobsSection extends StatelessWidget {
           )
         else
           ..._rentalCards(context, limited, customers, onOpenRental),
+      ],
+    );
+  }
+}
+
+class HomePendingLoansSection extends StatelessWidget {
+  const HomePendingLoansSection({
+    required this.moneyLoans,
+    required this.customers,
+    super.key,
+  });
+
+  final List<MoneyLoan> moneyLoans;
+  final List<Customer> customers;
+
+  @override
+  Widget build(BuildContext context) {
+    final AppLocalizations l10n = context.l10n;
+    final DateTime now = DateTime.now();
+    final Map<String, Customer> byId = <String, Customer>{
+      for (final Customer c in customers) c.id: c,
+    };
+    final List<MoneyLoan> pending = moneyLoans
+        .where((MoneyLoan l) => l.status == MoneyLoanStatus.pending)
+        .toList()
+      ..sort((MoneyLoan a, MoneyLoan b) => b.createdAt.compareTo(a.createdAt));
+    final List<MoneyLoan> limited = pending.take(5).toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Row(
+          children: <Widget>[
+            Expanded(
+              child: Text(
+                l10n.pendingLoansTitle,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const LoansListScreen(),
+                  ),
+                );
+              },
+              child: Text(l10n.customerLoansViewAll),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        if (limited.isEmpty)
+          CompactEmptyState(message: l10n.pendingLoansEmptySubtitle)
+        else
+          ...limited.map((MoneyLoan loan) {
+            final LoanScenario scenario =
+                computeLoanScenario(loan: loan, now: now);
+            final Customer? customer = byId[loan.customerId];
+            final String direction =
+                loan.direction == MoneyLoanDirection.given
+                    ? l10n.loanDirectionGiven
+                    : l10n.loanDirectionTaken;
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: EntityCard(
+                title: customer?.name ?? loan.customerId,
+                subtitle:
+                    '$direction · ${formatMoney(scenario.pendingPaise, currencyCode: loan.currencyCode)}',
+                leadingIcon: Icons.account_balance_wallet_outlined,
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => LoanDetailScreen(loanId: loan.id),
+                    ),
+                  );
+                },
+              ),
+            );
+          }),
+      ],
+    );
+  }
+}
+
+class HomeDueLoansSection extends StatelessWidget {
+  const HomeDueLoansSection({
+    required this.moneyLoans,
+    required this.customers,
+    super.key,
+  });
+
+  final List<MoneyLoan> moneyLoans;
+  final List<Customer> customers;
+
+  @override
+  Widget build(BuildContext context) {
+    final AppLocalizations l10n = context.l10n;
+    final DateTime now = DateTime.now();
+    final Map<String, Customer> byId = <String, Customer>{
+      for (final Customer c in customers) c.id: c,
+    };
+    final List<MoneyLoan> due = moneyLoans
+        .where((MoneyLoan l) => isMoneyLoanDue(l, now))
+        .toList()
+      ..sort((MoneyLoan a, MoneyLoan b) {
+        final DateTime aDue = a.interestEndedAt!;
+        final DateTime bDue = b.interestEndedAt!;
+        return aDue.compareTo(bDue);
+      });
+    final List<MoneyLoan> limited = due.take(5).toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Text(
+          l10n.dueLoansTitle,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+        ),
+        const SizedBox(height: 8),
+        if (limited.isEmpty)
+          CompactEmptyState(message: l10n.dueLoansEmptySubtitle)
+        else
+          ...limited.map((MoneyLoan loan) {
+            final LoanScenario scenario =
+                computeLoanScenario(loan: loan, now: now);
+            final Customer? customer = byId[loan.customerId];
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: EntityCard(
+                title: customer?.name ?? loan.customerId,
+                subtitle: formatMoney(
+                  scenario.pendingPaise,
+                  currencyCode: loan.currencyCode,
+                ),
+                leadingIcon: Icons.event_busy_outlined,
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => LoanDetailScreen(loanId: loan.id),
+                    ),
+                  );
+                },
+              ),
+            );
+          }),
       ],
     );
   }

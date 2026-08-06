@@ -1858,4 +1858,262 @@ class AppLocalizationsHi extends AppLocalizations {
   String reportTruncatedSuffix(String appName) {
     return '\n…(काटा गया — पूरी रिपोर्ट के लिए $appName खोलें)';
   }
+
+  @override
+  String get loansTitle => 'कर्ज';
+
+  @override
+  String get loansMoreSubtitle => 'दिए और लिए गए नकद कर्ज';
+
+  @override
+  String get loanCreateTitle => 'नया कर्ज';
+
+  @override
+  String get loanCreateAction => 'नया कर्ज';
+
+  @override
+  String get loanDetailTitle => 'कर्ज कैलकुलेटर';
+
+  @override
+  String get loanNotFound => 'कर्ज नहीं मिला';
+
+  @override
+  String get loanStatusPending => 'लंबित';
+
+  @override
+  String get loanStatusClosed => 'बंद';
+
+  @override
+  String get loanStatusCancelled => 'रद्द';
+
+  @override
+  String get loansPendingEmpty => 'कोई लंबित कर्ज नहीं।';
+
+  @override
+  String get loansClosedEmpty => 'अभी कोई बंद कर्ज नहीं।';
+
+  @override
+  String get loanDirectionLabel => 'दिशा';
+
+  @override
+  String get loanDirectionGiven => 'दिया (उधार दिया)';
+
+  @override
+  String get loanDirectionTaken => 'लिया (उधार लिया)';
+
+  @override
+  String get loanCustomerLabel => 'ग्राहक';
+
+  @override
+  String get loanCustomerHint => 'ग्राहक चुनें';
+
+  @override
+  String get loanCustomerRequired => 'ग्राहक चुनें';
+
+  @override
+  String get loanPrincipalLabel => 'मूलधन';
+
+  @override
+  String get loanPrincipalRequired => 'मूलधन राशि दर्ज करें';
+
+  @override
+  String get loanMoneyGivenOnLabel => 'पैसे दिए गए दिन';
+
+  @override
+  String get loanDueOptionalLabel => 'देय / समाप्ति (वैकल्पिक)';
+
+  @override
+  String get loanDueNone => 'कोई देय तिथि नहीं';
+
+  @override
+  String get loanInterestKindLabel => 'ब्याज';
+
+  @override
+  String get loanInterestSimple => 'सरल';
+
+  @override
+  String get loanInterestCompound => 'चक्रवृद्धि';
+
+  @override
+  String get loanRatePercentLabel => 'दर';
+
+  @override
+  String get loanRatePeriodLabel => 'अवधि';
+
+  @override
+  String get loanRateMonthly => 'मासिक';
+
+  @override
+  String get loanRateYearly => 'वार्षिक';
+
+  @override
+  String get loanRateInvalid => 'मान्य दर दर्ज करें';
+
+  @override
+  String get loanNoteOptionalLabel => 'नोट (वैकल्पिक)';
+
+  @override
+  String get loanSaving => 'सहेजा जा रहा है…';
+
+  @override
+  String get loanPendingNowLabel => 'अभी लंबित';
+
+  @override
+  String get loanInterestToDateLabel => 'अब तक का ब्याज';
+
+  @override
+  String get loanPaidLabel => 'भुगतान';
+
+  @override
+  String get loanAdjustmentsLabel => 'समायोजन';
+
+  @override
+  String get loanTimelineHeading => 'समयरेखा';
+
+  @override
+  String get loanAddPayment => 'भुगतान जोड़ें';
+
+  @override
+  String get loanAddAdjustment => 'समायोजन जोड़ें';
+
+  @override
+  String get loanEntryDateLabel => 'तारीख';
+
+  @override
+  String get loanPaymentAmountLabel => 'भुगतान राशि';
+
+  @override
+  String get loanAdjustmentAmountLabel => 'समायोजन राशि';
+
+  @override
+  String get loanAdjustmentHint =>
+      'धनात्मक शेष माफ करता है; ऋणात्मक मूलधन बढ़ाता है';
+
+  @override
+  String get loanSaveEntry => 'सहेजें';
+
+  @override
+  String get loanCancel => 'रद्द';
+
+  @override
+  String get loanKeepPending => 'लंबित रखें';
+
+  @override
+  String get loanKeepPendingHint =>
+      'कर्ज तब तक खुला रहता है जब तक आप बंद नहीं करते।';
+
+  @override
+  String get loanMarkClosed => 'बंद करें';
+
+  @override
+  String get loanReopen => 'फिर खोलें';
+
+  @override
+  String get loanClosedSnack => 'कर्ज बंद किया गया';
+
+  @override
+  String get loanCloseWithPendingTitle => 'शेष के साथ बंद करें?';
+
+  @override
+  String loanCloseWithPendingBody(String amount) {
+    return 'अभी भी $amount लंबित है। फिर भी बंद करें, या पहले समायोजन जोड़ें?';
+  }
+
+  @override
+  String get loanEditSetupTooltip => 'तिथियाँ संपादित करें';
+
+  @override
+  String get loanEditSetupTitle => 'कर्ज तिथियाँ संपादित करें';
+
+  @override
+  String loanSetupSummary(
+    String start,
+    String due,
+    String rate,
+    String period,
+    String kind,
+  ) {
+    return 'शुरू $start · देय $due · $rate $period · $kind';
+  }
+
+  @override
+  String loanTimelineStart(String date, String amount) {
+    return '$date — कर्ज शुरू · $amount';
+  }
+
+  @override
+  String loanTimelineInterest(
+    String from,
+    String to,
+    String principal,
+    String amount,
+  ) {
+    return '$from – $to — $principal पर ब्याज · $amount';
+  }
+
+  @override
+  String loanTimelinePayment(
+    String date,
+    String amount,
+    String interest,
+    String principal,
+  ) {
+    return '$date — भुगतान $amount · $interest ब्याज, $principal मूलधन';
+  }
+
+  @override
+  String loanTimelineAdjustment(String date, String amount) {
+    return '$date — समायोजन $amount';
+  }
+
+  @override
+  String loanTimelinePending(String date, String amount) {
+    return '$date — लंबित $amount';
+  }
+
+  @override
+  String get modulePendingLoans => 'लंबित कर्ज';
+
+  @override
+  String get modulePendingLoansSubtitle => 'अभी भी बकाया खुले नकद कर्ज';
+
+  @override
+  String get pendingLoansTitle => 'लंबित कर्ज';
+
+  @override
+  String get pendingLoansEmptySubtitle => 'अभी कोई लंबित कर्ज नहीं।';
+
+  @override
+  String get moduleDueLoans => 'देय कर्ज';
+
+  @override
+  String get moduleDueLoansSubtitle => 'देय तिथि पर या उसके बाद के लंबित कर्ज';
+
+  @override
+  String get dueLoansTitle => 'देय कर्ज';
+
+  @override
+  String get dueLoansEmptySubtitle => 'अभी कोई देय कर्ज नहीं।';
+
+  @override
+  String get customerLoansHeading => 'कर्ज';
+
+  @override
+  String get customerLoansEmpty => 'इस ग्राहक के कोई कर्ज नहीं।';
+
+  @override
+  String get customerLoansViewAll => 'सभी कर्ज देखें';
+
+  @override
+  String reportPendingLoansCount(int count) {
+    return 'लंबित कर्ज: $count';
+  }
+
+  @override
+  String get reportNoOutstandingLoans => 'कोई बकाया कर्ज नहीं।';
+
+  @override
+  String reportOutstandingLoansTotal(String amount, int count) {
+    return 'कुल $amount — $count कर्ज';
+  }
 }

@@ -14,6 +14,9 @@ import '../reports/report_widgets.dart';
 
 export '../home/home_modules.dart';
 export '../home/home_filter.dart';
+export '../loans/loan_models.dart';
+export '../loans/loan_balance.dart'
+    show computeLoanScenario, LoanScenario, LoanTimelineEvent, LoanTimelineKind;
 export '../templates/industry_templates.dart'
     show
         kEnabledResourceTypesPrefsKey,
@@ -92,6 +95,15 @@ final inventoryProvider = StreamProvider<List<InventoryItem>>((ref) {
 
 final rentalsProvider = StreamProvider<List<Rental>>((ref) {
   return ref.watch(repositoryProvider).watchRentals();
+});
+
+final moneyLoansProvider = StreamProvider<List<MoneyLoan>>((ref) {
+  return ref.watch(repositoryProvider).watchMoneyLoans();
+});
+
+final moneyLoansForCustomerProvider =
+    StreamProvider.family<List<MoneyLoan>, String>((ref, customerId) {
+  return ref.watch(repositoryProvider).watchMoneyLoans(customerId: customerId);
 });
 
 final depositLedgerProvider =

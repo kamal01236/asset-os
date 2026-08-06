@@ -9,6 +9,8 @@ enum ReportWidgetId {
   overdue,
   topCustomers,
   resourcesUtilisation,
+  outstandingLoansGiven,
+  outstandingLoansTaken,
 }
 
 /// Label + id for a report section (en/hi inline like field defs).
@@ -56,6 +58,16 @@ const List<ReportWidgetDef> kReportWidgetDefs = <ReportWidgetDef>[
     labelEn: 'Resource utilisation',
     labelHi: 'संसाधन उपयोग',
   ),
+  ReportWidgetDef(
+    id: ReportWidgetId.outstandingLoansGiven,
+    labelEn: 'Outstanding given',
+    labelHi: 'बाहर दिया बकाया',
+  ),
+  ReportWidgetDef(
+    id: ReportWidgetId.outstandingLoansTaken,
+    labelEn: 'Outstanding taken',
+    labelHi: 'लिया बकाया',
+  ),
 ];
 
 /// Default share pack when template / prefs omit widgets.
@@ -90,6 +102,12 @@ const List<ReportWidgetId> kLibraryReportWidgets = <ReportWidgetId>[
   ReportWidgetId.transactionsToday,
   ReportWidgetId.overdue,
   ReportWidgetId.resourcesUtilisation,
+];
+
+const List<ReportWidgetId> kMoneyLendingReportWidgets = <ReportWidgetId>[
+  ReportWidgetId.outstandingLoansGiven,
+  ReportWidgetId.outstandingLoansTaken,
+  ReportWidgetId.transactionsToday,
 ];
 
 ReportWidgetDef? reportWidgetDefById(ReportWidgetId id) {

@@ -1858,4 +1858,262 @@ class AppLocalizationsEn extends AppLocalizations {
   String reportTruncatedSuffix(String appName) {
     return '\n…(truncated — open $appName for full)';
   }
+
+  @override
+  String get loansTitle => 'Loans';
+
+  @override
+  String get loansMoreSubtitle => 'Cash loans given and taken';
+
+  @override
+  String get loanCreateTitle => 'New loan';
+
+  @override
+  String get loanCreateAction => 'New loan';
+
+  @override
+  String get loanDetailTitle => 'Loan calculator';
+
+  @override
+  String get loanNotFound => 'Loan not found';
+
+  @override
+  String get loanStatusPending => 'Pending';
+
+  @override
+  String get loanStatusClosed => 'Closed';
+
+  @override
+  String get loanStatusCancelled => 'Cancelled';
+
+  @override
+  String get loansPendingEmpty => 'No pending loans.';
+
+  @override
+  String get loansClosedEmpty => 'No closed loans yet.';
+
+  @override
+  String get loanDirectionLabel => 'Direction';
+
+  @override
+  String get loanDirectionGiven => 'Given (lent out)';
+
+  @override
+  String get loanDirectionTaken => 'Taken (borrowed)';
+
+  @override
+  String get loanCustomerLabel => 'Customer';
+
+  @override
+  String get loanCustomerHint => 'Select customer';
+
+  @override
+  String get loanCustomerRequired => 'Select a customer';
+
+  @override
+  String get loanPrincipalLabel => 'Principal';
+
+  @override
+  String get loanPrincipalRequired => 'Enter a principal amount';
+
+  @override
+  String get loanMoneyGivenOnLabel => 'Money given on';
+
+  @override
+  String get loanDueOptionalLabel => 'Due / end (optional)';
+
+  @override
+  String get loanDueNone => 'No due date';
+
+  @override
+  String get loanInterestKindLabel => 'Interest';
+
+  @override
+  String get loanInterestSimple => 'Simple';
+
+  @override
+  String get loanInterestCompound => 'Compound';
+
+  @override
+  String get loanRatePercentLabel => 'Rate';
+
+  @override
+  String get loanRatePeriodLabel => 'Period';
+
+  @override
+  String get loanRateMonthly => 'Monthly';
+
+  @override
+  String get loanRateYearly => 'Yearly';
+
+  @override
+  String get loanRateInvalid => 'Enter a valid rate';
+
+  @override
+  String get loanNoteOptionalLabel => 'Note (optional)';
+
+  @override
+  String get loanSaving => 'Saving…';
+
+  @override
+  String get loanPendingNowLabel => 'Pending now';
+
+  @override
+  String get loanInterestToDateLabel => 'Interest to date';
+
+  @override
+  String get loanPaidLabel => 'Paid';
+
+  @override
+  String get loanAdjustmentsLabel => 'Adjustments';
+
+  @override
+  String get loanTimelineHeading => 'Timeline';
+
+  @override
+  String get loanAddPayment => 'Add payment';
+
+  @override
+  String get loanAddAdjustment => 'Add adjustment';
+
+  @override
+  String get loanEntryDateLabel => 'Date';
+
+  @override
+  String get loanPaymentAmountLabel => 'Payment amount';
+
+  @override
+  String get loanAdjustmentAmountLabel => 'Adjustment amount';
+
+  @override
+  String get loanAdjustmentHint =>
+      'Positive forgives remaining; negative increases principal';
+
+  @override
+  String get loanSaveEntry => 'Save';
+
+  @override
+  String get loanCancel => 'Cancel';
+
+  @override
+  String get loanKeepPending => 'Keep pending';
+
+  @override
+  String get loanKeepPendingHint => 'Loan stays open until you mark it closed.';
+
+  @override
+  String get loanMarkClosed => 'Mark closed';
+
+  @override
+  String get loanReopen => 'Reopen loan';
+
+  @override
+  String get loanClosedSnack => 'Loan marked closed';
+
+  @override
+  String get loanCloseWithPendingTitle => 'Close with balance pending?';
+
+  @override
+  String loanCloseWithPendingBody(String amount) {
+    return 'Still pending $amount. Close anyway, or add an adjustment first?';
+  }
+
+  @override
+  String get loanEditSetupTooltip => 'Edit dates';
+
+  @override
+  String get loanEditSetupTitle => 'Edit loan dates';
+
+  @override
+  String loanSetupSummary(
+    String start,
+    String due,
+    String rate,
+    String period,
+    String kind,
+  ) {
+    return 'Start $start · Due $due · $rate $period · $kind';
+  }
+
+  @override
+  String loanTimelineStart(String date, String amount) {
+    return '$date — Loan started · $amount';
+  }
+
+  @override
+  String loanTimelineInterest(
+    String from,
+    String to,
+    String principal,
+    String amount,
+  ) {
+    return '$from – $to — Interest on $principal · $amount';
+  }
+
+  @override
+  String loanTimelinePayment(
+    String date,
+    String amount,
+    String interest,
+    String principal,
+  ) {
+    return '$date — Payment $amount · $interest interest, $principal principal';
+  }
+
+  @override
+  String loanTimelineAdjustment(String date, String amount) {
+    return '$date — Adjustment $amount';
+  }
+
+  @override
+  String loanTimelinePending(String date, String amount) {
+    return '$date — Pending $amount';
+  }
+
+  @override
+  String get modulePendingLoans => 'Pending loans';
+
+  @override
+  String get modulePendingLoansSubtitle => 'Open cash loans still outstanding';
+
+  @override
+  String get pendingLoansTitle => 'Pending loans';
+
+  @override
+  String get pendingLoansEmptySubtitle => 'No pending loans right now.';
+
+  @override
+  String get moduleDueLoans => 'Due loans';
+
+  @override
+  String get moduleDueLoansSubtitle =>
+      'Pending loans at or past their due date';
+
+  @override
+  String get dueLoansTitle => 'Due loans';
+
+  @override
+  String get dueLoansEmptySubtitle => 'No due loans right now.';
+
+  @override
+  String get customerLoansHeading => 'Loans';
+
+  @override
+  String get customerLoansEmpty => 'No loans for this customer.';
+
+  @override
+  String get customerLoansViewAll => 'View all loans';
+
+  @override
+  String reportPendingLoansCount(int count) {
+    return 'Pending loans: $count';
+  }
+
+  @override
+  String get reportNoOutstandingLoans => 'No outstanding loans.';
+
+  @override
+  String reportOutstandingLoansTotal(String amount, int count) {
+    return 'Total $amount across $count loan(s)';
+  }
 }

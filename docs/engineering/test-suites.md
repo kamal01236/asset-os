@@ -59,6 +59,7 @@ Every suite file has exactly one:
 | `reports` | Report share / WhatsApp text |
 | `notes` | Rental order notes |
 | `labels` | Rental instance labels |
+| `loans` | Cash money-loan calculator, ledger, money_lending template |
 
 ## Dependency → suite map
 
@@ -75,4 +76,5 @@ Every suite file has exactly one:
 | reports / WhatsApp share | `test reports` |
 | rental notes | `test notes` |
 | instance labels | `test labels` |
+| `core/loans/**`, money lending template | `test loans` |
 | Unsure / schema migration / many areas | `test` (full) |
