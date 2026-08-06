@@ -7,10 +7,15 @@ import '../../core/models/entities.dart';
 import '../../core/models/unknown_customer.dart';
 import '../../core/pricing/rental_pricing.dart';
 import '../../core/providers/app_providers.dart';
+import '../../core/repositories/local_repository.dart';
 import '../../core/validation/text_rules.dart';
+import '../../core/widgets/ui_primitives.dart';
 import 'loan_detail_screen.dart';
 
 /// Create a cash loan now; start date can be backfilled.
+///
+/// Customer is name + phone with typeahead (New Order pattern). Cash loans
+/// require a real phone — no Unknown / no-phone path on this screen.
 class LoanCreateScreen extends ConsumerStatefulWidget {
   const LoanCreateScreen({
     this.initialCustomerId,
@@ -24,6 +29,8 @@ class LoanCreateScreen extends ConsumerStatefulWidget {
 }
 
 class _LoanCreateScreenState extends ConsumerState<LoanCreateScreen> {
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _nameController = TextEditingController();
   final TextEditingController _principalCtrl = TextEditingController();
   final TextEditingController _rateCtrl = TextEditingController(text: '2');
   final TextEditingController _noteCtrl = TextEditingController();
@@ -32,32 +39,160 @@ class _LoanCreateScreenState extends ConsumerState<LoanCreateScreen> {
   MoneyRatePeriod _ratePeriod = MoneyRatePeriod.monthly;
   DateTime _startedAt = DateTime.now();
   DateTime? _endedAt;
-  String? _customerId;
+  Customer? _resolvedCustomer;
+  List<Customer> _suggestions = const <Customer>[];
+  bool _prefillApplied = false;
   bool _saving = false;
+  int _lookupGen = 0;
 
   @override
   void initState() {
     super.initState();
-    _customerId = widget.initialCustomerId;
     final DateTime now = DateTime.now();
     _startedAt = DateTime(now.year, now.month, now.day);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _applyPrefill();
+    });
   }
 
   @override
   void dispose() {
+    _phoneController.dispose();
+    _nameController.dispose();
     _principalCtrl.dispose();
     _rateCtrl.dispose();
     _noteCtrl.dispose();
     super.dispose();
   }
 
+  Future<void> _applyPrefill() async {
+    if (_prefillApplied || !mounted) {
+      return;
+    }
+    _prefillApplied = true;
+    final String? id = widget.initialCustomerId;
+    if (id == null ||
+        isUnknownCustomerId(id) ||
+        id == kLegacySelfCustomerId) {
+      return;
+    }
+    final LocalRepository repository = ref.read(repositoryProvider);
+    Customer? customer = await repository.customerById(id);
+    if (!mounted || customer == null || isUnknownCustomer(customer)) {
+      return;
+    }
+    final Customer resolved = customer;
+    setState(() {
+      _resolvedCustomer = resolved;
+      _phoneController.text = resolved.phone;
+      _nameController.text = resolved.name;
+      _suggestions = const <Customer>[];
+    });
+  }
+
+  Future<void> _onCustomerFieldsChanged() async {
+    final int gen = ++_lookupGen;
+    _clearResolvedIfEdited();
+    setState(() {});
+    final String phone = _phoneController.text.trim();
+    if (phone.length >= 10) {
+      final Customer? matched =
+          await ref.read(repositoryProvider).customerByPhone(phone);
+      if (!mounted || gen != _lookupGen) {
+        return;
+      }
+      if (matched != null && !isUnknownCustomer(matched)) {
+        _resolvedCustomer = matched;
+        if (_nameController.text.trim().isEmpty) {
+          _nameController.text = matched.name;
+        }
+      }
+    }
+    if (!mounted || gen != _lookupGen) {
+      return;
+    }
+    await _refreshSuggestions(gen: gen);
+    if (mounted && gen == _lookupGen) {
+      setState(() {});
+    }
+  }
+
+  Future<void> _refreshSuggestions({int? gen}) async {
+    final int expected = gen ?? _lookupGen;
+    final LocalRepository repository = ref.read(repositoryProvider);
+    final String nameQ = _nameController.text.trim();
+    final String phoneQ = _phoneController.text.trim();
+    final Map<String, Customer> merged = <String, Customer>{};
+    if (nameQ.length >= kMinMeaningfulTextLength) {
+      for (final Customer c
+          in await repository.searchCustomersByNameOrPhone(nameQ)) {
+        if (!isUnknownCustomer(c)) {
+          merged[c.id] = c;
+        }
+      }
+    }
+    if (!mounted || expected != _lookupGen) {
+      return;
+    }
+    if (phoneQ.length >= kMinMeaningfulTextLength) {
+      for (final Customer c
+          in await repository.searchCustomersByNameOrPhone(phoneQ)) {
+        if (!isUnknownCustomer(c)) {
+          merged[c.id] = c;
+        }
+      }
+    }
+    if (!mounted || expected != _lookupGen) {
+      return;
+    }
+    _suggestions = merged.values.toList();
+  }
+
+  void _clearResolvedIfEdited() {
+    final Customer? resolved = _resolvedCustomer;
+    if (resolved == null || isUnknownCustomer(resolved)) {
+      return;
+    }
+    if (_nameController.text.trim() != resolved.name ||
+        _phoneController.text.trim() != resolved.phone) {
+      _resolvedCustomer = null;
+    }
+  }
+
+  void _selectSuggestion(Customer customer) {
+    setState(() {
+      _resolvedCustomer = customer;
+      _nameController.text = customer.name;
+      _phoneController.text = customer.phone;
+      _suggestions = const <Customer>[];
+    });
+  }
+
+  bool _validateCustomerOrSnack() {
+    final AppLocalizations l10n = context.l10n;
+    if (_resolvedCustomer == null &&
+        !meetsMinMeaningfulText(_nameController.text)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            l10n.minMeaningfulTextError(kMinMeaningfulTextLength),
+          ),
+        ),
+      );
+      return false;
+    }
+    if (_phoneController.text.trim().length < 10) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.phoneRequiredError)),
+      );
+      return false;
+    }
+    return true;
+  }
+
   @override
   Widget build(BuildContext context) {
     final AppLocalizations l10n = context.l10n;
-    final List<Customer> customers =
-        (ref.watch(customersProvider).valueOrNull ?? const <Customer>[])
-            .where((Customer c) => c.id != kUnknownCustomerId)
-            .toList();
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.loanCreateTitle)),
@@ -66,25 +201,73 @@ class _LoanCreateScreenState extends ConsumerState<LoanCreateScreen> {
         children: <Widget>[
           Text(l10n.loanCustomerLabel, style: Theme.of(context).textTheme.titleSmall),
           const SizedBox(height: 8),
-          DropdownButtonFormField<String>(
-            value: _customerId != null &&
-                    customers.any((Customer c) => c.id == _customerId)
-                ? _customerId
-                : null,
-            items: customers
-                .map(
-                  (Customer c) => DropdownMenuItem<String>(
-                    value: c.id,
-                    child: Text('${c.name} (${c.phone})'),
-                  ),
-                )
-                .toList(),
-            onChanged: (String? id) => setState(() => _customerId = id),
+          TextField(
+            controller: _phoneController,
+            keyboardType: TextInputType.phone,
             decoration: InputDecoration(
+              labelText: l10n.phoneNumberLabel,
+              hintText: l10n.phoneNumberHint,
               border: const OutlineInputBorder(),
-              hintText: l10n.loanCustomerHint,
             ),
+            onChanged: (_) => _onCustomerFieldsChanged(),
           ),
+          const SizedBox(height: 8),
+          TextField(
+            controller: _nameController,
+            textCapitalization: TextCapitalization.words,
+            decoration: InputDecoration(
+              labelText: l10n.customerNameNewLabel,
+              hintText: l10n.customerNameNewHint,
+              border: const OutlineInputBorder(),
+            ),
+            onChanged: (_) => _onCustomerFieldsChanged(),
+          ),
+          if (_suggestions.isNotEmpty) ...<Widget>[
+            const SizedBox(height: 4),
+            DecoratedBox(
+              decoration: BoxDecoration(
+                border: Border.all(color: Theme.of(context).dividerColor),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                children: <Widget>[
+                  for (final Customer suggestion in _suggestions)
+                    ListTile(
+                      dense: true,
+                      leading: const Icon(Icons.person_outline),
+                      title: Text(
+                        l10n.customerSuggestionSubtitle(
+                          suggestion.name,
+                          suggestion.phone,
+                        ),
+                      ),
+                      onTap: () => _selectSuggestion(suggestion),
+                    ),
+                ],
+              ),
+            ),
+          ],
+          if (_suggestions.isEmpty &&
+              (_nameController.text.trim().length >= kMinMeaningfulTextLength ||
+                  _phoneController.text.trim().length >=
+                      kMinMeaningfulTextLength) &&
+              _resolvedCustomer == null) ...<Widget>[
+            const SizedBox(height: 4),
+            Text(
+              l10n.customerTypeaheadEmpty,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
+          if (_resolvedCustomer != null) ...<Widget>[
+            const SizedBox(height: 8),
+            EntityCard(
+              title: _resolvedCustomer!.name,
+              subtitle:
+                  l10n.existingCustomerSubtitle(_resolvedCustomer!.phone),
+              leadingIcon: Icons.verified_user_outlined,
+              status: AssetStatus.available,
+            ),
+          ],
           const SizedBox(height: 16),
           Text(l10n.loanDirectionLabel, style: Theme.of(context).textTheme.titleSmall),
           const SizedBox(height: 8),
@@ -200,6 +383,7 @@ class _LoanCreateScreenState extends ConsumerState<LoanCreateScreen> {
               const SizedBox(width: 12),
               Expanded(
                 child: DropdownButtonFormField<MoneyRatePeriod>(
+                  // ignore: deprecated_member_use
                   value: _ratePeriod,
                   items: <DropdownMenuItem<MoneyRatePeriod>>[
                     DropdownMenuItem<MoneyRatePeriod>(
@@ -245,11 +429,7 @@ class _LoanCreateScreenState extends ConsumerState<LoanCreateScreen> {
 
   Future<void> _save() async {
     final AppLocalizations l10n = context.l10n;
-    final String? customerId = _customerId;
-    if (customerId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.loanCustomerRequired)),
-      );
+    if (!_validateCustomerOrSnack()) {
       return;
     }
     final int principal = parseRupeesToPaise(_principalCtrl.text);
@@ -279,8 +459,21 @@ class _LoanCreateScreenState extends ConsumerState<LoanCreateScreen> {
 
     setState(() => _saving = true);
     try {
-      final String id = await ref.read(repositoryProvider).createMoneyLoan(
-            customerId: customerId,
+      final LocalRepository repository = ref.read(repositoryProvider);
+      Customer? resolved = _resolvedCustomer;
+      if (resolved == null &&
+          widget.initialCustomerId != null &&
+          !isUnknownCustomerId(widget.initialCustomerId!) &&
+          widget.initialCustomerId != kLegacySelfCustomerId) {
+        resolved = await repository.customerById(widget.initialCustomerId!);
+      }
+      final Customer customer = resolved ??
+          await repository.upsertCustomerByPhone(
+            phone: _phoneController.text.trim(),
+            fallbackName: _nameController.text.trim(),
+          );
+      final String id = await repository.createMoneyLoan(
+            customerId: customer.id,
             direction: _direction,
             principalPaise: principal,
             interestStartedAt: _startedAt,

@@ -3,8 +3,6 @@ library;
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:asset_os/core/loans/loan_balance.dart';
-import 'package:asset_os/core/loans/loan_models.dart';
 import 'package:asset_os/core/repositories/local_repository.dart';
 
 import 'support/test_harness.dart';
