@@ -3424,7 +3424,7 @@ abstract class AppLocalizations {
   /// No description provided for @loanPeriodEndInterestHint.
   ///
   /// In en, this message translates to:
-  /// **'Interest posts only after each full month or year from the start date, then adds to principal. Payments before that only reduce principal — no mid-period interest.'**
+  /// **'Mid-period repayments reduce principal and accrue pro-rata interest on the amount repaid for time outstanding. That interest, plus full-period interest on what remains, is added to principal at each month or year anniversary.'**
   String get loanPeriodEndInterestHint;
 
   /// No description provided for @loanRateInvalid.
@@ -3600,6 +3600,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Interest posted {date} on {principal} → {amount} (added to principal)'**
   String loanTimelineInterest(String date, String principal, String amount);
+
+  /// No description provided for @loanTimelineDeferredSlice.
+  ///
+  /// In en, this message translates to:
+  /// **'Interest on repaid {principal} through {date} → {amount} (adds at period end)'**
+  String loanTimelineDeferredSlice(String principal, String date, String amount);
 
   /// No description provided for @loanTimelinePayment.
   ///

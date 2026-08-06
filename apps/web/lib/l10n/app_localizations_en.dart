@@ -1948,7 +1948,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get loanPeriodEndInterestHint =>
-      'Interest posts only after each full month or year from the start date, then adds to principal. Payments before that only reduce principal — no mid-period interest.';
+      'Mid-period repayments reduce principal and accrue pro-rata interest on the amount repaid for time outstanding. That interest, plus full-period interest on what remains, is added to principal at each month or year anniversary.';
 
   @override
   String get loanRateInvalid => 'Enter a valid rate';
@@ -2047,6 +2047,15 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String loanTimelineInterest(String date, String principal, String amount) {
     return 'Interest posted $date on $principal → $amount (added to principal)';
+  }
+
+  @override
+  String loanTimelineDeferredSlice(
+    String principal,
+    String date,
+    String amount,
+  ) {
+    return 'Interest on repaid $principal through $date → $amount (adds at period end)';
   }
 
   @override

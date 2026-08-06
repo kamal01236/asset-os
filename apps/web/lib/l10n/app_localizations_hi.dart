@@ -1948,7 +1948,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get loanPeriodEndInterestHint =>
-      'ब्याज शुरू तिथि से पूरा महीना या साल पूरा होने के बाद ही लगता है, फिर मूलधन में जुड़ जाता है। उससे पहले भुगतान केवल मूलधन घटाते हैं — अवधि के बीच में ब्याज नहीं।';
+      'अवधि के बीच भुगतान मूलधन घटाते हैं और चुकाई राशि पर बीते समय का आनुपातिक ब्याज जोड़ते हैं। वह ब्याज, और शेष मूलधन पर पूरी अवधि का ब्याज, हर महीने या साल की सालगिरह पर मूलधन में जुड़ जाता है।';
 
   @override
   String get loanRateInvalid => 'मान्य दर दर्ज करें';
@@ -2048,6 +2048,15 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String loanTimelineInterest(String date, String principal, String amount) {
     return 'ब्याज दर्ज $date · $principal पर → $amount (मूलधन में जोड़ा)';
+  }
+
+  @override
+  String loanTimelineDeferredSlice(
+    String principal,
+    String date,
+    String amount,
+  ) {
+    return 'चुकाए $principal पर ब्याज $date तक → $amount (अवधि अंत में जुड़ेगा)';
   }
 
   @override

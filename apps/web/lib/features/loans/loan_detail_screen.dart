@@ -613,6 +613,15 @@ class _TimelineRow extends StatelessWidget {
           ),
           money,
         ),
+      LoanTimelineKind.deferredSliceInterest =>
+        l10n.loanTimelineDeferredSlice(
+          formatMoney(
+            event.principalBasisPaise ?? 0,
+            currencyCode: loan.currencyCode,
+          ),
+          formatIndiaDate(event.at),
+          money,
+        ),
       LoanTimelineKind.payment => l10n.loanTimelinePayment(
           formatIndiaDate(event.at),
           money,
@@ -635,6 +644,7 @@ class _TimelineRow extends StatelessWidget {
             switch (event.kind) {
               LoanTimelineKind.start => Icons.flag_outlined,
               LoanTimelineKind.interestSegment => Icons.trending_up,
+              LoanTimelineKind.deferredSliceInterest => Icons.timelapse,
               LoanTimelineKind.payment => Icons.payments_outlined,
               LoanTimelineKind.adjustment => Icons.tune,
               LoanTimelineKind.pendingAsOf => Icons.pending_actions_outlined,

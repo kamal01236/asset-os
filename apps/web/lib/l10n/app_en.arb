@@ -1147,7 +1147,7 @@
   "loanRatePeriodLabel": "Period",
   "loanRateMonthly": "Monthly",
   "loanRateYearly": "Yearly",
-  "loanPeriodEndInterestHint": "Interest posts only after each full month or year from the start date, then adds to principal. Payments before that only reduce principal — no mid-period interest.",
+  "loanPeriodEndInterestHint": "Mid-period repayments reduce principal and accrue pro-rata interest on the amount repaid for time outstanding. That interest, plus full-period interest on what remains, is added to principal at each month or year anniversary.",
   "loanRateInvalid": "Enter a valid rate",
   "loanNoteOptionalLabel": "Note (optional)",
   "loanSaving": "Saving…",
@@ -1200,6 +1200,14 @@
     "placeholders": {
       "date": {"type": "String"},
       "principal": {"type": "String"},
+      "amount": {"type": "String"}
+    }
+  },
+  "loanTimelineDeferredSlice": "Interest on repaid {principal} through {date} → {amount} (adds at period end)",
+  "@loanTimelineDeferredSlice": {
+    "placeholders": {
+      "principal": {"type": "String"},
+      "date": {"type": "String"},
       "amount": {"type": "String"}
     }
   },

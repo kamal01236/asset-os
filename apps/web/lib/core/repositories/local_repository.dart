@@ -20,6 +20,7 @@ export '../loans/loan_balance.dart'
     show
         computeLoanScenario,
         periodInterestPaise,
+        proRataPeriodInterestPaise,
         nextInterestPeriodEnd,
         LoanScenario,
         LoanTimelineEvent,
