@@ -8,55 +8,204 @@ import 'package:asset_os/core/repositories/local_repository.dart';
 import 'support/test_harness.dart';
 
 void main() {
-  group('accrueInterestPaise', () {
-    test('simple monthly accrues over 30 days', () {
-      // 2% monthly on ₹10,000 for 30 days ≈ ₹200
-      final int interest = accrueInterestPaise(
+  group('periodInterestPaise', () {
+    test('simple monthly period is P * rate', () {
+      // 2% monthly on ₹10,000 → ₹200
+      final int interest = periodInterestPaise(
         principalPaise: 1000000,
-        from: DateTime(2026, 1, 1),
-        to: DateTime(2026, 1, 31),
         kind: MoneyInterestKind.simple,
         rateBps: 200,
-        ratePeriod: MoneyRatePeriod.monthly,
       );
       expect(interest, 20000);
     });
 
-    test('compound exceeds simple over multi-period', () {
-      final int simple = accrueInterestPaise(
+    test('yearly simple period is P * rate', () {
+      final int interest = periodInterestPaise(
         principalPaise: 1000000,
-        from: DateTime(2026, 1, 1),
-        to: DateTime(2026, 4, 1),
-        kind: MoneyInterestKind.simple,
-        rateBps: 200,
-        ratePeriod: MoneyRatePeriod.monthly,
-      );
-      final int compound = accrueInterestPaise(
-        principalPaise: 1000000,
-        from: DateTime(2026, 1, 1),
-        to: DateTime(2026, 4, 1),
-        kind: MoneyInterestKind.compound,
-        rateBps: 200,
-        ratePeriod: MoneyRatePeriod.monthly,
-      );
-      expect(compound, greaterThan(simple));
-    });
-
-    test('yearly simple accrues over 365 days', () {
-      final int interest = accrueInterestPaise(
-        principalPaise: 1000000,
-        from: DateTime(2025, 1, 1),
-        to: DateTime(2026, 1, 1),
         kind: MoneyInterestKind.simple,
         rateBps: 1200, // 12%
-        ratePeriod: MoneyRatePeriod.yearly,
       );
       expect(interest, 120000);
     });
+
+    test('one-period simple and compound match', () {
+      final int simple = periodInterestPaise(
+        principalPaise: 1000000,
+        kind: MoneyInterestKind.simple,
+        rateBps: 200,
+      );
+      final int compound = periodInterestPaise(
+        principalPaise: 1000000,
+        kind: MoneyInterestKind.compound,
+        rateBps: 200,
+      );
+      expect(compound, simple);
+    });
   });
 
-  group('computeLoanScenario backfill', () {
-    test('past start + two dated payments → correct pending', () {
+  group('computeLoanScenario period-end', () {
+    test('mid-year payment reduces principal only; no interest until anniversary',
+        () {
+      final MoneyLoan loan = MoneyLoan(
+        id: 'MLN-mid',
+        customerId: 'C1',
+        direction: MoneyLoanDirection.given,
+        principalPaise: 1000000, // ₹10,000
+        currencyCode: 'INR',
+        interestKind: MoneyInterestKind.simple,
+        rateBps: 1200, // 12%/year
+        ratePeriod: MoneyRatePeriod.yearly,
+        interestStartedAt: DateTime(2026, 1, 1),
+        status: MoneyLoanStatus.pending,
+        createdAt: DateTime(2026, 4, 1),
+        entries: <MoneyLoanEntry>[
+          MoneyLoanEntry(
+            id: 'E1',
+            loanId: 'MLN-mid',
+            entryAt: DateTime(2026, 4, 1),
+            amountPaise: 300000, // ₹3,000
+            kind: MoneyLoanEntryKind.payment,
+          ),
+        ],
+      );
+
+      final LoanScenario midYear = computeLoanScenario(
+        loan: loan,
+        now: DateTime(2026, 6, 1),
+      );
+      expect(midYear.interestAccruedPaise, 0);
+      expect(midYear.remainingPrincipalPaise, 700000);
+      expect(midYear.pendingPaise, 700000);
+      expect(midYear.unpaidInterestPaise, 0);
+      expect(
+        midYear.timeline.where(
+          (LoanTimelineEvent e) => e.kind == LoanTimelineKind.interestSegment,
+        ),
+        isEmpty,
+      );
+      final LoanTimelineEvent payment = midYear.timeline.firstWhere(
+        (LoanTimelineEvent e) => e.kind == LoanTimelineKind.payment,
+      );
+      expect(payment.toInterestPaise, 0);
+      expect(payment.toPrincipalPaise, 300000);
+    });
+
+    test('after anniversary interest posts on reduced principal and capitalizes',
+        () {
+      final MoneyLoan loan = MoneyLoan(
+        id: 'MLN-ann',
+        customerId: 'C1',
+        direction: MoneyLoanDirection.given,
+        principalPaise: 1000000,
+        currencyCode: 'INR',
+        interestKind: MoneyInterestKind.simple,
+        rateBps: 1200,
+        ratePeriod: MoneyRatePeriod.yearly,
+        interestStartedAt: DateTime(2026, 1, 1),
+        status: MoneyLoanStatus.pending,
+        createdAt: DateTime(2027, 1, 1),
+        entries: <MoneyLoanEntry>[
+          MoneyLoanEntry(
+            id: 'E1',
+            loanId: 'MLN-ann',
+            entryAt: DateTime(2026, 4, 1),
+            amountPaise: 300000,
+            kind: MoneyLoanEntryKind.payment,
+          ),
+        ],
+      );
+
+      final LoanScenario after = computeLoanScenario(
+        loan: loan,
+        now: DateTime(2027, 1, 1),
+      );
+      // Interest on ₹7,000 × 12% = ₹840; capitalized → pending ₹7,840
+      expect(after.interestAccruedPaise, 84000);
+      expect(after.remainingPrincipalPaise, 784000);
+      expect(after.pendingPaise, 784000);
+      expect(after.unpaidInterestPaise, 0);
+
+      final LoanTimelineEvent interest = after.timeline.firstWhere(
+        (LoanTimelineEvent e) => e.kind == LoanTimelineKind.interestSegment,
+      );
+      expect(interest.at, DateTime(2027, 1, 1));
+      expect(interest.principalBasisPaise, 700000);
+      expect(interest.amountPaise, 84000);
+    });
+
+    test('monthly interest only after each full month', () {
+      final MoneyLoan loan = MoneyLoan(
+        id: 'MLN-mo',
+        customerId: 'C1',
+        direction: MoneyLoanDirection.given,
+        principalPaise: 1000000,
+        currencyCode: 'INR',
+        interestKind: MoneyInterestKind.simple,
+        rateBps: 200, // 2%/month
+        ratePeriod: MoneyRatePeriod.monthly,
+        interestStartedAt: DateTime(2026, 1, 1),
+        status: MoneyLoanStatus.pending,
+        createdAt: DateTime(2026, 1, 1),
+      );
+
+      final LoanScenario midMonth = computeLoanScenario(
+        loan: loan,
+        now: DateTime(2026, 1, 15),
+      );
+      expect(midMonth.interestAccruedPaise, 0);
+      expect(midMonth.pendingPaise, 1000000);
+
+      final LoanScenario oneMonth = computeLoanScenario(
+        loan: loan,
+        now: DateTime(2026, 2, 1),
+      );
+      expect(oneMonth.interestAccruedPaise, 20000);
+      expect(oneMonth.pendingPaise, 1020000);
+
+      final LoanScenario twoMonths = computeLoanScenario(
+        loan: loan,
+        now: DateTime(2026, 3, 1),
+      );
+      // Jan→Feb: 200 on 10k → 10200; Feb→Mar: 204 on 10200 → 10404
+      expect(twoMonths.interestAccruedPaise, 40400);
+      expect(twoMonths.pendingPaise, 1040400);
+    });
+
+    test('compound multi-period grows via capitalization', () {
+      final MoneyLoan loan = MoneyLoan(
+        id: 'MLN-cmp',
+        customerId: 'C1',
+        direction: MoneyLoanDirection.given,
+        principalPaise: 1000000,
+        currencyCode: 'INR',
+        interestKind: MoneyInterestKind.compound,
+        rateBps: 200,
+        ratePeriod: MoneyRatePeriod.monthly,
+        interestStartedAt: DateTime(2026, 1, 1),
+        status: MoneyLoanStatus.pending,
+        createdAt: DateTime(2026, 1, 1),
+      );
+
+      final LoanScenario threeMonths = computeLoanScenario(
+        loan: loan,
+        now: DateTime(2026, 4, 1),
+      );
+      // 10000 * 1.02^3 = 10612.08 → 1061208 paise (rounded per period)
+      // Period fold: 1000000→1020000→1040400→1061208
+      expect(threeMonths.interestAccruedPaise, 61208);
+      expect(threeMonths.pendingPaise, 1061208);
+      expect(
+        threeMonths.timeline
+            .where(
+              (LoanTimelineEvent e) =>
+                  e.kind == LoanTimelineKind.interestSegment,
+            )
+            .length,
+        3,
+      );
+    });
+
+    test('past start + two dated payments → period-end pending', () {
       final MoneyLoan loan = MoneyLoan(
         id: 'MLN-1',
         customerId: 'C1',
@@ -92,20 +241,24 @@ void main() {
         now: DateTime(2026, 6, 1),
       );
 
-      // Jan 1 → Apr 1 = 90 days = 3 months → ₹600 interest on 10k
-      // Payment 3k: 600 interest + 2400 principal → principal 7600
-      // Apr 1 → Jun 1 = 61 days → interest ≈ 7600 * 0.02 * (61/30)
+      // Jan→Feb→Mar→Apr: 3 months on 10k → capitalize to 1061208, then pay 3k
+      // Apr 1 is a boundary: interest posts first, then payment.
+      // Walk:
+      //  Feb 1: +20000 → 1020000
+      //  Mar 1: +20400 → 1040400
+      //  Apr 1: +20808 → 1061208, then pay 300000 → 761208
+      //  May 1: +15224 → 776432
+      //  Jun 1: +15529 → 791961, then pay 200000 → 591961
       expect(asOfJun1.totalPaidPaise, 500000);
-      expect(asOfJun1.interestAccruedPaise, greaterThan(60000));
-      expect(asOfJun1.pendingPaise, greaterThan(0));
-      expect(asOfJun1.remainingPrincipalPaise, lessThan(1000000));
+      expect(asOfJun1.interestAccruedPaise, 91961);
+      expect(asOfJun1.pendingPaise, 591961);
+      expect(asOfJun1.remainingPrincipalPaise, 591961);
       expect(
         asOfJun1.timeline.any(
           (LoanTimelineEvent e) => e.kind == LoanTimelineKind.payment,
         ),
         isTrue,
       );
-      // Still pending — no auto-close
       expect(loan.status, MoneyLoanStatus.pending);
     });
 
@@ -131,8 +284,15 @@ void main() {
         loan: base.copyWith(interestStartedAt: DateTime(2026, 2, 1)),
         now: DateTime(2026, 3, 1),
       );
+      // Early: Jan→Feb→Mar = 2 periods; later: Feb→Mar = 1 period
       expect(laterStart.interestAccruedPaise, lessThan(early.interestAccruedPaise));
       expect(laterStart.pendingPaise, lessThan(early.pendingPaise));
+      expect(early.timeline.where(
+        (LoanTimelineEvent e) => e.kind == LoanTimelineKind.interestSegment,
+      ).length, 2);
+      expect(laterStart.timeline.where(
+        (LoanTimelineEvent e) => e.kind == LoanTimelineKind.interestSegment,
+      ).length, 1);
     });
 
     test('adjustment clears remainder then close allowed', () async {

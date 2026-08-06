@@ -561,11 +561,23 @@ class _SetupSummary extends StatelessWidget {
         ? l10n.loanDueNone
         : formatIndiaDate(loan.interestEndedAt!);
 
-    return Text(
-      l10n.loanSetupSummary(start, due, '$ratePct%', period, kind),
-      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Text(
+          l10n.loanSetupSummary(start, due, '$ratePct%', period, kind),
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          l10n.loanPeriodEndInterestHint,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+        ),
+      ],
     );
   }
 }
@@ -587,7 +599,6 @@ class _TimelineRow extends StatelessWidget {
       LoanTimelineKind.start =>
         l10n.loanTimelineStart(formatIndiaDate(event.at), money),
       LoanTimelineKind.interestSegment => l10n.loanTimelineInterest(
-          formatIndiaDate(event.from ?? event.at),
           formatIndiaDate(event.at),
           formatMoney(
             event.principalBasisPaise ?? 0,
@@ -598,7 +609,6 @@ class _TimelineRow extends StatelessWidget {
       LoanTimelineKind.payment => l10n.loanTimelinePayment(
           formatIndiaDate(event.at),
           money,
-          formatMoney(event.toInterestPaise, currencyCode: loan.currencyCode),
           formatMoney(event.toPrincipalPaise, currencyCode: loan.currencyCode),
         ),
       LoanTimelineKind.adjustment => l10n.loanTimelineAdjustment(

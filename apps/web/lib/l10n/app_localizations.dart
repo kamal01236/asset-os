@@ -3421,6 +3421,12 @@ abstract class AppLocalizations {
   /// **'Yearly'**
   String get loanRateYearly;
 
+  /// No description provided for @loanPeriodEndInterestHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Interest posts only after each full month or year from the start date, then adds to principal. Payments before that only reduce principal — no mid-period interest.'**
+  String get loanPeriodEndInterestHint;
+
   /// No description provided for @loanRateInvalid.
   ///
   /// In en, this message translates to:
@@ -3592,24 +3598,14 @@ abstract class AppLocalizations {
   /// No description provided for @loanTimelineInterest.
   ///
   /// In en, this message translates to:
-  /// **'{from} – {to} — Interest on {principal} · {amount}'**
-  String loanTimelineInterest(
-    String from,
-    String to,
-    String principal,
-    String amount,
-  );
+  /// **'Interest posted {date} on {principal} → {amount} (added to principal)'**
+  String loanTimelineInterest(String date, String principal, String amount);
 
   /// No description provided for @loanTimelinePayment.
   ///
   /// In en, this message translates to:
-  /// **'{date} — Payment {amount} · {interest} interest, {principal} principal'**
-  String loanTimelinePayment(
-    String date,
-    String amount,
-    String interest,
-    String principal,
-  );
+  /// **'{date} — Payment {amount} → principal {principal}'**
+  String loanTimelinePayment(String date, String amount, String principal);
 
   /// No description provided for @loanTimelineAdjustment.
   ///

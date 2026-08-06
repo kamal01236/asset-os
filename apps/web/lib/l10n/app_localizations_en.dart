@@ -1947,6 +1947,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loanRateYearly => 'Yearly';
 
   @override
+  String get loanPeriodEndInterestHint =>
+      'Interest posts only after each full month or year from the start date, then adds to principal. Payments before that only reduce principal — no mid-period interest.';
+
+  @override
   String get loanRateInvalid => 'Enter a valid rate';
 
   @override
@@ -2041,23 +2045,13 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String loanTimelineInterest(
-    String from,
-    String to,
-    String principal,
-    String amount,
-  ) {
-    return '$from – $to — Interest on $principal · $amount';
+  String loanTimelineInterest(String date, String principal, String amount) {
+    return 'Interest posted $date on $principal → $amount (added to principal)';
   }
 
   @override
-  String loanTimelinePayment(
-    String date,
-    String amount,
-    String interest,
-    String principal,
-  ) {
-    return '$date — Payment $amount · $interest interest, $principal principal';
+  String loanTimelinePayment(String date, String amount, String principal) {
+    return '$date — Payment $amount → principal $principal';
   }
 
   @override

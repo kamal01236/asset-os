@@ -408,6 +408,13 @@ class _LoanCreateScreenState extends ConsumerState<LoanCreateScreen> {
               ),
             ],
           ),
+          const SizedBox(height: 8),
+          Text(
+            l10n.loanPeriodEndInterestHint,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+          ),
           const SizedBox(height: 16),
           TextField(
             controller: _noteCtrl,

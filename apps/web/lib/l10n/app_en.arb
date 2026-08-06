@@ -1147,6 +1147,7 @@
   "loanRatePeriodLabel": "Period",
   "loanRateMonthly": "Monthly",
   "loanRateYearly": "Yearly",
+  "loanPeriodEndInterestHint": "Interest posts only after each full month or year from the start date, then adds to principal. Payments before that only reduce principal — no mid-period interest.",
   "loanRateInvalid": "Enter a valid rate",
   "loanNoteOptionalLabel": "Note (optional)",
   "loanSaving": "Saving…",
@@ -1194,21 +1195,19 @@
       "amount": {"type": "String"}
     }
   },
-  "loanTimelineInterest": "{from} – {to} — Interest on {principal} · {amount}",
+  "loanTimelineInterest": "Interest posted {date} on {principal} → {amount} (added to principal)",
   "@loanTimelineInterest": {
     "placeholders": {
-      "from": {"type": "String"},
-      "to": {"type": "String"},
+      "date": {"type": "String"},
       "principal": {"type": "String"},
       "amount": {"type": "String"}
     }
   },
-  "loanTimelinePayment": "{date} — Payment {amount} · {interest} interest, {principal} principal",
+  "loanTimelinePayment": "{date} — Payment {amount} → principal {principal}",
   "@loanTimelinePayment": {
     "placeholders": {
       "date": {"type": "String"},
       "amount": {"type": "String"},
-      "interest": {"type": "String"},
       "principal": {"type": "String"}
     }
   },

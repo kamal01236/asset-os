@@ -1947,6 +1947,10 @@ class AppLocalizationsHi extends AppLocalizations {
   String get loanRateYearly => 'वार्षिक';
 
   @override
+  String get loanPeriodEndInterestHint =>
+      'ब्याज शुरू तिथि से पूरा महीना या साल पूरा होने के बाद ही लगता है, फिर मूलधन में जुड़ जाता है। उससे पहले भुगतान केवल मूलधन घटाते हैं — अवधि के बीच में ब्याज नहीं।';
+
+  @override
   String get loanRateInvalid => 'मान्य दर दर्ज करें';
 
   @override
@@ -2042,23 +2046,13 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String loanTimelineInterest(
-    String from,
-    String to,
-    String principal,
-    String amount,
-  ) {
-    return '$from – $to — $principal पर ब्याज · $amount';
+  String loanTimelineInterest(String date, String principal, String amount) {
+    return 'ब्याज दर्ज $date · $principal पर → $amount (मूलधन में जोड़ा)';
   }
 
   @override
-  String loanTimelinePayment(
-    String date,
-    String amount,
-    String interest,
-    String principal,
-  ) {
-    return '$date — भुगतान $amount · $interest ब्याज, $principal मूलधन';
+  String loanTimelinePayment(String date, String amount, String principal) {
+    return '$date — भुगतान $amount → मूलधन $principal';
   }
 
   @override

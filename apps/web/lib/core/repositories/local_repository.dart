@@ -17,7 +17,13 @@ import '../templates/workflows.dart';
 import '../validation/text_rules.dart';
 export '../loans/loan_models.dart';
 export '../loans/loan_balance.dart'
-    show computeLoanScenario, accrueInterestPaise, LoanScenario, LoanTimelineEvent, LoanTimelineKind;
+    show
+        computeLoanScenario,
+        periodInterestPaise,
+        nextInterestPeriodEnd,
+        LoanScenario,
+        LoanTimelineEvent,
+        LoanTimelineKind;
 
 class TemplateImportResult {
   const TemplateImportResult({

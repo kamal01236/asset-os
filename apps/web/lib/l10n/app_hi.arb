@@ -1147,6 +1147,7 @@
   "loanRatePeriodLabel": "अवधि",
   "loanRateMonthly": "मासिक",
   "loanRateYearly": "वार्षिक",
+  "loanPeriodEndInterestHint": "ब्याज शुरू तिथि से पूरा महीना या साल पूरा होने के बाद ही लगता है, फिर मूलधन में जुड़ जाता है। उससे पहले भुगतान केवल मूलधन घटाते हैं — अवधि के बीच में ब्याज नहीं।",
   "loanRateInvalid": "मान्य दर दर्ज करें",
   "loanNoteOptionalLabel": "नोट (वैकल्पिक)",
   "loanSaving": "सहेजा जा रहा है…",
@@ -1194,21 +1195,19 @@
       "amount": {"type": "String"}
     }
   },
-  "loanTimelineInterest": "{from} – {to} — {principal} पर ब्याज · {amount}",
+  "loanTimelineInterest": "ब्याज दर्ज {date} · {principal} पर → {amount} (मूलधन में जोड़ा)",
   "@loanTimelineInterest": {
     "placeholders": {
-      "from": {"type": "String"},
-      "to": {"type": "String"},
+      "date": {"type": "String"},
       "principal": {"type": "String"},
       "amount": {"type": "String"}
     }
   },
-  "loanTimelinePayment": "{date} — भुगतान {amount} · {interest} ब्याज, {principal} मूलधन",
+  "loanTimelinePayment": "{date} — भुगतान {amount} → मूलधन {principal}",
   "@loanTimelinePayment": {
     "placeholders": {
       "date": {"type": "String"},
       "amount": {"type": "String"},
-      "interest": {"type": "String"},
       "principal": {"type": "String"}
     }
   },
