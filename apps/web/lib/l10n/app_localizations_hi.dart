@@ -12,7 +12,10 @@ class AppLocalizationsHi extends AppLocalizations {
   String get navHome => 'होम';
 
   @override
-  String get navRentals => 'ऑर्डर';
+  String get navRentals => 'लेन-देन';
+
+  @override
+  String get navTransactions => 'लेन-देन';
 
   @override
   String get navResources => 'संसाधन';
@@ -28,6 +31,55 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get actionNewRental => 'नया ऑर्डर';
+
+  @override
+  String get transactionsTitle => 'लेन-देन';
+
+  @override
+  String get transactionsFilterAll => 'सभी';
+
+  @override
+  String get transactionsFilterOrders => 'ऑर्डर';
+
+  @override
+  String get transactionsFilterLoans => 'कर्ज';
+
+  @override
+  String get newTransaction => 'नया';
+
+  @override
+  String get newOrder => 'नया ऑर्डर';
+
+  @override
+  String get newLoan => 'नया कर्ज';
+
+  @override
+  String get transactionTypeOrder => 'ऑर्डर';
+
+  @override
+  String get transactionTypeLoan => 'कर्ज';
+
+  @override
+  String get searchTransactionsHint => 'ऑर्डर या कर्ज खोजें';
+
+  @override
+  String get noTransactionsYetTitle => 'अभी कोई लेन-देन नहीं';
+
+  @override
+  String get noTransactionsYetSubtitle =>
+      'शुरू करने के लिए ऑर्डर या कर्ज बनाएँ।';
+
+  @override
+  String get customerTransactionsHeading => 'लेन-देन';
+
+  @override
+  String get customerTransactionsEmpty => 'इस ग्राहक के लिए कोई लेन-देन नहीं।';
+
+  @override
+  String get customerTransactionsViewAll => 'सभी देखें';
+
+  @override
+  String get transactionsMoreSubtitle => 'ऑर्डर और नकद कर्ज';
 
   @override
   String get issueItemAction => 'जारी करें';

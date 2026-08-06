@@ -5,7 +5,6 @@ import 'core/config/app_branding.dart';
 import 'core/inventory/inventory_categories.dart';
 import 'core/l10n/india_date_format.dart';
 import 'core/l10n/l10n_ext.dart';
-import 'core/models/customer_activity.dart';
 import 'core/models/customer_balance.dart';
 import 'core/models/entities.dart';
 import 'core/models/unknown_customer.dart';
@@ -16,6 +15,7 @@ import 'core/search/search_scope.dart';
 import 'core/templates/field_defs.dart';
 import 'core/templates/workflows.dart';
 import 'core/theme/app_theme.dart';
+import 'core/transactions/transaction_list_item.dart';
 import 'core/validation/text_rules.dart';
 import 'core/widgets/category_picker_field.dart';
 import 'core/widgets/dynamic_field_inputs.dart';
@@ -26,12 +26,12 @@ import 'core/widgets/ui_primitives.dart';
 import 'features/home/customize_home_screen.dart';
 import 'features/home/home_screen.dart';
 import 'features/loans/loan_detail_screen.dart';
-import 'features/loans/loans_list_screen.dart';
 import 'features/orders/new_order_flow_screen.dart';
 import 'features/orders/rental_detail_nav.dart';
 import 'features/reports/share_reports_screen.dart';
 import 'features/templates/business_templates_screen.dart';
 import 'features/templates/enabled_resource_types_screen.dart';
+import 'features/transactions/transactions_screen.dart';
 
 export 'features/home/home_screen.dart' show HomeScreen;
 export 'features/orders/new_order_flow_screen.dart'
@@ -64,9 +64,7 @@ class AppShell extends ConsumerWidget {
         onOpenInventory: (InventoryItem item) =>
             _openInventoryDetail(context, item),
       ),
-      RentalsScreen(
-        onOpenRental: (Rental rental) => _openRentalDetail(context, rental),
-      ),
+      const TransactionsScreen(),
       InventoryScreen(
         onOpenInventory: (InventoryItem item) => _openInventoryDetail(context, item),
       ),
@@ -105,7 +103,7 @@ class AppShell extends ConsumerWidget {
         },
         destinations: <NavigationDestination>[
           NavigationDestination(icon: const Icon(Icons.home_outlined), label: l10n.navHome),
-          NavigationDestination(icon: const Icon(Icons.assignment_outlined), label: l10n.navRentals),
+          NavigationDestination(icon: const Icon(Icons.assignment_outlined), label: l10n.navTransactions),
           NavigationDestination(icon: const Icon(Icons.inventory_2_outlined), label: l10n.navResources),
           NavigationDestination(icon: const Icon(Icons.groups_outlined), label: l10n.navCustomers),
           NavigationDestination(icon: const Icon(Icons.more_horiz), label: l10n.navMore),
@@ -885,9 +883,10 @@ class MoreScreen extends ConsumerWidget {
           leadingIcon: Icons.account_balance_wallet_outlined,
           trailing: const Icon(Icons.chevron_right),
           onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute<void>(builder: (_) => const LoansListScreen()),
-            );
+            ref.read(transactionsTypeFilterProvider.notifier).state =
+                TransactionsTypeFilter.loans;
+            ref.read(currentTabIndexProvider.notifier).state =
+                kTabIndexTransactions;
           },
         ),
         const SizedBox(height: 10),
@@ -2189,10 +2188,13 @@ class CustomerDetailScreen extends ConsumerWidget {
         customerBalanceAsOf(customer, rentals, DateTime.now());
     final List<MoneyLoan> customerLoans =
         loansAsync.valueOrNull ?? const <MoneyLoan>[];
-    final bool showLoans = ref.watch(enabledResourceTypesProvider).contains(
-          ResourceType.financial,
-        ) ||
-        customerLoans.isNotEmpty;
+    final List<ResourceType> enabled = ref.watch(enabledResourceTypesProvider);
+    final bool canOrder = canCreateOrderTransaction(enabled);
+    final bool canLoan = canCreateLoanTransaction(enabled);
+    final List<TransactionListItem> customerTxns = mergeTransactionListItems(
+      rentals: customerRentals,
+      loans: customerLoans,
+    );
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.customerProfileTitle)),
@@ -2283,132 +2285,119 @@ class CustomerDetailScreen extends ConsumerWidget {
               ],
             ),
           ),
-          if (showLoans) ...<Widget>[
-            const SizedBox(height: 14),
-            Row(
-              children: <Widget>[
-                Expanded(
-                  child: Text(
-                    l10n.customerLoansHeading,
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                  ),
+          const SizedBox(height: 14),
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: Text(
+                  l10n.customerTransactionsHeading,
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
                 ),
+              ),
+              if (canOrder || canLoan)
                 TextButton(
                   onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => LoansListScreen(
-                          initialCustomerId: customer.id,
-                        ),
-                      ),
+                    showNewTransactionChooser(
+                      context,
+                      canOrder: canOrder,
+                      canLoan: canLoan,
+                      customerId: customer.id,
                     );
                   },
-                  child: Text(l10n.customerLoansViewAll),
+                  child: Text(l10n.newTransaction),
                 ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            if (customerLoans.isEmpty)
-              Text(l10n.customerLoansEmpty)
-            else
-              ...customerLoans.take(5).map((MoneyLoan loan) {
-                final LoanScenario scenario =
-                    computeLoanScenario(loan: loan, now: DateTime.now());
-                final String direction =
-                    loan.direction == MoneyLoanDirection.given
-                        ? l10n.loanDirectionGiven
-                        : l10n.loanDirectionTaken;
-                final String status = loan.status == MoneyLoanStatus.pending
-                    ? l10n.loanStatusPending
-                    : l10n.loanStatusClosed;
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: EntityCard(
-                    title: '$direction · $status',
-                    subtitle: formatMoney(
-                      scenario.pendingPaise,
-                      currencyCode: loan.currencyCode,
-                    ),
-                    leadingIcon: Icons.account_balance_wallet_outlined,
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute<void>(
-                          builder: (_) => LoanDetailScreen(loanId: loan.id),
-                        ),
-                      );
-                    },
-                  ),
-                );
-              }),
-          ],
-          const SizedBox(height: 10),
-          Text(
-            l10n.customerOrdersHeading,
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
+            ],
           ),
           const SizedBox(height: 8),
-          if (customerRentals.isEmpty)
-            Text(l10n.activityEmpty)
-          else ..._customerOrdersSection(context, l10n, customerRentals),
+          if (customerTxns.isEmpty)
+            Text(l10n.customerTransactionsEmpty)
+          else
+            ...customerTxns.take(8).map((TransactionListItem item) {
+              final DateTime now = DateTime.now();
+              final String typeLabel = item.kind == TransactionKind.order
+                  ? l10n.transactionTypeOrder
+                  : l10n.transactionTypeLoan;
+              final String status = item.statusLabel(
+                now: now,
+                orderStatus: (OrderStatus s) =>
+                    localizedOrderStatus(l10n, s),
+                assetStatus: (AssetStatus s) =>
+                    localizedStatusLabel(l10n, s),
+                loanStatus: (MoneyLoanStatus s) => switch (s) {
+                  MoneyLoanStatus.pending => l10n.loanStatusPending,
+                  MoneyLoanStatus.closed => l10n.loanStatusClosed,
+                  MoneyLoanStatus.cancelled => l10n.loanStatusCancelled,
+                },
+              );
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: ListEntityRow(
+                  title: item.kind == TransactionKind.order
+                      ? _rentalLinesLabel(
+                          (item as OrderTransactionItem).rental,
+                        )
+                      : status,
+                  leadingIcon: item.kind == TransactionKind.order
+                      ? Icons.receipt_long_outlined
+                      : Icons.account_balance_wallet_outlined,
+                  secondary: item.kind == TransactionKind.order
+                      ? status
+                      : item.amountLabel(now: now),
+                  tertiary: typeLabel,
+                  trailing: item.kind == TransactionKind.order
+                      ? Text(
+                          item.amountLabel(now: now),
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleSmall
+                              ?.copyWith(fontWeight: FontWeight.w700),
+                        )
+                      : const Icon(Icons.chevron_right),
+                  onTap: () {
+                    if (item is OrderTransactionItem) {
+                      Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) =>
+                              RentalDetailScreen(rentalId: item.rental.id),
+                        ),
+                      );
+                    } else if (item is LoanTransactionItem) {
+                      Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) =>
+                              LoanDetailScreen(loanId: item.loan.id),
+                        ),
+                      );
+                    }
+                  },
+                ),
+              );
+            }),
         ],
       ),
       bottomNavigationBar: SafeArea(
         minimum: const EdgeInsets.fromLTRB(16, 0, 16, 12),
         child: FilledButton(
           onPressed: () {
-            Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (_) => NewOrderFlowScreen(
-                  initialCustomerId: customer.id,
-                ),
-              ),
+            showNewTransactionChooser(
+              context,
+              canOrder: canOrder,
+              canLoan: canLoan,
+              customerId: customer.id,
             );
           },
-          child: Text(l10n.issueToCustomerAction),
+          child: Text(
+            canLoan && !canOrder
+                ? l10n.newLoan
+                : canOrder && !canLoan
+                    ? l10n.issueToCustomerAction
+                    : l10n.newTransaction,
+          ),
         ),
       ),
     );
-  }
-
-  List<Widget> _customerOrdersSection(
-    BuildContext context,
-    AppLocalizations l10n,
-    List<Rental> customerRentals,
-  ) {
-    final List<Rental> ordered = List<Rental>.from(customerRentals)
-      ..sort((Rental a, Rental b) => b.startedAt.compareTo(a.startedAt));
-    return ordered
-        .map(
-          (Rental rental) {
-            final RentalOrderStatusSummary summary =
-                RentalOrderStatusSummary.fromRental(rental);
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: OrderBillCard(
-                rental: rental,
-                partyLabel: _rentalLinesLabel(rental),
-                linesLabel: l10n.rentalOrderStatusChips(
-                  summary.issued,
-                  summary.pending,
-                  summary.returned,
-                ),
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => RentalDetailScreen(rentalId: rental.id),
-                    ),
-                  );
-                },
-              ),
-            );
-          },
-        )
-        .toList();
   }
 }
 

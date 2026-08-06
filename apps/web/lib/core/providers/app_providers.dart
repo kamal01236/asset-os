@@ -114,9 +114,17 @@ final depositLedgerProvider =
 /// Bottom-nav tab indices for [currentTabIndexProvider].
 const int kTabIndexHome = 0;
 const int kTabIndexRentals = 1;
+/// Alias: tab 1 is the unified Transactions surface (orders + loans).
+const int kTabIndexTransactions = kTabIndexRentals;
 const int kTabIndexInventory = 2;
 const int kTabIndexCustomers = 3;
 const int kTabIndexMore = 4;
+
+/// Type filter on the Transactions tab (More → Loans deep-links to [loans]).
+enum TransactionsTypeFilter { all, orders, loans }
+
+final transactionsTypeFilterProvider =
+    StateProvider<TransactionsTypeFilter>((ref) => TransactionsTypeFilter.all);
 
 final currentTabIndexProvider = StateProvider<int>((ref) => 0);
 

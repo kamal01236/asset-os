@@ -12,7 +12,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navHome => 'Home';
 
   @override
-  String get navRentals => 'Orders';
+  String get navRentals => 'Transactions';
+
+  @override
+  String get navTransactions => 'Transactions';
 
   @override
   String get navResources => 'Resources';
@@ -28,6 +31,55 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get actionNewRental => 'New Order';
+
+  @override
+  String get transactionsTitle => 'Transactions';
+
+  @override
+  String get transactionsFilterAll => 'All';
+
+  @override
+  String get transactionsFilterOrders => 'Orders';
+
+  @override
+  String get transactionsFilterLoans => 'Loans';
+
+  @override
+  String get newTransaction => 'New';
+
+  @override
+  String get newOrder => 'New order';
+
+  @override
+  String get newLoan => 'New loan';
+
+  @override
+  String get transactionTypeOrder => 'Order';
+
+  @override
+  String get transactionTypeLoan => 'Loan';
+
+  @override
+  String get searchTransactionsHint => 'Search orders or loans';
+
+  @override
+  String get noTransactionsYetTitle => 'No transactions yet';
+
+  @override
+  String get noTransactionsYetSubtitle =>
+      'Create an order or loan to get started.';
+
+  @override
+  String get customerTransactionsHeading => 'Transactions';
+
+  @override
+  String get customerTransactionsEmpty => 'No transactions for this customer.';
+
+  @override
+  String get customerTransactionsViewAll => 'View all';
+
+  @override
+  String get transactionsMoreSubtitle => 'Orders and cash loans';
 
   @override
   String get issueItemAction => 'Issue';

@@ -22,12 +22,13 @@ UI-first conventions for `apps/web` to keep flows fast, clear, and touch-friendl
 
 ## Home (attention-first)
 - **First launch:** empty DB shows a multi-step onboarding wizard before the shell: **Language** (EN default / HI) → **Offline or Online** (Offline default) → **WhatsApp** only when Online (required; OTP verification stubbed for later) → **industry template** (full pack seeds resources + Home modules). More → Business Templates remains for later merges.
-- Home KPI status chips are compact and tappable: tap navigates to the matching tab with that list filter applied (Active / Due today / Overdue → Orders; Available → Resources). Clear the filter chip on the destination tab to restore the full list.
+- Home KPI status chips are compact and tappable: tap navigates to the matching tab with that list filter applied (Active / Due today / Overdue → Transactions; Available → Resources). Clear the filter chip on the destination tab to restore the full list.
 - Home is modular (`search`, `kpis`, `filterResults`, `needsAttention`, `pendingJobs`, `quickActions`, `recentActivity`, `suggestions`). Defaults are `search`, `kpis`, `needsAttention` — no Quick Actions or Pending jobs on the default stack (FAB covers New Order / Return; both modules stay available via Customize Home). No in-place `filterResults` under KPIs. Business templates set Home defaults and enabled resource types: rental packs use the thin default; library / membership add `recentActivity`; job/service packs add `pendingJobs`. More → Customize Home lets users show/hide removable modules (including optional `filterResults`). Search is always on.
 - Prefer overdue/due lists and status filters over chart dashboards.
 
 ## Universal navigation contract
-- Bottom navigation has 5 stable tabs: Home, Orders, Resources, Customers, More.
+- Bottom navigation has 5 stable tabs: Home, **Transactions**, Resources, Customers, More.
+- **Transactions** is the product umbrella for **Orders** (rental/sale/job engine) and cash **Loans** (money_loans engine). Engines and Drift tables stay separate; the tab merges them in the UI only (All / Orders / Loans filters, New → Order | Loan chooser).
 - Global action entry points always include Search, New Order, Return, Add Resource, Scan.
 - Universal search is in-page on Home (typeahead dropdown under the field) and reachable from any tab via FAB → Search, which opens a modal bottom sheet with the same typeahead — not a separate route. Selecting a hit navigates to Customer / Order / Resource detail.
 
@@ -39,9 +40,10 @@ UI-first conventions for `apps/web` to keep flows fast, clear, and touch-friendl
 - Free-text identity/note fields (customer name, item name, category, instance name, SELF nickname, notes when non-empty) require at least 3 characters; search runs only at ≥3 chars (Home/global = all entities; Resources tab = resources; Customers tab = customers + order nicknames).
 
 ## Order bills and deposit
-- Orders tab lists orders as bill-style cards. When no Home KPI filter is active, light chips **All / Open / Completed / Pending jobs** narrow the list; default scope is **Open** (active / non-completed only). **Pending jobs** shows open orders with ≥1 unfinished job line. **All** includes open + completed + **cancelled**. Filters (Active / Due today / Overdue) from Home KPIs still narrow among open bills.
-- Bill cards: **party name** as title; item summary + short `#id`; trailing **Bill** / **Advance** amounts; status pill bottom-left — not a mega concatenated subtitle.
+- Transactions tab lists a merged chronological feed of orders and loans (type badge on each row). Filter chips **All / Orders / Loans** appear when both kinds are relevant; Home KPI filters (Active / Due today / Overdue) still narrow to matching open orders. Orders retain bill semantics on detail; the list row is lightweight (party, status, amount, date).
+- Legacy note: when viewing orders alone, bill-style cards used **All / Open / Completed / Pending jobs**; that scope chrome is superseded by the unified Transactions filters above.
 - Customer detail shows a signed net from all that customer’s orders (positive = owes shop, negative = credit). Advance = sum of order deposits; pending = sum of bill charges. No customer wallet Add/Refund in the profile UI. Customer **list** shows phone + TierPill and signed net only (breakdown stays on detail).
+- Customer detail has a single **Transactions** section (orders + loans for that party), not separate Orders / Loans blocks.
 - Advance lives on the **order** (set at New Order). Return and cancel settle against that order advance, not a shared customer wallet.
 - Order detail is a full bill: lines, deposit, total, status chip in the app bar. Charges use `MoneyStack` rows. Return only while status is open and ≥1 **rent** line is still out. **Mark complete** closes open **job** lines (no stock restore). **Cancel order** is the last bottom-bar action on open orders with no settled rent/job lines (not an app-bar icon). Sell-only orders complete at create; job-only stay open until marked complete.
 - Resource catalog types: **Rental / Sale / Service / Job / Subscription / Membership / Loan / Financial / Custom** (stored as `ResourceType`; UI may still omit a type picker). Job/service lines charge the catalog rate (editable override), stay open until Mark complete, and do not restore stock.

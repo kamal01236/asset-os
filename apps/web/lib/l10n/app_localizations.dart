@@ -107,8 +107,14 @@ abstract class AppLocalizations {
   /// No description provided for @navRentals.
   ///
   /// In en, this message translates to:
-  /// **'Orders'**
+  /// **'Transactions'**
   String get navRentals;
+
+  /// No description provided for @navTransactions.
+  ///
+  /// In en, this message translates to:
+  /// **'Transactions'**
+  String get navTransactions;
 
   /// No description provided for @navResources.
   ///
@@ -139,6 +145,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'New Order'**
   String get actionNewRental;
+
+  /// No description provided for @transactionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Transactions'**
+  String get transactionsTitle;
+
+  /// No description provided for @transactionsFilterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get transactionsFilterAll;
+
+  /// No description provided for @transactionsFilterOrders.
+  ///
+  /// In en, this message translates to:
+  /// **'Orders'**
+  String get transactionsFilterOrders;
+
+  /// No description provided for @transactionsFilterLoans.
+  ///
+  /// In en, this message translates to:
+  /// **'Loans'**
+  String get transactionsFilterLoans;
+
+  /// No description provided for @newTransaction.
+  ///
+  /// In en, this message translates to:
+  /// **'New'**
+  String get newTransaction;
+
+  /// No description provided for @newOrder.
+  ///
+  /// In en, this message translates to:
+  /// **'New order'**
+  String get newOrder;
+
+  /// No description provided for @newLoan.
+  ///
+  /// In en, this message translates to:
+  /// **'New loan'**
+  String get newLoan;
+
+  /// No description provided for @transactionTypeOrder.
+  ///
+  /// In en, this message translates to:
+  /// **'Order'**
+  String get transactionTypeOrder;
+
+  /// No description provided for @transactionTypeLoan.
+  ///
+  /// In en, this message translates to:
+  /// **'Loan'**
+  String get transactionTypeLoan;
+
+  /// No description provided for @searchTransactionsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search orders or loans'**
+  String get searchTransactionsHint;
+
+  /// No description provided for @noTransactionsYetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No transactions yet'**
+  String get noTransactionsYetTitle;
+
+  /// No description provided for @noTransactionsYetSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create an order or loan to get started.'**
+  String get noTransactionsYetSubtitle;
+
+  /// No description provided for @customerTransactionsHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Transactions'**
+  String get customerTransactionsHeading;
+
+  /// No description provided for @customerTransactionsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No transactions for this customer.'**
+  String get customerTransactionsEmpty;
+
+  /// No description provided for @customerTransactionsViewAll.
+  ///
+  /// In en, this message translates to:
+  /// **'View all'**
+  String get customerTransactionsViewAll;
+
+  /// No description provided for @transactionsMoreSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Orders and cash loans'**
+  String get transactionsMoreSubtitle;
 
   /// No description provided for @issueItemAction.
   ///
@@ -3605,7 +3707,11 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'Interest on repaid {principal} through {date} → {amount} (adds at period end)'**
-  String loanTimelineDeferredSlice(String principal, String date, String amount);
+  String loanTimelineDeferredSlice(
+    String principal,
+    String date,
+    String amount,
+  );
 
   /// No description provided for @loanTimelinePayment.
   ///

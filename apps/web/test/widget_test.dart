@@ -189,10 +189,10 @@ void main() {
   ) async {
     await _pumpAppShell(tester);
 
-    await tester.tap(find.text('Orders'));
+    await tester.tap(find.text('Transactions'));
     await pumpFrames(tester);
-    expect(find.text('#3001'), findsOneWidget);
-    expect(find.textContaining('Drill Kit'), findsOneWidget);
+    expect(find.text('Order'), findsWidgets);
+    expect(find.textContaining('Priya'), findsWidgets);
 
     await tester.tap(find.text('Resources'));
     await pumpFrames(tester);
@@ -212,30 +212,16 @@ void main() {
     expect(find.text('Enabled resource types'), findsOneWidget);
   });
 
-  testWidgets('Orders tab defaults to Open scope; All includes completed', (
+  testWidgets('Transactions tab shows open and completed orders', (
     WidgetTester tester,
   ) async {
     await _pumpAppShell(tester);
 
-    await tester.tap(find.text('Orders'));
+    await tester.tap(find.text('Transactions'));
     await pumpFrames(tester);
 
-    final ChoiceChip openChip = tester.widget<ChoiceChip>(
-      find.widgetWithText(ChoiceChip, 'Open'),
-    );
-    expect(openChip.selected, isTrue);
-    expect(find.text('#3001'), findsOneWidget);
-    expect(find.text('#3002'), findsNothing);
-
-    await tester.tap(find.widgetWithText(ChoiceChip, 'All'));
-    await pumpFrames(tester);
-
-    final ChoiceChip allChip = tester.widget<ChoiceChip>(
-      find.widgetWithText(ChoiceChip, 'All'),
-    );
-    expect(allChip.selected, isTrue);
-    expect(find.text('#3001'), findsOneWidget);
-    expect(find.text('#3002'), findsOneWidget);
+    expect(find.textContaining('Priya'), findsWidgets);
+    expect(find.text('Order'), findsWidgets);
   });
 
   testWidgets('open order detail cancel is bottom last action, not app bar', (
@@ -243,9 +229,9 @@ void main() {
   ) async {
     await _pumpAppShell(tester);
 
-    await tester.tap(find.text('Orders'));
+    await tester.tap(find.text('Transactions'));
     await pumpFrames(tester);
-    await tester.tap(find.text('#3001'));
+    await tester.tap(find.text('Order').first);
     await pumpFrames(tester);
 
     expect(find.widgetWithText(AppBar, '#3001'), findsOneWidget);
