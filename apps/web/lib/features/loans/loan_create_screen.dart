@@ -493,6 +493,8 @@ class _LoanCreateScreenState extends ConsumerState<LoanCreateScreen> {
       if (!mounted) {
         return;
       }
+      // Ensure detail sees the new row (avoid brief not-found flash).
+      ref.invalidate(moneyLoansProvider);
       Navigator.of(context).pushReplacement(
         MaterialPageRoute<void>(
           builder: (_) => LoanDetailScreen(loanId: id),

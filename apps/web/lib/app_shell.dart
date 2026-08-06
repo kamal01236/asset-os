@@ -28,6 +28,7 @@ import 'features/home/home_screen.dart';
 import 'features/loans/loan_detail_screen.dart';
 import 'features/loans/loans_list_screen.dart';
 import 'features/orders/new_order_flow_screen.dart';
+import 'features/orders/rental_detail_nav.dart';
 import 'features/reports/share_reports_screen.dart';
 import 'features/templates/business_templates_screen.dart';
 import 'features/templates/enabled_resource_types_screen.dart';
@@ -36,11 +37,19 @@ export 'features/home/home_screen.dart' show HomeScreen;
 export 'features/orders/new_order_flow_screen.dart'
     show NewOrderFlowScreen, NewRentalFlowScreen;
 
+/// Registers [RentalDetailScreen] for New Order navigation (avoids circular import).
+void ensureRentalDetailNavRegistered() {
+  registerRentalDetailScreenFactory(
+    ({required String rentalId}) => RentalDetailScreen(rentalId: rentalId),
+  );
+}
+
 class AppShell extends ConsumerWidget {
   const AppShell({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ensureRentalDetailNavRegistered();
     final AppLocalizations l10n = context.l10n;
     final int tabIndex = ref.watch(currentTabIndexProvider);
     final bool offlineMode = ref.watch(offlineModeProvider);

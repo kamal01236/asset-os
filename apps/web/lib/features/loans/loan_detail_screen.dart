@@ -46,6 +46,13 @@ class _LoanDetailScreenState extends ConsumerState<LoanDetailScreen> {
           }
         }
         if (loan == null) {
+          // After create, the stream can briefly lag; prefer spinner over a
+          // stuck not-found while the provider is still catching up.
+          if (loansAsync.isLoading || loansAsync.isRefreshing) {
+            return const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            );
+          }
           return Scaffold(
             appBar: AppBar(title: Text(l10n.loanDetailTitle)),
             body: Center(child: Text(l10n.loanNotFound)),

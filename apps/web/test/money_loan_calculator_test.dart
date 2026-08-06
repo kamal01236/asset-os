@@ -409,6 +409,49 @@ void main() {
       loan = (await repo.getMoneyLoan(loanId))!;
       expect(loan.status, MoneyLoanStatus.closed);
     });
+
+    test('addMoneyLoanEntry nudges watchMoneyLoans with new entry', () async {
+      final LocalRepository repo = await bootRepo();
+      final customer = await ensureCustomer(repo);
+      final String loanId = await repo.createMoneyLoan(
+        customerId: customer.id,
+        direction: MoneyLoanDirection.given,
+        principalPaise: 100000,
+        interestStartedAt: DateTime(2026, 1, 1),
+        rateBps: 0,
+      );
+
+      final List<List<MoneyLoan>> emissions = <List<MoneyLoan>>[];
+      final sub = repo.watchMoneyLoans().listen(emissions.add);
+      addTearDown(sub.cancel);
+
+      // Wait for initial emission (loan with zero entries).
+      await Future<void>.delayed(Duration.zero);
+      await pumpEventQueue();
+      expect(emissions, isNotEmpty);
+      final MoneyLoan before = emissions.last.firstWhere(
+        (MoneyLoan l) => l.id == loanId,
+      );
+      expect(before.entries, isEmpty);
+
+      await repo.addMoneyLoanEntry(
+        loanId: loanId,
+        entryAt: DateTime(2026, 1, 15),
+        amountPaise: 25000,
+        kind: MoneyLoanEntryKind.payment,
+      );
+      await pumpEventQueue();
+
+      final MoneyLoan after = emissions.last.firstWhere(
+        (MoneyLoan l) => l.id == loanId,
+      );
+      expect(after.entries, hasLength(1));
+      expect(after.entries.single.amountPaise, 25000);
+      expect(
+        computeLoanScenario(loan: after, now: DateTime(2026, 1, 15)).pendingPaise,
+        75000,
+      );
+    });
   });
 
   group('schema', () {

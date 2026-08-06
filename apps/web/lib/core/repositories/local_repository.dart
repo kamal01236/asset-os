@@ -1870,6 +1870,10 @@ class LocalRepository {
         ),
       ),
     );
+    // Entries are not watched by moneyLoansProvider; nudge the parent row.
+    _db.notifyUpdates(<TableUpdate>{
+      TableUpdate.onTable(_db.moneyLoans, kind: UpdateKind.update),
+    });
     return id;
   }
 
@@ -1925,6 +1929,9 @@ class LocalRepository {
         note: Value<String?>(nextNote),
       ),
     );
+    _db.notifyUpdates(<TableUpdate>{
+      TableUpdate.onTable(_db.moneyLoans, kind: UpdateKind.update),
+    });
   }
 
   Future<void> deleteMoneyLoanEntry(String entryId) async {
@@ -1940,6 +1947,9 @@ class LocalRepository {
     }
     await (_db.delete(_db.moneyLoanEntries)..where((t) => t.id.equals(entryId)))
         .go();
+    _db.notifyUpdates(<TableUpdate>{
+      TableUpdate.onTable(_db.moneyLoans, kind: UpdateKind.update),
+    });
   }
 
   /// Explicit close — never auto-closes on payment.

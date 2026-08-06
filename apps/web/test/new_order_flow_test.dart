@@ -12,6 +12,7 @@ import 'package:asset_os/core/models/entities.dart';
 import 'package:asset_os/core/providers/app_providers.dart';
 import 'package:asset_os/core/repositories/local_repository.dart';
 import 'package:asset_os/core/theme/app_theme.dart';
+import 'package:asset_os/core/widgets/ui_primitives.dart';
 
 import 'support/test_harness.dart';
 
@@ -77,6 +78,7 @@ Future<void> _continueToSummary(WidgetTester tester) async {
 
 void main() {
   driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
+  ensureRentalDetailNavRegistered();
 
   testWidgets('Generate Order creates rental with two prefilled lines', (
     WidgetTester tester,
@@ -124,7 +126,7 @@ void main() {
 
     await tester.tap(find.widgetWithText(FilledButton, 'Generate Order'));
     await tester.pump();
-    await _settle(tester, ticks: 20);
+    await _settle(tester, ticks: 25);
 
     final List<Rental> rentals = await repo.listRentals();
     final Rental created = rentals.firstWhere(
@@ -139,7 +141,11 @@ void main() {
     expect(created.baseAmount, 210000);
     expect(created.totalAmount, 210000);
 
-    // Flush Drift stream-cancel timers after the flow route pops.
+    // Opens created order detail instead of bare pop.
+    expect(find.byType(RentalDetailScreen), findsOneWidget);
+    expect(find.textContaining(shortOrderId(created.id)), findsWidgets);
+
+    // Flush Drift stream-cancel timers after detail is torn down.
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(milliseconds: 1));
   });

@@ -12,6 +12,7 @@ import 'package:asset_os/core/providers/app_providers.dart';
 import 'package:asset_os/core/repositories/local_repository.dart';
 import 'package:asset_os/core/theme/app_theme.dart';
 import 'package:asset_os/features/loans/loan_create_screen.dart';
+import 'package:asset_os/features/loans/loan_detail_screen.dart';
 
 import 'support/test_harness.dart';
 
@@ -80,6 +81,9 @@ void main() {
     expect(loans, hasLength(1));
     expect(loans.first.customerId, customer.id);
     expect(loans.first.principalPaise, 500000);
+
+    expect(find.byType(LoanDetailScreen), findsOneWidget);
+    expect(find.text('Loan not found'), findsNothing);
 
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(milliseconds: 1));

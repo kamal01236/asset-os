@@ -11,6 +11,7 @@ import '../../core/providers/app_providers.dart';
 import '../../core/repositories/local_repository.dart';
 import '../../core/validation/text_rules.dart';
 import '../../core/widgets/ui_primitives.dart';
+import 'rental_detail_nav.dart';
 
 /// New Order flow: items first (with running total), then customer, then
 /// order summary (sample bill), then generate.
@@ -758,12 +759,17 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
             );
         nickname = null;
       }
-      await repository.createRental(
+      final String rentalId = await repository.createRental(
         customer: customer,
         lines: _buildLineInputs(catalog),
         nickname: nickname,
         depositTopUpPaise: _depositTopUpPaise(),
       );
+      if (!mounted) {
+        return;
+      }
+      // Parent rentals row insert already refreshes rentalsProvider; open detail.
+      pushReplacementRentalDetail(context, rentalId: rentalId);
     } catch (error) {
       if (mounted) {
         setState(() => _submitting = false);
@@ -790,9 +796,6 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
         );
       }
       return;
-    }
-    if (mounted) {
-      Navigator.of(context).pop();
     }
   }
 
