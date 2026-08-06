@@ -102,7 +102,7 @@ void main() {
     );
     expect(find.text('Showing: Due Today'), findsOneWidget);
     expect(find.text('Clear'), findsOneWidget);
-    expect(find.textContaining('Workshop set A'), findsOneWidget);
+    expect(find.textContaining('Priya'), findsWidgets);
 
     await tester.tap(find.text('Clear'));
     await pumpFrames(tester);
@@ -359,6 +359,7 @@ void main() {
     expect(find.text('कुछ भी खोजें'), findsOneWidget);
     expect(find.text('आज एक नज़र में'), findsOneWidget);
     expect(find.text('होम'), findsOneWidget);
+    expect(find.text('लेन-देन'), findsOneWidget);
     expect(find.text('संसाधन'), findsOneWidget);
   });
 

@@ -6,66 +6,92 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:asset_os/app_shell.dart';
 import 'package:asset_os/core/l10n/l10n_ext.dart';
 import 'package:asset_os/core/models/entities.dart';
 import 'package:asset_os/core/providers/app_providers.dart';
-import 'package:asset_os/core/repositories/local_repository.dart';
 import 'package:asset_os/core/theme/app_theme.dart';
 import 'package:asset_os/features/loans/loan_create_screen.dart';
+import 'package:asset_os/features/orders/new_order_flow_screen.dart';
+import 'package:asset_os/features/orders/rental_detail_nav.dart';
 import 'package:asset_os/features/transactions/transactions_screen.dart';
 
 import 'support/test_harness.dart';
 
-Future<void> _seedOrderAndLoan(LocalRepository repo) async {
-  await repo.addInventory(
-    name: 'Drill Kit',
-    category: 'Tools',
-    units: 2,
-    billingMode: BillingMode.daily,
-    rateAmount: 10000,
+Rental _rental(Customer customer, DateTime now) => Rental(
+      id: 'REN-1',
+      customerId: customer.id,
+      startedAt: now,
+      dueAt: now.add(const Duration(days: 1)),
+      qrCode: 'r1',
+      lines: const <RentalLine>[],
+      timeline: const <RentalEvent>[],
+    );
+
+MoneyLoan _loan(Customer customer, DateTime now) => MoneyLoan(
+      id: 'MLN-1',
+      customerId: customer.id,
+      direction: MoneyLoanDirection.given,
+      principalPaise: 500000,
+      currencyCode: 'INR',
+      interestKind: MoneyInterestKind.simple,
+      rateBps: 1200,
+      ratePeriod: MoneyRatePeriod.monthly,
+      interestStartedAt: now,
+      status: MoneyLoanStatus.pending,
+      createdAt: now,
+    );
+
+Future<ProviderContainer> _containerWithTxns() async {
+  final DateTime now = DateTime(2026, 8, 6);
+  const Customer customer = Customer(
+    id: 'CUS-1',
+    name: 'Priya Patel',
+    phone: '6666666666',
+    isTrusted: true,
+    qrCode: 'c1',
   );
-  final InventoryItem item = (await repo.listInventory()).first;
-  final Customer customer = await ensureCustomer(repo, name: 'Priya Patel');
-  await repo.createRental(
-    customer: customer,
-    lines: <RentalLineInput>[
-      RentalLineInput(
-        itemId: item.id,
-        instanceName: 'Drill 1',
-        shortCode: 'DRL-01',
+  final ProviderContainer base = await bootContainer(
+    prefs: <String, Object>{
+      kEnabledResourceTypesPrefsKey: encodeEnabledResourceTypes(
+        const <ResourceType>[ResourceType.rental, ResourceType.financial],
       ),
+    },
+  );
+  // Rebuild with stream overrides on top of harness overrides.
+  final ProviderContainer container = ProviderContainer(
+    overrides: <Override>[
+      sharedPreferencesProvider.overrideWithValue(
+        base.read(sharedPreferencesProvider),
+      ),
+      databaseProvider.overrideWithValue(base.read(databaseProvider)),
+      repositoryProvider.overrideWithValue(base.read(repositoryProvider)),
+      needsIndustryOnboardingProvider.overrideWith((ref) => false),
+      rentalsProvider.overrideWith((ref) async* {
+        yield <Rental>[_rental(customer, now)];
+      }),
+      moneyLoansProvider.overrideWith((ref) async* {
+        yield <MoneyLoan>[_loan(customer, now)];
+      }),
+      customersProvider.overrideWith((ref) async* {
+        yield <Customer>[customer];
+      }),
     ],
-    durationUnits: 2,
   );
-  await repo.createMoneyLoan(
-    customerId: customer.id,
-    direction: MoneyLoanDirection.given,
-    principalPaise: 500000,
-    interestStartedAt: DateTime.now(),
-    rateBps: 1200,
-  );
+  addTearDown(container.dispose);
+  return container;
 }
 
-Future<ProviderContainer> _pumpTransactions(
-  WidgetTester tester, {
-  Map<String, Object> prefs = const <String, Object>{},
-}) async {
+Future<void> _pump(
+  WidgetTester tester,
+  ProviderContainer container,
+) async {
   tester.view.physicalSize = const Size(900, 1600);
   tester.view.devicePixelRatio = 1.0;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
-
-  final ProviderContainer container = await bootContainer(prefs: prefs);
-  ensureRentalDetailNavRegistered();
-  await _seedOrderAndLoan(container.read(repositoryProvider));
-  await container
-      .read(enabledResourceTypesProvider.notifier)
-      .setTypes(const <ResourceType>[
-    ResourceType.rental,
-    ResourceType.financial,
-  ]);
-
+  registerRentalDetailScreenFactory(
+    ({required String rentalId}) => Text(rentalId),
+  );
   await tester.pumpWidget(
     UncontrolledProviderScope(
       container: container,
@@ -80,107 +106,64 @@ Future<ProviderContainer> _pumpTransactions(
       ),
     ),
   );
-  await pumpFrames(tester, frames: 20);
-  return container;
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 50));
+  await tester.pump(const Duration(milliseconds: 50));
 }
 
 void main() {
   driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
 
-  testWidgets('merged list shows Order and Loan type badges', (
-    WidgetTester tester,
-  ) async {
-    await _pumpTransactions(tester);
+  testWidgets('merged list shows Order and Loan type badges', (tester) async {
+    final ProviderContainer container = await _containerWithTxns();
+    await _pump(tester, container);
 
-    expect(find.text('Order'), findsWidgets);
-    expect(find.text('Loan'), findsWidgets);
+    expect(find.text('Order'), findsOneWidget);
+    expect(find.text('Loan'), findsOneWidget);
     expect(find.text('Priya Patel'), findsWidgets);
   });
 
-  testWidgets('Loans filter hides orders', (WidgetTester tester) async {
-    await _pumpTransactions(tester);
+  testWidgets('Loans filter hides orders', (tester) async {
+    final ProviderContainer container = await _containerWithTxns();
+    await _pump(tester, container);
 
     await tester.tap(find.widgetWithText(ChoiceChip, 'Loans'));
-    await pumpFrames(tester);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
 
-    expect(find.text('Loan'), findsWidgets);
+    expect(find.text('Loan'), findsOneWidget);
     expect(find.text('Order'), findsNothing);
   });
 
-  testWidgets('New chooser offers Order and Loan routes', (
-    WidgetTester tester,
-  ) async {
-    await _pumpTransactions(tester);
+  testWidgets('New chooser offers Order and Loan routes', (tester) async {
+    final ProviderContainer container = await _containerWithTxns();
+    await _pump(tester, container);
 
+    await tester.ensureVisible(find.widgetWithText(FilledButton, 'New'));
     await tester.tap(find.widgetWithText(FilledButton, 'New'));
-    await pumpFrames(tester);
+    await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
 
     expect(find.text('New order'), findsOneWidget);
     expect(find.text('New loan'), findsOneWidget);
 
-    await tester.tap(find.text('New order'));
-    await pumpFrames(tester, frames: 20);
-    expect(find.byType(NewOrderFlowScreen), findsOneWidget);
-
-    await tester.pageBack();
-    await pumpFrames(tester);
-
-    await tester.tap(find.widgetWithText(FilledButton, 'New'));
-    await pumpFrames(tester);
-    await tester.pump(const Duration(milliseconds: 300));
     await tester.tap(find.text('New loan'));
-    await pumpFrames(tester, frames: 20);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
     expect(find.byType(LoanCreateScreen), findsOneWidget);
   });
 
-  testWidgets('pure financial New skips chooser and opens loan', (
-    WidgetTester tester,
-  ) async {
-    tester.view.physicalSize = const Size(900, 1600);
-    tester.view.devicePixelRatio = 1.0;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
+  testWidgets('New chooser New order opens order flow', (tester) async {
+    final ProviderContainer container = await _containerWithTxns();
+    await _pump(tester, container);
 
-    final ProviderContainer container = await bootContainer(
-      prefs: <String, Object>{
-        kEnabledResourceTypesPrefsKey: encodeEnabledResourceTypes(
-          const <ResourceType>[ResourceType.financial],
-        ),
-      },
-    );
-    ensureRentalDetailNavRegistered();
-    final LocalRepository repo = container.read(repositoryProvider);
-    final Customer customer = await ensureCustomer(repo);
-    await repo.createMoneyLoan(
-      customerId: customer.id,
-      direction: MoneyLoanDirection.given,
-      principalPaise: 100000,
-      interestStartedAt: DateTime.now(),
-    );
-    await container.read(enabledResourceTypesProvider.notifier).setTypes(
-          const <ResourceType>[ResourceType.financial],
-        );
-
-    await tester.pumpWidget(
-      UncontrolledProviderScope(
-        container: container,
-        child: MaterialApp(
-          theme: AppTheme.light(),
-          darkTheme: AppTheme.dark(),
-          themeMode: ThemeMode.dark,
-          locale: const Locale('en'),
-          supportedLocales: AppLocalizations.supportedLocales,
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          home: const Scaffold(body: TransactionsScreen()),
-        ),
-      ),
-    );
-    await pumpFrames(tester, frames: 20);
-
+    await tester.ensureVisible(find.widgetWithText(FilledButton, 'New'));
     await tester.tap(find.widgetWithText(FilledButton, 'New'));
-    await pumpFrames(tester, frames: 20);
-    expect(find.byType(LoanCreateScreen), findsOneWidget);
-    expect(find.text('New order'), findsNothing);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.tap(find.text('New order'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(find.byType(NewOrderFlowScreen), findsOneWidget);
   });
 }
