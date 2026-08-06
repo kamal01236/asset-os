@@ -57,6 +57,51 @@ void main() {
         encodeHomeModules(kLibraryHomeModules),
       );
       expect(prefs.getBool(kHomeModulesCustomizedKey), isFalse);
+      expect(
+        prefs.getString(kEnabledResourceTypesPrefsKey),
+        encodeEnabledResourceTypes(library.enabledResourceTypes),
+      );
+      expect(
+        repo.enabledResourceTypes(),
+        <ResourceType>[ResourceType.rental, ResourceType.loan],
+      );
+    });
+
+    test('completeIndustryOnboarding persists camera rental-only types', () async {
+      final LocalRepository repo = await bootRepo(seedDemo: false);
+      final IndustryTemplate camera = industryTemplateById('camera')!;
+
+      await repo.completeIndustryOnboarding(camera);
+
+      expect(
+        repo.enabledResourceTypes(),
+        <ResourceType>[ResourceType.rental],
+      );
+      expect(
+        fulfillmentOptionsForEnabledTypes(repo.enabledResourceTypes()),
+        <LineFulfillment>[LineFulfillment.rent],
+      );
+    });
+
+    test('unionEnabledResourceTypes does not shrink existing set', () async {
+      final LocalRepository repo = await bootRepo(seedDemo: false);
+      await repo.setEnabledResourceTypes(const <ResourceType>[
+        ResourceType.rental,
+        ResourceType.sale,
+      ]);
+
+      final List<ResourceType> merged = await repo.unionEnabledResourceTypes(
+        const <ResourceType>[ResourceType.job, ResourceType.rental],
+      );
+
+      expect(
+        merged,
+        <ResourceType>[
+          ResourceType.rental,
+          ResourceType.sale,
+          ResourceType.job,
+        ],
+      );
     });
 
     test('second launch skips onboarding after template chosen', () async {

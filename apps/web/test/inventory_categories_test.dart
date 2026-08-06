@@ -9,7 +9,7 @@ import 'package:asset_os/core/models/entities.dart';
 InventoryItem _item({
   required String id,
   required String category,
-  InventoryItemKind defaultItemKind = InventoryItemKind.rental,
+  ResourceType defaultItemKind = ResourceType.rental,
   String? name,
 }) {
   return InventoryItem(
@@ -135,31 +135,31 @@ void main() {
   });
 
   group('defaultKindForCategory', () {
-    test('General maps to general kind', () {
+    test('General maps to sale kind', () {
       expect(
         defaultKindForCategory(kCategoryGeneral),
-        InventoryItemKind.general,
+        ResourceType.sale,
       );
-      expect(defaultKindForCategory('Camera'), InventoryItemKind.rental);
+      expect(defaultKindForCategory('Camera'), ResourceType.rental);
     });
   });
 
   group('sortInventoryForOrderPicker', () {
-    test('puts general items first then sorts by name', () {
+    test('puts sale items first then sorts by name', () {
       final List<InventoryItem> sorted = sortInventoryForOrderPicker(<InventoryItem>[
         _item(id: '1', category: 'Camera', name: 'Zoom'),
         _item(
           id: '2',
           category: kCategoryGeneral,
           name: 'Cable',
-          defaultItemKind: InventoryItemKind.general,
+          defaultItemKind: ResourceType.sale,
         ),
         _item(id: '3', category: 'Tools', name: 'Adapter'),
         _item(
           id: '4',
           category: kCategoryGeneral,
           name: 'Battery',
-          defaultItemKind: InventoryItemKind.general,
+          defaultItemKind: ResourceType.sale,
         ),
       ]);
       expect(

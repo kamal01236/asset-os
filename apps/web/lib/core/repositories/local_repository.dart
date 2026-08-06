@@ -94,6 +94,7 @@ class LocalRepository {
         await _markMigrationComplete();
       }
       await ensureUnknownCustomer();
+      await ensureEnabledResourceTypes();
       return;
     }
 
@@ -104,6 +105,7 @@ class LocalRepository {
       await _markMigrationComplete();
       await _preferences.remove(snapshotKey);
       await ensureUnknownCustomer();
+      await ensureEnabledResourceTypes();
       return;
     }
 
@@ -112,6 +114,7 @@ class LocalRepository {
     }
     await _markMigrationComplete();
     await ensureUnknownCustomer();
+    await ensureEnabledResourceTypes();
   }
 
   /// Chosen industry template id from first-load onboarding, if any.
@@ -145,6 +148,7 @@ class LocalRepository {
   }) async {
     await importTemplateInventory(template.items, locale: locale);
     await _setHomeModules(template.defaultHomeModules);
+    await setEnabledResourceTypes(template.enabledResourceTypes);
     await _db.into(_db.appMeta).insertOnConflictUpdate(
       AppMetaCompanion.insert(
         key: industryTemplateMetaKey,
@@ -159,6 +163,70 @@ class LocalRepository {
       encodeHomeModules(modules),
     );
     await _preferences.setBool(kHomeModulesCustomizedKey, false);
+  }
+
+  /// Persisted enabled resource types (comma-separated names).
+  List<ResourceType> enabledResourceTypes() {
+    return resolveEnabledResourceTypes(
+      prefsRaw: _preferences.getString(kEnabledResourceTypesPrefsKey),
+    );
+  }
+
+  /// Replace enabled types (onboarding / full template apply).
+  Future<void> setEnabledResourceTypes(List<ResourceType> types) async {
+    await _preferences.setString(
+      kEnabledResourceTypesPrefsKey,
+      encodeEnabledResourceTypes(types),
+    );
+  }
+
+  /// Union [extra] into the enabled set without shrinking existing types.
+  /// Union [extra] into the enabled set without shrinking existing types.
+  Future<List<ResourceType>> unionEnabledResourceTypes(
+    Iterable<ResourceType> extra,
+  ) async {
+    final String? raw =
+        _preferences.getString(kEnabledResourceTypesPrefsKey);
+    final List<ResourceType> current;
+    if (raw != null && raw.trim().isNotEmpty) {
+      current = parseEnabledResourceTypes(raw);
+    } else {
+      final List<InventoryItemRow> rows =
+          await _db.select(_db.inventoryItems).get();
+      current = resolveEnabledResourceTypes(
+        prefsRaw: null,
+        inventoryKinds: rows.map(
+          (InventoryItemRow row) => ResourceType.parse(row.defaultItemKind),
+        ),
+      );
+    }
+    final List<ResourceType> merged = resourceTypesFromItems(
+      <ResourceType>[...current, ...extra],
+    );
+    await setEnabledResourceTypes(merged);
+    return merged;
+  }
+
+  /// Seed prefs from inventory when missing (legacy DBs).
+  ///
+  /// Uses a one-shot Drift [get] (not [listInventory]/[watchInventory].first)
+  /// so it is safe during [initialize] before the widget binding pumps frames.
+  Future<List<ResourceType>> ensureEnabledResourceTypes() async {
+    final String? raw =
+        _preferences.getString(kEnabledResourceTypesPrefsKey);
+    if (raw != null && raw.trim().isNotEmpty) {
+      return parseEnabledResourceTypes(raw);
+    }
+    final List<InventoryItemRow> rows =
+        await _db.select(_db.inventoryItems).get();
+    final List<ResourceType> resolved = resolveEnabledResourceTypes(
+      prefsRaw: null,
+      inventoryKinds: rows.map(
+        (InventoryItemRow row) => ResourceType.parse(row.defaultItemKind),
+      ),
+    );
+    await setEnabledResourceTypes(resolved);
+    return resolved;
   }
 
   /// Inserts the fixed Unknown sentinel if missing; migrates legacy CUS-SELF.
@@ -1384,7 +1452,7 @@ class LocalRepository {
     String currencyCode = 'INR',
     bool dueDateOptional = false,
     bool requiresUnitIdentity = false,
-    InventoryItemKind defaultItemKind = InventoryItemKind.rental,
+    ResourceType defaultItemKind = ResourceType.rental,
   }) async {
     final String trimmedName = name.trim();
     final String trimmedCategory = category.trim();
@@ -1500,7 +1568,7 @@ class LocalRepository {
     String? currencyCode,
     bool? dueDateOptional,
     bool? requiresUnitIdentity,
-    InventoryItemKind? defaultItemKind,
+    ResourceType? defaultItemKind,
   }) async {
     final String trimmedName = name.trim();
     final String trimmedCategory = category.trim();
@@ -1930,7 +1998,7 @@ class LocalRepository {
       currencyCode: row.currencyCode,
       dueDateOptional: row.dueDateOptional,
       requiresUnitIdentity: row.requiresUnitIdentity,
-      defaultItemKind: InventoryItemKind.parse(row.defaultItemKind),
+      defaultItemKind: ResourceType.parse(row.defaultItemKind),
     );
   }
 

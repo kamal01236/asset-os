@@ -184,7 +184,7 @@ void main() {
     expect(find.text('AI suggestions (beta)'), findsOneWidget);
   });
 
-  testWidgets('primary tabs show seeded rentals, inventory, and customers', (
+  testWidgets('primary tabs show seeded rentals, resources, and customers', (
     WidgetTester tester,
   ) async {
     await _pumpAppShell(tester);
@@ -194,7 +194,7 @@ void main() {
     expect(find.text('#3001'), findsOneWidget);
     expect(find.textContaining('Drill Kit'), findsOneWidget);
 
-    await tester.tap(find.text('Inventory'));
+    await tester.tap(find.text('Resources'));
     await pumpFrames(tester);
     expect(find.text('DSLR'), findsOneWidget);
     expect(find.text('Tripod'), findsOneWidget);
@@ -289,7 +289,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
 
-    expect(find.text('Find customer, order, or inventory'), findsOneWidget);
+    expect(find.text('Find customer, order, or resource'), findsOneWidget);
     expect(find.widgetWithText(AppBar, 'Search'), findsNothing);
   });
 
@@ -372,6 +372,7 @@ void main() {
     expect(find.text('कुछ भी खोजें'), findsOneWidget);
     expect(find.text('आज एक नज़र में'), findsOneWidget);
     expect(find.text('होम'), findsOneWidget);
+    expect(find.text('संसाधन'), findsOneWidget);
   });
 
   test('localeProvider persists Hindi preference', () async {

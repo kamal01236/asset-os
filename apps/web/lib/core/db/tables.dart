@@ -37,7 +37,7 @@ class InventoryItems extends Table {
   /// When true, each issued unit needs instance name + short code (parent catalog).
   BoolColumn get requiresUnitIdentity =>
       boolean().withDefault(const Constant(false))();
-  /// `rental` | `general` — catalog default for New Order Rent/Sell.
+  /// Full [ResourceType] set (`rental` | `sale` | `service` | …). Legacy `general` → `sale`.
   TextColumn get defaultItemKind =>
       text().withDefault(const Constant('rental'))();
 

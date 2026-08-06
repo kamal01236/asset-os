@@ -11,27 +11,159 @@ import 'package:asset_os/core/templates/industry_templates.dart';
 import 'support/test_harness.dart';
 
 void main() {
+  group('resourceTypesFromItems', () {
+    test('unions distinct kinds in first-seen order', () {
+      expect(
+        resourceTypesFromItems(const <ResourceType>[
+          ResourceType.service,
+          ResourceType.rental,
+          ResourceType.service,
+          ResourceType.job,
+        ]),
+        <ResourceType>[
+          ResourceType.service,
+          ResourceType.rental,
+          ResourceType.job,
+        ],
+      );
+    });
+
+    test('defaults from template items when override omitted', () {
+      const IndustryTemplate pack = IndustryTemplate(
+        id: 'test',
+        name: 'Test',
+        description: 'Test',
+        items: <TemplateInventoryItem>[
+          TemplateInventoryItem(
+            name: 'A',
+            category: 'X',
+            defaultUnits: 1,
+            defaultItemKind: ResourceType.membership,
+          ),
+          TemplateInventoryItem(
+            name: 'B',
+            category: 'X',
+            defaultUnits: 1,
+            defaultItemKind: ResourceType.sale,
+          ),
+        ],
+      );
+      expect(
+        pack.enabledResourceTypes,
+        <ResourceType>[ResourceType.membership, ResourceType.sale],
+      );
+    });
+  });
+
+  group('fulfillmentOptionsForEnabledTypes', () {
+    test('rental-only hides Sell and Job', () {
+      expect(
+        fulfillmentOptionsForEnabledTypes(const <ResourceType>[
+          ResourceType.rental,
+        ]),
+        <LineFulfillment>[LineFulfillment.rent],
+      );
+    });
+
+    test('sale enables Sell; job/service enable Job', () {
+      expect(
+        fulfillmentOptionsForEnabledTypes(const <ResourceType>[
+          ResourceType.rental,
+          ResourceType.sale,
+        ]),
+        <LineFulfillment>[LineFulfillment.rent, LineFulfillment.sell],
+      );
+      expect(
+        fulfillmentOptionsForEnabledTypes(const <ResourceType>[
+          ResourceType.service,
+        ]),
+        <LineFulfillment>[LineFulfillment.job],
+      );
+    });
+
+    test('keeps current Sell visible even when sale not enabled', () {
+      expect(
+        fulfillmentOptionsForEnabledTypes(
+          const <ResourceType>[ResourceType.rental],
+          current: LineFulfillment.sell,
+        ),
+        <LineFulfillment>[LineFulfillment.rent, LineFulfillment.sell],
+      );
+    });
+  });
+
   group('industryTemplateById', () {
-    test('finds parlour, boutique, and gym packs', () {
+    test('finds parlour, boutique, and gym packs with presets', () {
       final IndustryTemplate? parlour = industryTemplateById('parlour');
       final IndustryTemplate? boutique = industryTemplateById('boutique');
       final IndustryTemplate? gym = industryTemplateById('gym');
 
       expect(parlour, isNotNull);
       expect(parlour!.name, 'Beauty Parlour');
-      expect(parlour.defaultHomeModules, kLibraryHomeModules);
+      expect(parlour.defaultHomeModules, kJobHomeModules);
+      expect(
+        parlour.enabledResourceTypes,
+        <ResourceType>[
+          ResourceType.service,
+          ResourceType.job,
+          ResourceType.rental,
+        ],
+      );
 
       expect(boutique, isNotNull);
       expect(boutique!.name, 'Boutique');
-      expect(boutique.defaultHomeModules, kLibraryHomeModules);
+      expect(boutique.defaultHomeModules, kJobHomeModules);
+      expect(
+        boutique.enabledResourceTypes,
+        containsAll(<ResourceType>[
+          ResourceType.rental,
+          ResourceType.sale,
+          ResourceType.job,
+        ]),
+      );
 
       expect(gym, isNotNull);
       expect(gym!.name, 'Gym Membership');
-      expect(gym.defaultHomeModules, kLibraryHomeModules);
+      expect(gym.defaultHomeModules, kMembershipHomeModules);
+      expect(
+        gym.enabledResourceTypes,
+        containsAll(<ResourceType>[
+          ResourceType.membership,
+          ResourceType.sale,
+          ResourceType.rental,
+        ]),
+      );
 
       expect(
         kIndustryTemplates.map((IndustryTemplate t) => t.id),
         containsAll(<String>['parlour', 'boutique', 'gym']),
+      );
+    });
+
+    test('pure rental packs use rental home modules', () {
+      for (final String id in <String>[
+        'camera',
+        'farm',
+        'event',
+        'construction',
+        'office',
+      ]) {
+        final IndustryTemplate pack = industryTemplateById(id)!;
+        expect(pack.defaultHomeModules, kRentalHomeModules, reason: id);
+        expect(
+          pack.enabledResourceTypes,
+          <ResourceType>[ResourceType.rental],
+          reason: id,
+        );
+      }
+    });
+
+    test('library enables rental and loan with library home modules', () {
+      final IndustryTemplate library = industryTemplateById('library')!;
+      expect(library.defaultHomeModules, kLibraryHomeModules);
+      expect(
+        library.enabledResourceTypes,
+        <ResourceType>[ResourceType.rental, ResourceType.loan],
       );
     });
 
@@ -52,7 +184,7 @@ void main() {
             defaultUnits: 1,
             billingMode: BillingMode.fixed,
             rateAmount: 30000,
-            defaultItemKind: InventoryItemKind.general,
+            defaultItemKind: ResourceType.sale,
             requiresUnitIdentity: false,
           ),
           TemplateInventoryItem(
@@ -86,13 +218,13 @@ void main() {
       final InventoryItem locker =
           inventory.firstWhere((InventoryItem i) => i.name == 'Locker');
 
-      expect(haircut.defaultItemKind, InventoryItemKind.general);
+      expect(haircut.defaultItemKind, ResourceType.sale);
       expect(haircut.requiresUnitIdentity, isFalse);
       expect(haircut.dueDateOptional, isFalse);
       expect(haircut.billingMode, BillingMode.fixed);
       expect(haircut.rateAmount, 30000);
 
-      expect(lehenga.defaultItemKind, InventoryItemKind.rental);
+      expect(lehenga.defaultItemKind, ResourceType.rental);
       expect(lehenga.requiresUnitIdentity, isTrue);
 
       expect(locker.requiresUnitIdentity, isFalse);
@@ -100,7 +232,7 @@ void main() {
       expect(locker.billingMode, BillingMode.monthly);
     });
 
-    test('parlour pack seeds job services and rental kits', () async {
+    test('parlour pack seeds service treatments and rental kits', () async {
       final LocalRepository repo = await bootRepo();
       final IndustryTemplate parlour = industryTemplateById('parlour')!;
 
@@ -114,10 +246,25 @@ void main() {
       final InventoryItem steamer =
           inventory.firstWhere((InventoryItem i) => i.name == 'Steamer Kit');
 
-      expect(facial.defaultItemKind, InventoryItemKind.job);
+      expect(facial.defaultItemKind, ResourceType.service);
       expect(facial.requiresUnitIdentity, isFalse);
-      expect(steamer.defaultItemKind, InventoryItemKind.rental);
+      expect(steamer.defaultItemKind, ResourceType.rental);
       expect(steamer.requiresUnitIdentity, isFalse);
+    });
+
+    test('gym pack seeds membership and sale day pass', () async {
+      final LocalRepository repo = await bootRepo();
+      final IndustryTemplate gym = industryTemplateById('gym')!;
+
+      await repo.importTemplateInventory(gym.items);
+      final List<InventoryItem> inventory = await repo.listInventory();
+      final InventoryItem monthly = inventory
+          .firstWhere((InventoryItem i) => i.name == 'Monthly Membership');
+      final InventoryItem dayPass =
+          inventory.firstWhere((InventoryItem i) => i.name == 'Day Pass');
+
+      expect(monthly.defaultItemKind, ResourceType.membership);
+      expect(dayPass.defaultItemKind, ResourceType.sale);
     });
   });
 }

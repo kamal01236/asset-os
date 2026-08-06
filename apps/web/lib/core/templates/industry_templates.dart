@@ -18,7 +18,7 @@ class TemplateInventoryItem {
     this.rateAmount = 0,
     this.lateFeePerDay = 0,
     this.currencyCode = 'INR',
-    this.defaultItemKind = InventoryItemKind.rental,
+    this.defaultItemKind = ResourceType.rental,
     this.requiresUnitIdentity = false,
     this.dueDateOptional = false,
   });
@@ -34,7 +34,7 @@ class TemplateInventoryItem {
   final int rateAmount;
   final int lateFeePerDay;
   final String currencyCode;
-  final InventoryItemKind defaultItemKind;
+  final ResourceType defaultItemKind;
   final bool requiresUnitIdentity;
   final bool dueDateOptional;
 
@@ -67,6 +67,129 @@ class TemplateInventoryItem {
   }
 }
 
+/// Prefs key for comma-separated [ResourceType.name] values.
+const String kEnabledResourceTypesPrefsKey = 'asset_os_enabled_resource_types';
+
+/// Fallback when prefs are empty and inventory has no typed kinds yet.
+const List<ResourceType> kFallbackEnabledResourceTypes = <ResourceType>[
+  ResourceType.rental,
+  ResourceType.sale,
+  ResourceType.job,
+];
+
+/// Distinct [ResourceType]s from template / inventory item kinds (stable order).
+List<ResourceType> resourceTypesFromItems(
+  Iterable<ResourceType> kinds,
+) {
+  final Set<ResourceType> seen = <ResourceType>{};
+  final List<ResourceType> ordered = <ResourceType>[];
+  for (final ResourceType kind in kinds) {
+    if (seen.add(kind)) {
+      ordered.add(kind);
+    }
+  }
+  return ordered;
+}
+
+List<ResourceType> resourceTypesFromTemplateItems(
+  Iterable<TemplateInventoryItem> items,
+) {
+  return resourceTypesFromItems(
+    items.map((TemplateInventoryItem i) => i.defaultItemKind),
+  );
+}
+
+List<ResourceType> parseEnabledResourceTypes(String? raw) {
+  if (raw == null || raw.trim().isEmpty) {
+    return List<ResourceType>.from(kFallbackEnabledResourceTypes);
+  }
+  final List<ResourceType> parsed = <ResourceType>[];
+  final Set<ResourceType> seen = <ResourceType>{};
+  for (final String part in raw.split(',')) {
+    final String id = part.trim();
+    if (id.isEmpty) {
+      continue;
+    }
+    final ResourceType type = ResourceType.parse(id);
+    // Reject unknown tokens that parse() maps to rental by default when the
+    // raw string was not a known enum name (except explicit "rental").
+    final bool known = ResourceType.values.any((ResourceType t) => t.name == id) ||
+        id == 'general';
+    if (!known) {
+      continue;
+    }
+    if (seen.add(type)) {
+      parsed.add(type);
+    }
+  }
+  return parsed.isEmpty
+      ? List<ResourceType>.from(kFallbackEnabledResourceTypes)
+      : parsed;
+}
+
+String encodeEnabledResourceTypes(Iterable<ResourceType> types) {
+  final Set<ResourceType> seen = <ResourceType>{};
+  final List<ResourceType> ordered = <ResourceType>[];
+  for (final ResourceType type in types) {
+    if (seen.add(type)) {
+      ordered.add(type);
+    }
+  }
+  return ordered.map((ResourceType t) => t.name).join(',');
+}
+
+/// Resolve enabled types: prefs → inventory kinds → fallback.
+List<ResourceType> resolveEnabledResourceTypes({
+  required String? prefsRaw,
+  Iterable<ResourceType> inventoryKinds = const <ResourceType>[],
+}) {
+  if (prefsRaw != null && prefsRaw.trim().isNotEmpty) {
+    return parseEnabledResourceTypes(prefsRaw);
+  }
+  final List<ResourceType> fromInventory =
+      resourceTypesFromItems(inventoryKinds);
+  if (fromInventory.isNotEmpty) {
+    return fromInventory;
+  }
+  return List<ResourceType>.from(kFallbackEnabledResourceTypes);
+}
+
+/// New Order More-options fulfillment segments for the enabled type set.
+///
+/// [current] keeps Sell/Job visible when already selected on the line even if
+/// the type is not in the enabled set. Catalog items are never hidden by type.
+List<LineFulfillment> fulfillmentOptionsForEnabledTypes(
+  Iterable<ResourceType> enabled, {
+  LineFulfillment? current,
+}) {
+  final Set<ResourceType> set = enabled.toSet();
+  final bool showSell =
+      set.contains(ResourceType.sale) || current == LineFulfillment.sell;
+  final bool showJob = set.contains(ResourceType.job) ||
+      set.contains(ResourceType.service) ||
+      current == LineFulfillment.job;
+  final bool rentLike = set.contains(ResourceType.rental) ||
+      set.contains(ResourceType.loan) ||
+      set.contains(ResourceType.subscription) ||
+      set.contains(ResourceType.membership) ||
+      set.contains(ResourceType.financial) ||
+      set.contains(ResourceType.custom) ||
+      current == LineFulfillment.rent;
+  final bool showRent = rentLike || (!showSell && !showJob);
+
+  final List<LineFulfillment> options = <LineFulfillment>[];
+  if (showRent) {
+    options.add(LineFulfillment.rent);
+  }
+  if (showSell) {
+    options.add(LineFulfillment.sell);
+  }
+  if (showJob) {
+    options.add(LineFulfillment.job);
+  }
+  return options;
+}
+
 class IndustryTemplate {
   const IndustryTemplate({
     required this.id,
@@ -76,6 +199,7 @@ class IndustryTemplate {
     this.nameHi = '',
     this.descriptionHi = '',
     this.defaultHomeModules = kDefaultHomeModules,
+    this.enabledResourceTypesOverride,
   });
 
   final String id;
@@ -87,6 +211,14 @@ class IndustryTemplate {
 
   /// Home layout defaults applied when the user accepts the template layout.
   final List<HomeModuleId> defaultHomeModules;
+
+  /// Explicit enabled types; when null, derived from [items].
+  final List<ResourceType>? enabledResourceTypesOverride;
+
+  /// Resource types this pack enables for New Order fulfillment chrome.
+  /// Defaults to the union of [items] `.defaultItemKind` when override omitted.
+  List<ResourceType> get enabledResourceTypes =>
+      enabledResourceTypesOverride ?? resourceTypesFromTemplateItems(items);
 
   String localizedName(Locale locale) =>
       _isHindi(locale) && nameHi.isNotEmpty ? nameHi : name;
@@ -103,6 +235,10 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
     description: 'Books and study materials for lending counters.',
     descriptionHi: 'उधार काउंटर के लिए किताबें और अध्ययन सामग्री।',
     defaultHomeModules: kLibraryHomeModules,
+    enabledResourceTypesOverride: <ResourceType>[
+      ResourceType.rental,
+      ResourceType.loan,
+    ],
     items: <TemplateInventoryItem>[
       TemplateInventoryItem(
         name: 'Novel',
@@ -158,6 +294,8 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
     nameHi: 'कैमरा किराया',
     description: 'Photography gear for shoot-day rentals.',
     descriptionHi: 'शूट के दिन किराए के लिए फोटोग्राफी गियर।',
+    defaultHomeModules: kRentalHomeModules,
+    enabledResourceTypesOverride: <ResourceType>[ResourceType.rental],
     items: <TemplateInventoryItem>[
       TemplateInventoryItem(
         name: 'DSLR',
@@ -213,6 +351,8 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
     nameHi: 'कृषि उपकरण',
     description: 'Field machinery and irrigation gear.',
     descriptionHi: 'खेत की मशीनरी और सिंचाई का सामान।',
+    defaultHomeModules: kRentalHomeModules,
+    enabledResourceTypesOverride: <ResourceType>[ResourceType.rental],
     items: <TemplateInventoryItem>[
       TemplateInventoryItem(
         name: 'Tractor',
@@ -259,6 +399,8 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
     nameHi: 'इवेंट किराया',
     description: 'Seating, staging, and AV for events.',
     descriptionHi: 'इवेंट के लिए बैठक, स्टेजिंग और AV।',
+    defaultHomeModules: kRentalHomeModules,
+    enabledResourceTypesOverride: <ResourceType>[ResourceType.rental],
     items: <TemplateInventoryItem>[
       TemplateInventoryItem(
         name: 'Chair',
@@ -313,6 +455,8 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
     nameHi: 'निर्माण / औजार',
     description: 'Jobsite tools and safety kits.',
     descriptionHi: 'साइट के औजार और सुरक्षा किट।',
+    defaultHomeModules: kRentalHomeModules,
+    enabledResourceTypesOverride: <ResourceType>[ResourceType.rental],
     items: <TemplateInventoryItem>[
       TemplateInventoryItem(
         name: 'Drill Kit',
@@ -359,6 +503,8 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
     nameHi: 'ऑफिस संपत्ति',
     description: 'Shared office hardware and access gear.',
     descriptionHi: 'साझा ऑफिस हार्डवेयर और एक्सेस गियर।',
+    defaultHomeModules: kRentalHomeModules,
+    enabledResourceTypesOverride: <ResourceType>[ResourceType.rental],
     items: <TemplateInventoryItem>[
       TemplateInventoryItem(
         name: 'Laptop',
@@ -405,7 +551,12 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
     nameHi: 'ब्यूटी पार्लर',
     description: 'Service packages plus chair and kit rentals.',
     descriptionHi: 'सेवा पैकेज तथा कुर्सी और किट किराया।',
-    defaultHomeModules: kLibraryHomeModules,
+    defaultHomeModules: kJobHomeModules,
+    enabledResourceTypesOverride: <ResourceType>[
+      ResourceType.service,
+      ResourceType.job,
+      ResourceType.rental,
+    ],
     items: <TemplateInventoryItem>[
       TemplateInventoryItem(
         name: 'Haircut',
@@ -415,7 +566,7 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
         defaultUnits: 1,
         billingMode: BillingMode.fixed,
         rateAmount: 30000, // ₹300
-        defaultItemKind: InventoryItemKind.job,
+        defaultItemKind: ResourceType.service,
         requiresUnitIdentity: false,
       ),
       TemplateInventoryItem(
@@ -426,7 +577,7 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
         defaultUnits: 1,
         billingMode: BillingMode.fixed,
         rateAmount: 80000, // ₹800
-        defaultItemKind: InventoryItemKind.job,
+        defaultItemKind: ResourceType.service,
         requiresUnitIdentity: false,
       ),
       TemplateInventoryItem(
@@ -437,7 +588,7 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
         defaultUnits: 1,
         billingMode: BillingMode.fixed,
         rateAmount: 40000, // ₹400
-        defaultItemKind: InventoryItemKind.job,
+        defaultItemKind: ResourceType.service,
         requiresUnitIdentity: false,
       ),
       TemplateInventoryItem(
@@ -448,7 +599,7 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
         defaultUnits: 1,
         billingMode: BillingMode.fixed,
         rateAmount: 1500000, // ₹15,000
-        defaultItemKind: InventoryItemKind.job,
+        defaultItemKind: ResourceType.service,
         requiresUnitIdentity: false,
       ),
       TemplateInventoryItem(
@@ -478,7 +629,12 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
     nameHi: 'बुटीक',
     description: 'Garment and accessory rental for occasions.',
     descriptionHi: 'अवसरों के लिए कपड़े और एक्सेसरी किराया।',
-    defaultHomeModules: kLibraryHomeModules,
+    defaultHomeModules: kJobHomeModules,
+    enabledResourceTypesOverride: <ResourceType>[
+      ResourceType.rental,
+      ResourceType.sale,
+      ResourceType.job,
+    ],
     items: <TemplateInventoryItem>[
       TemplateInventoryItem(
         name: 'Lehenga',
@@ -541,7 +697,12 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
     nameHi: 'जिम सदस्यता',
     description: 'Membership fee products and locker rentals.',
     descriptionHi: 'सदस्यता शुल्क उत्पाद और लॉकर किराया।',
-    defaultHomeModules: kLibraryHomeModules,
+    defaultHomeModules: kMembershipHomeModules,
+    enabledResourceTypesOverride: <ResourceType>[
+      ResourceType.membership,
+      ResourceType.sale,
+      ResourceType.rental,
+    ],
     items: <TemplateInventoryItem>[
       TemplateInventoryItem(
         name: 'Monthly Membership',
@@ -551,7 +712,7 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
         defaultUnits: 50,
         billingMode: BillingMode.monthly,
         rateAmount: 150000, // ₹1,500/month
-        defaultItemKind: InventoryItemKind.general,
+        defaultItemKind: ResourceType.membership,
         requiresUnitIdentity: false,
       ),
       TemplateInventoryItem(
@@ -562,7 +723,7 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
         defaultUnits: 30,
         billingMode: BillingMode.fixed,
         rateAmount: 400000, // ₹4,000
-        defaultItemKind: InventoryItemKind.general,
+        defaultItemKind: ResourceType.membership,
         requiresUnitIdentity: false,
       ),
       TemplateInventoryItem(
@@ -573,7 +734,7 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
         defaultUnits: 20,
         billingMode: BillingMode.fixed,
         rateAmount: 1200000, // ₹12,000
-        defaultItemKind: InventoryItemKind.general,
+        defaultItemKind: ResourceType.membership,
         requiresUnitIdentity: false,
       ),
       TemplateInventoryItem(
@@ -584,7 +745,7 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
         defaultUnits: 100,
         billingMode: BillingMode.fixed,
         rateAmount: 30000, // ₹300
-        defaultItemKind: InventoryItemKind.general,
+        defaultItemKind: ResourceType.sale,
         requiresUnitIdentity: false,
       ),
       TemplateInventoryItem(

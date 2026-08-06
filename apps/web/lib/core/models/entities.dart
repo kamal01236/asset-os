@@ -4,22 +4,62 @@ import '../pricing/rental_pricing.dart';
 
 export '../pricing/rental_pricing.dart' show BillingMode;
 
-/// Catalog default for New Order Rent/Sell/Job (`rental` | `general` | `job`).
-enum InventoryItemKind {
+/// Catalog resource type stored in `default_item_kind`.
+///
+/// Legacy `general` maps to [sale]. Unknown values fall back to [rental].
+enum ResourceType {
   rental,
-  general,
-  job;
+  sale,
+  service,
+  job,
+  subscription,
+  membership,
+  loan,
+  financial,
+  custom;
 
   String get storageValue => name;
 
-  static InventoryItemKind parse(String? raw) {
+  static ResourceType parse(String? raw) {
     switch (raw) {
       case 'general':
-        return InventoryItemKind.general;
+      case 'sale':
+        return ResourceType.sale;
+      case 'service':
+        return ResourceType.service;
       case 'job':
-        return InventoryItemKind.job;
+        return ResourceType.job;
+      case 'subscription':
+        return ResourceType.subscription;
+      case 'membership':
+        return ResourceType.membership;
+      case 'loan':
+        return ResourceType.loan;
+      case 'financial':
+        return ResourceType.financial;
+      case 'custom':
+        return ResourceType.custom;
+      case 'rental':
       default:
-        return InventoryItemKind.rental;
+        return ResourceType.rental;
+    }
+  }
+
+  /// Default New Order line fulfillment for this catalog type.
+  LineFulfillment get defaultFulfillment {
+    switch (this) {
+      case ResourceType.sale:
+        return LineFulfillment.sell;
+      case ResourceType.job:
+      case ResourceType.service:
+        return LineFulfillment.job;
+      case ResourceType.rental:
+      case ResourceType.loan:
+      case ResourceType.subscription:
+      case ResourceType.membership:
+      case ResourceType.financial:
+      case ResourceType.custom:
+        return LineFulfillment.rent;
     }
   }
 }
@@ -168,7 +208,7 @@ class InventoryItem {
     this.currencyCode = 'INR',
     this.dueDateOptional = false,
     this.requiresUnitIdentity = true,
-    this.defaultItemKind = InventoryItemKind.rental,
+    this.defaultItemKind = ResourceType.rental,
   });
 
   final String id;
@@ -186,12 +226,12 @@ class InventoryItem {
   final bool dueDateOptional;
   /// Parent catalog (e.g. Novels): each unit needs name/id at issue.
   final bool requiresUnitIdentity;
-  /// Default Rent/Sell/Job mode when adding this item to an order.
-  final InventoryItemKind defaultItemKind;
+  /// Catalog [ResourceType] (column still named `defaultItemKind`).
+  final ResourceType defaultItemKind;
 
-  bool get isGeneral => defaultItemKind == InventoryItemKind.general;
+  bool get isSale => defaultItemKind == ResourceType.sale;
 
-  bool get isJob => defaultItemKind == InventoryItemKind.job;
+  bool get isJob => defaultItemKind == ResourceType.job;
 
   InventoryItem copyWith({
     int? availableUnits,
@@ -204,7 +244,7 @@ class InventoryItem {
     String? currencyCode,
     bool? dueDateOptional,
     bool? requiresUnitIdentity,
-    InventoryItemKind? defaultItemKind,
+    ResourceType? defaultItemKind,
   }) => InventoryItem(
     id: id,
     name: name,
@@ -256,7 +296,7 @@ class InventoryItem {
     currencyCode: (json['currencyCode'] as String?) ?? 'INR',
     dueDateOptional: (json['dueDateOptional'] as bool?) ?? false,
     requiresUnitIdentity: (json['requiresUnitIdentity'] as bool?) ?? true,
-    defaultItemKind: InventoryItemKind.parse(json['defaultItemKind'] as String?),
+    defaultItemKind: ResourceType.parse(json['defaultItemKind'] as String?),
   );
 }
 

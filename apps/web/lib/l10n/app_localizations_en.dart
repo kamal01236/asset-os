@@ -15,7 +15,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navRentals => 'Orders';
 
   @override
-  String get navInventory => 'Inventory';
+  String get navResources => 'Resources';
 
   @override
   String get navCustomers => 'Customers';
@@ -45,7 +45,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get actionReturnItem => 'Return Item';
 
   @override
-  String get actionAddInventory => 'Add Inventory';
+  String get actionAddResource => 'Add Resource';
 
   @override
   String get actionScan => 'Scan';
@@ -164,14 +164,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get businessTemplatesSubtitle =>
-      'Import starter inventory by industry (merge).';
+      'Import starter resources by industry (merge).';
 
   @override
   String get onboardingTemplateTitle => 'Choose your business type';
 
   @override
   String get onboardingTemplateSubtitle =>
-      'We\'ll add starter inventory for your industry. You can add more later from More → Business Templates.';
+      'We\'ll add starter resources for your industry. You can add more later from More → Business Templates.';
 
   @override
   String get onboardingTemplateConfirm => 'Use this template';
@@ -211,10 +211,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sharePlaceholder => 'Share is a placeholder action.';
 
   @override
-  String get editInventoryTitle => 'Edit inventory';
+  String get editResourceTitle => 'Edit resource';
 
   @override
-  String get inventoryDetailTitle => 'Inventory detail';
+  String get resourceDetailTitle => 'Resource detail';
 
   @override
   String get editTooltip => 'Edit';
@@ -266,7 +266,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get nameCategoryRequired => 'Name and category are required.';
 
   @override
-  String get inventoryUpdated => 'Inventory updated.';
+  String get resourceUpdated => 'Resource updated.';
 
   @override
   String get customerProfileTitle => 'Customer profile';
@@ -300,7 +300,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get searchHint => 'Find customer, order, or inventory';
+  String get searchHint => 'Find customer, order, or resource';
 
   @override
   String get searchSectionCustomers => 'Customers';
@@ -312,7 +312,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchSectionPreviousRentals => 'Previous orders';
 
   @override
-  String get searchSectionInventory => 'Inventory';
+  String get searchSectionResources => 'Resources';
 
   @override
   String noMatchingSection(String section) {
@@ -553,7 +553,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adding => 'Adding…';
 
   @override
-  String get addSelectedToInventory => 'Add selected to inventory';
+  String get addSelectedToResources => 'Add selected to resources';
 
   @override
   String templateImportResult(int added, int skipped) {
@@ -593,7 +593,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reportTypeCustomerWise => 'Customer-wise';
 
   @override
-  String get reportTypeInventoryWise => 'Inventory-wise';
+  String get reportTypeResourcesWise => 'Resources-wise';
 
   @override
   String get reportPeriodLabel => 'Period';
@@ -1041,8 +1041,8 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get homeFilterEmptyInventorySubtitle =>
-      'No inventory with remaining units right now.';
+  String get homeFilterEmptyResourcesSubtitle =>
+      'No resources with remaining units right now.';
 
   @override
   String get customizeHomeTitle => 'Customize Home';
@@ -1065,7 +1065,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get moduleKpisSubtitle =>
-      'Compact chips; tap opens Orders or Inventory filtered';
+      'Compact chips; tap opens Orders or Resources filtered';
 
   @override
   String get moduleFilterResults => 'Filter results';
@@ -1097,7 +1097,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get moduleQuickActions => 'Quick actions';
 
   @override
-  String get moduleQuickActionsSubtitle => 'New Order, Return, Add Inventory';
+  String get moduleQuickActionsSubtitle => 'New Order, Return, Add Resource';
 
   @override
   String get moduleRecentActivity => 'Recent activity';
@@ -1304,7 +1304,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get removeOrderLineAction => 'Remove line';
 
   @override
-  String get selectInventoryItemLabel => 'Inventory item';
+  String get selectResourceItemLabel => 'Resource';
 
   @override
   String orderLineHeading(int number) {
@@ -1353,16 +1353,52 @@ class AppLocalizationsEn extends AppLocalizations {
   String get itemKindRentalLabel => 'Rental';
 
   @override
-  String get itemKindGeneralLabel => 'General';
+  String get itemKindSaleLabel => 'Sale';
+
+  @override
+  String get itemKindServiceLabel => 'Service';
 
   @override
   String get itemKindJobLabel => 'Job';
 
   @override
-  String get itemKindGeneralBadge => 'General';
+  String get itemKindSubscriptionLabel => 'Subscription';
+
+  @override
+  String get itemKindMembershipLabel => 'Membership';
+
+  @override
+  String get itemKindLoanLabel => 'Loan';
+
+  @override
+  String get itemKindFinancialLabel => 'Financial';
+
+  @override
+  String get itemKindCustomLabel => 'Custom';
+
+  @override
+  String get itemKindSaleBadge => 'Sale';
+
+  @override
+  String get itemKindServiceBadge => 'Service';
 
   @override
   String get itemKindJobBadge => 'Job';
+
+  @override
+  String get itemKindSubscriptionBadge => 'Subscription';
+
+  @override
+  String get itemKindMembershipBadge => 'Membership';
+
+  @override
+  String get itemKindLoanBadge => 'Loan';
+
+  @override
+  String get itemKindFinancialBadge => 'Financial';
+
+  @override
+  String get itemKindCustomBadge => 'Custom';
 
   @override
   String get lineFulfillmentRent => 'Rent';
@@ -1677,7 +1713,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reportNoRentalsInRange => '(no rentals in range)';
 
   @override
-  String get reportNoInventory => '(no inventory)';
+  String get reportNoResources => '(no resources)';
 
   @override
   String reportCustomerWithDeposit(String header, String amount) {

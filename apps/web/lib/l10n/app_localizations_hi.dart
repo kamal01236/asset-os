@@ -15,7 +15,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get navRentals => 'ऑर्डर';
 
   @override
-  String get navInventory => 'इन्वेंटरी';
+  String get navResources => 'संसाधन';
 
   @override
   String get navCustomers => 'ग्राहक';
@@ -45,7 +45,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get actionReturnItem => 'वस्तु वापस लें';
 
   @override
-  String get actionAddInventory => 'इन्वेंटरी जोड़ें';
+  String get actionAddResource => 'संसाधन जोड़ें';
 
   @override
   String get actionScan => 'स्कैन';
@@ -165,14 +165,14 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get businessTemplatesSubtitle =>
-      'उद्योग के अनुसार स्टार्टर इन्वेंटरी आयात करें (मर्ज)।';
+      'उद्योग के अनुसार स्टार्टर संसाधन आयात करें (मर्ज)।';
 
   @override
   String get onboardingTemplateTitle => 'अपना व्यवसाय प्रकार चुनें';
 
   @override
   String get onboardingTemplateSubtitle =>
-      'हम आपके उद्योग के लिए स्टार्टर इन्वेंटरी जोड़ेंगे। बाद में और → व्यवसाय टेम्पलेट से और जोड़ सकते हैं।';
+      'हम आपके उद्योग के लिए स्टार्टर संसाधन जोड़ेंगे। बाद में और → व्यवसाय टेम्पलेट से और जोड़ सकते हैं।';
 
   @override
   String get onboardingTemplateConfirm => 'यह टेम्पलेट उपयोग करें';
@@ -212,10 +212,10 @@ class AppLocalizationsHi extends AppLocalizations {
   String get sharePlaceholder => 'शेयर एक प्लेसहोल्डर कार्रवाई है।';
 
   @override
-  String get editInventoryTitle => 'इन्वेंटरी संपादित करें';
+  String get editResourceTitle => 'संसाधन संपादित करें';
 
   @override
-  String get inventoryDetailTitle => 'इन्वेंटरी विवरण';
+  String get resourceDetailTitle => 'संसाधन विवरण';
 
   @override
   String get editTooltip => 'संपादित करें';
@@ -267,7 +267,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get nameCategoryRequired => 'नाम और श्रेणी आवश्यक हैं।';
 
   @override
-  String get inventoryUpdated => 'इन्वेंटरी अपडेट हो गई।';
+  String get resourceUpdated => 'संसाधन अपडेट हो गया।';
 
   @override
   String get customerProfileTitle => 'ग्राहक प्रोफ़ाइल';
@@ -301,7 +301,7 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String get searchHint => 'ग्राहक, ऑर्डर या इन्वेंटरी खोजें';
+  String get searchHint => 'ग्राहक, ऑर्डर या संसाधन खोजें';
 
   @override
   String get searchSectionCustomers => 'ग्राहक';
@@ -313,7 +313,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get searchSectionPreviousRentals => 'पिछले ऑर्डर';
 
   @override
-  String get searchSectionInventory => 'इन्वेंटरी';
+  String get searchSectionResources => 'संसाधन';
 
   @override
   String noMatchingSection(String section) {
@@ -554,7 +554,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get adding => 'जोड़ा जा रहा है…';
 
   @override
-  String get addSelectedToInventory => 'चयनित को इन्वेंटरी में जोड़ें';
+  String get addSelectedToResources => 'चयनित को संसाधनों में जोड़ें';
 
   @override
   String templateImportResult(int added, int skipped) {
@@ -594,7 +594,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get reportTypeCustomerWise => 'ग्राहक-वार';
 
   @override
-  String get reportTypeInventoryWise => 'इन्वेंटरी-वार';
+  String get reportTypeResourcesWise => 'संसाधन-वार';
 
   @override
   String get reportPeriodLabel => 'अवधि';
@@ -1043,8 +1043,8 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String get homeFilterEmptyInventorySubtitle =>
-      'अभी कोई इन्वेंटरी उपलब्ध इकाइयों के साथ नहीं।';
+  String get homeFilterEmptyResourcesSubtitle =>
+      'अभी कोई संसाधन उपलब्ध इकाइयों के साथ नहीं।';
 
   @override
   String get customizeHomeTitle => 'होम अनुकूलित करें';
@@ -1067,7 +1067,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get moduleKpisSubtitle =>
-      'कॉम्पैक्ट चिप्स; टैप पर फ़िल्टर के साथ ऑर्डर या इन्वेंटरी खोलता है';
+      'कॉम्पैक्ट चिप्स; टैप पर फ़िल्टर के साथ ऑर्डर या संसाधन खोलता है';
 
   @override
   String get moduleFilterResults => 'फ़िल्टर परिणाम';
@@ -1098,7 +1098,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get moduleQuickActions => 'त्वरित कार्रवाई';
 
   @override
-  String get moduleQuickActionsSubtitle => 'नया ऑर्डर, वापसी, इन्वेंटरी जोड़ें';
+  String get moduleQuickActionsSubtitle => 'नया ऑर्डर, वापसी, संसाधन जोड़ें';
 
   @override
   String get moduleRecentActivity => 'हाल की गतिविधि';
@@ -1305,7 +1305,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get removeOrderLineAction => 'पंक्ति हटाएँ';
 
   @override
-  String get selectInventoryItemLabel => 'इन्वेंटरी वस्तु';
+  String get selectResourceItemLabel => 'संसाधन';
 
   @override
   String orderLineHeading(int number) {
@@ -1354,16 +1354,52 @@ class AppLocalizationsHi extends AppLocalizations {
   String get itemKindRentalLabel => 'किराया';
 
   @override
-  String get itemKindGeneralLabel => 'सामान्य';
+  String get itemKindSaleLabel => 'बिक्री';
+
+  @override
+  String get itemKindServiceLabel => 'सेवा';
 
   @override
   String get itemKindJobLabel => 'जॉब';
 
   @override
-  String get itemKindGeneralBadge => 'सामान्य';
+  String get itemKindSubscriptionLabel => 'सदस्यता योजना';
+
+  @override
+  String get itemKindMembershipLabel => 'सदस्यता';
+
+  @override
+  String get itemKindLoanLabel => 'ऋण';
+
+  @override
+  String get itemKindFinancialLabel => 'वित्तीय';
+
+  @override
+  String get itemKindCustomLabel => 'कस्टम';
+
+  @override
+  String get itemKindSaleBadge => 'बिक्री';
+
+  @override
+  String get itemKindServiceBadge => 'सेवा';
 
   @override
   String get itemKindJobBadge => 'जॉब';
+
+  @override
+  String get itemKindSubscriptionBadge => 'सदस्यता योजना';
+
+  @override
+  String get itemKindMembershipBadge => 'सदस्यता';
+
+  @override
+  String get itemKindLoanBadge => 'ऋण';
+
+  @override
+  String get itemKindFinancialBadge => 'वित्तीय';
+
+  @override
+  String get itemKindCustomBadge => 'कस्टम';
 
   @override
   String get lineFulfillmentRent => 'किराया';
@@ -1677,7 +1713,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get reportNoRentalsInRange => '(रेंज में कोई किराया नहीं)';
 
   @override
-  String get reportNoInventory => '(कोई इन्वेंटरी नहीं)';
+  String get reportNoResources => '(कोई संसाधन नहीं)';
 
   @override
   String reportCustomerWithDeposit(String header, String amount) {

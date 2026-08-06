@@ -23,8 +23,27 @@ const List<HomeModuleId> kDefaultHomeModules = <HomeModuleId>[
   HomeModuleId.needsAttention,
 ];
 
+/// Pure rental packs (camera, farm, event, tools, office).
+const List<HomeModuleId> kRentalHomeModules = kDefaultHomeModules;
+
 /// Library template adds recent activity for borrow/return tracking feel.
 const List<HomeModuleId> kLibraryHomeModules = <HomeModuleId>[
+  HomeModuleId.search,
+  HomeModuleId.kpis,
+  HomeModuleId.needsAttention,
+  HomeModuleId.recentActivity,
+];
+
+/// Job / service packs (beauty, boutique, mechanic-style).
+const List<HomeModuleId> kJobHomeModules = <HomeModuleId>[
+  HomeModuleId.search,
+  HomeModuleId.kpis,
+  HomeModuleId.needsAttention,
+  HomeModuleId.pendingJobs,
+];
+
+/// Membership packs (gym): default stack plus recent activity.
+const List<HomeModuleId> kMembershipHomeModules = <HomeModuleId>[
   HomeModuleId.search,
   HomeModuleId.kpis,
   HomeModuleId.needsAttention,

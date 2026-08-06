@@ -8,9 +8,10 @@ Index for Hando (Asset Handover Platform) documentation.
 2. **[ADR-001: Flutter Web Client](architecture/decisions/ADR-001-mobile-stack.md)** — Flutter web client now; native packaging later
 3. **[ADR-002: Local-First Foundation](architecture/decisions/ADR-002-local-first-foundation.md)** — Drift + Riverpod local DB
 4. **[ADR-003: UI Localization](architecture/decisions/ADR-003-localization.md)** — gen-l10n English default + Hindi
-5. **[Web UX Conventions](ux/web-ux-conventions.md)** — touch-friendly interaction rules, status semantics, and shell contracts
-6. **[Phase 5 Extension Stubs](ux/phase5-extension-stubs.md)** — lightweight stubs for voice, templates, and AI suggestions
-7. **[Test Suites](engineering/test-suites.md)** — tagged unit/widget/integration suites and dependency → suite map
+5. **[ADR-004: Business Resources](architecture/decisions/ADR-004-business-resources.md)** — Business → Resources → Transactions → Reports (direction; implementation deferred)
+6. **[Web UX Conventions](ux/web-ux-conventions.md)** — touch-friendly interaction rules, status semantics, and shell contracts
+7. **[Phase 5 Extension Stubs](ux/phase5-extension-stubs.md)** — lightweight stubs for voice, templates, and AI suggestions
+8. **[Test Suites](engineering/test-suites.md)** — tagged unit/widget/integration suites and dependency → suite map
 
 ## Document conventions
 

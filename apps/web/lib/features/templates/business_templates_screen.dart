@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/l10n_ext.dart';
+import '../../core/models/entities.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/repositories/local_repository.dart';
 import '../../core/templates/industry_templates.dart';
@@ -107,6 +108,14 @@ class _TemplateItemPickerScreenState extends ConsumerState<TemplateItemPickerScr
     final TemplateImportResult result = await ref
         .read(repositoryProvider)
         .importTemplateInventory(selected, locale: locale);
+    if (result.added > 0) {
+      final List<ResourceType> importedKinds = resourceTypesFromTemplateItems(
+        selected,
+      );
+      await ref
+          .read(enabledResourceTypesProvider.notifier)
+          .unionTypes(importedKinds);
+    }
     if (!mounted) {
       return;
     }
@@ -159,6 +168,9 @@ class _TemplateItemPickerScreenState extends ConsumerState<TemplateItemPickerScr
     );
     if (apply == true) {
       await modules.applyTemplateDefaults(widget.template.defaultHomeModules);
+      await ref
+          .read(enabledResourceTypesProvider.notifier)
+          .applyTemplateTypes(widget.template.enabledResourceTypes);
       if (!mounted) {
         return;
       }
@@ -231,7 +243,7 @@ class _TemplateItemPickerScreenState extends ConsumerState<TemplateItemPickerScr
         child: FilledButton(
           onPressed: _selected.isEmpty || _submitting ? null : _importSelected,
           child: Text(
-            _submitting ? l10n.adding : l10n.addSelectedToInventory,
+            _submitting ? l10n.adding : l10n.addSelectedToResources,
           ),
         ),
       ),

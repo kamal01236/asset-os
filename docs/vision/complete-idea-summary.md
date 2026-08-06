@@ -50,7 +50,7 @@ It removes repetition, merges overlapping chapters, and **preserves every unique
 
 ### What it is
 
-A **privacy-first, offline-first, local-first Business Operating System for physical asset handovers**.
+A **privacy-first, offline-first, local-first Business Operating System for physical asset handovers**, expanding toward configurable business resources (see §13).
 
 Businesses that already own assets use it to **lend, rent, issue, return, track, and maintain** those assets — without needing continuous internet, cloud accounts, or a customer-facing app.
 
@@ -411,6 +411,8 @@ Offline-first · local-first · privacy-first · no customer app · minimal clou
 System · Master · Transactions · Synchronization · Configuration.
 
 ### Core tables (authoritative field set)
+
+> **Naming note:** Canonical long-term language is **Resource** (and Transaction); physical schema / module names below may lag. See §13 and [ADR-004](../architecture/decisions/ADR-004-business-resources.md).
 
 **Business:** BusinessId, BusinessName, Category, OwnerName, Phone, Email, Address, Country, TimeZone, Currency, Created/Updated, SyncStatus. One business per installation.
 
@@ -846,15 +848,41 @@ Future modules appear as add-ons without changing core flows.
 
 ## 13. Universal platform & 10-year vision
 
-### Abstraction: Asset Movement
+### Abstraction: Business Resources engine
 
-Universal models:
+Long-term domain stack (canonical product language; see [ADR-004](../architecture/decisions/ADR-004-business-resources.md)):
 
-- **Asset** (Digital Asset Passport)
+```text
+Business → Resources → Transactions → Reports
+```
+
+| Concept | Meaning |
+|---------|---------|
+| **Business** | The installing operator (shop / gym / salon / …); one local installation = one business in V1 |
+| **Resource** | Catalog unit: physical item, service, job, membership, digital asset, or financial record |
+| **Transaction** | Universal action: counterparty + resource lines + status + timeline (today’s rental/order is the first shape) |
+| **Reports** | Operational views and exports over resources and transactions (later: template-declared widgets) |
+
+Related concepts that still matter:
+
+- **Asset** (Digital Asset Passport) — identity and history for tracked physical items
 - **Person** (customer / employee / member)
-- **Transaction** types: Rental · Loan · Issue · Return · Transfer · Maintenance · Inspection · Reservation
 
-Plus: **Rule Engine** · **Workflow Engine** (optional approval/inspect steps) · **Metadata** · **Templates** · **Plugins**.
+**Resource types** (configuration, not separate modules): Rental Item · Sale Item · Service · Job · Subscription · Membership · Loan · Financial · Custom.
+
+**Industry mapping examples** (same engine, different config packs):
+
+| Template flavor | Typical resource types |
+|-----------------|------------------------|
+| Camera / tool rental | Rental Item (+ accessories as resources) |
+| Boutique / retail | Sale Item |
+| Mechanic / repair | Job · Service · Sale Item (parts) |
+| Gym / club | Membership · Subscription · Rental Item |
+| Library | Loan · Rental Item |
+
+Plus later: **Rule Engine** · **Workflow Engine** (optional approval/inspect steps) · **Metadata** · **Templates** · **Plugins**.
+
+V1 still ships **rental-first** UX and may still say “Inventory” in the app until a rename phase. Schema table names in §7 remain historically named; epic names in §14 stay accurate for the backlog with a forward pointer to ADR-004.
 
 ### Plugin examples
 
@@ -872,10 +900,10 @@ Currency · timezone · locale · units.
 
 ```text
 Offline Register → Digital Rental → Asset Handover
-  → Business Asset Platform → Universal Asset Infrastructure
+  → Business Resources Platform → Configurable Business OS
 ```
 
-**One engine + configuration**, not separate products per industry.
+**One engine + configuration**, not separate products per industry. Same DB, different config; dynamic fields and configurable workflows are future schema, not V1 claims.
 
 ### Governance for new modules
 
@@ -900,6 +928,8 @@ Foundation → Customer → Inventory → Rental → Dashboard → Notifications
 Solo-dev path: release early, validate; ~8 two-week sprints → closed alpha (~4 months) as one estimate.
 
 ### Epics (backlog SoT)
+
+Epic names below stay historically accurate (Inventory / Rentals). Long-term product language is **Resources / Transactions** — see [ADR-004](../architecture/decisions/ADR-004-business-resources.md) and §13.
 
 | Epic | Focus | Notes |
 |------|-------|-------|

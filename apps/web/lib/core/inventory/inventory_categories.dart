@@ -67,26 +67,33 @@ String resolveSelectedCategory({
   return selected.trim();
 }
 
-/// Default catalog kind implied by the selected category option.
-InventoryItemKind defaultKindForCategory(String? selectedCategory) {
+/// Default catalog type implied by the selected category option.
+ResourceType defaultKindForCategory(String? selectedCategory) {
   if (selectedCategory == kCategoryGeneral) {
-    return InventoryItemKind.general;
+    return ResourceType.sale;
   }
-  return InventoryItemKind.rental;
+  return ResourceType.rental;
 }
 
-/// Sort inventory for New Order picker: sell/job catalog first, then by name.
+/// Sort inventory for New Order picker: sell/job/service first, then by name.
 List<InventoryItem> sortInventoryForOrderPicker(List<InventoryItem> items) {
   final List<InventoryItem> sorted = List<InventoryItem>.of(items);
   sorted.sort((InventoryItem a, InventoryItem b) {
     int kindRank(InventoryItem item) {
       switch (item.defaultItemKind) {
-        case InventoryItemKind.general:
+        case ResourceType.sale:
           return 0;
-        case InventoryItemKind.job:
+        case ResourceType.job:
+        case ResourceType.service:
           return 1;
-        case InventoryItemKind.rental:
+        case ResourceType.subscription:
+        case ResourceType.membership:
+        case ResourceType.loan:
+        case ResourceType.financial:
+        case ResourceType.custom:
           return 2;
+        case ResourceType.rental:
+          return 3;
       }
     }
 

@@ -22,7 +22,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 10;
+  int get schemaVersion => 11;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -261,6 +261,14 @@ class AppDatabase extends _$AppDatabase {
                 WHEN returned_at IS NULL THEN 'open'
                 ELSE 'completed'
               END
+        ''');
+      }
+      if (from < 11) {
+        // ResourceType: legacy InventoryItemKind.general → sale.
+        await customStatement('''
+          UPDATE inventory_items
+          SET default_item_kind = 'sale'
+          WHERE default_item_kind = 'general'
         ''');
       }
     },

@@ -8,11 +8,11 @@ alwaysApply: false
 
 Follow `docs/ux/web-ux-conventions.md` (source of truth). Digest:
 
-- Bottom nav has 5 stable tabs: Home, Orders, Inventory, Customers, More. Do not add/remove tabs without updating that doc.
-- Global actions always include Search, New Order, Return, Add Inventory, Scan.
+- Bottom nav has 5 stable tabs: Home, Orders, Resources, Customers, More. Do not add/remove tabs without updating that doc.
+- Global actions always include Search, New Order, Return, Add Resource, Scan.
 - Thumb-zone primary actions; one dominant choice per step; list/status-first (no chart dashboards in MVP).
 - Status colors: Available green, Rented blue, Due Today orange, Overdue red, Archived grey.
 - Offline: subtle non-blocking banner only. More-tab offline toggle is demo/simulation, not product positioning.
 - Appearance: Dark/Light only; default Dark; More-tab segmented toggle; theme-aware colors via ColorScheme (no light-only hardcodes).
-- Forms: items-first New Order (running total; days/amount happy path; Rent/Sell/Job under More options), then phone-first customer attach with optional collapsed Advance; skip customer when issuing from a profile; unit identity optional unless catalog requires it.
-- Home defaults: search + KPIs + needsAttention (Quick Actions / Pending jobs via Customize Home; FAB for New Order / Return).
+- Forms: items-first New Order (running total; days/amount happy path; Rent/Sell/Job under More options gated by template enabled resource types; do not hide catalog by type), then phone-first customer attach with optional collapsed Advance; skip customer when issuing from a profile; unit identity optional unless catalog requires it.
+- Home defaults: search + KPIs + needsAttention (template presets may add recentActivity / pendingJobs; Quick Actions via Customize Home; FAB for New Order / Return).

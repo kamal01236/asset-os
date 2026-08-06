@@ -261,10 +261,10 @@ class ReportBuilder {
     }
 
     if (inventory.isEmpty) {
-      return '${l10n.reportTypeInventoryWise}\n${l10n.reportNoInventory}';
+      return '${l10n.reportTypeResourcesWise}\n${l10n.reportNoResources}';
     }
 
-    final List<String> lines = <String>[l10n.reportTypeInventoryWise];
+    final List<String> lines = <String>[l10n.reportTypeResourcesWise];
     final List<InventoryItem> sorted = List<InventoryItem>.from(inventory)
       ..sort((InventoryItem a, InventoryItem b) => a.name.compareTo(b.name));
     for (final InventoryItem item in sorted) {

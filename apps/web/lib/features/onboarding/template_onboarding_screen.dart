@@ -65,6 +65,9 @@ class _TemplateOnboardingScreenState
       await ref
           .read(homeModulesProvider.notifier)
           .applyTemplateDefaults(template.defaultHomeModules);
+      await ref
+          .read(enabledResourceTypesProvider.notifier)
+          .applyTemplateTypes(template.enabledResourceTypes);
       ref.read(needsIndustryOnboardingProvider.notifier).state = false;
     } finally {
       if (mounted) {

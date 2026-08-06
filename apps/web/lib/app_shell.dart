@@ -90,7 +90,7 @@ class AppShell extends ConsumerWidget {
         destinations: <NavigationDestination>[
           NavigationDestination(icon: const Icon(Icons.home_outlined), label: l10n.navHome),
           NavigationDestination(icon: const Icon(Icons.assignment_outlined), label: l10n.navRentals),
-          NavigationDestination(icon: const Icon(Icons.inventory_2_outlined), label: l10n.navInventory),
+          NavigationDestination(icon: const Icon(Icons.inventory_2_outlined), label: l10n.navResources),
           NavigationDestination(icon: const Icon(Icons.groups_outlined), label: l10n.navCustomers),
           NavigationDestination(icon: const Icon(Icons.more_horiz), label: l10n.navMore),
         ],
@@ -563,8 +563,8 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
             if (visible.isEmpty && listFilter != null)
               EmptyStatePane(
                 title: l10n.homeFilterEmptyTitle,
-                subtitle: l10n.homeFilterEmptyInventorySubtitle,
-                ctaLabel: l10n.actionAddInventory,
+                subtitle: l10n.homeFilterEmptyResourcesSubtitle,
+                ctaLabel: l10n.actionAddResource,
                 onPressed: () {
                   Navigator.of(context).push(
                     MaterialPageRoute<void>(
@@ -578,11 +578,8 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                 final AssetStatus status = item.availableUnits > 0
                     ? AssetStatus.available
                     : AssetStatus.rented;
-                final String categoryLabel = item.isJob
-                    ? '${item.category} · ${l10n.itemKindJobBadge}'
-                    : item.isGeneral
-                        ? '${item.category} · ${l10n.itemKindGeneralBadge}'
-                        : item.category;
+                final String categoryLabel =
+                    categoryWithResourceTypeBadge(l10n, item);
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 10),
                   child: ListEntityRow(
@@ -975,7 +972,7 @@ class GlobalActionsButton extends StatelessWidget {
                   ),
                   ListTile(
                     leading: const Icon(Icons.add_box_outlined),
-                    title: Text(sheetL10n.actionAddInventory),
+                    title: Text(sheetL10n.actionAddResource),
                     onTap: () {
                       Navigator.of(context).pop();
                       onAddInventory();
@@ -1634,15 +1631,15 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
   }
 
   /// Kind on edit: keep existing unless category becomes/leaves General.
-  InventoryItemKind _resolvedEditKind({
+  ResourceType _resolvedEditKind({
     required InventoryItem item,
     required String category,
   }) {
     if (category == kCategoryGeneral) {
-      return InventoryItemKind.general;
+      return ResourceType.sale;
     }
-    if (item.defaultItemKind == InventoryItemKind.general) {
-      return InventoryItemKind.rental;
+    if (item.defaultItemKind == ResourceType.sale) {
+      return ResourceType.rental;
     }
     return item.defaultItemKind;
   }
@@ -1705,7 +1702,7 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
       _editing = false;
     });
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(context.l10n.inventoryUpdated)),
+      SnackBar(content: Text(context.l10n.resourceUpdated)),
     );
   }
 
@@ -1727,7 +1724,7 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
             item.availableUnits > 0 ? AssetStatus.available : AssetStatus.rented;
         return Scaffold(
           appBar: AppBar(
-            title: Text(_editing ? l10n.editInventoryTitle : l10n.inventoryDetailTitle),
+            title: Text(_editing ? l10n.editResourceTitle : l10n.resourceDetailTitle),
             actions: <Widget>[
               if (!_editing)
                 IconButton(
@@ -1845,11 +1842,7 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
                     EntityCard(
                       title: item.name,
                       subtitle: l10n.inventoryAvailableSubtitle(
-                        item.isJob
-                            ? '${item.category} · ${l10n.itemKindJobBadge}'
-                            : item.isGeneral
-                                ? '${item.category} · ${l10n.itemKindGeneralBadge}'
-                                : item.category,
+                        categoryWithResourceTypeBadge(l10n, item),
                         item.availableUnits,
                         item.totalUnits,
                       ),
@@ -2267,7 +2260,7 @@ class _AddInventoryFlowScreenState extends ConsumerState<AddInventoryFlowScreen>
             ? categoryOptions.first
             : kCategoryOther);
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.actionAddInventory)),
+      appBar: AppBar(title: Text(l10n.actionAddResource)),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: <Widget>[

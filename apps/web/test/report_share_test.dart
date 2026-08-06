@@ -262,7 +262,7 @@ void main() {
         rentals: rentals,
         now: now,
       );
-      expect(text, contains(l10n.reportTypeInventoryWise));
+      expect(text, contains(l10n.reportTypeResourcesWise));
       expect(text, contains('DSLR'));
       expect(text, contains('Tripod'));
       expect(text, contains('Floor stand (TRP-001)'));

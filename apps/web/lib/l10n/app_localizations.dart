@@ -110,11 +110,11 @@ abstract class AppLocalizations {
   /// **'Orders'**
   String get navRentals;
 
-  /// No description provided for @navInventory.
+  /// No description provided for @navResources.
   ///
   /// In en, this message translates to:
-  /// **'Inventory'**
-  String get navInventory;
+  /// **'Resources'**
+  String get navResources;
 
   /// No description provided for @navCustomers.
   ///
@@ -170,11 +170,11 @@ abstract class AppLocalizations {
   /// **'Return Item'**
   String get actionReturnItem;
 
-  /// No description provided for @actionAddInventory.
+  /// No description provided for @actionAddResource.
   ///
   /// In en, this message translates to:
-  /// **'Add Inventory'**
-  String get actionAddInventory;
+  /// **'Add Resource'**
+  String get actionAddResource;
 
   /// No description provided for @actionScan.
   ///
@@ -389,7 +389,7 @@ abstract class AppLocalizations {
   /// No description provided for @businessTemplatesSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Import starter inventory by industry (merge).'**
+  /// **'Import starter resources by industry (merge).'**
   String get businessTemplatesSubtitle;
 
   /// No description provided for @onboardingTemplateTitle.
@@ -401,7 +401,7 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingTemplateSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'We\'ll add starter inventory for your industry. You can add more later from More → Business Templates.'**
+  /// **'We\'ll add starter resources for your industry. You can add more later from More → Business Templates.'**
   String get onboardingTemplateSubtitle;
 
   /// No description provided for @onboardingTemplateConfirm.
@@ -470,17 +470,17 @@ abstract class AppLocalizations {
   /// **'Share is a placeholder action.'**
   String get sharePlaceholder;
 
-  /// No description provided for @editInventoryTitle.
+  /// No description provided for @editResourceTitle.
   ///
   /// In en, this message translates to:
-  /// **'Edit inventory'**
-  String get editInventoryTitle;
+  /// **'Edit resource'**
+  String get editResourceTitle;
 
-  /// No description provided for @inventoryDetailTitle.
+  /// No description provided for @resourceDetailTitle.
   ///
   /// In en, this message translates to:
-  /// **'Inventory detail'**
-  String get inventoryDetailTitle;
+  /// **'Resource detail'**
+  String get resourceDetailTitle;
 
   /// No description provided for @editTooltip.
   ///
@@ -578,11 +578,11 @@ abstract class AppLocalizations {
   /// **'Name and category are required.'**
   String get nameCategoryRequired;
 
-  /// No description provided for @inventoryUpdated.
+  /// No description provided for @resourceUpdated.
   ///
   /// In en, this message translates to:
-  /// **'Inventory updated.'**
-  String get inventoryUpdated;
+  /// **'Resource updated.'**
+  String get resourceUpdated;
 
   /// No description provided for @customerProfileTitle.
   ///
@@ -641,7 +641,7 @@ abstract class AppLocalizations {
   /// No description provided for @searchHint.
   ///
   /// In en, this message translates to:
-  /// **'Find customer, order, or inventory'**
+  /// **'Find customer, order, or resource'**
   String get searchHint;
 
   /// No description provided for @searchSectionCustomers.
@@ -662,11 +662,11 @@ abstract class AppLocalizations {
   /// **'Previous orders'**
   String get searchSectionPreviousRentals;
 
-  /// No description provided for @searchSectionInventory.
+  /// No description provided for @searchSectionResources.
   ///
   /// In en, this message translates to:
-  /// **'Inventory'**
-  String get searchSectionInventory;
+  /// **'Resources'**
+  String get searchSectionResources;
 
   /// No description provided for @noMatchingSection.
   ///
@@ -1052,11 +1052,11 @@ abstract class AppLocalizations {
   /// **'Adding…'**
   String get adding;
 
-  /// No description provided for @addSelectedToInventory.
+  /// No description provided for @addSelectedToResources.
   ///
   /// In en, this message translates to:
-  /// **'Add selected to inventory'**
-  String get addSelectedToInventory;
+  /// **'Add selected to resources'**
+  String get addSelectedToResources;
 
   /// No description provided for @templateImportResult.
   ///
@@ -1124,11 +1124,11 @@ abstract class AppLocalizations {
   /// **'Customer-wise'**
   String get reportTypeCustomerWise;
 
-  /// No description provided for @reportTypeInventoryWise.
+  /// No description provided for @reportTypeResourcesWise.
   ///
   /// In en, this message translates to:
-  /// **'Inventory-wise'**
-  String get reportTypeInventoryWise;
+  /// **'Resources-wise'**
+  String get reportTypeResourcesWise;
 
   /// No description provided for @reportPeriodLabel.
   ///
@@ -1868,11 +1868,11 @@ abstract class AppLocalizations {
   /// **'No orders match {label} right now.'**
   String homeFilterEmptyRentalsSubtitle(String label);
 
-  /// No description provided for @homeFilterEmptyInventorySubtitle.
+  /// No description provided for @homeFilterEmptyResourcesSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'No inventory with remaining units right now.'**
-  String get homeFilterEmptyInventorySubtitle;
+  /// **'No resources with remaining units right now.'**
+  String get homeFilterEmptyResourcesSubtitle;
 
   /// No description provided for @customizeHomeTitle.
   ///
@@ -1913,7 +1913,7 @@ abstract class AppLocalizations {
   /// No description provided for @moduleKpisSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Compact chips; tap opens Orders or Inventory filtered'**
+  /// **'Compact chips; tap opens Orders or Resources filtered'**
   String get moduleKpisSubtitle;
 
   /// No description provided for @moduleFilterResults.
@@ -1973,7 +1973,7 @@ abstract class AppLocalizations {
   /// No description provided for @moduleQuickActionsSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'New Order, Return, Add Inventory'**
+  /// **'New Order, Return, Add Resource'**
   String get moduleQuickActionsSubtitle;
 
   /// No description provided for @moduleRecentActivity.
@@ -2312,11 +2312,11 @@ abstract class AppLocalizations {
   /// **'Remove line'**
   String get removeOrderLineAction;
 
-  /// No description provided for @selectInventoryItemLabel.
+  /// No description provided for @selectResourceItemLabel.
   ///
   /// In en, this message translates to:
-  /// **'Inventory item'**
-  String get selectInventoryItemLabel;
+  /// **'Resource'**
+  String get selectResourceItemLabel;
 
   /// No description provided for @orderLineHeading.
   ///
@@ -2390,11 +2390,17 @@ abstract class AppLocalizations {
   /// **'Rental'**
   String get itemKindRentalLabel;
 
-  /// No description provided for @itemKindGeneralLabel.
+  /// No description provided for @itemKindSaleLabel.
   ///
   /// In en, this message translates to:
-  /// **'General'**
-  String get itemKindGeneralLabel;
+  /// **'Sale'**
+  String get itemKindSaleLabel;
+
+  /// No description provided for @itemKindServiceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Service'**
+  String get itemKindServiceLabel;
 
   /// No description provided for @itemKindJobLabel.
   ///
@@ -2402,17 +2408,83 @@ abstract class AppLocalizations {
   /// **'Job'**
   String get itemKindJobLabel;
 
-  /// No description provided for @itemKindGeneralBadge.
+  /// No description provided for @itemKindSubscriptionLabel.
   ///
   /// In en, this message translates to:
-  /// **'General'**
-  String get itemKindGeneralBadge;
+  /// **'Subscription'**
+  String get itemKindSubscriptionLabel;
+
+  /// No description provided for @itemKindMembershipLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Membership'**
+  String get itemKindMembershipLabel;
+
+  /// No description provided for @itemKindLoanLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Loan'**
+  String get itemKindLoanLabel;
+
+  /// No description provided for @itemKindFinancialLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Financial'**
+  String get itemKindFinancialLabel;
+
+  /// No description provided for @itemKindCustomLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get itemKindCustomLabel;
+
+  /// No description provided for @itemKindSaleBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Sale'**
+  String get itemKindSaleBadge;
+
+  /// No description provided for @itemKindServiceBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Service'**
+  String get itemKindServiceBadge;
 
   /// No description provided for @itemKindJobBadge.
   ///
   /// In en, this message translates to:
   /// **'Job'**
   String get itemKindJobBadge;
+
+  /// No description provided for @itemKindSubscriptionBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscription'**
+  String get itemKindSubscriptionBadge;
+
+  /// No description provided for @itemKindMembershipBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Membership'**
+  String get itemKindMembershipBadge;
+
+  /// No description provided for @itemKindLoanBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Loan'**
+  String get itemKindLoanBadge;
+
+  /// No description provided for @itemKindFinancialBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Financial'**
+  String get itemKindFinancialBadge;
+
+  /// No description provided for @itemKindCustomBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get itemKindCustomBadge;
 
   /// No description provided for @lineFulfillmentRent.
   ///
@@ -2948,11 +3020,11 @@ abstract class AppLocalizations {
   /// **'(no rentals in range)'**
   String get reportNoRentalsInRange;
 
-  /// No description provided for @reportNoInventory.
+  /// No description provided for @reportNoResources.
   ///
   /// In en, this message translates to:
-  /// **'(no inventory)'**
-  String get reportNoInventory;
+  /// **'(no resources)'**
+  String get reportNoResources;
 
   /// No description provided for @reportCustomerWithDeposit.
   ///

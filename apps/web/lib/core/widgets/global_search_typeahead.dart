@@ -142,7 +142,7 @@ class _GlobalSearchTypeaheadState extends ConsumerState<GlobalSearchTypeahead> {
           id: item.id,
           title: item.name,
           subtitle:
-              '${l10n.searchSectionInventory} · ${l10n.inventoryUnitsSubtitle(
+              '${l10n.searchSectionResources} · ${l10n.inventoryUnitsSubtitle(
             item.category,
             item.availableUnits,
             item.totalUnits,

@@ -19,10 +19,10 @@ void main() {
         billingMode: BillingMode.fixed,
         rateAmount: 80000,
         requiresUnitIdentity: false,
-        defaultItemKind: InventoryItemKind.job,
+        defaultItemKind: ResourceType.job,
       );
       final InventoryItem item = (await repository.listInventory()).single;
-      expect(item.defaultItemKind, InventoryItemKind.job);
+      expect(item.defaultItemKind, ResourceType.job);
       expect(item.isJob, isTrue);
       final Customer customer = await ensureCustomer(repository);
 
@@ -64,7 +64,7 @@ void main() {
         billingMode: BillingMode.fixed,
         rateAmount: 30000,
         requiresUnitIdentity: false,
-        defaultItemKind: InventoryItemKind.job,
+        defaultItemKind: ResourceType.job,
       );
       final InventoryItem item = (await repository.listInventory()).single;
       final Customer customer = await ensureCustomer(repository);
@@ -110,14 +110,14 @@ void main() {
         billingMode: BillingMode.fixed,
         rateAmount: 40000,
         requiresUnitIdentity: false,
-        defaultItemKind: InventoryItemKind.job,
+        defaultItemKind: ResourceType.job,
       );
       await repository.addInventory(
         name: 'USB Cable',
         category: 'General',
         units: 2,
         requiresUnitIdentity: false,
-        defaultItemKind: InventoryItemKind.general,
+        defaultItemKind: ResourceType.sale,
       );
       final List<InventoryItem> inventory = await repository.listInventory();
       final InventoryItem manicure =
@@ -172,7 +172,7 @@ void main() {
         category: 'Parlour',
         units: 1,
         requiresUnitIdentity: false,
-        defaultItemKind: InventoryItemKind.job,
+        defaultItemKind: ResourceType.job,
         rateAmount: 1500000,
       );
       final InventoryItem item = (await repository.listInventory()).single;

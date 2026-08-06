@@ -536,4 +536,75 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(milliseconds: 1));
   });
+
+  testWidgets('More options hides Sell when only rental types enabled', (
+    WidgetTester tester,
+  ) async {
+    final ProviderContainer container = await bootContainer(
+      seedDemo: true,
+      prefs: <String, Object>{
+        kEnabledResourceTypesPrefsKey: 'rental',
+      },
+    );
+
+    tester.view.physicalSize = const Size(800, 1600);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await _pumpFlow(
+      tester,
+      container: container,
+      home: const NewOrderFlowScreen(
+        initialCustomerId: 'CUS-1001',
+        initialInventoryItemIds: <String>['INV-2001'],
+      ),
+    );
+
+    await tester.tap(find.text('More options'));
+    await tester.pump();
+    await _settle(tester, ticks: 8);
+
+    expect(find.text('Rent'), findsWidgets);
+    expect(find.text('Sell'), findsNothing);
+    expect(find.text('Job'), findsNothing);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(milliseconds: 1));
+  });
+
+  testWidgets('More options shows Sell when sale type enabled', (
+    WidgetTester tester,
+  ) async {
+    final ProviderContainer container = await bootContainer(
+      seedDemo: true,
+      prefs: <String, Object>{
+        kEnabledResourceTypesPrefsKey: 'rental,sale',
+      },
+    );
+
+    tester.view.physicalSize = const Size(800, 1600);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await _pumpFlow(
+      tester,
+      container: container,
+      home: const NewOrderFlowScreen(
+        initialCustomerId: 'CUS-1001',
+        initialInventoryItemIds: <String>['INV-2001'],
+      ),
+    );
+
+    await tester.tap(find.text('More options'));
+    await tester.pump();
+    await _settle(tester, ticks: 8);
+
+    expect(find.text('Sell'), findsOneWidget);
+    expect(find.text('Job'), findsNothing);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(milliseconds: 1));
+  });
 }

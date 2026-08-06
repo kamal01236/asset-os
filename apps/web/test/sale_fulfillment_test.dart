@@ -18,13 +18,26 @@ void main() {
         category: kCategoryGeneral,
         units: 3,
         requiresUnitIdentity: false,
-        defaultItemKind: InventoryItemKind.general,
+        defaultItemKind: ResourceType.sale,
       );
       final InventoryItem item = (await repository.listInventory()).single;
       expect(item.category, kCategoryGeneral);
-      expect(item.defaultItemKind, InventoryItemKind.general);
-      expect(item.isGeneral, isTrue);
-      expect(repository.database.schemaVersion, 10);
+      expect(item.defaultItemKind, ResourceType.sale);
+      expect(item.isSale, isTrue);
+      expect(repository.database.schemaVersion, 11);
+    });
+
+    test('ResourceType.parse maps legacy general to sale', () {
+      expect(ResourceType.parse('general'), ResourceType.sale);
+      expect(ResourceType.parse('sale'), ResourceType.sale);
+      expect(
+        ResourceType.parse('membership').defaultFulfillment,
+        LineFulfillment.rent,
+      );
+      expect(
+        ResourceType.parse('service').defaultFulfillment,
+        LineFulfillment.job,
+      );
     });
 
     test('rental item sold with manual amount drops total and closes line',
@@ -69,7 +82,7 @@ void main() {
       expect(order.lines.single.lateAmount, 0);
     });
 
-    test('general item rented opens with duration and keeps total', () async {
+    test('sale item rented opens with duration and keeps total', () async {
       final LocalRepository repository = await bootRepo();
       await repository.addInventory(
         name: 'Extension Cord',
@@ -78,7 +91,7 @@ void main() {
         billingMode: BillingMode.daily,
         rateAmount: 5000,
         requiresUnitIdentity: false,
-        defaultItemKind: InventoryItemKind.general,
+        defaultItemKind: ResourceType.sale,
       );
       final InventoryItem cord = (await repository.listInventory()).single;
       final Customer customer = await ensureCustomer(repository);
@@ -124,7 +137,7 @@ void main() {
         category: kCategoryGeneral,
         units: 5,
         requiresUnitIdentity: false,
-        defaultItemKind: InventoryItemKind.general,
+        defaultItemKind: ResourceType.sale,
       );
       final List<InventoryItem> inventory = await repository.listInventory();
       final InventoryItem novel =
@@ -183,7 +196,7 @@ void main() {
         category: kCategoryGeneral,
         units: 1,
         requiresUnitIdentity: false,
-        defaultItemKind: InventoryItemKind.general,
+        defaultItemKind: ResourceType.sale,
       );
       final InventoryItem item = (await repository.listInventory()).single;
       final Customer customer = await ensureCustomer(repository);

@@ -338,14 +338,7 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
   }
 
   LineFulfillment _defaultFulfillment(InventoryItem item) {
-    switch (item.defaultItemKind) {
-      case InventoryItemKind.general:
-        return LineFulfillment.sell;
-      case InventoryItemKind.job:
-        return LineFulfillment.job;
-      case InventoryItemKind.rental:
-        return LineFulfillment.rent;
-    }
+    return item.defaultItemKind.defaultFulfillment;
   }
 
   void _applyFulfillmentDefaults(_OrderLineDraft draft, InventoryItem item) {
@@ -1192,6 +1185,11 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
         : (choices.any((InventoryItem i) => i.id == selected.id)
             ? selected.id
             : null);
+    final List<LineFulfillment> fulfillmentOptions =
+        fulfillmentOptionsForEnabledTypes(
+      ref.read(enabledResourceTypesProvider),
+      current: draft.fulfillment,
+    );
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -1227,7 +1225,7 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
                 // ignore: deprecated_member_use
                 value: value,
                 decoration: InputDecoration(
-                  labelText: l10n.selectInventoryItemLabel,
+                  labelText: l10n.selectResourceItemLabel,
                 ),
                 items: choices
                     .map(
@@ -1343,40 +1341,56 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
                   childrenPadding: EdgeInsets.zero,
                   title: Text(l10n.moreOptions),
                   children: <Widget>[
-                    SegmentedButton<LineFulfillment>(
-                      segments: <ButtonSegment<LineFulfillment>>[
-                        ButtonSegment<LineFulfillment>(
-                          value: LineFulfillment.rent,
-                          label: Text(l10n.lineFulfillmentRent),
-                        ),
-                        ButtonSegment<LineFulfillment>(
-                          value: LineFulfillment.sell,
-                          label: Text(l10n.lineFulfillmentSell),
-                        ),
-                        ButtonSegment<LineFulfillment>(
-                          value: LineFulfillment.job,
-                          label: Text(l10n.lineFulfillmentJob),
-                        ),
-                      ],
-                      selected: <LineFulfillment>{draft.fulfillment},
-                      onSelectionChanged: (Set<LineFulfillment> selection) {
-                        setState(() {
-                          draft.fulfillment = selection.first;
-                          if (draft.usesManualAmount) {
-                            draft.leaveOpenEnded = false;
-                            draft.customEnd = null;
-                            if (draft.isJob &&
-                                selected.rateAmount > 0 &&
-                                draft.saleAmountController.text.trim().isEmpty) {
-                              draft.saleAmountController.text =
-                                  paiseToRupeesField(selected.rateAmount);
+                    if (fulfillmentOptions.length > 1)
+                      SegmentedButton<LineFulfillment>(
+                        segments: <ButtonSegment<LineFulfillment>>[
+                          for (final LineFulfillment option
+                              in fulfillmentOptions)
+                            ButtonSegment<LineFulfillment>(
+                              value: option,
+                              label: Text(switch (option) {
+                                LineFulfillment.rent =>
+                                  l10n.lineFulfillmentRent,
+                                LineFulfillment.sell =>
+                                  l10n.lineFulfillmentSell,
+                                LineFulfillment.job =>
+                                  l10n.lineFulfillmentJob,
+                              }),
+                            ),
+                        ],
+                        selected: <LineFulfillment>{draft.fulfillment},
+                        onSelectionChanged: (Set<LineFulfillment> selection) {
+                          setState(() {
+                            draft.fulfillment = selection.first;
+                            if (draft.usesManualAmount) {
+                              draft.leaveOpenEnded = false;
+                              draft.customEnd = null;
+                              if (draft.isJob &&
+                                  selected.rateAmount > 0 &&
+                                  draft.saleAmountController.text
+                                      .trim()
+                                      .isEmpty) {
+                                draft.saleAmountController.text =
+                                    paiseToRupeesField(selected.rateAmount);
+                              }
+                            } else if (draft.durationController.text.isEmpty) {
+                              draft.durationController.text = '1';
                             }
-                          } else if (draft.durationController.text.isEmpty) {
-                            draft.durationController.text = '1';
-                          }
-                        });
-                      },
-                    ),
+                          });
+                        },
+                      )
+                    else
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          switch (draft.fulfillment) {
+                            LineFulfillment.rent => l10n.lineFulfillmentRent,
+                            LineFulfillment.sell => l10n.lineFulfillmentSell,
+                            LineFulfillment.job => l10n.lineFulfillmentJob,
+                          },
+                          style: Theme.of(context).textTheme.labelLarge,
+                        ),
+                      ),
                     if (!draft.usesManualAmount) ...<Widget>[
                       const SizedBox(height: 8),
                       Align(

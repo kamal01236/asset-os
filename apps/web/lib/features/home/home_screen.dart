@@ -292,8 +292,8 @@ class HomeFilterResultsSection extends StatelessWidget {
           if (items.isEmpty)
             EmptyStatePane(
               title: l10n.homeFilterEmptyTitle,
-              subtitle: l10n.homeFilterEmptyInventorySubtitle,
-              ctaLabel: l10n.actionAddInventory,
+              subtitle: l10n.homeFilterEmptyResourcesSubtitle,
+              ctaLabel: l10n.actionAddResource,
               onPressed: onAddInventory,
             )
           else
@@ -466,7 +466,7 @@ class HomeQuickActionsSection extends StatelessWidget {
             FilledButton.tonalIcon(
               onPressed: onAddInventory,
               icon: const Icon(Icons.add_box_outlined),
-              label: Text(l10n.actionAddInventory),
+              label: Text(l10n.actionAddResource),
             ),
           ],
         ),

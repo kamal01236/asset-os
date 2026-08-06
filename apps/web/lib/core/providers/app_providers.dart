@@ -7,9 +7,17 @@ import '../home/home_modules.dart';
 import '../models/entities.dart';
 import '../repositories/local_repository.dart';
 import '../sharing/whatsapp_share.dart';
+import '../templates/industry_templates.dart';
 
 export '../home/home_modules.dart';
 export '../home/home_filter.dart';
+export '../templates/industry_templates.dart'
+    show
+        kEnabledResourceTypesPrefsKey,
+        encodeEnabledResourceTypes,
+        parseEnabledResourceTypes,
+        resolveEnabledResourceTypes,
+        fulfillmentOptionsForEnabledTypes;
 
 const String kLocalePrefsKey = 'asset_os_locale';
 const String kThemeModePrefsKey = 'asset_os_theme_mode';
@@ -173,6 +181,46 @@ class HomeModulesNotifier extends StateNotifier<List<HomeModuleId>> {
   }
 
   bool isEnabled(HomeModuleId id) => state.contains(id);
+}
+
+final enabledResourceTypesProvider =
+    StateNotifierProvider<EnabledResourceTypesNotifier, List<ResourceType>>(
+  (ref) {
+    return EnabledResourceTypesNotifier(
+      ref.watch(sharedPreferencesProvider),
+    );
+  },
+);
+
+class EnabledResourceTypesNotifier extends StateNotifier<List<ResourceType>> {
+  EnabledResourceTypesNotifier(this._preferences)
+      : super(
+          resolveEnabledResourceTypes(
+            prefsRaw: _preferences.getString(kEnabledResourceTypesPrefsKey),
+          ),
+        );
+
+  final SharedPreferences _preferences;
+
+  Future<void> setTypes(List<ResourceType> types) async {
+    state = resourceTypesFromItems(types);
+    await _preferences.setString(
+      kEnabledResourceTypesPrefsKey,
+      encodeEnabledResourceTypes(state),
+    );
+  }
+
+  /// Replace with a template pack's enabled set (full apply / onboarding).
+  Future<void> applyTemplateTypes(List<ResourceType> types) async {
+    await setTypes(types);
+  }
+
+  /// Union without shrinking (partial Business Templates merge).
+  Future<void> unionTypes(Iterable<ResourceType> extra) async {
+    await setTypes(resourceTypesFromItems(<ResourceType>[...state, ...extra]));
+  }
+
+  bool isTypeEnabled(ResourceType type) => state.contains(type);
 }
 
 /// Owner WhatsApp number for share-to-self reports (digits + country code).

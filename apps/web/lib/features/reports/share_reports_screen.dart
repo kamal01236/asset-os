@@ -101,7 +101,7 @@ class _ShareReportsScreenState extends ConsumerState<ShareReportsScreen> {
                     setState(() => _type = ReportType.customerWise),
               ),
               ChoiceChip(
-                label: Text(l10n.reportTypeInventoryWise),
+                label: Text(l10n.reportTypeResourcesWise),
                 selected: _type == ReportType.inventoryWise,
                 onSelected: (_) =>
                     setState(() => _type = ReportType.inventoryWise),

@@ -60,3 +60,39 @@ String localizedRentalNoteKind(AppLocalizations l10n, RentalNoteKind kind) {
       return l10n.orderNoteKindMeasurement;
   }
 }
+
+/// Badge label for non-rental catalog types; null for [ResourceType.rental].
+String? localizedResourceTypeBadge(AppLocalizations l10n, ResourceType type) {
+  switch (type) {
+    case ResourceType.rental:
+      return null;
+    case ResourceType.sale:
+      return l10n.itemKindSaleBadge;
+    case ResourceType.service:
+      return l10n.itemKindServiceBadge;
+    case ResourceType.job:
+      return l10n.itemKindJobBadge;
+    case ResourceType.subscription:
+      return l10n.itemKindSubscriptionBadge;
+    case ResourceType.membership:
+      return l10n.itemKindMembershipBadge;
+    case ResourceType.loan:
+      return l10n.itemKindLoanBadge;
+    case ResourceType.financial:
+      return l10n.itemKindFinancialBadge;
+    case ResourceType.custom:
+      return l10n.itemKindCustomBadge;
+  }
+}
+
+/// Category line with optional resource-type badge (e.g. `Gym · Membership`).
+String categoryWithResourceTypeBadge(
+  AppLocalizations l10n,
+  InventoryItem item,
+) {
+  final String? badge = localizedResourceTypeBadge(l10n, item.defaultItemKind);
+  if (badge == null) {
+    return item.category;
+  }
+  return '${item.category} · $badge';
+}
