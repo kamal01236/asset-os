@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/l10n/india_date_format.dart';
 import '../../core/l10n/l10n_ext.dart';
 import '../../core/models/entities.dart';
 import '../../core/models/unknown_customer.dart';
@@ -117,11 +118,12 @@ class _LoanCreateScreenState extends ConsumerState<LoanCreateScreen> {
           ListTile(
             contentPadding: EdgeInsets.zero,
             title: Text(l10n.loanMoneyGivenOnLabel),
-            subtitle: Text(_formatDate(_startedAt)),
+            subtitle: Text(formatIndiaDate(_startedAt)),
             trailing: const Icon(Icons.calendar_today_outlined),
             onTap: () async {
               final DateTime? picked = await showDatePicker(
                 context: context,
+                locale: indiaDatePickerLocale(context),
                 initialDate: _startedAt,
                 firstDate: DateTime(2000),
                 lastDate: DateTime.now(),
@@ -135,7 +137,7 @@ class _LoanCreateScreenState extends ConsumerState<LoanCreateScreen> {
             contentPadding: EdgeInsets.zero,
             title: Text(l10n.loanDueOptionalLabel),
             subtitle: Text(
-              _endedAt == null ? l10n.loanDueNone : _formatDate(_endedAt!),
+              _endedAt == null ? l10n.loanDueNone : formatIndiaDate(_endedAt!),
             ),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
@@ -151,6 +153,7 @@ class _LoanCreateScreenState extends ConsumerState<LoanCreateScreen> {
             onTap: () async {
               final DateTime? picked = await showDatePicker(
                 context: context,
+                locale: indiaDatePickerLocale(context),
                 initialDate: _endedAt ?? _startedAt,
                 firstDate: _startedAt,
                 lastDate: DateTime(2100),
@@ -304,12 +307,5 @@ class _LoanCreateScreenState extends ConsumerState<LoanCreateScreen> {
       );
       setState(() => _saving = false);
     }
-  }
-
-  String _formatDate(DateTime value) {
-    final String y = value.year.toString().padLeft(4, '0');
-    final String m = value.month.toString().padLeft(2, '0');
-    final String d = value.day.toString().padLeft(2, '0');
-    return '$y-$m-$d';
   }
 }

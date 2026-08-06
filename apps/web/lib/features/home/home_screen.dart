@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/l10n/india_date_format.dart';
 import '../../core/l10n/l10n_ext.dart';
 import '../../core/models/entities.dart';
 import '../../core/models/unknown_customer.dart';
@@ -821,10 +822,6 @@ String _rentalLinesLabel(Rental rental) {
   return source.map((RentalLine line) => line.displayLabel).join(', ');
 }
 
-String _shortDate(DateTime value) {
-  return '${value.day.toString().padLeft(2, '0')}/${value.month.toString().padLeft(2, '0')}/${value.year}';
-}
-
 String _rentalAmountSubtitle(AppLocalizations l10n, Rental rental) {
   final DateTime now = DateTime.now();
   final String amount = formatMoney(rental.totalAmountAsOf(now));
@@ -832,7 +829,7 @@ String _rentalAmountSubtitle(AppLocalizations l10n, Rental rental) {
     return l10n.rentalAmountOpenEnded(amount);
   }
   return l10n.rentalAmountSubtitle(
-    _shortDate(rental.dueAt!),
+    formatIndiaDate(rental.dueAt!),
     amount,
   );
 }

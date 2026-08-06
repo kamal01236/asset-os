@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../l10n/india_date_format.dart';
 import '../l10n/l10n_ext.dart';
 import '../models/entities.dart';
 import '../pricing/rental_pricing.dart';
@@ -206,22 +207,18 @@ String _rentalLinesLabel(Rental rental) {
   return source.map((RentalLine line) => line.displayLabel).join(', ');
 }
 
-String _shortDate(DateTime value) {
-  return '${value.day.toString().padLeft(2, '0')}/${value.month.toString().padLeft(2, '0')}/${value.year}';
-}
-
 String _rentalAmountSubtitle(AppLocalizations l10n, Rental rental) {
   final DateTime now = DateTime.now();
   final String amount = formatMoney(rental.totalAmountAsOf(now));
   if (rental.isOpenEnded) {
     return l10n.rentalAmountOpenEnded(amount);
   }
-  return l10n.rentalAmountSubtitle(_shortDate(rental.dueAt!), amount);
+  return l10n.rentalAmountSubtitle(formatIndiaDate(rental.dueAt!), amount);
 }
 
 String _previousRentalSubtitle(AppLocalizations l10n, Rental rental) {
   final String returned = l10n.returnedDate(
-    _shortDate(rental.returnedAt ?? rental.dueAt ?? rental.startedAt),
+    formatIndiaDate(rental.returnedAt ?? rental.dueAt ?? rental.startedAt),
   );
   if (rental.depositApplied > 0) {
     return '$returned · ${l10n.depositAppliedLabel(formatMoney(rental.depositApplied))}';

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/inventory/inventory_categories.dart';
+import '../../core/l10n/india_date_format.dart';
 import '../../core/l10n/l10n_ext.dart';
 import '../../core/models/entities.dart';
 import '../../core/models/unknown_customer.dart';
@@ -795,12 +796,6 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
     }
   }
 
-  String _formatDate(DateTime value) {
-    return '${value.day.toString().padLeft(2, '0')}/'
-        '${value.month.toString().padLeft(2, '0')}/'
-        '${value.year}';
-  }
-
   @override
   Widget build(BuildContext context) {
     final AppLocalizations l10n = context.l10n;
@@ -946,7 +941,7 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
                   !draft.leaveOpenEnded) ...<Widget>[
                 Text(
                   l10n.chargePreviewDue(
-                    _formatDate(_previewDue(draft, item)!),
+                    formatIndiaDate(_previewDue(draft, item)!),
                   ),
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
@@ -1294,7 +1289,7 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
                     const SizedBox(height: 8),
                     Text(
                       l10n.chargePreviewDue(
-                        _formatDate(_previewDue(draft, selected)!),
+                        formatIndiaDate(_previewDue(draft, selected)!),
                       ),
                     ),
                     Text(
@@ -1426,13 +1421,14 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
                           subtitle: Text(
                             draft.customEnd == null
                                 ? '—'
-                                : _formatDate(draft.customEnd!),
+                                : formatIndiaDate(draft.customEnd!),
                           ),
                           trailing: const Icon(Icons.calendar_today_outlined),
                           onTap: () async {
                             final DateTime now = DateTime.now();
                             final DateTime? picked = await showDatePicker(
                               context: context,
+                              locale: indiaDatePickerLocale(context),
                               initialDate: draft.customEnd ??
                                   now.add(const Duration(days: 1)),
                               firstDate:

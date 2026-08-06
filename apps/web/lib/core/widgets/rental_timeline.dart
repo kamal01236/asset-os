@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/india_date_format.dart';
 import '../l10n/l10n_ext.dart';
 import '../l10n/timeline_l10n.dart';
 import '../models/entities.dart';
@@ -52,7 +53,7 @@ class RentalTimeline extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(localizeTimelineSubtitle(l10n, event.subtitle)),
                   Text(
-                    _formatDate(event.at),
+                    formatIndiaDateTime(event.at),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
@@ -68,7 +69,4 @@ class RentalTimeline extends StatelessWidget {
     );
   }
 
-  String _formatDate(DateTime value) {
-    return '${value.day}/${value.month}/${value.year} ${value.hour.toString().padLeft(2, '0')}:${value.minute.toString().padLeft(2, '0')}';
-  }
 }

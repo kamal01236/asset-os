@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/l10n/india_date_format.dart';
 import '../../core/l10n/l10n_ext.dart';
 import '../../core/models/entities.dart';
 import '../../core/providers/app_providers.dart';
@@ -166,7 +167,7 @@ class _ShareReportsScreenState extends ConsumerState<ShareReportsScreen> {
                     onPressed: () => _pickDate(isStart: true),
                     icon: const Icon(Icons.calendar_today_outlined, size: 18),
                     label: Text(
-                      '${l10n.reportStartDate}: ${_formatShort(_customStart ?? now)}',
+                      '${l10n.reportStartDate}: ${formatIndiaDate(_customStart ?? now)}',
                     ),
                   ),
                 ),
@@ -176,7 +177,7 @@ class _ShareReportsScreenState extends ConsumerState<ShareReportsScreen> {
                     onPressed: () => _pickDate(isStart: false),
                     icon: const Icon(Icons.event_outlined, size: 18),
                     label: Text(
-                      '${l10n.reportEndDate}: ${_formatShort(_customEnd ?? now)}',
+                      '${l10n.reportEndDate}: ${formatIndiaDate(_customEnd ?? now)}',
                     ),
                   ),
                 ),
@@ -254,6 +255,7 @@ class _ShareReportsScreenState extends ConsumerState<ShareReportsScreen> {
         : (_customEnd ?? now);
     final DateTime? picked = await showDatePicker(
       context: context,
+      locale: indiaDatePickerLocale(context),
       initialDate: initial,
       firstDate: DateTime(now.year - 5),
       lastDate: DateTime(now.year + 1),
@@ -312,13 +314,6 @@ class _ShareReportsScreenState extends ConsumerState<ShareReportsScreen> {
         setState(() => _sharing = false);
       }
     }
-  }
-
-  String _formatShort(DateTime value) {
-    final String y = value.year.toString().padLeft(4, '0');
-    final String m = value.month.toString().padLeft(2, '0');
-    final String d = value.day.toString().padLeft(2, '0');
-    return '$y-$m-$d';
   }
 }
 

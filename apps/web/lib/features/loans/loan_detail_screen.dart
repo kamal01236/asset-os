@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/l10n/india_date_format.dart';
 import '../../core/l10n/l10n_ext.dart';
 import '../../core/models/entities.dart';
 import '../../core/pricing/rental_pricing.dart';
@@ -185,11 +186,12 @@ class _LoanDetailScreenState extends ConsumerState<LoanDetailScreen> {
                   ListTile(
                     contentPadding: EdgeInsets.zero,
                     title: Text(l10n.loanEntryDateLabel),
-                    subtitle: Text(_formatDate(entryAt)),
+                    subtitle: Text(formatIndiaDate(entryAt)),
                     trailing: const Icon(Icons.calendar_today_outlined),
                     onTap: () async {
                       final DateTime? picked = await showDatePicker(
                         context: context,
+                        locale: indiaDatePickerLocale(context),
                         initialDate: entryAt,
                         firstDate: DateTime(2000),
                         lastDate: DateTime.now(),
@@ -289,10 +291,11 @@ class _LoanDetailScreenState extends ConsumerState<LoanDetailScreen> {
                   ListTile(
                     contentPadding: EdgeInsets.zero,
                     title: Text(l10n.loanMoneyGivenOnLabel),
-                    subtitle: Text(_formatDate(started)),
+                    subtitle: Text(formatIndiaDate(started)),
                     onTap: () async {
                       final DateTime? picked = await showDatePicker(
                         context: context,
+                        locale: indiaDatePickerLocale(context),
                         initialDate: started,
                         firstDate: DateTime(2000),
                         lastDate: DateTime.now(),
@@ -308,7 +311,7 @@ class _LoanDetailScreenState extends ConsumerState<LoanDetailScreen> {
                     subtitle: Text(
                       ended == null
                           ? l10n.loanDueNone
-                          : _formatDate(ended!),
+                          : formatIndiaDate(ended!),
                     ),
                     trailing: ended == null
                         ? null
@@ -319,6 +322,7 @@ class _LoanDetailScreenState extends ConsumerState<LoanDetailScreen> {
                     onTap: () async {
                       final DateTime? picked = await showDatePicker(
                         context: context,
+                        locale: indiaDatePickerLocale(context),
                         initialDate: ended ?? started,
                         firstDate: started,
                         lastDate: DateTime(2100),
@@ -427,13 +431,6 @@ class _LoanDetailScreenState extends ConsumerState<LoanDetailScreen> {
         SnackBar(content: Text('$e')),
       );
     }
-  }
-
-  String _formatDate(DateTime value) {
-    final String y = value.year.toString().padLeft(4, '0');
-    final String m = value.month.toString().padLeft(2, '0');
-    final String d = value.day.toString().padLeft(2, '0');
-    return '$y-$m-$d';
   }
 }
 
@@ -559,10 +556,10 @@ class _SetupSummary extends StatelessWidget {
     final String kind = loan.interestKind == MoneyInterestKind.simple
         ? l10n.loanInterestSimple
         : l10n.loanInterestCompound;
-    final String start = _formatDate(loan.interestStartedAt);
+    final String start = formatIndiaDate(loan.interestStartedAt);
     final String due = loan.interestEndedAt == null
         ? l10n.loanDueNone
-        : _formatDate(loan.interestEndedAt!);
+        : formatIndiaDate(loan.interestEndedAt!);
 
     return Text(
       l10n.loanSetupSummary(start, due, '$ratePct%', period, kind),
@@ -570,13 +567,6 @@ class _SetupSummary extends StatelessWidget {
             color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
     );
-  }
-
-  String _formatDate(DateTime value) {
-    final String y = value.year.toString().padLeft(4, '0');
-    final String m = value.month.toString().padLeft(2, '0');
-    final String d = value.day.toString().padLeft(2, '0');
-    return '$y-$m-$d';
   }
 }
 
@@ -595,10 +585,10 @@ class _TimelineRow extends StatelessWidget {
     );
     final String text = switch (event.kind) {
       LoanTimelineKind.start =>
-        l10n.loanTimelineStart(_formatDate(event.at), money),
+        l10n.loanTimelineStart(formatIndiaDate(event.at), money),
       LoanTimelineKind.interestSegment => l10n.loanTimelineInterest(
-          _formatDate(event.from ?? event.at),
-          _formatDate(event.at),
+          formatIndiaDate(event.from ?? event.at),
+          formatIndiaDate(event.at),
           formatMoney(
             event.principalBasisPaise ?? 0,
             currencyCode: loan.currencyCode,
@@ -606,17 +596,17 @@ class _TimelineRow extends StatelessWidget {
           money,
         ),
       LoanTimelineKind.payment => l10n.loanTimelinePayment(
-          _formatDate(event.at),
+          formatIndiaDate(event.at),
           money,
           formatMoney(event.toInterestPaise, currencyCode: loan.currencyCode),
           formatMoney(event.toPrincipalPaise, currencyCode: loan.currencyCode),
         ),
       LoanTimelineKind.adjustment => l10n.loanTimelineAdjustment(
-          _formatDate(event.at),
+          formatIndiaDate(event.at),
           money,
         ),
       LoanTimelineKind.pendingAsOf =>
-        l10n.loanTimelinePending(_formatDate(event.at), money),
+        l10n.loanTimelinePending(formatIndiaDate(event.at), money),
     };
 
     return Padding(
@@ -649,12 +639,5 @@ class _TimelineRow extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  String _formatDate(DateTime value) {
-    final String y = value.year.toString().padLeft(4, '0');
-    final String m = value.month.toString().padLeft(2, '0');
-    final String d = value.day.toString().padLeft(2, '0');
-    return '$y-$m-$d';
   }
 }

@@ -176,6 +176,7 @@ void main() {
         now: now,
       );
       expect(text, contains(l10n.reportHeader(kAppDisplayName)));
+      expect(text, contains('26/07/2026 → 02/08/2026'));
       expect(text, contains(l10n.reportTypeSummary));
       expect(text, contains(l10n.reportActiveCount(2)));
       expect(text, contains(l10n.reportOpenedCount(2)));

@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 
 import '../config/app_branding.dart';
+import '../l10n/india_date_format.dart';
 import '../l10n/l10n_ext.dart';
 import '../loans/loan_balance.dart';
 import '../loans/loan_models.dart';
@@ -57,7 +58,7 @@ class ReportBuilder {
         body = _buildInventoryWise(l10n, range, inventory, rentals);
     }
     final String header =
-        '${l10n.reportHeader(appName)}\n${_formatDate(range.start)} → ${_formatDate(range.end)}\n';
+        '${l10n.reportHeader(appName)}\n${formatIndiaDate(range.start)} → ${formatIndiaDate(range.end)}\n';
     return _truncate(l10n, '$header\n$body'.trimRight());
   }
 
@@ -467,7 +468,7 @@ class ReportBuilder {
             : '';
         final String dueBit = rental.dueAt == null
             ? l10n.reportOpenEnded
-            : l10n.reportDueDateBit(_formatDate(rental.dueAt!));
+            : l10n.reportDueDateBit(formatIndiaDate(rental.dueAt!));
         lines.add(
           l10n.reportCustomerRentalLine(
             prefix,
@@ -551,13 +552,6 @@ class ReportBuilder {
 
   bool _inRange(DateTime value, ReportDateRange range) {
     return !value.isBefore(range.start) && !value.isAfter(range.end);
-  }
-
-  String _formatDate(DateTime value) {
-    final String y = value.year.toString().padLeft(4, '0');
-    final String m = value.month.toString().padLeft(2, '0');
-    final String d = value.day.toString().padLeft(2, '0');
-    return '$y-$m-$d';
   }
 
   String _truncate(AppLocalizations l10n, String text) {

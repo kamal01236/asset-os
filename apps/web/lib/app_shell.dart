@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/config/app_branding.dart';
 import 'core/inventory/inventory_categories.dart';
+import 'core/l10n/india_date_format.dart';
 import 'core/l10n/l10n_ext.dart';
 import 'core/models/customer_activity.dart';
 import 'core/models/customer_balance.dart';
@@ -1346,7 +1347,7 @@ class _RentalDetailScreenState extends ConsumerState<RentalDetailScreen> {
                         ? l10n.reviewOpenEndedLabel
                         : (rental.dueAt == null
                             ? l10n.reviewOpenEndedLabel
-                            : l10n.reviewDueLabel(_date(rental.dueAt!))),
+                            : l10n.reviewDueLabel(formatIndiaDate(rental.dueAt!))),
                   ),
                   if (rental.isOpenEnded && rental.isActive)
                     Text(l10n.accruedAmountHint),
@@ -1507,7 +1508,7 @@ class _RentalDetailScreenState extends ConsumerState<RentalDetailScreen> {
                               ),
                             Text(note.body),
                             Text(
-                              _dateTime(note.createdAt),
+                              formatIndiaDateTime(note.createdAt),
                               style: Theme.of(context)
                                   .textTheme
                                   .bodySmall
@@ -2451,7 +2452,7 @@ class ReturnFlowScreen extends ConsumerWidget {
                           rental.isOpenEnded
                               ? l10n.rentalAmountOpenEnded(formatMoney(total))
                               : l10n.rentalAmountSubtitle(
-                                  _date(rental.dueAt!),
+                                  formatIndiaDate(rental.dueAt!),
                                   formatMoney(total),
                                 ),
                           if (rental.isOpenEnded) l10n.accruedAmountHint,
@@ -2911,14 +2912,6 @@ Widget _balanceLabeledRow(
       Text(amount, style: amountStyle),
     ],
   );
-}
-
-String _date(DateTime value) {
-  return '${value.day.toString().padLeft(2, '0')}/${value.month.toString().padLeft(2, '0')}/${value.year}';
-}
-
-String _dateTime(DateTime value) {
-  return '${_date(value)} ${value.hour.toString().padLeft(2, '0')}:${value.minute.toString().padLeft(2, '0')}';
 }
 
 Future<void> _showAddOrderNoteSheet({
