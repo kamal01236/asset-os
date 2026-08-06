@@ -7,7 +7,7 @@ These are intentionally lightweight stubs so core rental UX remains stable.
 - Future intent examples: "Find customer Priya", "Return rental REN-3001".
 
 ## Business templates
-- **First launch:** empty DB requires choosing an industry template; the full pack seeds inventory and Home modules (no skip-empty in this pass).
+- **First launch:** empty DB runs Language → Offline/Online → WhatsApp (online only; OTP later) → industry template; the full pack seeds inventory and Home modules (no skip-empty in this pass).
 - Afterward, **More → Business Templates**: pick an industry pack, multi-select starter items, then merge into inventory (duplicate names skipped).
 - Packs: Library, Camera Rental, Farm Equipment, Event Rental, Construction/Tools, Office Assets, Beauty Parlour, Boutique, Gym Membership.
 - Vocabulary/label presets (Library Edition-style relabeling) remain a later extension.

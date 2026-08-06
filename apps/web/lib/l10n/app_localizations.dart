@@ -392,6 +392,90 @@ abstract class AppLocalizations {
   /// **'Import starter resources by industry (merge types). Applying Home layout replaces enabled types.'**
   String get businessTemplatesSubtitle;
 
+  /// No description provided for @onboardingStepProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Step {current} of {total}'**
+  String onboardingStepProgress(int current, int total);
+
+  /// No description provided for @onboardingLanguageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your language'**
+  String get onboardingLanguageTitle;
+
+  /// No description provided for @onboardingLanguageSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You can change this later in More.'**
+  String get onboardingLanguageSubtitle;
+
+  /// No description provided for @onboardingModeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How do you want to work?'**
+  String get onboardingModeTitle;
+
+  /// No description provided for @onboardingModeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline is the default — everything stays on this device.'**
+  String get onboardingModeSubtitle;
+
+  /// No description provided for @onboardingModeOfflineTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline'**
+  String get onboardingModeOfflineTitle;
+
+  /// No description provided for @onboardingModeOfflineSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Works without internet. Data stays local-first on this device.'**
+  String get onboardingModeOfflineSubtitle;
+
+  /// No description provided for @onboardingModeOnlineTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Online'**
+  String get onboardingModeOnlineTitle;
+
+  /// No description provided for @onboardingModeOnlineSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'WhatsApp reports and future sync / OTP ownership proof.'**
+  String get onboardingModeOnlineSubtitle;
+
+  /// No description provided for @onboardingWhatsAppTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your WhatsApp number'**
+  String get onboardingWhatsAppTitle;
+
+  /// No description provided for @onboardingWhatsAppSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Required for online mode so we can verify ownership and share reports to you.'**
+  String get onboardingWhatsAppSubtitle;
+
+  /// No description provided for @onboardingWhatsAppOtpLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'OTP'**
+  String get onboardingWhatsAppOtpLabel;
+
+  /// No description provided for @onboardingWhatsAppOtpHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Coming later'**
+  String get onboardingWhatsAppOtpHint;
+
+  /// No description provided for @onboardingWhatsAppOtpLater.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'ll verify this number by OTP later. Saving the number is enough for now.'**
+  String get onboardingWhatsAppOtpLater;
+
   /// No description provided for @onboardingTemplateTitle.
   ///
   /// In en, this message translates to:

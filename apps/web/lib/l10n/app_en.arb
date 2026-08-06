@@ -68,6 +68,26 @@
   "voiceSearchStubSubtitle": "Placeholder for intent-based search commands.",
   "businessTemplatesTitle": "Business Templates",
   "businessTemplatesSubtitle": "Import starter resources by industry (merge types). Applying Home layout replaces enabled types.",
+  "onboardingStepProgress": "Step {current} of {total}",
+  "@onboardingStepProgress": {
+    "placeholders": {
+      "current": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "onboardingLanguageTitle": "Choose your language",
+  "onboardingLanguageSubtitle": "You can change this later in More.",
+  "onboardingModeTitle": "How do you want to work?",
+  "onboardingModeSubtitle": "Offline is the default — everything stays on this device.",
+  "onboardingModeOfflineTitle": "Offline",
+  "onboardingModeOfflineSubtitle": "Works without internet. Data stays local-first on this device.",
+  "onboardingModeOnlineTitle": "Online",
+  "onboardingModeOnlineSubtitle": "WhatsApp reports and future sync / OTP ownership proof.",
+  "onboardingWhatsAppTitle": "Your WhatsApp number",
+  "onboardingWhatsAppSubtitle": "Required for online mode so we can verify ownership and share reports to you.",
+  "onboardingWhatsAppOtpLabel": "OTP",
+  "onboardingWhatsAppOtpHint": "Coming later",
+  "onboardingWhatsAppOtpLater": "We'll verify this number by OTP later. Saving the number is enough for now.",
   "onboardingTemplateTitle": "Choose your business type",
   "onboardingTemplateSubtitle": "We'll add starter resources for your industry. You can add more later from More → Business Templates.",
   "onboardingTemplateConfirm": "Use this template",

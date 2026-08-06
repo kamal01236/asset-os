@@ -9,7 +9,7 @@ import 'core/l10n/l10n_ext.dart';
 import 'core/providers/app_providers.dart';
 import 'core/repositories/local_repository.dart';
 import 'core/theme/app_theme.dart';
-import 'features/onboarding/template_onboarding_screen.dart';
+import 'features/onboarding/onboarding_wizard_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -53,7 +53,7 @@ class MainApp extends ConsumerWidget {
       supportedLocales: AppLocalizations.supportedLocales,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       home: needsOnboarding
-          ? const TemplateOnboardingScreen()
+          ? const OnboardingWizardScreen()
           : const AppShell(),
     );
   }

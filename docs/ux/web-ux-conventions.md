@@ -21,7 +21,7 @@ UI-first conventions for `apps/web` to keep flows fast, clear, and touch-friendl
 - Archived = grey
 
 ## Home (attention-first)
-- **First launch:** empty DB shows a required industry-template picker (full pack seeds resources + Home modules) before the shell. More → Business Templates remains for later merges.
+- **First launch:** empty DB shows a multi-step onboarding wizard before the shell: **Language** (EN default / HI) → **Offline or Online** (Offline default) → **WhatsApp** only when Online (required; OTP verification stubbed for later) → **industry template** (full pack seeds resources + Home modules). More → Business Templates remains for later merges.
 - Home KPI status chips are compact and tappable: tap navigates to the matching tab with that list filter applied (Active / Due today / Overdue → Orders; Available → Resources). Clear the filter chip on the destination tab to restore the full list.
 - Home is modular (`search`, `kpis`, `filterResults`, `needsAttention`, `pendingJobs`, `quickActions`, `recentActivity`, `suggestions`). Defaults are `search`, `kpis`, `needsAttention` — no Quick Actions or Pending jobs on the default stack (FAB covers New Order / Return; both modules stay available via Customize Home). No in-place `filterResults` under KPIs. Business templates set Home defaults and enabled resource types: rental packs use the thin default; library / membership add `recentActivity`; job/service packs add `pendingJobs`. More → Customize Home lets users show/hide removable modules (including optional `filterResults`). Search is always on.
 - Prefer overdue/due lists and status filters over chart dashboards.
@@ -69,3 +69,15 @@ UI-first conventions for `apps/web` to keep flows fast, clear, and touch-friendl
 - All user-visible chrome (nav, actions, forms, empty states, status labels, More) is l10n-backed via Flutter gen-l10n (`en` default, `hi` selectable).
 - Add new chrome strings to ARB files first; do not hardcode UI copy in widgets.
 - Keep `kAppDisplayName` and seeded entity/data names untranslated.
+
+## First-load onboarding (backlog — not in this pass)
+
+Documented ideas only; do not implement until scoped:
+
+- Real WhatsApp / SMS OTP verification for online mode.
+- Dark / Light theme pick during onboarding (today defaults Dark; More toggle remains).
+- Business display name / shop name for reports.
+- Currency default (INR today).
+- Optional ~30-second guided tour (New Order / Return / Resources).
+- “Start empty” escape hatch after language (advanced).
+- Restore from backup as an alternate first-run path.

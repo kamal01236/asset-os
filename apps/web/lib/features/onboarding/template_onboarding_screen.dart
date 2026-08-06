@@ -7,17 +7,39 @@ import '../../core/providers/app_providers.dart';
 import '../../core/templates/industry_templates.dart';
 import '../../core/widgets/ui_primitives.dart';
 
-/// First-load gate: require an industry template before entering the shell.
-class TemplateOnboardingScreen extends ConsumerStatefulWidget {
+/// Standalone first-load template picker (Scaffold + brand). Prefer embedding
+/// [TemplateOnboardingBody] inside [OnboardingWizardScreen] for the full gate.
+class TemplateOnboardingScreen extends StatelessWidget {
   const TemplateOnboardingScreen({super.key});
 
   @override
-  ConsumerState<TemplateOnboardingScreen> createState() =>
-      _TemplateOnboardingScreenState();
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: SafeArea(
+        child: TemplateOnboardingBody(showBrandHeader: true),
+      ),
+    );
+  }
 }
 
-class _TemplateOnboardingScreenState
-    extends ConsumerState<TemplateOnboardingScreen> {
+/// Industry template picker body used by the onboarding wizard (and standalone).
+class TemplateOnboardingBody extends ConsumerStatefulWidget {
+  const TemplateOnboardingBody({
+    this.showBrandHeader = false,
+    this.padding = const EdgeInsets.fromLTRB(16, 8, 16, 24),
+    super.key,
+  });
+
+  final bool showBrandHeader;
+  final EdgeInsetsGeometry padding;
+
+  @override
+  ConsumerState<TemplateOnboardingBody> createState() =>
+      _TemplateOnboardingBodyState();
+}
+
+class _TemplateOnboardingBodyState
+    extends ConsumerState<TemplateOnboardingBody> {
   bool _submitting = false;
 
   Future<void> _chooseTemplate(IndustryTemplate template) async {
@@ -90,61 +112,59 @@ class _TemplateOnboardingScreenState
     final AppLocalizations l10n = context.l10n;
     final ThemeData theme = Theme.of(context);
     final Locale locale = Localizations.localeOf(context);
-    return Scaffold(
-      body: SafeArea(
-        child: Stack(
+    return Stack(
+      children: <Widget>[
+        ListView(
+          padding: widget.padding,
           children: <Widget>[
-            ListView(
-              padding: const EdgeInsets.fromLTRB(16, 28, 16, 24),
-              children: <Widget>[
-                Text(
-                  kAppDisplayName,
-                  style: theme.textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
+            if (widget.showBrandHeader) ...<Widget>[
+              Text(
+                kAppDisplayName,
+                style: theme.textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
                 ),
-                const SizedBox(height: 10),
-                Text(
-                  l10n.onboardingTemplateTitle,
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  l10n.onboardingTemplateSubtitle,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                ...kIndustryTemplates.map(
-                  (IndustryTemplate template) => Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
-                    child: EntityCard(
-                      title: template.localizedName(locale),
-                      subtitle: l10n.templateCardSubtitle(
-                        template.localizedDescription(locale),
-                        template.items.length,
-                      ),
-                      leadingIcon: Icons.storefront_outlined,
-                      trailing: const Icon(Icons.chevron_right),
-                      onTap: _submitting
-                          ? null
-                          : () => _chooseTemplate(template),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            if (_submitting)
-              const ColoredBox(
-                color: Color(0x66000000),
-                child: Center(child: CircularProgressIndicator()),
               ),
+              const SizedBox(height: 10),
+            ],
+            Text(
+              l10n.onboardingTemplateTitle,
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              l10n.onboardingTemplateSubtitle,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 20),
+            ...kIndustryTemplates.map(
+              (IndustryTemplate template) => Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: EntityCard(
+                  title: template.localizedName(locale),
+                  subtitle: l10n.templateCardSubtitle(
+                    template.localizedDescription(locale),
+                    template.items.length,
+                  ),
+                  leadingIcon: Icons.storefront_outlined,
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: _submitting
+                      ? null
+                      : () => _chooseTemplate(template),
+                ),
+              ),
+            ),
           ],
         ),
-      ),
+        if (_submitting)
+          const ColoredBox(
+            color: Color(0x66000000),
+            child: Center(child: CircularProgressIndicator()),
+          ),
+      ],
     );
   }
 }

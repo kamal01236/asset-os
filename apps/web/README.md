@@ -6,7 +6,7 @@ Flutter shell for Hando (web for local validation and GitHub Pages feedback). Na
 
 - **Source of truth:** Drift (SQLite). On web, `sqlite3.wasm` and `drift_worker.js` live under `web/`.
 - **State:** Riverpod providers watch repository streams; UI screens are `ConsumerWidget`s.
-- **Migration:** One-time import from SharedPreferences `asset_os_snapshot_v1` when the DB is empty. Production first boot does **not** load the Priya/DSLR demo snapshot — only the Unknown customer sentinel, then a required industry-template picker seeds inventory.
+- **Migration:** One-time import from SharedPreferences `asset_os_snapshot_v1` when the DB is empty. Production first boot does **not** load the Priya/DSLR demo snapshot — only the Unknown customer sentinel, then the Language → Mode → WhatsApp (online) → industry-template wizard seeds inventory.
 - **Sync / encryption:** Not implemented yet — see [ADR-002](../../docs/architecture/decisions/ADR-002-local-first-foundation.md).
 
 After dependency or schema changes:
@@ -37,7 +37,14 @@ Public preview: push to `main` → GitHub Pages at [https://kamal01236.github.io
 
 ## First launch
 
-On an empty database, Hando asks you to **choose a business type** (industry template). That packs all starter inventory items and applies the template’s Home layout. There is no skip-empty path in this pass.
+On an empty database, Hando runs a short onboarding wizard:
+
+1. **Language** — English (default) or Hindi  
+2. **Working mode** — Offline (default, local-first) or Online  
+3. **WhatsApp** — only when Online; number required (OTP verification comes later)  
+4. **Business type** — industry template packs starter inventory and Home layout  
+
+There is no skip-empty path in this pass. Already-onboarded installs never re-prompt.
 
 ## Business Templates
 

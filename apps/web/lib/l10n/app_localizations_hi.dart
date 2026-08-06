@@ -168,6 +168,55 @@ class AppLocalizationsHi extends AppLocalizations {
       'उद्योग के अनुसार स्टार्टर संसाधन आयात करें (प्रकार मर्ज)। होम लेआउट लागू करने पर सक्षम प्रकार बदल जाते हैं।';
 
   @override
+  String onboardingStepProgress(int current, int total) {
+    return 'चरण $current / $total';
+  }
+
+  @override
+  String get onboardingLanguageTitle => 'अपनी भाषा चुनें';
+
+  @override
+  String get onboardingLanguageSubtitle => 'बाद में और में बदल सकते हैं।';
+
+  @override
+  String get onboardingModeTitle => 'आप कैसे काम करना चाहते हैं?';
+
+  @override
+  String get onboardingModeSubtitle =>
+      'ऑफ़लाइन डिफ़ॉल्ट है — सब कुछ इसी डिवाइस पर रहता है।';
+
+  @override
+  String get onboardingModeOfflineTitle => 'ऑफ़लाइन';
+
+  @override
+  String get onboardingModeOfflineSubtitle =>
+      'इंटरनेट के बिना चलता है। डेटा लोकल-फर्स्ट इसी डिवाइस पर रहता है।';
+
+  @override
+  String get onboardingModeOnlineTitle => 'ऑनलाइन';
+
+  @override
+  String get onboardingModeOnlineSubtitle =>
+      'WhatsApp रिपोर्ट और भविष्य का सिंक / OTP स्वामित्व प्रमाण।';
+
+  @override
+  String get onboardingWhatsAppTitle => 'आपका WhatsApp नंबर';
+
+  @override
+  String get onboardingWhatsAppSubtitle =>
+      'ऑनलाइन मोड के लिए आवश्यक — स्वामित्व सत्यापन और रिपोर्ट शेयर के लिए।';
+
+  @override
+  String get onboardingWhatsAppOtpLabel => 'OTP';
+
+  @override
+  String get onboardingWhatsAppOtpHint => 'बाद में आएगा';
+
+  @override
+  String get onboardingWhatsAppOtpLater =>
+      'हम इस नंबर को बाद में OTP से सत्यापित करेंगे। अभी नंबर सहेजना पर्याप्त है।';
+
+  @override
   String get onboardingTemplateTitle => 'अपना व्यवसाय प्रकार चुनें';
 
   @override

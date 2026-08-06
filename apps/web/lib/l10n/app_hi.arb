@@ -68,6 +68,26 @@
   "voiceSearchStubSubtitle": "इंटेंट-आधारित खोज कमांड के लिए प्लेसहोल्डर।",
   "businessTemplatesTitle": "व्यवसाय टेम्पलेट",
   "businessTemplatesSubtitle": "उद्योग के अनुसार स्टार्टर संसाधन आयात करें (प्रकार मर्ज)। होम लेआउट लागू करने पर सक्षम प्रकार बदल जाते हैं।",
+  "onboardingStepProgress": "चरण {current} / {total}",
+  "@onboardingStepProgress": {
+    "placeholders": {
+      "current": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "onboardingLanguageTitle": "अपनी भाषा चुनें",
+  "onboardingLanguageSubtitle": "बाद में और में बदल सकते हैं।",
+  "onboardingModeTitle": "आप कैसे काम करना चाहते हैं?",
+  "onboardingModeSubtitle": "ऑफ़लाइन डिफ़ॉल्ट है — सब कुछ इसी डिवाइस पर रहता है।",
+  "onboardingModeOfflineTitle": "ऑफ़लाइन",
+  "onboardingModeOfflineSubtitle": "इंटरनेट के बिना चलता है। डेटा लोकल-फर्स्ट इसी डिवाइस पर रहता है।",
+  "onboardingModeOnlineTitle": "ऑनलाइन",
+  "onboardingModeOnlineSubtitle": "WhatsApp रिपोर्ट और भविष्य का सिंक / OTP स्वामित्व प्रमाण।",
+  "onboardingWhatsAppTitle": "आपका WhatsApp नंबर",
+  "onboardingWhatsAppSubtitle": "ऑनलाइन मोड के लिए आवश्यक — स्वामित्व सत्यापन और रिपोर्ट शेयर के लिए।",
+  "onboardingWhatsAppOtpLabel": "OTP",
+  "onboardingWhatsAppOtpHint": "बाद में आएगा",
+  "onboardingWhatsAppOtpLater": "हम इस नंबर को बाद में OTP से सत्यापित करेंगे। अभी नंबर सहेजना पर्याप्त है।",
   "onboardingTemplateTitle": "अपना व्यवसाय प्रकार चुनें",
   "onboardingTemplateSubtitle": "हम आपके उद्योग के लिए स्टार्टर संसाधन जोड़ेंगे। बाद में और → व्यवसाय टेम्पलेट से और जोड़ सकते हैं।",
   "onboardingTemplateConfirm": "यह टेम्पलेट उपयोग करें",

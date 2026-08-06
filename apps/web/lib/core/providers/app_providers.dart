@@ -47,9 +47,26 @@ export '../reports/report_widgets.dart'
 
 const String kLocalePrefsKey = 'asset_os_locale';
 const String kThemeModePrefsKey = 'asset_os_theme_mode';
+const String kPreferredModePrefsKey = 'asset_os_preferred_mode';
 const String kOwnerWhatsAppPhoneKey = 'owner_whatsapp_phone';
 const String kOwnerWhatsAppCountryCodeKey = 'owner_whatsapp_country_code';
 const String kDefaultWhatsAppCountryCode = '91';
+
+/// First-load / preferred working mode (local-first vs cloud-ready path).
+enum PreferredWorkingMode {
+  offline,
+  online;
+
+  String get prefsValue => name;
+
+  static PreferredWorkingMode fromPrefsValue(String? raw) {
+    if (raw == PreferredWorkingMode.online.prefsValue) {
+      return PreferredWorkingMode.online;
+    }
+    // Missing or unknown → offline (product offline-first default).
+    return PreferredWorkingMode.offline;
+  }
+}
 
 final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
   throw UnimplementedError('SharedPreferences must be overridden in ProviderScope.');
@@ -92,6 +109,41 @@ const int kTabIndexMore = 4;
 final currentTabIndexProvider = StateProvider<int>((ref) => 0);
 
 final offlineModeProvider = StateProvider<bool>((ref) => false);
+
+/// Persisted Offline / Online preference from first-load onboarding.
+/// Maps to [offlineModeProvider] when set (offline → true, online → false).
+final preferredModeProvider =
+    StateNotifierProvider<PreferredModeNotifier, PreferredWorkingMode>((ref) {
+  return PreferredModeNotifier(ref.watch(sharedPreferencesProvider), ref);
+});
+
+class PreferredModeNotifier extends StateNotifier<PreferredWorkingMode> {
+  PreferredModeNotifier(this._preferences, this._ref)
+      : super(
+          PreferredWorkingMode.fromPrefsValue(
+            _preferences.getString(kPreferredModePrefsKey),
+          ),
+        ) {
+    if (_preferences.containsKey(kPreferredModePrefsKey)) {
+      // Defer so sibling providers finish constructing.
+      Future.microtask(() => _syncOfflineFlag(state));
+    }
+  }
+
+  final SharedPreferences _preferences;
+  final Ref _ref;
+
+  Future<void> setMode(PreferredWorkingMode mode) async {
+    state = mode;
+    await _preferences.setString(kPreferredModePrefsKey, mode.prefsValue);
+    _syncOfflineFlag(mode);
+  }
+
+  void _syncOfflineFlag(PreferredWorkingMode mode) {
+    _ref.read(offlineModeProvider.notifier).state =
+        mode == PreferredWorkingMode.offline;
+  }
+}
 
 /// Persisted app locale. Defaults to English when missing or unsupported.
 final localeProvider = StateNotifierProvider<LocaleNotifier, Locale>((ref) {

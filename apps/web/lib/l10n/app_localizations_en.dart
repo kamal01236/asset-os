@@ -167,6 +167,55 @@ class AppLocalizationsEn extends AppLocalizations {
       'Import starter resources by industry (merge types). Applying Home layout replaces enabled types.';
 
   @override
+  String onboardingStepProgress(int current, int total) {
+    return 'Step $current of $total';
+  }
+
+  @override
+  String get onboardingLanguageTitle => 'Choose your language';
+
+  @override
+  String get onboardingLanguageSubtitle => 'You can change this later in More.';
+
+  @override
+  String get onboardingModeTitle => 'How do you want to work?';
+
+  @override
+  String get onboardingModeSubtitle =>
+      'Offline is the default — everything stays on this device.';
+
+  @override
+  String get onboardingModeOfflineTitle => 'Offline';
+
+  @override
+  String get onboardingModeOfflineSubtitle =>
+      'Works without internet. Data stays local-first on this device.';
+
+  @override
+  String get onboardingModeOnlineTitle => 'Online';
+
+  @override
+  String get onboardingModeOnlineSubtitle =>
+      'WhatsApp reports and future sync / OTP ownership proof.';
+
+  @override
+  String get onboardingWhatsAppTitle => 'Your WhatsApp number';
+
+  @override
+  String get onboardingWhatsAppSubtitle =>
+      'Required for online mode so we can verify ownership and share reports to you.';
+
+  @override
+  String get onboardingWhatsAppOtpLabel => 'OTP';
+
+  @override
+  String get onboardingWhatsAppOtpHint => 'Coming later';
+
+  @override
+  String get onboardingWhatsAppOtpLater =>
+      'We\'ll verify this number by OTP later. Saving the number is enough for now.';
+
+  @override
   String get onboardingTemplateTitle => 'Choose your business type';
 
   @override
