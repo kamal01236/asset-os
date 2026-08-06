@@ -67,7 +67,7 @@
   "voiceSearchStubTitle": "वॉइस खोज (स्टब)",
   "voiceSearchStubSubtitle": "इंटेंट-आधारित खोज कमांड के लिए प्लेसहोल्डर।",
   "businessTemplatesTitle": "व्यवसाय टेम्पलेट",
-  "businessTemplatesSubtitle": "उद्योग के अनुसार स्टार्टर संसाधन आयात करें (मर्ज)।",
+  "businessTemplatesSubtitle": "उद्योग के अनुसार स्टार्टर संसाधन आयात करें (प्रकार मर्ज)। होम लेआउट लागू करने पर सक्षम प्रकार बदल जाते हैं।",
   "onboardingTemplateTitle": "अपना व्यवसाय प्रकार चुनें",
   "onboardingTemplateSubtitle": "हम आपके उद्योग के लिए स्टार्टर संसाधन जोड़ेंगे। बाद में और → व्यवसाय टेम्पलेट से और जोड़ सकते हैं।",
   "onboardingTemplateConfirm": "यह टेम्पलेट उपयोग करें",
@@ -254,6 +254,7 @@
   "unitsLabel": "इकाइयाँ",
   "advancedFields": "उन्नत फ़ील्ड",
   "advancedFieldsSubtitle": "MVP में वैकल्पिक",
+  "extraFieldsSectionTitle": "अतिरिक्त फ़ील्ड",
   "saveItem": "वस्तु सहेजें",
   "scanIntro": "अगले चरण में कैमरा इंटीग्रेशन। अभी QR टेक्स्ट पेस्ट/दर्ज करें।",
   "qrContentLabel": "QR सामग्री",
@@ -262,7 +263,7 @@
   "openLinkedRecord": "लिंक किया गया रिकॉर्ड खोलें",
   "voiceSearchTitle": "वॉइस खोज",
   "voiceSearchBody": "केवल स्टब: वॉइस कमांड चरण 5+ में यूनिवर्सल खोज इंटेंट से जुड़ेंगे।",
-  "templatesIntro": "एक उद्योग चुनें, फिर जोड़ने वाली स्टार्टर वस्तुएँ चुनें। समान नाम वाली मौजूदा वस्तुएँ बनी रहती हैं (मर्ज)।",
+  "templatesIntro": "एक उद्योग चुनें, फिर जोड़ने वाली स्टार्टर वस्तुएँ चुनें। समान नाम वाली मौजूदा वस्तुएँ बनी रहती हैं। आयात सक्षम संसाधन प्रकारों को मर्ज करता है; होम लेआउट लागू करने पर वे टेम्पलेट के सेट से बदल जाते हैं।",
   "starterItemsCount": "{count} स्टार्टर वस्तुएँ",
   "@starterItemsCount": {
     "placeholders": {
@@ -636,6 +637,10 @@
   "customizeHomeTitle": "होम अनुकूलित करें",
   "customizeHomeSubtitle": "होम मॉड्यूल दिखाएँ या छिपाएँ।",
   "customizeHomeIntro": "खोज हमेशा चालू रहती है। होम को फोकस्ड रखने के लिए अन्य मॉड्यूल टॉगल करें।",
+  "enabledResourceTypesTitle": "सक्षम संसाधन प्रकार",
+  "enabledResourceTypesSubtitle": "नया ऑर्डर → अधिक विकल्प में दिखने वाले प्रकार चुनें।",
+  "enabledResourceTypesIntro": "नए ऑर्डर की पूर्ति (किराया / बिक्री / जॉब) के लिए प्रकार टॉगल करें। टेम्पलेट आइटम आयात करने पर प्रकार इस सूची में मर्ज होते हैं। टेम्पलेट का होम लेआउट लागू करने पर यह सूची टेम्पलेट के सेट से बदल जाती है।",
+  "enabledResourceTypesKeepOne": "कम से कम एक प्रकार सक्षम रखें।",
   "moduleSearch": "खोज",
   "moduleSearchLocked": "हमेशा चालू",
   "moduleKpis": "स्थिति चिप्स",
@@ -655,11 +660,11 @@
   "moduleSuggestions": "AI सुझाव",
   "moduleSuggestionsSubtitle": "वैकल्पिक बीटा सुझाव",
   "applyHomeLayoutTitle": "होम लेआउट लागू करें?",
-  "applyHomeLayoutBody": "इस टेम्पलेट के अनुशंसित होम मॉड्यूल उपयोग करें।",
-  "applyHomeLayoutCustomizedBody": "आपने होम पहले अनुकूलित किया है। इसे इस टेम्पलेट के लेआउट से बदलें?",
+  "applyHomeLayoutBody": "होम मॉड्यूल और सक्षम संसाधन प्रकारों को इस टेम्पलेट के अनुशंसित सेट से बदलें। केवल आइटम आयात करने पर प्रकार मर्ज होते हैं।",
+  "applyHomeLayoutCustomizedBody": "आपने होम पहले अनुकूलित किया है। होम मॉड्यूल और सक्षम संसाधन प्रकारों को इस टेम्पलेट के सेट से बदलें?",
   "applyHomeLayoutSkip": "वर्तमान रखें",
   "applyHomeLayoutConfirm": "लेआउट लागू करें",
-  "applyHomeLayoutDone": "होम लेआउट अपडेट हो गया।",
+  "applyHomeLayoutDone": "होम लेआउट और संसाधन प्रकार अपडेट हो गए।",
   "minMeaningfulTextError": "कम से कम {min} अक्षर दर्ज करें।",
   "@minMeaningfulTextError": {
     "placeholders": {
@@ -734,6 +739,10 @@
   },
   "labelsAutoAssignedHint": "व्यक्तिगत वस्तुओं को कैटलॉग नाम और स्वतः छोटा कोड मिलता है।",
   "orderStatusHeading": "ऑर्डर स्थिति",
+  "workflowStatusHeading": "कार्यप्रवाह स्थिति",
+  "workflowAdvanceAction": "आगे बढ़ाएँ",
+  "workflowPickStatusAction": "स्थिति चुनें",
+  "workflowStatusTerminalHint": "इस पाइपलाइन के लिए ऑर्डर पूर्ण।",
   "orderIssuedSummary": "मूल रूप से जारी: {count}",
   "@orderIssuedSummary": {
     "placeholders": {
@@ -907,6 +916,7 @@
   "timelineTitleDueToday": "आज देय",
   "timelineTitleRentalOpened": "किराया खोला गया",
   "timelineTitleIssued": "जारी",
+  "timelineTitleStatusChanged": "स्थिति बदली",
 
   "timelineSubtitleCreatedOrderFlow": "फ़ोन-फ़र्स्ट ऑर्डर फ़्लो से बनाया गया।",
   "timelineSubtitleCreatedOrderFlowSale": "फ़ोन-फ़र्स्ट ऑर्डर फ़्लो से बनाया गया (बिक्री)।",
@@ -952,6 +962,13 @@
   "timelineSubtitleCheckedOutByStaff": "1 वस्तु स्टाफ़ द्वारा जारी।",
   "timelineSubtitleClosedAtCounter": "काउंटर पर बंद।",
   "timelineSubtitleManualWalkIn": "मैनुअल वॉक-इन चेकआउट।",
+  "timelineSubtitleStatusChanged": "{from} → {to}",
+  "@timelineSubtitleStatusChanged": {
+    "placeholders": {
+      "from": {"type": "String"},
+      "to": {"type": "String"}
+    }
+  },
   "timelineSubtitleDiscountBit": "छूट {amount}।",
   "@timelineSubtitleDiscountBit": {
     "placeholders": {

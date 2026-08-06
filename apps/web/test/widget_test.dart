@@ -209,6 +209,7 @@ void main() {
     expect(find.text('Offline simulation'), findsOneWidget);
     expect(find.text('Language'), findsOneWidget);
     expect(find.text('Customize Home'), findsOneWidget);
+    expect(find.text('Enabled resource types'), findsOneWidget);
   });
 
   testWidgets('Orders tab defaults to Open scope; All includes completed', (

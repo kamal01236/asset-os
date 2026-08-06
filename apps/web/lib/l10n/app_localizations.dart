@@ -389,7 +389,7 @@ abstract class AppLocalizations {
   /// No description provided for @businessTemplatesSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Import starter resources by industry (merge).'**
+  /// **'Import starter resources by industry (merge types). Applying Home layout replaces enabled types.'**
   String get businessTemplatesSubtitle;
 
   /// No description provided for @onboardingTemplateTitle.
@@ -944,6 +944,12 @@ abstract class AppLocalizations {
   /// **'Optional in MVP'**
   String get advancedFieldsSubtitle;
 
+  /// No description provided for @extraFieldsSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Extra fields'**
+  String get extraFieldsSectionTitle;
+
   /// No description provided for @saveItem.
   ///
   /// In en, this message translates to:
@@ -995,7 +1001,7 @@ abstract class AppLocalizations {
   /// No description provided for @templatesIntro.
   ///
   /// In en, this message translates to:
-  /// **'Pick an industry, then choose which starter items to add. Existing items with the same name are kept (merge).'**
+  /// **'Pick an industry, then choose which starter items to add. Existing items with the same name are kept. Importing merges enabled resource types; applying the Home layout replaces them with the template’s set.'**
   String get templatesIntro;
 
   /// No description provided for @starterItemsCount.
@@ -1892,6 +1898,30 @@ abstract class AppLocalizations {
   /// **'Search stays on. Toggle other modules to keep Home focused.'**
   String get customizeHomeIntro;
 
+  /// No description provided for @enabledResourceTypesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enabled resource types'**
+  String get enabledResourceTypesTitle;
+
+  /// No description provided for @enabledResourceTypesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose which types appear under New Order → More options.'**
+  String get enabledResourceTypesSubtitle;
+
+  /// No description provided for @enabledResourceTypesIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Toggle types for New Order fulfillment (Rent / Sell / Job). Importing template items merges types into this list. Applying a template’s Home layout replaces this list with the template’s set.'**
+  String get enabledResourceTypesIntro;
+
+  /// No description provided for @enabledResourceTypesKeepOne.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep at least one type enabled.'**
+  String get enabledResourceTypesKeepOne;
+
   /// No description provided for @moduleSearch.
   ///
   /// In en, this message translates to:
@@ -2009,13 +2039,13 @@ abstract class AppLocalizations {
   /// No description provided for @applyHomeLayoutBody.
   ///
   /// In en, this message translates to:
-  /// **'Use this template’s recommended Home modules.'**
+  /// **'Replace Home modules and enabled resource types with this template’s recommended set. Importing items alone only merges types.'**
   String get applyHomeLayoutBody;
 
   /// No description provided for @applyHomeLayoutCustomizedBody.
   ///
   /// In en, this message translates to:
-  /// **'You customized Home earlier. Replace it with this template’s layout?'**
+  /// **'You customized Home earlier. Replace Home modules and enabled resource types with this template’s set?'**
   String get applyHomeLayoutCustomizedBody;
 
   /// No description provided for @applyHomeLayoutSkip.
@@ -2033,7 +2063,7 @@ abstract class AppLocalizations {
   /// No description provided for @applyHomeLayoutDone.
   ///
   /// In en, this message translates to:
-  /// **'Home layout updated.'**
+  /// **'Home layout and resource types updated.'**
   String get applyHomeLayoutDone;
 
   /// No description provided for @minMeaningfulTextError.
@@ -2245,6 +2275,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Order status'**
   String get orderStatusHeading;
+
+  /// No description provided for @workflowStatusHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Workflow status'**
+  String get workflowStatusHeading;
+
+  /// No description provided for @workflowAdvanceAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Advance'**
+  String get workflowAdvanceAction;
+
+  /// No description provided for @workflowPickStatusAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick status'**
+  String get workflowPickStatusAction;
+
+  /// No description provided for @workflowStatusTerminalHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Order completed for this pipeline.'**
+  String get workflowStatusTerminalHint;
 
   /// No description provided for @orderIssuedSummary.
   ///
@@ -2852,6 +2906,12 @@ abstract class AppLocalizations {
   /// **'Issued'**
   String get timelineTitleIssued;
 
+  /// No description provided for @timelineTitleStatusChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Status changed'**
+  String get timelineTitleStatusChanged;
+
   /// No description provided for @timelineSubtitleCreatedOrderFlow.
   ///
   /// In en, this message translates to:
@@ -2947,6 +3007,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Manual walk-in checkout.'**
   String get timelineSubtitleManualWalkIn;
+
+  /// No description provided for @timelineSubtitleStatusChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'{from} → {to}'**
+  String timelineSubtitleStatusChanged(String from, String to);
 
   /// No description provided for @timelineSubtitleDiscountBit.
   ///

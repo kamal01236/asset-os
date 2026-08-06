@@ -171,6 +171,15 @@ class _TemplateItemPickerScreenState extends ConsumerState<TemplateItemPickerScr
       await ref
           .read(enabledResourceTypesProvider.notifier)
           .applyTemplateTypes(widget.template.enabledResourceTypes);
+      await ref
+          .read(activeWorkflowProvider.notifier)
+          .applyTemplateWorkflow(widget.template.workflowId);
+      await ref
+          .read(extraFieldIdsProvider.notifier)
+          .applyTemplateFields(widget.template.extraFieldIds);
+      await ref
+          .read(reportWidgetsProvider.notifier)
+          .applyTemplateWidgets(widget.template.defaultReportWidgets);
       if (!mounted) {
         return;
       }

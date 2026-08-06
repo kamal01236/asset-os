@@ -861,7 +861,7 @@ Business → Resources → Transactions → Reports
 | **Business** | The installing operator (shop / gym / salon / …); one local installation = one business in V1 |
 | **Resource** | Catalog unit: physical item, service, job, membership, digital asset, or financial record |
 | **Transaction** | Universal action: counterparty + resource lines + status + timeline (today’s rental/order is the first shape) |
-| **Reports** | Operational views and exports over resources and transactions (later: template-declared widgets) |
+| **Reports** | Operational views and exports over resources and transactions (template-declared widgets; Share Reports is plain text) |
 
 Related concepts that still matter:
 
@@ -903,7 +903,9 @@ Offline Register → Digital Rental → Asset Handover
   → Business Resources Platform → Configurable Business OS
 ```
 
-**One engine + configuration**, not separate products per industry. Same DB, different config; dynamic fields and configurable workflows are future schema, not V1 claims.
+**One engine + configuration**, not separate products per industry. Same DB, different config.
+
+**Engine MVP complete (ADR-004 phases 1–5):** enabled resource types, Home presets, workflow status pipelines, dynamic catalog fields (`FieldDef` + `metadata` JSON), and composable report widgets. Further platform work (Transaction rename, new Home modules, AI, plugins) remains later — see ADR-004 later track.
 
 ### Governance for new modules
 

@@ -164,7 +164,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get businessTemplatesSubtitle =>
-      'Import starter resources by industry (merge).';
+      'Import starter resources by industry (merge types). Applying Home layout replaces enabled types.';
 
   @override
   String get onboardingTemplateTitle => 'Choose your business type';
@@ -484,6 +484,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get advancedFieldsSubtitle => 'Optional in MVP';
 
   @override
+  String get extraFieldsSectionTitle => 'Extra fields';
+
+  @override
   String get saveItem => 'Save item';
 
   @override
@@ -511,7 +514,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get templatesIntro =>
-      'Pick an industry, then choose which starter items to add. Existing items with the same name are kept (merge).';
+      'Pick an industry, then choose which starter items to add. Existing items with the same name are kept. Importing merges enabled resource types; applying the Home layout replaces them with the template’s set.';
 
   @override
   String starterItemsCount(int count) {
@@ -1055,6 +1058,20 @@ class AppLocalizationsEn extends AppLocalizations {
       'Search stays on. Toggle other modules to keep Home focused.';
 
   @override
+  String get enabledResourceTypesTitle => 'Enabled resource types';
+
+  @override
+  String get enabledResourceTypesSubtitle =>
+      'Choose which types appear under New Order → More options.';
+
+  @override
+  String get enabledResourceTypesIntro =>
+      'Toggle types for New Order fulfillment (Rent / Sell / Job). Importing template items merges types into this list. Applying a template’s Home layout replaces this list with the template’s set.';
+
+  @override
+  String get enabledResourceTypesKeepOne => 'Keep at least one type enabled.';
+
+  @override
   String get moduleSearch => 'Search';
 
   @override
@@ -1116,11 +1133,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get applyHomeLayoutBody =>
-      'Use this template’s recommended Home modules.';
+      'Replace Home modules and enabled resource types with this template’s recommended set. Importing items alone only merges types.';
 
   @override
   String get applyHomeLayoutCustomizedBody =>
-      'You customized Home earlier. Replace it with this template’s layout?';
+      'You customized Home earlier. Replace Home modules and enabled resource types with this template’s set?';
 
   @override
   String get applyHomeLayoutSkip => 'Keep current';
@@ -1129,7 +1146,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get applyHomeLayoutConfirm => 'Apply layout';
 
   @override
-  String get applyHomeLayoutDone => 'Home layout updated.';
+  String get applyHomeLayoutDone => 'Home layout and resource types updated.';
 
   @override
   String minMeaningfulTextError(int min) {
@@ -1257,6 +1274,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get orderStatusHeading => 'Order status';
+
+  @override
+  String get workflowStatusHeading => 'Workflow status';
+
+  @override
+  String get workflowAdvanceAction => 'Advance';
+
+  @override
+  String get workflowPickStatusAction => 'Pick status';
+
+  @override
+  String get workflowStatusTerminalHint => 'Order completed for this pipeline.';
 
   @override
   String orderIssuedSummary(int count) {
@@ -1590,6 +1619,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get timelineTitleIssued => 'Issued';
 
   @override
+  String get timelineTitleStatusChanged => 'Status changed';
+
+  @override
   String get timelineSubtitleCreatedOrderFlow =>
       'Created from phone-first order flow.';
 
@@ -1653,6 +1685,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get timelineSubtitleManualWalkIn => 'Manual walk-in checkout.';
+
+  @override
+  String timelineSubtitleStatusChanged(String from, String to) {
+    return '$from → $to';
+  }
 
   @override
   String timelineSubtitleDiscountBit(String amount) {

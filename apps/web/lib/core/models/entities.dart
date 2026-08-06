@@ -46,17 +46,20 @@ enum ResourceType {
   }
 
   /// Default New Order line fulfillment for this catalog type.
+  ///
+  /// Membership / subscription map to **sell** (one-shot pack charge).
+  /// Loan stays **rent** (issue / return without sale terms).
   LineFulfillment get defaultFulfillment {
     switch (this) {
       case ResourceType.sale:
+      case ResourceType.subscription:
+      case ResourceType.membership:
         return LineFulfillment.sell;
       case ResourceType.job:
       case ResourceType.service:
         return LineFulfillment.job;
       case ResourceType.rental:
       case ResourceType.loan:
-      case ResourceType.subscription:
-      case ResourceType.membership:
       case ResourceType.financial:
       case ResourceType.custom:
         return LineFulfillment.rent;
@@ -209,6 +212,7 @@ class InventoryItem {
     this.dueDateOptional = false,
     this.requiresUnitIdentity = true,
     this.defaultItemKind = ResourceType.rental,
+    this.metadata = const <String, Object?>{},
   });
 
   final String id;
@@ -228,6 +232,8 @@ class InventoryItem {
   final bool requiresUnitIdentity;
   /// Catalog [ResourceType] (column still named `defaultItemKind`).
   final ResourceType defaultItemKind;
+  /// Dynamic field values keyed by [FieldDef] id.
+  final Map<String, Object?> metadata;
 
   bool get isSale => defaultItemKind == ResourceType.sale;
 
@@ -245,6 +251,7 @@ class InventoryItem {
     bool? dueDateOptional,
     bool? requiresUnitIdentity,
     ResourceType? defaultItemKind,
+    Map<String, Object?>? metadata,
   }) => InventoryItem(
     id: id,
     name: name,
@@ -261,6 +268,7 @@ class InventoryItem {
     dueDateOptional: dueDateOptional ?? this.dueDateOptional,
     requiresUnitIdentity: requiresUnitIdentity ?? this.requiresUnitIdentity,
     defaultItemKind: defaultItemKind ?? this.defaultItemKind,
+    metadata: metadata ?? this.metadata,
   );
 
   Map<String, dynamic> toJson() => <String, dynamic>{
@@ -279,6 +287,7 @@ class InventoryItem {
     'dueDateOptional': dueDateOptional,
     'requiresUnitIdentity': requiresUnitIdentity,
     'defaultItemKind': defaultItemKind.storageValue,
+    'metadata': metadata,
   };
 
   factory InventoryItem.fromJson(Map<String, dynamic> json) => InventoryItem(
@@ -297,6 +306,9 @@ class InventoryItem {
     dueDateOptional: (json['dueDateOptional'] as bool?) ?? false,
     requiresUnitIdentity: (json['requiresUnitIdentity'] as bool?) ?? true,
     defaultItemKind: ResourceType.parse(json['defaultItemKind'] as String?),
+    metadata: json['metadata'] is Map
+        ? Map<String, Object?>.from(json['metadata'] as Map)
+        : const <String, Object?>{},
   );
 }
 
@@ -688,6 +700,7 @@ class Rental {
     this.depositApplied = 0,
     this.depositAmount = 0,
     this.orderStatus = OrderStatus.open,
+    this.workflowStatus,
     this.durationUnits = 1,
     this.replacedFromRentalId,
     this.notes = const <RentalNote>[],
@@ -715,6 +728,8 @@ class Rental {
   /// Token/advance on this order (paise); original amount set at create.
   final int depositAmount;
   final OrderStatus orderStatus;
+  /// Template workflow status id; null means derive from [orderStatus].
+  final String? workflowStatus;
   final int durationUnits;
   final String? replacedFromRentalId;
   /// Append-only order notes (newest first when loaded from DB).
@@ -843,6 +858,7 @@ class Rental {
     int? depositApplied,
     int? depositAmount,
     OrderStatus? orderStatus,
+    String? workflowStatus,
     int? durationUnits,
     DateTime? dueAt,
     String? replacedFromRentalId,
@@ -866,6 +882,7 @@ class Rental {
     depositApplied: depositApplied ?? this.depositApplied,
     depositAmount: depositAmount ?? this.depositAmount,
     orderStatus: orderStatus ?? this.orderStatus,
+    workflowStatus: workflowStatus ?? this.workflowStatus,
     durationUnits: durationUnits ?? this.durationUnits,
     replacedFromRentalId: replacedFromRentalId ?? this.replacedFromRentalId,
     notes: notes ?? this.notes,
@@ -891,6 +908,7 @@ class Rental {
     'depositApplied': depositApplied,
     'depositAmount': depositAmount,
     'orderStatus': orderStatus.storageValue,
+    'workflowStatus': workflowStatus,
     'durationUnits': durationUnits,
     'replacedFromRentalId': replacedFromRentalId,
     'notes': notes.map((RentalNote note) => note.toJson()).toList(),
@@ -947,6 +965,7 @@ class Rental {
       depositApplied: (json['depositApplied'] as int?) ?? 0,
       depositAmount: (json['depositAmount'] as int?) ?? 0,
       orderStatus: orderStatus,
+      workflowStatus: json['workflowStatus'] as String?,
       durationUnits: (json['durationUnits'] as int?) ?? 1,
       replacedFromRentalId: json['replacedFromRentalId'] as String?,
       notes: (json['notes'] as List<dynamic>? ?? const <dynamic>[])

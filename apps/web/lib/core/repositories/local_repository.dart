@@ -8,8 +8,11 @@ import '../l10n/timeline_l10n.dart';
 import '../models/entities.dart';
 import '../models/unknown_customer.dart';
 import '../pricing/rental_pricing.dart';
+import '../reports/report_widgets.dart';
 import '../search/search_scope.dart';
+import '../templates/field_defs.dart';
 import '../templates/industry_templates.dart';
+import '../templates/workflows.dart';
 import '../validation/text_rules.dart';
 
 class TemplateImportResult {
@@ -111,6 +114,13 @@ class LocalRepository {
 
     if (seedDemo) {
       await _insertSnapshot(buildDemoSnapshot());
+      // Demo inventory is rental-only; seed fallback types when prefs are
+      // unset so Sell/Job stay available. Explicit prefs (tests / owner) win.
+      final String? raw =
+          _preferences.getString(kEnabledResourceTypesPrefsKey);
+      if (raw == null || raw.trim().isEmpty) {
+        await setEnabledResourceTypes(kFallbackEnabledResourceTypes);
+      }
     }
     await _markMigrationComplete();
     await ensureUnknownCustomer();
@@ -149,6 +159,9 @@ class LocalRepository {
     await importTemplateInventory(template.items, locale: locale);
     await _setHomeModules(template.defaultHomeModules);
     await setEnabledResourceTypes(template.enabledResourceTypes);
+    await setActiveWorkflowId(template.workflowId);
+    await setExtraFieldIds(template.extraFieldIds);
+    await setReportWidgets(template.defaultReportWidgets);
     await _db.into(_db.appMeta).insertOnConflictUpdate(
       AppMetaCompanion.insert(
         key: industryTemplateMetaKey,
@@ -180,7 +193,44 @@ class LocalRepository {
     );
   }
 
-  /// Union [extra] into the enabled set without shrinking existing types.
+  /// Active status pipeline for this business (template preset id).
+  WorkflowDefinition activeWorkflow() {
+    return resolveWorkflow(
+      prefsId: _preferences.getString(kActiveWorkflowIdPrefsKey),
+    );
+  }
+
+  Future<void> setActiveWorkflowId(String workflowId) async {
+    final WorkflowDefinition workflow = resolveWorkflow(prefsId: workflowId);
+    await _preferences.setString(kActiveWorkflowIdPrefsKey, workflow.id);
+  }
+
+  /// Extra field ids from the active template pack.
+  List<String> extraFieldIds() {
+    return parseExtraFieldIds(_preferences.getString(kExtraFieldIdsPrefsKey));
+  }
+
+  Future<void> setExtraFieldIds(List<String> ids) async {
+    await _preferences.setString(
+      kExtraFieldIdsPrefsKey,
+      encodeExtraFieldIds(ids),
+    );
+  }
+
+  /// Report widget composition for Share Reports (summary pack).
+  List<ReportWidgetId> reportWidgets() {
+    return resolveReportWidgets(
+      prefsRaw: _preferences.getString(kReportWidgetsPrefsKey),
+    );
+  }
+
+  Future<void> setReportWidgets(List<ReportWidgetId> widgets) async {
+    await _preferences.setString(
+      kReportWidgetsPrefsKey,
+      encodeReportWidgets(widgets),
+    );
+  }
+
   /// Union [extra] into the enabled set without shrinking existing types.
   Future<List<ResourceType>> unionEnabledResourceTypes(
     Iterable<ResourceType> extra,
@@ -528,6 +578,10 @@ class LocalRepository {
           lineFulfillments.every((LineFulfillment f) => f == LineFulfillment.sell);
       final OrderStatus orderStatus =
           allSold ? OrderStatus.completed : OrderStatus.open;
+      final WorkflowDefinition workflow = activeWorkflow();
+      final String workflowStatusId = allSold
+          ? workflow.terminal.id
+          : workflow.initial.id;
       int snapshotIndex = 0;
       for (var i = 0; i < lineOpenEndedFlags.length; i++) {
         if (lineFulfillments[i] != LineFulfillment.rent) {
@@ -574,6 +628,7 @@ class LocalRepository {
           totalAmount: Value<int>(baseAmount),
           depositAmount: Value<int>(depositTopUpPaise),
           orderStatus: Value<String>(orderStatus.storageValue),
+          workflowStatus: Value<String?>(workflowStatusId),
           durationUnits: Value<int>(storedDurationUnits),
           replacedFromRentalId: Value<String?>(replacedFrom),
         ),
@@ -897,11 +952,20 @@ class LocalRepository {
       final int parentTotal = parentBase + parentLate;
       final OrderStatus nextStatus =
           noOpenWork ? OrderStatus.completed : OrderStatus.open;
+      final WorkflowDefinition workflow = activeWorkflow();
+      final String? nextWorkflow = noOpenWork
+          ? workflow.terminal.id
+          : effectiveWorkflowStatusId(
+              stored: rental.workflowStatus,
+              orderStatus: OrderStatus.open,
+              workflow: workflow,
+            );
 
       await (_db.update(_db.rentals)..where((t) => t.id.equals(rentalId))).write(
         RentalsCompanion(
           returnedAt: Value<DateTime?>(noOpenWork ? now : null),
           orderStatus: Value<String>(nextStatus.storageValue),
+          workflowStatus: Value<String?>(nextWorkflow),
           baseAmount: Value<int>(parentBase),
           lateAmount: Value<int>(parentLate),
           totalAmount: Value<int>(parentTotal),
@@ -940,6 +1004,27 @@ class LocalRepository {
           at: now,
         ),
       );
+
+      if (noOpenWork) {
+        final String? fromStatus = effectiveWorkflowStatusId(
+          stored: rental.workflowStatus,
+          orderStatus: OrderStatus.open,
+          workflow: workflow,
+        );
+        if (fromStatus != workflow.terminal.id) {
+          await _db.into(_db.rentalEvents).insert(
+            RentalEventsCompanion.insert(
+              rentalId: rentalId,
+              title: TimelineTitleKey.statusChanged,
+              subtitle: encodeTimelineSubtitle(
+                TimelineSubtitleKey.statusChanged,
+                args: <String>[fromStatus ?? '', workflow.terminal.id],
+              ),
+              at: now,
+            ),
+          );
+        }
+      }
 
       return RentalReturnResult(
         rentalId: rentalId,
@@ -1029,11 +1114,27 @@ class LocalRepository {
       final int parentTotal = parentBase + parentLate;
       final OrderStatus nextStatus =
           noOpenWork ? OrderStatus.completed : OrderStatus.open;
+      final WorkflowDefinition workflow = activeWorkflow();
+      final String? fromStatus = effectiveWorkflowStatusId(
+        stored: rental.workflowStatus,
+        orderStatus: OrderStatus.open,
+        workflow: workflow,
+      );
+      final String? nextWorkflow;
+      if (noOpenWork) {
+        nextWorkflow = workflow.terminal.id;
+      } else {
+        final WorkflowStatus? advanced = workflow.immediateNext(fromStatus);
+        nextWorkflow = advanced != null && !advanced.isTerminal
+            ? advanced.id
+            : fromStatus;
+      }
 
       await (_db.update(_db.rentals)..where((t) => t.id.equals(rentalId))).write(
         RentalsCompanion(
           returnedAt: Value<DateTime?>(noOpenWork ? now : null),
           orderStatus: Value<String>(nextStatus.storageValue),
+          workflowStatus: Value<String?>(nextWorkflow),
           baseAmount: Value<int>(parentBase),
           lateAmount: Value<int>(parentLate),
           totalAmount: Value<int>(parentTotal),
@@ -1060,6 +1161,22 @@ class LocalRepository {
         ),
       );
 
+      if (nextWorkflow != null &&
+          fromStatus != null &&
+          nextWorkflow != fromStatus) {
+        await _db.into(_db.rentalEvents).insert(
+          RentalEventsCompanion.insert(
+            rentalId: rentalId,
+            title: TimelineTitleKey.statusChanged,
+            subtitle: encodeTimelineSubtitle(
+              TimelineSubtitleKey.statusChanged,
+              args: <String>[fromStatus, nextWorkflow],
+            ),
+            at: now,
+          ),
+        );
+      }
+
       return RentalReturnResult(
         rentalId: rentalId,
         totalAmount: batchTotal,
@@ -1069,6 +1186,92 @@ class LocalRepository {
         returnedLineIds: completedIds,
         rentalClosed: noOpenWork,
       );
+    });
+  }
+
+  /// Advances the order along the active workflow (immediate next, or [toStatusId]).
+  ///
+  /// Terminal statuses set [OrderStatus.completed]. Cancelled orders are unchanged.
+  Future<Rental?> advanceWorkflowStatus(
+    String rentalId, {
+    String? toStatusId,
+  }) async {
+    final DateTime now = DateTime.now();
+    return _db.transaction(() async {
+      final RentalRow? rental = await (_db.select(_db.rentals)
+            ..where((t) => t.id.equals(rentalId)))
+          .getSingleOrNull();
+      if (rental == null) {
+        return null;
+      }
+      final OrderStatus orderStatus = OrderStatus.parse(rental.orderStatus);
+      if (orderStatus == OrderStatus.cancelled) {
+        return null;
+      }
+      if (orderStatus == OrderStatus.completed) {
+        return _findRental(rentalId);
+      }
+
+      final WorkflowDefinition workflow = activeWorkflow();
+      final String? fromStatus = effectiveWorkflowStatusId(
+        stored: rental.workflowStatus,
+        orderStatus: orderStatus,
+        workflow: workflow,
+      );
+      final List<WorkflowStatus> allowed = workflow.nextAllowed(fromStatus);
+      if (allowed.isEmpty) {
+        return _findRental(rentalId);
+      }
+
+      final WorkflowStatus target;
+      if (toStatusId == null || toStatusId.isEmpty) {
+        target = allowed.first;
+      } else {
+        WorkflowStatus? picked;
+        for (final WorkflowStatus status in allowed) {
+          if (status.id == toStatusId) {
+            picked = status;
+            break;
+          }
+        }
+        if (picked == null) {
+          throw ArgumentError('Status $toStatusId is not allowed from $fromStatus');
+        }
+        target = picked;
+      }
+
+      if (fromStatus == target.id) {
+        return _findRental(rentalId);
+      }
+
+      final bool terminal = target.isTerminal;
+      await (_db.update(_db.rentals)..where((t) => t.id.equals(rentalId))).write(
+        RentalsCompanion(
+          workflowStatus: Value<String?>(target.id),
+          orderStatus: Value<String>(
+            terminal
+                ? OrderStatus.completed.storageValue
+                : OrderStatus.open.storageValue,
+          ),
+          returnedAt: terminal
+              ? Value<DateTime?>(rental.returnedAt ?? now)
+              : const Value<DateTime?>.absent(),
+        ),
+      );
+
+      await _db.into(_db.rentalEvents).insert(
+        RentalEventsCompanion.insert(
+          rentalId: rentalId,
+          title: TimelineTitleKey.statusChanged,
+          subtitle: encodeTimelineSubtitle(
+            TimelineSubtitleKey.statusChanged,
+            args: <String>[fromStatus ?? '', target.id],
+          ),
+          at: now,
+        ),
+      );
+
+      return _findRental(rentalId);
     });
   }
 
@@ -1453,6 +1656,7 @@ class LocalRepository {
     bool dueDateOptional = false,
     bool requiresUnitIdentity = false,
     ResourceType defaultItemKind = ResourceType.rental,
+    Map<String, Object?> metadata = const <String, Object?>{},
   }) async {
     final String trimmedName = name.trim();
     final String trimmedCategory = category.trim();
@@ -1490,6 +1694,7 @@ class LocalRepository {
         dueDateOptional: Value<bool>(dueDateOptional),
         requiresUnitIdentity: Value<bool>(requiresUnitIdentity),
         defaultItemKind: Value<String>(defaultItemKind.storageValue),
+        metadata: Value<String?>(encodeMetadata(metadata)),
       ),
     );
   }
@@ -1569,6 +1774,7 @@ class LocalRepository {
     bool? dueDateOptional,
     bool? requiresUnitIdentity,
     ResourceType? defaultItemKind,
+    Map<String, Object?>? metadata,
   }) async {
     final String trimmedName = name.trim();
     final String trimmedCategory = category.trim();
@@ -1639,6 +1845,9 @@ class LocalRepository {
         defaultItemKind: defaultItemKind == null
             ? const Value.absent()
             : Value<String>(defaultItemKind.storageValue),
+        metadata: metadata == null
+            ? const Value.absent()
+            : Value<String?>(encodeMetadata(metadata)),
       ),
     );
   }
@@ -1870,6 +2079,7 @@ class LocalRepository {
             depositApplied: Value<int>(rental.depositApplied),
             depositAmount: Value<int>(rental.depositAmount),
             orderStatus: Value<String>(rental.orderStatus.storageValue),
+            workflowStatus: Value<String?>(rental.workflowStatus),
             durationUnits: Value<int>(rental.durationUnits),
             replacedFromRentalId: Value<String?>(rental.replacedFromRentalId),
           ),
@@ -1955,6 +2165,7 @@ class LocalRepository {
       dueDateOptional: Value<bool>(item.dueDateOptional),
       requiresUnitIdentity: Value<bool>(item.requiresUnitIdentity),
       defaultItemKind: Value<String>(item.defaultItemKind.storageValue),
+      metadata: Value<String?>(encodeMetadata(item.metadata)),
     );
   }
 
@@ -1999,6 +2210,7 @@ class LocalRepository {
       dueDateOptional: row.dueDateOptional,
       requiresUnitIdentity: row.requiresUnitIdentity,
       defaultItemKind: ResourceType.parse(row.defaultItemKind),
+      metadata: decodeMetadata(row.metadata),
     );
   }
 
@@ -2063,6 +2275,7 @@ class LocalRepository {
       depositApplied: row.depositApplied,
       depositAmount: row.depositAmount,
       orderStatus: OrderStatus.parse(row.orderStatus),
+      workflowStatus: row.workflowStatus,
       durationUnits: row.durationUnits,
       replacedFromRentalId: row.replacedFromRentalId,
       timeline: events

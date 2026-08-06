@@ -61,6 +61,30 @@ String localizedRentalNoteKind(AppLocalizations l10n, RentalNoteKind kind) {
   }
 }
 
+/// Full label for a [ResourceType] (More toggles, add-resource kind picker).
+String localizedResourceTypeLabel(AppLocalizations l10n, ResourceType type) {
+  switch (type) {
+    case ResourceType.rental:
+      return l10n.itemKindRentalLabel;
+    case ResourceType.sale:
+      return l10n.itemKindSaleLabel;
+    case ResourceType.service:
+      return l10n.itemKindServiceLabel;
+    case ResourceType.job:
+      return l10n.itemKindJobLabel;
+    case ResourceType.subscription:
+      return l10n.itemKindSubscriptionLabel;
+    case ResourceType.membership:
+      return l10n.itemKindMembershipLabel;
+    case ResourceType.loan:
+      return l10n.itemKindLoanLabel;
+    case ResourceType.financial:
+      return l10n.itemKindFinancialLabel;
+    case ResourceType.custom:
+      return l10n.itemKindCustomLabel;
+  }
+}
+
 /// Badge label for non-rental catalog types; null for [ResourceType.rental].
 String? localizedResourceTypeBadge(AppLocalizations l10n, ResourceType type) {
   switch (type) {

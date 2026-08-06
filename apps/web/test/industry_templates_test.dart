@@ -81,6 +81,27 @@ void main() {
       );
     });
 
+    test('membership and subscription enable Sell; loan enables Rent', () {
+      expect(
+        fulfillmentOptionsForEnabledTypes(const <ResourceType>[
+          ResourceType.membership,
+        ]),
+        <LineFulfillment>[LineFulfillment.sell],
+      );
+      expect(
+        fulfillmentOptionsForEnabledTypes(const <ResourceType>[
+          ResourceType.subscription,
+        ]),
+        <LineFulfillment>[LineFulfillment.sell],
+      );
+      expect(
+        fulfillmentOptionsForEnabledTypes(const <ResourceType>[
+          ResourceType.loan,
+        ]),
+        <LineFulfillment>[LineFulfillment.rent],
+      );
+    });
+
     test('keeps current Sell visible even when sale not enabled', () {
       expect(
         fulfillmentOptionsForEnabledTypes(
@@ -88,6 +109,45 @@ void main() {
           current: LineFulfillment.sell,
         ),
         <LineFulfillment>[LineFulfillment.rent, LineFulfillment.sell],
+      );
+    });
+  });
+
+  group('resolveEnabledResourceTypes', () {
+    test('rental-only inventory unions fallback so Sell/Job stay available', () {
+      expect(
+        resolveEnabledResourceTypes(
+          prefsRaw: null,
+          inventoryKinds: const <ResourceType>[ResourceType.rental],
+        ),
+        <ResourceType>[
+          ResourceType.rental,
+          ResourceType.sale,
+          ResourceType.job,
+        ],
+      );
+    });
+
+    test('explicit prefs win even when rental-only', () {
+      expect(
+        resolveEnabledResourceTypes(
+          prefsRaw: 'rental',
+          inventoryKinds: const <ResourceType>[ResourceType.rental],
+        ),
+        <ResourceType>[ResourceType.rental],
+      );
+    });
+
+    test('sale inventory does not need fallback expansion', () {
+      expect(
+        resolveEnabledResourceTypes(
+          prefsRaw: null,
+          inventoryKinds: const <ResourceType>[
+            ResourceType.rental,
+            ResourceType.sale,
+          ],
+        ),
+        <ResourceType>[ResourceType.rental, ResourceType.sale],
       );
     });
   });

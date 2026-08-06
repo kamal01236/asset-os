@@ -1,4 +1,7 @@
+import 'package:flutter/widgets.dart';
+
 import '../models/entities.dart';
+import '../templates/workflows.dart';
 import 'l10n_ext.dart';
 
 /// Stable keys written to [RentalEvent.title] / demo seed; localized at display.
@@ -15,6 +18,7 @@ abstract final class TimelineTitleKey {
   static const noteAdded = 'note_added';
   static const dueToday = 'due_today';
   static const rentalOpened = 'rental_opened';
+  static const statusChanged = 'status_changed';
 }
 
 /// Stable subtitle keys (optionally with `|`-separated args). See [encodeTimelineSubtitle].
@@ -35,6 +39,7 @@ abstract final class TimelineSubtitleKey {
   static const checkedOutByStaff = 'checked_out_by_staff';
   static const closedAtCounter = 'closed_at_counter';
   static const manualWalkIn = 'manual_walk_in';
+  static const statusChanged = 'status_changed';
 }
 
 const String _kDiscountPrefix = 'd:';
@@ -96,6 +101,9 @@ String localizeTimelineTitle(AppLocalizations l10n, String raw) {
     case TimelineTitleKey.rentalOpened:
     case 'Rental opened':
       return l10n.timelineTitleRentalOpened;
+    case TimelineTitleKey.statusChanged:
+    case 'Status changed':
+      return l10n.timelineTitleStatusChanged;
     default:
       return raw;
   }
@@ -240,6 +248,14 @@ String? _subtitleForKey(
       return l10n.timelineSubtitleClosedAtCounter;
     case TimelineSubtitleKey.manualWalkIn:
       return l10n.timelineSubtitleManualWalkIn;
+    case TimelineSubtitleKey.statusChanged:
+      if (args.length < 2) {
+        return null;
+      }
+      final Locale locale = Locale(l10n.localeName);
+      final String fromLabel = localizedWorkflowStatusLabel(locale, args[0]);
+      final String toLabel = localizedWorkflowStatusLabel(locale, args[1]);
+      return l10n.timelineSubtitleStatusChanged(fromLabel, toLabel);
     default:
       return null;
   }

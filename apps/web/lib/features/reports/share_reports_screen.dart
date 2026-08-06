@@ -29,6 +29,8 @@ class _ShareReportsScreenState extends ConsumerState<ShareReportsScreen> {
   Widget build(BuildContext context) {
     final AppLocalizations l10n = context.l10n;
     final OwnerWhatsAppSettings whatsApp = ref.watch(ownerWhatsAppProvider);
+    final List<ReportWidgetId> reportWidgets =
+        ref.watch(reportWidgetsProvider);
     final AsyncValue<List<Customer>> customersAsync = ref.watch(customersProvider);
     final AsyncValue<List<InventoryItem>> inventoryAsync =
         ref.watch(inventoryProvider);
@@ -52,6 +54,7 @@ class _ShareReportsScreenState extends ConsumerState<ShareReportsScreen> {
       customEnd: _customEnd,
     );
 
+    final Locale locale = Localizations.localeOf(context);
     final String preview = loading
         ? '…'
         : const ReportBuilder().build(
@@ -62,6 +65,8 @@ class _ShareReportsScreenState extends ConsumerState<ShareReportsScreen> {
             inventory: inventory,
             rentals: rentals,
             now: now,
+            widgets: reportWidgets,
+            locale: locale,
           );
 
     final bool canShare = whatsApp.isConfigured && !loading && !_sharing;

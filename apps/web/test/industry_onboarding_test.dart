@@ -122,5 +122,51 @@ void main() {
         isTrue,
       );
     });
+
+    test('seedDemo enables fallback types so Sell/Job are not hidden', () async {
+      final LocalRepository repo = await bootRepo(seedDemo: true);
+
+      expect(
+        repo.enabledResourceTypes(),
+        containsAll(<ResourceType>[
+          ResourceType.rental,
+          ResourceType.sale,
+          ResourceType.job,
+        ]),
+      );
+      expect(
+        fulfillmentOptionsForEnabledTypes(repo.enabledResourceTypes()),
+        containsAll(<LineFulfillment>[
+          LineFulfillment.rent,
+          LineFulfillment.sell,
+          LineFulfillment.job,
+        ]),
+      );
+    });
+
+    test('ensureEnabledResourceTypes expands rental-only inventory', () async {
+      final LocalRepository repo = await bootRepo(seedDemo: false);
+      await repo.addInventory(
+        name: 'Camera Body',
+        category: 'Camera',
+        units: 1,
+        requiresUnitIdentity: false,
+        defaultItemKind: ResourceType.rental,
+      );
+
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.remove(kEnabledResourceTypesPrefsKey);
+
+      final List<ResourceType> resolved =
+          await repo.ensureEnabledResourceTypes();
+      expect(
+        resolved,
+        containsAll(<ResourceType>[
+          ResourceType.rental,
+          ResourceType.sale,
+          ResourceType.job,
+        ]),
+      );
+    });
   });
 }

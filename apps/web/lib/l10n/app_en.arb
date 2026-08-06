@@ -67,7 +67,7 @@
   "voiceSearchStubTitle": "Voice Search (stub)",
   "voiceSearchStubSubtitle": "Placeholder for intent-based search commands.",
   "businessTemplatesTitle": "Business Templates",
-  "businessTemplatesSubtitle": "Import starter resources by industry (merge).",
+  "businessTemplatesSubtitle": "Import starter resources by industry (merge types). Applying Home layout replaces enabled types.",
   "onboardingTemplateTitle": "Choose your business type",
   "onboardingTemplateSubtitle": "We'll add starter resources for your industry. You can add more later from More → Business Templates.",
   "onboardingTemplateConfirm": "Use this template",
@@ -254,6 +254,7 @@
   "unitsLabel": "Units",
   "advancedFields": "Advanced fields",
   "advancedFieldsSubtitle": "Optional in MVP",
+  "extraFieldsSectionTitle": "Extra fields",
   "saveItem": "Save item",
   "scanIntro": "Use camera integration in the next phase. For now, paste/enter QR text.",
   "qrContentLabel": "QR content",
@@ -262,7 +263,7 @@
   "openLinkedRecord": "Open linked record",
   "voiceSearchTitle": "Voice Search",
   "voiceSearchBody": "Stub only: voice commands map to universal search intents in phase 5+.",
-  "templatesIntro": "Pick an industry, then choose which starter items to add. Existing items with the same name are kept (merge).",
+  "templatesIntro": "Pick an industry, then choose which starter items to add. Existing items with the same name are kept. Importing merges enabled resource types; applying the Home layout replaces them with the template’s set.",
   "starterItemsCount": "{count} starter items",
   "@starterItemsCount": {
     "placeholders": {
@@ -636,6 +637,10 @@
   "customizeHomeTitle": "Customize Home",
   "customizeHomeSubtitle": "Show or hide Home modules.",
   "customizeHomeIntro": "Search stays on. Toggle other modules to keep Home focused.",
+  "enabledResourceTypesTitle": "Enabled resource types",
+  "enabledResourceTypesSubtitle": "Choose which types appear under New Order → More options.",
+  "enabledResourceTypesIntro": "Toggle types for New Order fulfillment (Rent / Sell / Job). Importing template items merges types into this list. Applying a template’s Home layout replaces this list with the template’s set.",
+  "enabledResourceTypesKeepOne": "Keep at least one type enabled.",
   "moduleSearch": "Search",
   "moduleSearchLocked": "Always on",
   "moduleKpis": "Status chips",
@@ -655,11 +660,11 @@
   "moduleSuggestions": "AI suggestions",
   "moduleSuggestionsSubtitle": "Optional beta tips",
   "applyHomeLayoutTitle": "Apply Home layout?",
-  "applyHomeLayoutBody": "Use this template’s recommended Home modules.",
-  "applyHomeLayoutCustomizedBody": "You customized Home earlier. Replace it with this template’s layout?",
+  "applyHomeLayoutBody": "Replace Home modules and enabled resource types with this template’s recommended set. Importing items alone only merges types.",
+  "applyHomeLayoutCustomizedBody": "You customized Home earlier. Replace Home modules and enabled resource types with this template’s set?",
   "applyHomeLayoutSkip": "Keep current",
   "applyHomeLayoutConfirm": "Apply layout",
-  "applyHomeLayoutDone": "Home layout updated.",
+  "applyHomeLayoutDone": "Home layout and resource types updated.",
   "minMeaningfulTextError": "Enter at least {min} characters.",
   "@minMeaningfulTextError": {
     "placeholders": {
@@ -734,6 +739,10 @@
   },
   "labelsAutoAssignedHint": "Individual items get catalog name and an auto short code.",
   "orderStatusHeading": "Order status",
+  "workflowStatusHeading": "Workflow status",
+  "workflowAdvanceAction": "Advance",
+  "workflowPickStatusAction": "Pick status",
+  "workflowStatusTerminalHint": "Order completed for this pipeline.",
   "orderIssuedSummary": "Originally issued: {count}",
   "@orderIssuedSummary": {
     "placeholders": {
@@ -907,6 +916,7 @@
   "timelineTitleDueToday": "Due today",
   "timelineTitleRentalOpened": "Rental opened",
   "timelineTitleIssued": "Issued",
+  "timelineTitleStatusChanged": "Status changed",
 
   "timelineSubtitleCreatedOrderFlow": "Created from phone-first order flow.",
   "timelineSubtitleCreatedOrderFlowSale": "Created from phone-first order flow (sale).",
@@ -952,6 +962,13 @@
   "timelineSubtitleCheckedOutByStaff": "1 item checked out by staff.",
   "timelineSubtitleClosedAtCounter": "Closed at counter.",
   "timelineSubtitleManualWalkIn": "Manual walk-in checkout.",
+  "timelineSubtitleStatusChanged": "{from} → {to}",
+  "@timelineSubtitleStatusChanged": {
+    "placeholders": {
+      "from": {"type": "String"},
+      "to": {"type": "String"}
+    }
+  },
   "timelineSubtitleDiscountBit": "Discount {amount}.",
   "@timelineSubtitleDiscountBit": {
     "placeholders": {

@@ -572,7 +572,7 @@ class $InventoryItemsTable extends InventoryItems
     defaultConstraints: GeneratedColumn.constraintIsAlways(
       'CHECK ("requires_unit_identity" IN (0, 1))',
     ),
-    defaultValue: const Constant(true),
+    defaultValue: const Constant(false),
   );
   static const VerificationMeta _defaultItemKindMeta = const VerificationMeta(
     'defaultItemKind',
@@ -585,6 +585,17 @@ class $InventoryItemsTable extends InventoryItems
     type: DriftSqlType.string,
     requiredDuringInsert: false,
     defaultValue: const Constant('rental'),
+  );
+  static const VerificationMeta _metadataMeta = const VerificationMeta(
+    'metadata',
+  );
+  @override
+  late final GeneratedColumn<String> metadata = GeneratedColumn<String>(
+    'metadata',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
   );
   @override
   List<GeneratedColumn> get $columns => [
@@ -603,6 +614,7 @@ class $InventoryItemsTable extends InventoryItems
     dueDateOptional,
     requiresUnitIdentity,
     defaultItemKind,
+    metadata,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -738,6 +750,12 @@ class $InventoryItemsTable extends InventoryItems
         ),
       );
     }
+    if (data.containsKey('metadata')) {
+      context.handle(
+        _metadataMeta,
+        metadata.isAcceptableOrUnknown(data['metadata']!, _metadataMeta),
+      );
+    }
     return context;
   }
 
@@ -807,6 +825,10 @@ class $InventoryItemsTable extends InventoryItems
         DriftSqlType.string,
         data['${effectivePrefix}default_item_kind'],
       )!,
+      metadata: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}metadata'],
+      ),
     );
   }
 
@@ -843,8 +865,11 @@ class InventoryItemRow extends DataClass
   /// When true, each issued unit needs instance name + short code (parent catalog).
   final bool requiresUnitIdentity;
 
-  /// `rental` | `general` — catalog default for New Order Rent/Sell.
+  /// Full [ResourceType] set (`rental` | `sale` | `service` | …). Legacy `general` → `sale`.
   final String defaultItemKind;
+
+  /// JSON map of dynamic field values ([FieldDef] ids → values).
+  final String? metadata;
   const InventoryItemRow({
     required this.id,
     required this.name,
@@ -861,6 +886,7 @@ class InventoryItemRow extends DataClass
     required this.dueDateOptional,
     required this.requiresUnitIdentity,
     required this.defaultItemKind,
+    this.metadata,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -882,6 +908,9 @@ class InventoryItemRow extends DataClass
     map['due_date_optional'] = Variable<bool>(dueDateOptional);
     map['requires_unit_identity'] = Variable<bool>(requiresUnitIdentity);
     map['default_item_kind'] = Variable<String>(defaultItemKind);
+    if (!nullToAbsent || metadata != null) {
+      map['metadata'] = Variable<String>(metadata);
+    }
     return map;
   }
 
@@ -904,6 +933,9 @@ class InventoryItemRow extends DataClass
       dueDateOptional: Value(dueDateOptional),
       requiresUnitIdentity: Value(requiresUnitIdentity),
       defaultItemKind: Value(defaultItemKind),
+      metadata: metadata == null && nullToAbsent
+          ? const Value.absent()
+          : Value(metadata),
     );
   }
 
@@ -930,6 +962,7 @@ class InventoryItemRow extends DataClass
         json['requiresUnitIdentity'],
       ),
       defaultItemKind: serializer.fromJson<String>(json['defaultItemKind']),
+      metadata: serializer.fromJson<String?>(json['metadata']),
     );
   }
   @override
@@ -951,6 +984,7 @@ class InventoryItemRow extends DataClass
       'dueDateOptional': serializer.toJson<bool>(dueDateOptional),
       'requiresUnitIdentity': serializer.toJson<bool>(requiresUnitIdentity),
       'defaultItemKind': serializer.toJson<String>(defaultItemKind),
+      'metadata': serializer.toJson<String?>(metadata),
     };
   }
 
@@ -970,6 +1004,7 @@ class InventoryItemRow extends DataClass
     bool? dueDateOptional,
     bool? requiresUnitIdentity,
     String? defaultItemKind,
+    Value<String?> metadata = const Value.absent(),
   }) => InventoryItemRow(
     id: id ?? this.id,
     name: name ?? this.name,
@@ -986,6 +1021,7 @@ class InventoryItemRow extends DataClass
     dueDateOptional: dueDateOptional ?? this.dueDateOptional,
     requiresUnitIdentity: requiresUnitIdentity ?? this.requiresUnitIdentity,
     defaultItemKind: defaultItemKind ?? this.defaultItemKind,
+    metadata: metadata.present ? metadata.value : this.metadata,
   );
   InventoryItemRow copyWithCompanion(InventoryItemsCompanion data) {
     return InventoryItemRow(
@@ -1022,6 +1058,7 @@ class InventoryItemRow extends DataClass
       defaultItemKind: data.defaultItemKind.present
           ? data.defaultItemKind.value
           : this.defaultItemKind,
+      metadata: data.metadata.present ? data.metadata.value : this.metadata,
     );
   }
 
@@ -1042,7 +1079,8 @@ class InventoryItemRow extends DataClass
           ..write('currencyCode: $currencyCode, ')
           ..write('dueDateOptional: $dueDateOptional, ')
           ..write('requiresUnitIdentity: $requiresUnitIdentity, ')
-          ..write('defaultItemKind: $defaultItemKind')
+          ..write('defaultItemKind: $defaultItemKind, ')
+          ..write('metadata: $metadata')
           ..write(')'))
         .toString();
   }
@@ -1064,6 +1102,7 @@ class InventoryItemRow extends DataClass
     dueDateOptional,
     requiresUnitIdentity,
     defaultItemKind,
+    metadata,
   );
   @override
   bool operator ==(Object other) =>
@@ -1083,7 +1122,8 @@ class InventoryItemRow extends DataClass
           other.currencyCode == this.currencyCode &&
           other.dueDateOptional == this.dueDateOptional &&
           other.requiresUnitIdentity == this.requiresUnitIdentity &&
-          other.defaultItemKind == this.defaultItemKind);
+          other.defaultItemKind == this.defaultItemKind &&
+          other.metadata == this.metadata);
 }
 
 class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
@@ -1102,6 +1142,7 @@ class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
   final Value<bool> dueDateOptional;
   final Value<bool> requiresUnitIdentity;
   final Value<String> defaultItemKind;
+  final Value<String?> metadata;
   final Value<int> rowid;
   const InventoryItemsCompanion({
     this.id = const Value.absent(),
@@ -1119,6 +1160,7 @@ class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
     this.dueDateOptional = const Value.absent(),
     this.requiresUnitIdentity = const Value.absent(),
     this.defaultItemKind = const Value.absent(),
+    this.metadata = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   InventoryItemsCompanion.insert({
@@ -1137,6 +1179,7 @@ class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
     this.dueDateOptional = const Value.absent(),
     this.requiresUnitIdentity = const Value.absent(),
     this.defaultItemKind = const Value.absent(),
+    this.metadata = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        name = Value(name),
@@ -1161,6 +1204,7 @@ class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
     Expression<bool>? dueDateOptional,
     Expression<bool>? requiresUnitIdentity,
     Expression<String>? defaultItemKind,
+    Expression<String>? metadata,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -1180,6 +1224,7 @@ class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
       if (requiresUnitIdentity != null)
         'requires_unit_identity': requiresUnitIdentity,
       if (defaultItemKind != null) 'default_item_kind': defaultItemKind,
+      if (metadata != null) 'metadata': metadata,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -1200,6 +1245,7 @@ class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
     Value<bool>? dueDateOptional,
     Value<bool>? requiresUnitIdentity,
     Value<String>? defaultItemKind,
+    Value<String?>? metadata,
     Value<int>? rowid,
   }) {
     return InventoryItemsCompanion(
@@ -1218,6 +1264,7 @@ class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
       dueDateOptional: dueDateOptional ?? this.dueDateOptional,
       requiresUnitIdentity: requiresUnitIdentity ?? this.requiresUnitIdentity,
       defaultItemKind: defaultItemKind ?? this.defaultItemKind,
+      metadata: metadata ?? this.metadata,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1272,6 +1319,9 @@ class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
     if (defaultItemKind.present) {
       map['default_item_kind'] = Variable<String>(defaultItemKind.value);
     }
+    if (metadata.present) {
+      map['metadata'] = Variable<String>(metadata.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -1296,6 +1346,7 @@ class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
           ..write('dueDateOptional: $dueDateOptional, ')
           ..write('requiresUnitIdentity: $requiresUnitIdentity, ')
           ..write('defaultItemKind: $defaultItemKind, ')
+          ..write('metadata: $metadata, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -1486,6 +1537,17 @@ class $RentalsTable extends Rentals with TableInfo<$RentalsTable, RentalRow> {
     requiredDuringInsert: false,
     defaultValue: const Constant('open'),
   );
+  static const VerificationMeta _workflowStatusMeta = const VerificationMeta(
+    'workflowStatus',
+  );
+  @override
+  late final GeneratedColumn<String> workflowStatus = GeneratedColumn<String>(
+    'workflow_status',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _durationUnitsMeta = const VerificationMeta(
     'durationUnits',
   );
@@ -1527,6 +1589,7 @@ class $RentalsTable extends Rentals with TableInfo<$RentalsTable, RentalRow> {
     depositApplied,
     depositAmount,
     orderStatus,
+    workflowStatus,
     durationUnits,
     replacedFromRentalId,
   ];
@@ -1661,6 +1724,15 @@ class $RentalsTable extends Rentals with TableInfo<$RentalsTable, RentalRow> {
         ),
       );
     }
+    if (data.containsKey('workflow_status')) {
+      context.handle(
+        _workflowStatusMeta,
+        workflowStatus.isAcceptableOrUnknown(
+          data['workflow_status']!,
+          _workflowStatusMeta,
+        ),
+      );
+    }
     if (data.containsKey('duration_units')) {
       context.handle(
         _durationUnitsMeta,
@@ -1752,6 +1824,10 @@ class $RentalsTable extends Rentals with TableInfo<$RentalsTable, RentalRow> {
         DriftSqlType.string,
         data['${effectivePrefix}order_status'],
       )!,
+      workflowStatus: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}workflow_status'],
+      ),
       durationUnits: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}duration_units'],
@@ -1803,6 +1879,9 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
   /// `open` | `completed` | `cancelled`
   final String orderStatus;
 
+  /// Template workflow status id (nullable; null → derive from [orderStatus]).
+  final String? workflowStatus;
+
   /// Chosen duration (e.g. 1 week → 1; fixed due-days still stored here).
   final int durationUnits;
 
@@ -1825,6 +1904,7 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
     required this.depositApplied,
     required this.depositAmount,
     required this.orderStatus,
+    this.workflowStatus,
     required this.durationUnits,
     this.replacedFromRentalId,
   });
@@ -1853,6 +1933,9 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
     map['deposit_applied'] = Variable<int>(depositApplied);
     map['deposit_amount'] = Variable<int>(depositAmount);
     map['order_status'] = Variable<String>(orderStatus);
+    if (!nullToAbsent || workflowStatus != null) {
+      map['workflow_status'] = Variable<String>(workflowStatus);
+    }
     map['duration_units'] = Variable<int>(durationUnits);
     if (!nullToAbsent || replacedFromRentalId != null) {
       map['replaced_from_rental_id'] = Variable<String>(replacedFromRentalId);
@@ -1884,6 +1967,9 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
       depositApplied: Value(depositApplied),
       depositAmount: Value(depositAmount),
       orderStatus: Value(orderStatus),
+      workflowStatus: workflowStatus == null && nullToAbsent
+          ? const Value.absent()
+          : Value(workflowStatus),
       durationUnits: Value(durationUnits),
       replacedFromRentalId: replacedFromRentalId == null && nullToAbsent
           ? const Value.absent()
@@ -1913,6 +1999,7 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
       depositApplied: serializer.fromJson<int>(json['depositApplied']),
       depositAmount: serializer.fromJson<int>(json['depositAmount']),
       orderStatus: serializer.fromJson<String>(json['orderStatus']),
+      workflowStatus: serializer.fromJson<String?>(json['workflowStatus']),
       durationUnits: serializer.fromJson<int>(json['durationUnits']),
       replacedFromRentalId: serializer.fromJson<String?>(
         json['replacedFromRentalId'],
@@ -1939,6 +2026,7 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
       'depositApplied': serializer.toJson<int>(depositApplied),
       'depositAmount': serializer.toJson<int>(depositAmount),
       'orderStatus': serializer.toJson<String>(orderStatus),
+      'workflowStatus': serializer.toJson<String?>(workflowStatus),
       'durationUnits': serializer.toJson<int>(durationUnits),
       'replacedFromRentalId': serializer.toJson<String?>(replacedFromRentalId),
     };
@@ -1961,6 +2049,7 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
     int? depositApplied,
     int? depositAmount,
     String? orderStatus,
+    Value<String?> workflowStatus = const Value.absent(),
     int? durationUnits,
     Value<String?> replacedFromRentalId = const Value.absent(),
   }) => RentalRow(
@@ -1980,6 +2069,9 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
     depositApplied: depositApplied ?? this.depositApplied,
     depositAmount: depositAmount ?? this.depositAmount,
     orderStatus: orderStatus ?? this.orderStatus,
+    workflowStatus: workflowStatus.present
+        ? workflowStatus.value
+        : this.workflowStatus,
     durationUnits: durationUnits ?? this.durationUnits,
     replacedFromRentalId: replacedFromRentalId.present
         ? replacedFromRentalId.value
@@ -2025,6 +2117,9 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
       orderStatus: data.orderStatus.present
           ? data.orderStatus.value
           : this.orderStatus,
+      workflowStatus: data.workflowStatus.present
+          ? data.workflowStatus.value
+          : this.workflowStatus,
       durationUnits: data.durationUnits.present
           ? data.durationUnits.value
           : this.durationUnits,
@@ -2053,6 +2148,7 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
           ..write('depositApplied: $depositApplied, ')
           ..write('depositAmount: $depositAmount, ')
           ..write('orderStatus: $orderStatus, ')
+          ..write('workflowStatus: $workflowStatus, ')
           ..write('durationUnits: $durationUnits, ')
           ..write('replacedFromRentalId: $replacedFromRentalId')
           ..write(')'))
@@ -2077,6 +2173,7 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
     depositApplied,
     depositAmount,
     orderStatus,
+    workflowStatus,
     durationUnits,
     replacedFromRentalId,
   );
@@ -2100,6 +2197,7 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
           other.depositApplied == this.depositApplied &&
           other.depositAmount == this.depositAmount &&
           other.orderStatus == this.orderStatus &&
+          other.workflowStatus == this.workflowStatus &&
           other.durationUnits == this.durationUnits &&
           other.replacedFromRentalId == this.replacedFromRentalId);
 }
@@ -2121,6 +2219,7 @@ class RentalsCompanion extends UpdateCompanion<RentalRow> {
   final Value<int> depositApplied;
   final Value<int> depositAmount;
   final Value<String> orderStatus;
+  final Value<String?> workflowStatus;
   final Value<int> durationUnits;
   final Value<String?> replacedFromRentalId;
   final Value<int> rowid;
@@ -2141,6 +2240,7 @@ class RentalsCompanion extends UpdateCompanion<RentalRow> {
     this.depositApplied = const Value.absent(),
     this.depositAmount = const Value.absent(),
     this.orderStatus = const Value.absent(),
+    this.workflowStatus = const Value.absent(),
     this.durationUnits = const Value.absent(),
     this.replacedFromRentalId = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -2162,6 +2262,7 @@ class RentalsCompanion extends UpdateCompanion<RentalRow> {
     this.depositApplied = const Value.absent(),
     this.depositAmount = const Value.absent(),
     this.orderStatus = const Value.absent(),
+    this.workflowStatus = const Value.absent(),
     this.durationUnits = const Value.absent(),
     this.replacedFromRentalId = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -2186,6 +2287,7 @@ class RentalsCompanion extends UpdateCompanion<RentalRow> {
     Expression<int>? depositApplied,
     Expression<int>? depositAmount,
     Expression<String>? orderStatus,
+    Expression<String>? workflowStatus,
     Expression<int>? durationUnits,
     Expression<String>? replacedFromRentalId,
     Expression<int>? rowid,
@@ -2207,6 +2309,7 @@ class RentalsCompanion extends UpdateCompanion<RentalRow> {
       if (depositApplied != null) 'deposit_applied': depositApplied,
       if (depositAmount != null) 'deposit_amount': depositAmount,
       if (orderStatus != null) 'order_status': orderStatus,
+      if (workflowStatus != null) 'workflow_status': workflowStatus,
       if (durationUnits != null) 'duration_units': durationUnits,
       if (replacedFromRentalId != null)
         'replaced_from_rental_id': replacedFromRentalId,
@@ -2231,6 +2334,7 @@ class RentalsCompanion extends UpdateCompanion<RentalRow> {
     Value<int>? depositApplied,
     Value<int>? depositAmount,
     Value<String>? orderStatus,
+    Value<String?>? workflowStatus,
     Value<int>? durationUnits,
     Value<String?>? replacedFromRentalId,
     Value<int>? rowid,
@@ -2252,6 +2356,7 @@ class RentalsCompanion extends UpdateCompanion<RentalRow> {
       depositApplied: depositApplied ?? this.depositApplied,
       depositAmount: depositAmount ?? this.depositAmount,
       orderStatus: orderStatus ?? this.orderStatus,
+      workflowStatus: workflowStatus ?? this.workflowStatus,
       durationUnits: durationUnits ?? this.durationUnits,
       replacedFromRentalId: replacedFromRentalId ?? this.replacedFromRentalId,
       rowid: rowid ?? this.rowid,
@@ -2309,6 +2414,9 @@ class RentalsCompanion extends UpdateCompanion<RentalRow> {
     if (orderStatus.present) {
       map['order_status'] = Variable<String>(orderStatus.value);
     }
+    if (workflowStatus.present) {
+      map['workflow_status'] = Variable<String>(workflowStatus.value);
+    }
     if (durationUnits.present) {
       map['duration_units'] = Variable<int>(durationUnits.value);
     }
@@ -2342,6 +2450,7 @@ class RentalsCompanion extends UpdateCompanion<RentalRow> {
           ..write('depositApplied: $depositApplied, ')
           ..write('depositAmount: $depositAmount, ')
           ..write('orderStatus: $orderStatus, ')
+          ..write('workflowStatus: $workflowStatus, ')
           ..write('durationUnits: $durationUnits, ')
           ..write('replacedFromRentalId: $replacedFromRentalId, ')
           ..write('rowid: $rowid')
@@ -4717,6 +4826,7 @@ typedef $$InventoryItemsTableCreateCompanionBuilder =
       Value<bool> dueDateOptional,
       Value<bool> requiresUnitIdentity,
       Value<String> defaultItemKind,
+      Value<String?> metadata,
       Value<int> rowid,
     });
 typedef $$InventoryItemsTableUpdateCompanionBuilder =
@@ -4736,6 +4846,7 @@ typedef $$InventoryItemsTableUpdateCompanionBuilder =
       Value<bool> dueDateOptional,
       Value<bool> requiresUnitIdentity,
       Value<String> defaultItemKind,
+      Value<String?> metadata,
       Value<int> rowid,
     });
 
@@ -4820,6 +4931,11 @@ class $$InventoryItemsTableFilterComposer
 
   ColumnFilters<String> get defaultItemKind => $composableBuilder(
     column: $table.defaultItemKind,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get metadata => $composableBuilder(
+    column: $table.metadata,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -4907,6 +5023,11 @@ class $$InventoryItemsTableOrderingComposer
     column: $table.defaultItemKind,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get metadata => $composableBuilder(
+    column: $table.metadata,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$InventoryItemsTableAnnotationComposer
@@ -4980,6 +5101,9 @@ class $$InventoryItemsTableAnnotationComposer
     column: $table.defaultItemKind,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get metadata =>
+      $composableBuilder(column: $table.metadata, builder: (column) => column);
 }
 
 class $$InventoryItemsTableTableManager
@@ -5034,6 +5158,7 @@ class $$InventoryItemsTableTableManager
                 Value<bool> dueDateOptional = const Value.absent(),
                 Value<bool> requiresUnitIdentity = const Value.absent(),
                 Value<String> defaultItemKind = const Value.absent(),
+                Value<String?> metadata = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => InventoryItemsCompanion(
                 id: id,
@@ -5051,6 +5176,7 @@ class $$InventoryItemsTableTableManager
                 dueDateOptional: dueDateOptional,
                 requiresUnitIdentity: requiresUnitIdentity,
                 defaultItemKind: defaultItemKind,
+                metadata: metadata,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -5070,6 +5196,7 @@ class $$InventoryItemsTableTableManager
                 Value<bool> dueDateOptional = const Value.absent(),
                 Value<bool> requiresUnitIdentity = const Value.absent(),
                 Value<String> defaultItemKind = const Value.absent(),
+                Value<String?> metadata = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => InventoryItemsCompanion.insert(
                 id: id,
@@ -5087,6 +5214,7 @@ class $$InventoryItemsTableTableManager
                 dueDateOptional: dueDateOptional,
                 requiresUnitIdentity: requiresUnitIdentity,
                 defaultItemKind: defaultItemKind,
+                metadata: metadata,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -5132,6 +5260,7 @@ typedef $$RentalsTableCreateCompanionBuilder =
       Value<int> depositApplied,
       Value<int> depositAmount,
       Value<String> orderStatus,
+      Value<String?> workflowStatus,
       Value<int> durationUnits,
       Value<String?> replacedFromRentalId,
       Value<int> rowid,
@@ -5154,6 +5283,7 @@ typedef $$RentalsTableUpdateCompanionBuilder =
       Value<int> depositApplied,
       Value<int> depositAmount,
       Value<String> orderStatus,
+      Value<String?> workflowStatus,
       Value<int> durationUnits,
       Value<String?> replacedFromRentalId,
       Value<int> rowid,
@@ -5245,6 +5375,11 @@ class $$RentalsTableFilterComposer
 
   ColumnFilters<String> get orderStatus => $composableBuilder(
     column: $table.orderStatus,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get workflowStatus => $composableBuilder(
+    column: $table.workflowStatus,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5348,6 +5483,11 @@ class $$RentalsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get workflowStatus => $composableBuilder(
+    column: $table.workflowStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get durationUnits => $composableBuilder(
     column: $table.durationUnits,
     builder: (column) => ColumnOrderings(column),
@@ -5438,6 +5578,11 @@ class $$RentalsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get workflowStatus => $composableBuilder(
+    column: $table.workflowStatus,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<int> get durationUnits => $composableBuilder(
     column: $table.durationUnits,
     builder: (column) => column,
@@ -5493,6 +5638,7 @@ class $$RentalsTableTableManager
                 Value<int> depositApplied = const Value.absent(),
                 Value<int> depositAmount = const Value.absent(),
                 Value<String> orderStatus = const Value.absent(),
+                Value<String?> workflowStatus = const Value.absent(),
                 Value<int> durationUnits = const Value.absent(),
                 Value<String?> replacedFromRentalId = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -5513,6 +5659,7 @@ class $$RentalsTableTableManager
                 depositApplied: depositApplied,
                 depositAmount: depositAmount,
                 orderStatus: orderStatus,
+                workflowStatus: workflowStatus,
                 durationUnits: durationUnits,
                 replacedFromRentalId: replacedFromRentalId,
                 rowid: rowid,
@@ -5535,6 +5682,7 @@ class $$RentalsTableTableManager
                 Value<int> depositApplied = const Value.absent(),
                 Value<int> depositAmount = const Value.absent(),
                 Value<String> orderStatus = const Value.absent(),
+                Value<String?> workflowStatus = const Value.absent(),
                 Value<int> durationUnits = const Value.absent(),
                 Value<String?> replacedFromRentalId = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -5555,6 +5703,7 @@ class $$RentalsTableTableManager
                 depositApplied: depositApplied,
                 depositAmount: depositAmount,
                 orderStatus: orderStatus,
+                workflowStatus: workflowStatus,
                 durationUnits: durationUnits,
                 replacedFromRentalId: replacedFromRentalId,
                 rowid: rowid,

@@ -22,7 +22,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 11;
+  int get schemaVersion => 13;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -270,6 +270,13 @@ class AppDatabase extends _$AppDatabase {
           SET default_item_kind = 'sale'
           WHERE default_item_kind = 'general'
         ''');
+      }
+      if (from < 12) {
+        await m.addColumn(rentals, rentals.workflowStatus);
+        // Leave null; readers derive from order_status via active workflow.
+      }
+      if (from < 13) {
+        await m.addColumn(inventoryItems, inventoryItems.metadata);
       }
     },
   );

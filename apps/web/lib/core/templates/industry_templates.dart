@@ -2,6 +2,9 @@ import 'package:flutter/widgets.dart';
 
 import '../home/home_modules.dart';
 import '../models/entities.dart';
+import '../reports/report_widgets.dart';
+import 'field_defs.dart';
+import 'workflows.dart';
 
 bool _isHindi(Locale locale) => locale.languageCode == 'hi';
 
@@ -139,6 +142,11 @@ String encodeEnabledResourceTypes(Iterable<ResourceType> types) {
 }
 
 /// Resolve enabled types: prefs → inventory kinds → fallback.
+///
+/// When prefs are missing and inventory derivation would leave New Order
+/// without Sell/Job (e.g. demo seed or legacy rental-only catalog), union
+/// with [kFallbackEnabledResourceTypes] so Sell/Job are not silently hidden.
+/// Explicit prefs (onboarding / owner UI / template apply) win as-is.
 List<ResourceType> resolveEnabledResourceTypes({
   required String? prefsRaw,
   Iterable<ResourceType> inventoryKinds = const <ResourceType>[],
@@ -149,6 +157,16 @@ List<ResourceType> resolveEnabledResourceTypes({
   final List<ResourceType> fromInventory =
       resourceTypesFromItems(inventoryKinds);
   if (fromInventory.isNotEmpty) {
+    final List<LineFulfillment> options =
+        fulfillmentOptionsForEnabledTypes(fromInventory);
+    final bool hasSellOrJob = options.contains(LineFulfillment.sell) ||
+        options.contains(LineFulfillment.job);
+    if (!hasSellOrJob) {
+      return resourceTypesFromItems(<ResourceType>[
+        ...fromInventory,
+        ...kFallbackEnabledResourceTypes,
+      ]);
+    }
     return fromInventory;
   }
   return List<ResourceType>.from(kFallbackEnabledResourceTypes);
@@ -158,20 +176,21 @@ List<ResourceType> resolveEnabledResourceTypes({
 ///
 /// [current] keeps Sell/Job visible when already selected on the line even if
 /// the type is not in the enabled set. Catalog items are never hidden by type.
+/// Membership / subscription enable Sell; loan enables Rent.
 List<LineFulfillment> fulfillmentOptionsForEnabledTypes(
   Iterable<ResourceType> enabled, {
   LineFulfillment? current,
 }) {
   final Set<ResourceType> set = enabled.toSet();
-  final bool showSell =
-      set.contains(ResourceType.sale) || current == LineFulfillment.sell;
+  final bool showSell = set.contains(ResourceType.sale) ||
+      set.contains(ResourceType.subscription) ||
+      set.contains(ResourceType.membership) ||
+      current == LineFulfillment.sell;
   final bool showJob = set.contains(ResourceType.job) ||
       set.contains(ResourceType.service) ||
       current == LineFulfillment.job;
   final bool rentLike = set.contains(ResourceType.rental) ||
       set.contains(ResourceType.loan) ||
-      set.contains(ResourceType.subscription) ||
-      set.contains(ResourceType.membership) ||
       set.contains(ResourceType.financial) ||
       set.contains(ResourceType.custom) ||
       current == LineFulfillment.rent;
@@ -200,6 +219,9 @@ class IndustryTemplate {
     this.descriptionHi = '',
     this.defaultHomeModules = kDefaultHomeModules,
     this.enabledResourceTypesOverride,
+    this.workflowId = kDefaultWorkflowId,
+    this.extraFieldIds = const <String>[],
+    this.defaultReportWidgets = kDefaultReportWidgets,
   });
 
   final String id;
@@ -215,10 +237,33 @@ class IndustryTemplate {
   /// Explicit enabled types; when null, derived from [items].
   final List<ResourceType>? enabledResourceTypesOverride;
 
+  /// Status pipeline preset applied at onboarding / full Home layout apply.
+  final String workflowId;
+
+  /// Dynamic catalog field ids from [kFieldDefs] for this pack.
+  final List<String> extraFieldIds;
+
+  /// Default Share Reports widget composition for this pack.
+  final List<ReportWidgetId> defaultReportWidgets;
+
   /// Resource types this pack enables for New Order fulfillment chrome.
   /// Defaults to the union of [items] `.defaultItemKind` when override omitted.
   List<ResourceType> get enabledResourceTypes =>
       enabledResourceTypesOverride ?? resourceTypesFromTemplateItems(items);
+
+  WorkflowDefinition get workflow => resolveWorkflow(prefsId: workflowId);
+
+  /// Resolved [FieldDef]s declared by this pack (unknown ids skipped).
+  List<FieldDef> get extraFields {
+    final List<FieldDef> out = <FieldDef>[];
+    for (final String id in extraFieldIds) {
+      final FieldDef? def = fieldDefById(id);
+      if (def != null) {
+        out.add(def);
+      }
+    }
+    return out;
+  }
 
   String localizedName(Locale locale) =>
       _isHindi(locale) && nameHi.isNotEmpty ? nameHi : name;
@@ -235,6 +280,9 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
     description: 'Books and study materials for lending counters.',
     descriptionHi: 'उधार काउंटर के लिए किताबें और अध्ययन सामग्री।',
     defaultHomeModules: kLibraryHomeModules,
+    workflowId: kRentalWorkflowId,
+    defaultReportWidgets: kLibraryReportWidgets,
+    extraFieldIds: <String>[kFieldBarcode],
     enabledResourceTypesOverride: <ResourceType>[
       ResourceType.rental,
       ResourceType.loan,
@@ -295,6 +343,9 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
     description: 'Photography gear for shoot-day rentals.',
     descriptionHi: 'शूट के दिन किराए के लिए फोटोग्राफी गियर।',
     defaultHomeModules: kRentalHomeModules,
+    workflowId: kRentalWorkflowId,
+    defaultReportWidgets: kRentalReportWidgets,
+    extraFieldIds: <String>[kFieldBarcode],
     enabledResourceTypesOverride: <ResourceType>[ResourceType.rental],
     items: <TemplateInventoryItem>[
       TemplateInventoryItem(
@@ -352,6 +403,8 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
     description: 'Field machinery and irrigation gear.',
     descriptionHi: 'खेत की मशीनरी और सिंचाई का सामान।',
     defaultHomeModules: kRentalHomeModules,
+    defaultReportWidgets: kRentalReportWidgets,
+    extraFieldIds: <String>[kFieldBarcode],
     enabledResourceTypesOverride: <ResourceType>[ResourceType.rental],
     items: <TemplateInventoryItem>[
       TemplateInventoryItem(
@@ -400,6 +453,8 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
     description: 'Seating, staging, and AV for events.',
     descriptionHi: 'इवेंट के लिए बैठक, स्टेजिंग और AV।',
     defaultHomeModules: kRentalHomeModules,
+    defaultReportWidgets: kRentalReportWidgets,
+    extraFieldIds: <String>[kFieldBarcode],
     enabledResourceTypesOverride: <ResourceType>[ResourceType.rental],
     items: <TemplateInventoryItem>[
       TemplateInventoryItem(
@@ -456,6 +511,8 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
     description: 'Jobsite tools and safety kits.',
     descriptionHi: 'साइट के औजार और सुरक्षा किट।',
     defaultHomeModules: kRentalHomeModules,
+    defaultReportWidgets: kRentalReportWidgets,
+    extraFieldIds: <String>[kFieldBarcode],
     enabledResourceTypesOverride: <ResourceType>[ResourceType.rental],
     items: <TemplateInventoryItem>[
       TemplateInventoryItem(
@@ -504,6 +561,8 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
     description: 'Shared office hardware and access gear.',
     descriptionHi: 'साझा ऑफिस हार्डवेयर और एक्सेस गियर।',
     defaultHomeModules: kRentalHomeModules,
+    defaultReportWidgets: kRentalReportWidgets,
+    extraFieldIds: <String>[kFieldBarcode],
     enabledResourceTypesOverride: <ResourceType>[ResourceType.rental],
     items: <TemplateInventoryItem>[
       TemplateInventoryItem(
@@ -552,6 +611,9 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
     description: 'Service packages plus chair and kit rentals.',
     descriptionHi: 'सेवा पैकेज तथा कुर्सी और किट किराया।',
     defaultHomeModules: kJobHomeModules,
+    workflowId: kJobWorkflowId,
+    defaultReportWidgets: kJobReportWidgets,
+    extraFieldIds: <String>[kFieldEstimatedDuration, kFieldBarcode],
     enabledResourceTypesOverride: <ResourceType>[
       ResourceType.service,
       ResourceType.job,
@@ -630,6 +692,9 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
     description: 'Garment and accessory rental for occasions.',
     descriptionHi: 'अवसरों के लिए कपड़े और एक्सेसरी किराया।',
     defaultHomeModules: kJobHomeModules,
+    workflowId: kBoutiqueWorkflowId,
+    defaultReportWidgets: kBoutiqueReportWidgets,
+    extraFieldIds: <String>[kFieldBarcode],
     enabledResourceTypesOverride: <ResourceType>[
       ResourceType.rental,
       ResourceType.sale,
@@ -698,6 +763,9 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
     description: 'Membership fee products and locker rentals.',
     descriptionHi: 'सदस्यता शुल्क उत्पाद और लॉकर किराया।',
     defaultHomeModules: kMembershipHomeModules,
+    workflowId: kRentalWorkflowId,
+    defaultReportWidgets: kMembershipReportWidgets,
+    extraFieldIds: <String>[kFieldMaxVisits, kFieldBarcode],
     enabledResourceTypesOverride: <ResourceType>[
       ResourceType.membership,
       ResourceType.sale,
@@ -756,6 +824,107 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
         defaultUnits: 20,
         billingMode: BillingMode.monthly,
         rateAmount: 30000, // ₹300/month
+        requiresUnitIdentity: false,
+      ),
+    ],
+  ),
+  IndustryTemplate(
+    id: 'salon',
+    name: 'Salon',
+    nameHi: 'सैलून',
+    description: 'Short service pipeline for walk-in chairs.',
+    descriptionHi: 'वॉक-इन कुर्सियों के लिए छोटी सेवा पाइपलाइन।',
+    defaultHomeModules: kJobHomeModules,
+    workflowId: kSalonWorkflowId,
+    defaultReportWidgets: kJobReportWidgets,
+    extraFieldIds: <String>[kFieldEstimatedDuration],
+    enabledResourceTypesOverride: <ResourceType>[
+      ResourceType.service,
+      ResourceType.job,
+    ],
+    items: <TemplateInventoryItem>[
+      TemplateInventoryItem(
+        name: 'Haircut',
+        nameHi: 'हेयरकट',
+        category: 'Salon',
+        categoryHi: 'सैलून',
+        defaultUnits: 1,
+        billingMode: BillingMode.fixed,
+        rateAmount: 25000,
+        defaultItemKind: ResourceType.service,
+        requiresUnitIdentity: false,
+      ),
+      TemplateInventoryItem(
+        name: 'Beard Trim',
+        nameHi: 'दाढ़ी ट्रिम',
+        category: 'Salon',
+        categoryHi: 'सैलून',
+        defaultUnits: 1,
+        billingMode: BillingMode.fixed,
+        rateAmount: 15000,
+        defaultItemKind: ResourceType.service,
+        requiresUnitIdentity: false,
+      ),
+      TemplateInventoryItem(
+        name: 'Hair Color',
+        nameHi: 'हेयर कलर',
+        category: 'Salon',
+        categoryHi: 'सैलून',
+        defaultUnits: 1,
+        billingMode: BillingMode.fixed,
+        rateAmount: 80000,
+        defaultItemKind: ResourceType.service,
+        requiresUnitIdentity: false,
+      ),
+    ],
+  ),
+  IndustryTemplate(
+    id: 'mechanic',
+    name: 'Mechanic',
+    nameHi: 'मैकेनिक',
+    description: 'Repair job tickets and parts counter.',
+    descriptionHi: 'मरम्मत जॉब टिकट और पार्ट्स काउंटर।',
+    defaultHomeModules: kJobHomeModules,
+    workflowId: kJobWorkflowId,
+    defaultReportWidgets: kJobReportWidgets,
+    extraFieldIds: <String>[kFieldEstimatedDuration, kFieldBarcode],
+    enabledResourceTypesOverride: <ResourceType>[
+      ResourceType.job,
+      ResourceType.sale,
+      ResourceType.service,
+    ],
+    items: <TemplateInventoryItem>[
+      TemplateInventoryItem(
+        name: 'Oil Change',
+        nameHi: 'ऑयल चेंज',
+        category: 'Mechanic',
+        categoryHi: 'मैकेनिक',
+        defaultUnits: 1,
+        billingMode: BillingMode.fixed,
+        rateAmount: 50000,
+        defaultItemKind: ResourceType.job,
+        requiresUnitIdentity: false,
+      ),
+      TemplateInventoryItem(
+        name: 'Brake Service',
+        nameHi: 'ब्रेक सेवा',
+        category: 'Mechanic',
+        categoryHi: 'मैकेनिक',
+        defaultUnits: 1,
+        billingMode: BillingMode.fixed,
+        rateAmount: 120000,
+        defaultItemKind: ResourceType.job,
+        requiresUnitIdentity: false,
+      ),
+      TemplateInventoryItem(
+        name: 'Spare Part',
+        nameHi: 'स्पेयर पार्ट',
+        category: 'Mechanic',
+        categoryHi: 'मैकेनिक',
+        defaultUnits: 20,
+        billingMode: BillingMode.fixed,
+        rateAmount: 20000,
+        defaultItemKind: ResourceType.sale,
         requiresUnitIdentity: false,
       ),
     ],

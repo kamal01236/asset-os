@@ -68,6 +68,15 @@ class _TemplateOnboardingScreenState
       await ref
           .read(enabledResourceTypesProvider.notifier)
           .applyTemplateTypes(template.enabledResourceTypes);
+      await ref
+          .read(activeWorkflowProvider.notifier)
+          .applyTemplateWorkflow(template.workflowId);
+      await ref
+          .read(extraFieldIdsProvider.notifier)
+          .applyTemplateFields(template.extraFieldIds);
+      await ref
+          .read(reportWidgetsProvider.notifier)
+          .applyTemplateWidgets(template.defaultReportWidgets);
       ref.read(needsIndustryOnboardingProvider.notifier).state = false;
     } finally {
       if (mounted) {

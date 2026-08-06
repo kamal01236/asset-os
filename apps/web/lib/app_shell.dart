@@ -12,9 +12,12 @@ import 'core/pricing/rental_pricing.dart';
 import 'core/providers/app_providers.dart';
 import 'core/repositories/local_repository.dart';
 import 'core/search/search_scope.dart';
+import 'core/templates/field_defs.dart';
+import 'core/templates/workflows.dart';
 import 'core/theme/app_theme.dart';
 import 'core/validation/text_rules.dart';
 import 'core/widgets/category_picker_field.dart';
+import 'core/widgets/dynamic_field_inputs.dart';
 import 'core/widgets/global_search_typeahead.dart';
 import 'core/widgets/rental_timeline.dart';
 import 'core/widgets/scoped_search_field.dart';
@@ -24,6 +27,7 @@ import 'features/home/home_screen.dart';
 import 'features/orders/new_order_flow_screen.dart';
 import 'features/reports/share_reports_screen.dart';
 import 'features/templates/business_templates_screen.dart';
+import 'features/templates/enabled_resource_types_screen.dart';
 
 export 'features/home/home_screen.dart' show HomeScreen;
 export 'features/orders/new_order_flow_screen.dart'
@@ -890,6 +894,20 @@ class MoreScreen extends ConsumerWidget {
         ),
         const SizedBox(height: 10),
         EntityCard(
+          title: l10n.enabledResourceTypesTitle,
+          subtitle: l10n.enabledResourceTypesSubtitle,
+          leadingIcon: Icons.category_outlined,
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const EnabledResourceTypesScreen(),
+              ),
+            );
+          },
+        ),
+        const SizedBox(height: 10),
+        EntityCard(
           title: l10n.voiceSearchStubTitle,
           subtitle: l10n.voiceSearchStubSubtitle,
           leadingIcon: Icons.keyboard_voice_outlined,
@@ -1030,6 +1048,15 @@ class _RentalDetailScreenState extends ConsumerState<RentalDetailScreen> {
     final Rental rental = rentals.firstWhere((item) => item.id == widget.rentalId);
     final Customer customer = customers.firstWhere((item) => item.id == rental.customerId);
     final DateTime now = DateTime.now();
+    final WorkflowDefinition workflow = ref.watch(activeWorkflowProvider);
+    final String? workflowStatusId = effectiveWorkflowStatusId(
+      stored: rental.workflowStatus,
+      orderStatus: rental.orderStatus,
+      workflow: workflow,
+    );
+    final WorkflowStatus? workflowStatus = workflow.byId(workflowStatusId);
+    final List<WorkflowStatus> nextStatuses =
+        rental.isActive ? workflow.nextAllowed(workflowStatusId) : const <WorkflowStatus>[];
     final int lateShown = rental.lateAmountAsOf(now);
     final int totalShown = rental.totalAmountAsOf(now);
     final List<RentalLine> openRentLines = rental.openRentLines;
@@ -1088,6 +1115,108 @@ class _RentalDetailScreenState extends ConsumerState<RentalDetailScreen> {
               style: Theme.of(context).textTheme.bodySmall,
             ),
           ],
+          const SizedBox(height: 10),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    l10n.workflowStatusHeading,
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    workflowStatus?.localizedLabel(
+                          Localizations.localeOf(context),
+                        ) ??
+                        localizedOrderStatus(l10n, rental.orderStatus),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                  ),
+                  if (rental.isActive && nextStatuses.isNotEmpty) ...<Widget>[
+                    const SizedBox(height: 12),
+                    Row(
+                      children: <Widget>[
+                        Expanded(
+                          child: FilledButton(
+                            onPressed: () async {
+                              await ref
+                                  .read(repositoryProvider)
+                                  .advanceWorkflowStatus(rental.id);
+                            },
+                            child: Text(l10n.workflowAdvanceAction),
+                          ),
+                        ),
+                        if (nextStatuses.length > 1) ...<Widget>[
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () async {
+                                final String? picked =
+                                    await showModalBottomSheet<String>(
+                                  context: context,
+                                  builder: (BuildContext sheetContext) {
+                                    final Locale locale =
+                                        Localizations.localeOf(sheetContext);
+                                    return SafeArea(
+                                      child: ListView(
+                                        shrinkWrap: true,
+                                        children: <Widget>[
+                                          Padding(
+                                            padding: const EdgeInsets.all(16),
+                                            child: Text(
+                                              l10n.workflowPickStatusAction,
+                                              style: Theme.of(sheetContext)
+                                                  .textTheme
+                                                  .titleMedium,
+                                            ),
+                                          ),
+                                          ...nextStatuses.map(
+                                            (WorkflowStatus status) => ListTile(
+                                              title: Text(
+                                                status.localizedLabel(locale),
+                                              ),
+                                              onTap: () => Navigator.of(
+                                                sheetContext,
+                                              ).pop(status.id),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                );
+                                if (picked == null || !mounted) {
+                                  return;
+                                }
+                                await ref
+                                    .read(repositoryProvider)
+                                    .advanceWorkflowStatus(
+                                      rental.id,
+                                      toStatusId: picked,
+                                    );
+                              },
+                              child: Text(l10n.workflowPickStatusAction),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ] else if (!rental.isActive &&
+                      rental.orderStatus == OrderStatus.completed) ...<Widget>[
+                    const SizedBox(height: 6),
+                    Text(
+                      l10n.workflowStatusTerminalHint,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
           const SizedBox(height: 10),
           Card(
             child: Padding(
@@ -1591,6 +1720,7 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
   final TextEditingController _notesController = TextEditingController();
   final TextEditingController _rateController = TextEditingController();
   final TextEditingController _lateFeeController = TextEditingController();
+  final DynamicFieldEditors _extraFields = DynamicFieldEditors();
   String? _selectedCategory;
   BillingMode _billingMode = BillingMode.weekly;
   bool _dueDateOptional = false;
@@ -1604,6 +1734,7 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
     _notesController.dispose();
     _rateController.dispose();
     _lateFeeController.dispose();
+    _extraFields.dispose();
     super.dispose();
   }
 
@@ -1627,6 +1758,12 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
     _billingMode = item.billingMode;
     _dueDateOptional = item.dueDateOptional;
     _requiresUnitIdentity = item.requiresUnitIdentity;
+    final List<String> templateFields = ref.read(extraFieldIdsProvider);
+    final List<FieldDef> fields = resolveExtraFields(
+      type: item.defaultItemKind,
+      templateFieldIds: templateFields.isEmpty ? null : templateFields,
+    );
+    _extraFields.syncFields(fields, item.metadata);
     setState(() => _editing = true);
   }
 
@@ -1680,6 +1817,13 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
     }
     final InventoryItem existing = inventory[existingIndex];
     final int units = int.tryParse(_unitsController.text.trim()) ?? 1;
+    final ResourceType kind =
+        _resolvedEditKind(item: existing, category: category);
+    final List<String> templateFields = ref.read(extraFieldIdsProvider);
+    final List<FieldDef> fields = resolveExtraFields(
+      type: kind,
+      templateFieldIds: templateFields.isEmpty ? null : templateFields,
+    );
     setState(() => _saving = true);
     await ref.read(repositoryProvider).updateInventory(
       id: widget.itemId,
@@ -1692,7 +1836,8 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
       lateFeePerDay: parseRupeesToPaise(_lateFeeController.text),
       dueDateOptional: _dueDateOptional,
       requiresUnitIdentity: _requiresUnitIdentity,
-      defaultItemKind: _resolvedEditKind(item: existing, category: category),
+      defaultItemKind: kind,
+      metadata: _extraFields.collect(fields),
     );
     if (!mounted) {
       return;
@@ -1837,6 +1982,28 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
                         hintText: l10n.notesHint,
                       ),
                     ),
+                    ...() {
+                      final List<String> templateFields =
+                          ref.watch(extraFieldIdsProvider);
+                      final ResourceType kind = _resolvedEditKind(
+                        item: item,
+                        category: resolveSelectedCategory(
+                          selected: _selectedCategory,
+                          customText: _customCategoryController.text,
+                        ),
+                      );
+                      final List<FieldDef> fields = resolveExtraFields(
+                        type: kind,
+                        templateFieldIds:
+                            templateFields.isEmpty ? null : templateFields,
+                      );
+                      return buildDynamicFieldInputs(
+                        context: context,
+                        fields: fields,
+                        editors: _extraFields,
+                        onChanged: () => setState(() {}),
+                      );
+                    }(),
                   ]
                 : <Widget>[
                     EntityCard(
@@ -1893,6 +2060,34 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
                         ),
                       ),
                     ],
+                    ...() {
+                      final Locale locale = Localizations.localeOf(context);
+                      final List<String> templateFields =
+                          ref.watch(extraFieldIdsProvider);
+                      final List<FieldDef> fields = resolveExtraFields(
+                        type: item.defaultItemKind,
+                        templateFieldIds:
+                            templateFields.isEmpty ? null : templateFields,
+                      );
+                      final List<Widget> metaCards = <Widget>[];
+                      for (final FieldDef field in fields) {
+                        final Object? value = item.metadata[field.id];
+                        if (value == null ||
+                            (value is String && value.trim().isEmpty)) {
+                          continue;
+                        }
+                        metaCards.add(const SizedBox(height: 10));
+                        metaCards.add(
+                          Card(
+                            child: ListTile(
+                              title: Text(field.localizedLabel(locale)),
+                              subtitle: Text(formatMetadataValue(field, value)),
+                            ),
+                          ),
+                        );
+                      }
+                      return metaCards;
+                    }(),
                   ],
           ),
           bottomNavigationBar: _editing
@@ -2220,6 +2415,7 @@ class _AddInventoryFlowScreenState extends ConsumerState<AddInventoryFlowScreen>
   final TextEditingController _notesController = TextEditingController();
   final TextEditingController _rateController = TextEditingController(text: '0');
   final TextEditingController _lateFeeController = TextEditingController(text: '0');
+  final DynamicFieldEditors _extraFields = DynamicFieldEditors();
   late String _selectedCategory;
   BillingMode _billingMode = BillingMode.weekly;
   bool _dueDateOptional = false;
@@ -2242,6 +2438,7 @@ class _AddInventoryFlowScreenState extends ConsumerState<AddInventoryFlowScreen>
     _notesController.dispose();
     _rateController.dispose();
     _lateFeeController.dispose();
+    _extraFields.dispose();
     super.dispose();
   }
 
@@ -2356,6 +2553,24 @@ class _AddInventoryFlowScreenState extends ConsumerState<AddInventoryFlowScreen>
               setState(() => _requiresUnitIdentity = value);
             },
           ),
+          ...() {
+            final String category = resolveSelectedCategory(
+              selected: selectedCategory,
+              customText: _customCategoryController.text,
+            );
+            final ResourceType kind = defaultKindForCategory(category);
+            final List<String> templateFields = ref.watch(extraFieldIdsProvider);
+            final List<FieldDef> fields = resolveExtraFields(
+              type: kind,
+              templateFieldIds: templateFields.isEmpty ? null : templateFields,
+            );
+            return buildDynamicFieldInputs(
+              context: context,
+              fields: fields,
+              editors: _extraFields,
+              onChanged: () => setState(() {}),
+            );
+          }(),
           const SizedBox(height: 8),
           ExpansionTile(
             tilePadding: EdgeInsets.zero,
@@ -2408,6 +2623,14 @@ class _AddInventoryFlowScreenState extends ConsumerState<AddInventoryFlowScreen>
                     return;
                   }
                   final int units = int.tryParse(_unitsController.text.trim()) ?? 1;
+                  final ResourceType kind = defaultKindForCategory(category);
+                  final List<String> templateFields =
+                      ref.read(extraFieldIdsProvider);
+                  final List<FieldDef> fields = resolveExtraFields(
+                    type: kind,
+                    templateFieldIds:
+                        templateFields.isEmpty ? null : templateFields,
+                  );
                   setState(() => _submitting = true);
                   await ref.read(repositoryProvider).addInventory(
                     name: _nameController.text.trim(),
@@ -2419,7 +2642,8 @@ class _AddInventoryFlowScreenState extends ConsumerState<AddInventoryFlowScreen>
                     lateFeePerDay: parseRupeesToPaise(_lateFeeController.text),
                     dueDateOptional: _dueDateOptional,
                     requiresUnitIdentity: _requiresUnitIdentity,
-                    defaultItemKind: defaultKindForCategory(category),
+                    defaultItemKind: kind,
+                    metadata: _extraFields.collect(fields),
                   );
                   if (context.mounted) {
                     Navigator.of(context).pop();

@@ -165,7 +165,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get businessTemplatesSubtitle =>
-      'उद्योग के अनुसार स्टार्टर संसाधन आयात करें (मर्ज)।';
+      'उद्योग के अनुसार स्टार्टर संसाधन आयात करें (प्रकार मर्ज)। होम लेआउट लागू करने पर सक्षम प्रकार बदल जाते हैं।';
 
   @override
   String get onboardingTemplateTitle => 'अपना व्यवसाय प्रकार चुनें';
@@ -485,6 +485,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get advancedFieldsSubtitle => 'MVP में वैकल्पिक';
 
   @override
+  String get extraFieldsSectionTitle => 'अतिरिक्त फ़ील्ड';
+
+  @override
   String get saveItem => 'वस्तु सहेजें';
 
   @override
@@ -512,7 +515,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get templatesIntro =>
-      'एक उद्योग चुनें, फिर जोड़ने वाली स्टार्टर वस्तुएँ चुनें। समान नाम वाली मौजूदा वस्तुएँ बनी रहती हैं (मर्ज)।';
+      'एक उद्योग चुनें, फिर जोड़ने वाली स्टार्टर वस्तुएँ चुनें। समान नाम वाली मौजूदा वस्तुएँ बनी रहती हैं। आयात सक्षम संसाधन प्रकारों को मर्ज करता है; होम लेआउट लागू करने पर वे टेम्पलेट के सेट से बदल जाते हैं।';
 
   @override
   String starterItemsCount(int count) {
@@ -1057,6 +1060,20 @@ class AppLocalizationsHi extends AppLocalizations {
       'खोज हमेशा चालू रहती है। होम को फोकस्ड रखने के लिए अन्य मॉड्यूल टॉगल करें।';
 
   @override
+  String get enabledResourceTypesTitle => 'सक्षम संसाधन प्रकार';
+
+  @override
+  String get enabledResourceTypesSubtitle =>
+      'नया ऑर्डर → अधिक विकल्प में दिखने वाले प्रकार चुनें।';
+
+  @override
+  String get enabledResourceTypesIntro =>
+      'नए ऑर्डर की पूर्ति (किराया / बिक्री / जॉब) के लिए प्रकार टॉगल करें। टेम्पलेट आइटम आयात करने पर प्रकार इस सूची में मर्ज होते हैं। टेम्पलेट का होम लेआउट लागू करने पर यह सूची टेम्पलेट के सेट से बदल जाती है।';
+
+  @override
+  String get enabledResourceTypesKeepOne => 'कम से कम एक प्रकार सक्षम रखें।';
+
+  @override
   String get moduleSearch => 'खोज';
 
   @override
@@ -1117,11 +1134,11 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get applyHomeLayoutBody =>
-      'इस टेम्पलेट के अनुशंसित होम मॉड्यूल उपयोग करें।';
+      'होम मॉड्यूल और सक्षम संसाधन प्रकारों को इस टेम्पलेट के अनुशंसित सेट से बदलें। केवल आइटम आयात करने पर प्रकार मर्ज होते हैं।';
 
   @override
   String get applyHomeLayoutCustomizedBody =>
-      'आपने होम पहले अनुकूलित किया है। इसे इस टेम्पलेट के लेआउट से बदलें?';
+      'आपने होम पहले अनुकूलित किया है। होम मॉड्यूल और सक्षम संसाधन प्रकारों को इस टेम्पलेट के सेट से बदलें?';
 
   @override
   String get applyHomeLayoutSkip => 'वर्तमान रखें';
@@ -1130,7 +1147,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get applyHomeLayoutConfirm => 'लेआउट लागू करें';
 
   @override
-  String get applyHomeLayoutDone => 'होम लेआउट अपडेट हो गया।';
+  String get applyHomeLayoutDone => 'होम लेआउट और संसाधन प्रकार अपडेट हो गए।';
 
   @override
   String minMeaningfulTextError(int min) {
@@ -1258,6 +1275,18 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get orderStatusHeading => 'ऑर्डर स्थिति';
+
+  @override
+  String get workflowStatusHeading => 'कार्यप्रवाह स्थिति';
+
+  @override
+  String get workflowAdvanceAction => 'आगे बढ़ाएँ';
+
+  @override
+  String get workflowPickStatusAction => 'स्थिति चुनें';
+
+  @override
+  String get workflowStatusTerminalHint => 'इस पाइपलाइन के लिए ऑर्डर पूर्ण।';
 
   @override
   String orderIssuedSummary(int count) {
@@ -1590,6 +1619,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get timelineTitleIssued => 'जारी';
 
   @override
+  String get timelineTitleStatusChanged => 'स्थिति बदली';
+
+  @override
   String get timelineSubtitleCreatedOrderFlow =>
       'फ़ोन-फ़र्स्ट ऑर्डर फ़्लो से बनाया गया।';
 
@@ -1653,6 +1685,11 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get timelineSubtitleManualWalkIn => 'मैनुअल वॉक-इन चेकआउट।';
+
+  @override
+  String timelineSubtitleStatusChanged(String from, String to) {
+    return '$from → $to';
+  }
 
   @override
   String timelineSubtitleDiscountBit(String amount) {

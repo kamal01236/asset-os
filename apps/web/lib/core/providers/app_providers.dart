@@ -7,7 +7,10 @@ import '../home/home_modules.dart';
 import '../models/entities.dart';
 import '../repositories/local_repository.dart';
 import '../sharing/whatsapp_share.dart';
+import '../templates/field_defs.dart';
 import '../templates/industry_templates.dart';
+import '../templates/workflows.dart';
+import '../reports/report_widgets.dart';
 
 export '../home/home_modules.dart';
 export '../home/home_filter.dart';
@@ -18,6 +21,29 @@ export '../templates/industry_templates.dart'
         parseEnabledResourceTypes,
         resolveEnabledResourceTypes,
         fulfillmentOptionsForEnabledTypes;
+export '../templates/workflows.dart'
+    show
+        kActiveWorkflowIdPrefsKey,
+        kDefaultWorkflowId,
+        resolveWorkflow,
+        WorkflowDefinition,
+        WorkflowStatus;
+export '../templates/field_defs.dart'
+    show
+        kExtraFieldIdsPrefsKey,
+        FieldDef,
+        FieldValueType,
+        resolveExtraFields,
+        parseExtraFieldIds,
+        encodeExtraFieldIds;
+export '../reports/report_widgets.dart'
+    show
+        kReportWidgetsPrefsKey,
+        ReportWidgetId,
+        resolveReportWidgets,
+        parseReportWidgets,
+        encodeReportWidgets,
+        kDefaultReportWidgets;
 
 const String kLocalePrefsKey = 'asset_os_locale';
 const String kThemeModePrefsKey = 'asset_os_theme_mode';
@@ -220,7 +246,103 @@ class EnabledResourceTypesNotifier extends StateNotifier<List<ResourceType>> {
     await setTypes(resourceTypesFromItems(<ResourceType>[...state, ...extra]));
   }
 
+  /// Toggle one type from More → Enabled resource types. Keeps at least one.
+  Future<void> setTypeEnabled(ResourceType type, bool enabled) async {
+    if (enabled) {
+      if (state.contains(type)) {
+        return;
+      }
+      await setTypes(<ResourceType>[...state, type]);
+      return;
+    }
+    if (!state.contains(type) || state.length <= 1) {
+      return;
+    }
+    await setTypes(
+      state.where((ResourceType t) => t != type).toList(),
+    );
+  }
+
   bool isTypeEnabled(ResourceType type) => state.contains(type);
+}
+
+final activeWorkflowProvider =
+    StateNotifierProvider<ActiveWorkflowNotifier, WorkflowDefinition>((ref) {
+  return ActiveWorkflowNotifier(ref.watch(sharedPreferencesProvider));
+});
+
+class ActiveWorkflowNotifier extends StateNotifier<WorkflowDefinition> {
+  ActiveWorkflowNotifier(this._preferences)
+      : super(
+          resolveWorkflow(
+            prefsId: _preferences.getString(kActiveWorkflowIdPrefsKey),
+          ),
+        );
+
+  final SharedPreferences _preferences;
+
+  Future<void> setWorkflowId(String workflowId) async {
+    final WorkflowDefinition workflow = resolveWorkflow(prefsId: workflowId);
+    state = workflow;
+    await _preferences.setString(kActiveWorkflowIdPrefsKey, workflow.id);
+  }
+
+  Future<void> applyTemplateWorkflow(String workflowId) async {
+    await setWorkflowId(workflowId);
+  }
+}
+
+final extraFieldIdsProvider =
+    StateNotifierProvider<ExtraFieldIdsNotifier, List<String>>((ref) {
+  return ExtraFieldIdsNotifier(ref.watch(sharedPreferencesProvider));
+});
+
+class ExtraFieldIdsNotifier extends StateNotifier<List<String>> {
+  ExtraFieldIdsNotifier(this._preferences)
+      : super(parseExtraFieldIds(_preferences.getString(kExtraFieldIdsPrefsKey)));
+
+  final SharedPreferences _preferences;
+
+  Future<void> setIds(List<String> ids) async {
+    final List<String> next = parseExtraFieldIds(encodeExtraFieldIds(ids));
+    state = next;
+    await _preferences.setString(kExtraFieldIdsPrefsKey, encodeExtraFieldIds(next));
+  }
+
+  Future<void> applyTemplateFields(List<String> ids) async {
+    await setIds(ids);
+  }
+}
+
+final reportWidgetsProvider =
+    StateNotifierProvider<ReportWidgetsNotifier, List<ReportWidgetId>>((ref) {
+  return ReportWidgetsNotifier(ref.watch(sharedPreferencesProvider));
+});
+
+class ReportWidgetsNotifier extends StateNotifier<List<ReportWidgetId>> {
+  ReportWidgetsNotifier(this._preferences)
+      : super(
+          resolveReportWidgets(
+            prefsRaw: _preferences.getString(kReportWidgetsPrefsKey),
+          ),
+        );
+
+  final SharedPreferences _preferences;
+
+  Future<void> setWidgets(List<ReportWidgetId> widgets) async {
+    final List<ReportWidgetId> next = parseReportWidgets(
+      encodeReportWidgets(widgets),
+    );
+    state = next;
+    await _preferences.setString(
+      kReportWidgetsPrefsKey,
+      encodeReportWidgets(next),
+    );
+  }
+
+  Future<void> applyTemplateWidgets(List<ReportWidgetId> widgets) async {
+    await setWidgets(widgets);
+  }
 }
 
 /// Owner WhatsApp number for share-to-self reports (digits + country code).

@@ -40,6 +40,8 @@ class InventoryItems extends Table {
   /// Full [ResourceType] set (`rental` | `sale` | `service` | …). Legacy `general` → `sale`.
   TextColumn get defaultItemKind =>
       text().withDefault(const Constant('rental'))();
+  /// JSON map of dynamic field values ([FieldDef] ids → values).
+  TextColumn get metadata => text().nullable()();
 
   @override
   Set<Column<Object>> get primaryKey => <Column<Object>>{id};
@@ -71,6 +73,8 @@ class Rentals extends Table {
   IntColumn get depositAmount => integer().withDefault(const Constant(0))();
   /// `open` | `completed` | `cancelled`
   TextColumn get orderStatus => text().withDefault(const Constant('open'))();
+  /// Template workflow status id (nullable; null → derive from [orderStatus]).
+  TextColumn get workflowStatus => text().nullable()();
   /// Chosen duration (e.g. 1 week → 1; fixed due-days still stored here).
   IntColumn get durationUnits => integer().withDefault(const Constant(1))();
   /// Set when this rental was opened as a replacement for a line on another rental.
