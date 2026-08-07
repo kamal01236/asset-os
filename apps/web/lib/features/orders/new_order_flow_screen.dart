@@ -60,7 +60,8 @@ class _UnitIdentityDraft {
 class _OrderLineDraft {
   _OrderLineDraft({this.itemId})
       : durationController = TextEditingController(text: '1'),
-        saleAmountController = TextEditingController() {
+        saleAmountController = TextEditingController(),
+        rateController = TextEditingController() {
     ensureIdentitySlots(1);
   }
 
@@ -70,6 +71,7 @@ class _OrderLineDraft {
   final List<_UnitIdentityDraft> identities = <_UnitIdentityDraft>[];
   final TextEditingController durationController;
   final TextEditingController saleAmountController;
+  final TextEditingController rateController;
   DateTime? customEnd;
   bool leaveOpenEnded = false;
   /// Optional unit labels when catalog does not require identity.
@@ -104,6 +106,7 @@ class _OrderLineDraft {
     }
     durationController.dispose();
     saleAmountController.dispose();
+    rateController.dispose();
   }
 }
 
@@ -350,6 +353,22 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
     } else if (!draft.usesManualAmount) {
       draft.saleAmountController.clear();
     }
+    if (!draft.usesManualAmount) {
+      draft.rateController.text = paiseToRupeesField(item.rateAmount);
+    } else {
+      draft.rateController.clear();
+    }
+  }
+
+  int _effectiveRatePaise(_OrderLineDraft draft, InventoryItem item) {
+    if (!item.allowsDynamicPricing) {
+      return item.rateAmount;
+    }
+    final String raw = draft.rateController.text.trim();
+    if (raw.isEmpty) {
+      return item.rateAmount;
+    }
+    return parseRupeesToPaise(raw);
   }
 
   Future<void> _seedPrefillLabels() async {
@@ -388,6 +407,7 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
       draft.ensureIdentitySlots(1);
       draft.clearIdentityFields();
       draft.saleAmountController.clear();
+      draft.rateController.clear();
       draft.customEnd = null;
       draft.leaveOpenEnded = false;
       draft.durationController.text = '1';
@@ -472,7 +492,7 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
     }
     return computeBaseAmount(
       mode: item.billingMode,
-      rateAmount: item.rateAmount,
+      rateAmount: _effectiveRatePaise(draft, item),
       start: DateTime.now(),
       due: due,
     );
@@ -653,6 +673,7 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
           continue;
         }
         final bool openEnded = _lineIsOpenEnded(draft, item);
+        final int effectiveRate = _effectiveRatePaise(draft, item);
         inputs.add(
           RentalLineInput(
             itemId: item.id,
@@ -668,6 +689,8 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
             customEnd: openEnded || item.billingMode != BillingMode.custom
                 ? null
                 : draft.customEnd,
+            rateAmountOverride:
+                item.allowsDynamicPricing ? effectiveRate : null,
           ),
         );
       }
@@ -1271,6 +1294,19 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
                     ),
                   ],
                 ] else ...<Widget>[
+                  if (selected.allowsDynamicPricing) ...<Widget>[
+                    TextField(
+                      controller: draft.rateController,
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
+                      decoration: InputDecoration(
+                        labelText: l10n.orderLineRateLabel,
+                        hintText: l10n.orderLineRateHint,
+                      ),
+                      onChanged: (_) => setState(() {}),
+                    ),
+                    const SizedBox(height: 8),
+                  ],
                   if (!draft.leaveOpenEnded &&
                       selected.billingMode != BillingMode.custom)
                     TextField(

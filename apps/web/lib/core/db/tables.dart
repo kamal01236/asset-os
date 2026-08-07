@@ -37,6 +37,9 @@ class InventoryItems extends Table {
   /// When true, each issued unit needs instance name + short code (parent catalog).
   BoolColumn get requiresUnitIdentity =>
       boolean().withDefault(const Constant(false))();
+  /// When true, New Order may override catalog [rateAmount] for that rental line.
+  BoolColumn get allowsDynamicPricing =>
+      boolean().withDefault(const Constant(false))();
   /// Full [ResourceType] set (`rental` | `sale` | `service` | …). Legacy `general` → `sale`.
   TextColumn get defaultItemKind =>
       text().withDefault(const Constant('rental'))();
@@ -102,6 +105,12 @@ class RentalItems extends Table {
   IntColumn get lateAmount => integer().withDefault(const Constant(0))();
   /// Deposit applied from wallet for this line (paise).
   IntColumn get depositApplied => integer().withDefault(const Constant(0))();
+  /// Frozen billing mode at issue (`daily`/`weekly`/…).
+  TextColumn get billingMode => text().withDefault(const Constant('weekly'))();
+  /// Frozen rate in paise at issue (catalog or dynamic override).
+  IntColumn get rateAmount => integer().withDefault(const Constant(0))();
+  /// Frozen late fee per day in paise at issue.
+  IntColumn get lateFeePerDay => integer().withDefault(const Constant(0))();
   /// `rent` | `sell` — how this line was issued.
   TextColumn get fulfillment => text().withDefault(const Constant('rent'))();
 

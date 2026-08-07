@@ -1735,6 +1735,7 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
   BillingMode _billingMode = BillingMode.weekly;
   bool _dueDateOptional = false;
   bool _requiresUnitIdentity = true;
+  bool _allowsDynamicPricing = false;
 
   @override
   void dispose() {
@@ -1768,6 +1769,7 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
     _billingMode = item.billingMode;
     _dueDateOptional = item.dueDateOptional;
     _requiresUnitIdentity = item.requiresUnitIdentity;
+    _allowsDynamicPricing = item.allowsDynamicPricing;
     final List<String> templateFields = ref.read(extraFieldIdsProvider);
     final List<FieldDef> fields = resolveExtraFields(
       type: item.defaultItemKind,
@@ -1846,6 +1848,7 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
       lateFeePerDay: parseRupeesToPaise(_lateFeeController.text),
       dueDateOptional: _dueDateOptional,
       requiresUnitIdentity: _requiresUnitIdentity,
+      allowsDynamicPricing: _allowsDynamicPricing,
       defaultItemKind: kind,
       metadata: _extraFields.collect(fields),
     );
@@ -1982,6 +1985,15 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
                       subtitle: Text(l10n.requiresUnitIdentitySubtitle),
                       onChanged: (bool value) {
                         setState(() => _requiresUnitIdentity = value);
+                      },
+                    ),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      value: _allowsDynamicPricing,
+                      title: Text(l10n.allowsDynamicPricingLabel),
+                      subtitle: Text(l10n.allowsDynamicPricingSubtitle),
+                      onChanged: (bool value) {
+                        setState(() => _allowsDynamicPricing = value);
                       },
                     ),
                     const SizedBox(height: 8),
@@ -2489,6 +2501,7 @@ class _AddInventoryFlowScreenState extends ConsumerState<AddInventoryFlowScreen>
   BillingMode _billingMode = BillingMode.weekly;
   bool _dueDateOptional = false;
   bool _requiresUnitIdentity = false;
+  bool _allowsDynamicPricing = false;
   bool _submitting = false;
 
   @override
@@ -2622,6 +2635,15 @@ class _AddInventoryFlowScreenState extends ConsumerState<AddInventoryFlowScreen>
               setState(() => _requiresUnitIdentity = value);
             },
           ),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            value: _allowsDynamicPricing,
+            title: Text(l10n.allowsDynamicPricingLabel),
+            subtitle: Text(l10n.allowsDynamicPricingSubtitle),
+            onChanged: (bool value) {
+              setState(() => _allowsDynamicPricing = value);
+            },
+          ),
           ...() {
             final String category = resolveSelectedCategory(
               selected: selectedCategory,
@@ -2711,6 +2733,7 @@ class _AddInventoryFlowScreenState extends ConsumerState<AddInventoryFlowScreen>
                     lateFeePerDay: parseRupeesToPaise(_lateFeeController.text),
                     dueDateOptional: _dueDateOptional,
                     requiresUnitIdentity: _requiresUnitIdentity,
+                    allowsDynamicPricing: _allowsDynamicPricing,
                     defaultItemKind: kind,
                     metadata: _extraFields.collect(fields),
                   );

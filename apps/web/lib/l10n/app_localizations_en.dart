@@ -1294,6 +1294,20 @@ class AppLocalizationsEn extends AppLocalizations {
       'Allow issuing without a fixed return date (charge accrues until return).';
 
   @override
+  String get allowsDynamicPricingLabel => 'Allow dynamic pricing';
+
+  @override
+  String get allowsDynamicPricingSubtitle =>
+      'Staff can change the rate on New Order for this item. Catalog changes only affect new orders.';
+
+  @override
+  String get orderLineRateLabel => 'Rate for this order (₹)';
+
+  @override
+  String get orderLineRateHint =>
+      'Catalog default can be changed for this rental';
+
+  @override
   String get continueWithoutDueDate => 'Continue without due date';
 
   @override

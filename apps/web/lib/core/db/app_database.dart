@@ -24,7 +24,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 15;
+  int get schemaVersion => 16;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -292,6 +292,48 @@ class AppDatabase extends _$AppDatabase {
           moneyLoans,
           moneyLoans.prepaymentAllocation,
         );
+      }
+      if (from < 16) {
+        await m.addColumn(
+          inventoryItems,
+          inventoryItems.allowsDynamicPricing,
+        );
+        await m.addColumn(rentalItems, rentalItems.billingMode);
+        await m.addColumn(rentalItems, rentalItems.rateAmount);
+        await m.addColumn(rentalItems, rentalItems.lateFeePerDay);
+        await customStatement('''
+          UPDATE inventory_items
+          SET allows_dynamic_pricing = COALESCE(allows_dynamic_pricing, 0)
+        ''');
+        // Historical lines had no snapshot; freeze current catalog values.
+        await customStatement('''
+          UPDATE rental_items
+          SET
+            billing_mode = COALESCE(
+              (
+                SELECT inventory_items.billing_mode
+                FROM inventory_items
+                WHERE inventory_items.id = rental_items.item_id
+              ),
+              'weekly'
+            ),
+            rate_amount = COALESCE(
+              (
+                SELECT inventory_items.rate_amount
+                FROM inventory_items
+                WHERE inventory_items.id = rental_items.item_id
+              ),
+              0
+            ),
+            late_fee_per_day = COALESCE(
+              (
+                SELECT inventory_items.late_fee_per_day
+                FROM inventory_items
+                WHERE inventory_items.id = rental_items.item_id
+              ),
+              0
+            )
+        ''');
       }
     },
   );

@@ -2330,6 +2330,30 @@ abstract class AppLocalizations {
   /// **'Allow issuing without a fixed return date (charge accrues until return).'**
   String get dueDateOptionalSubtitle;
 
+  /// No description provided for @allowsDynamicPricingLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow dynamic pricing'**
+  String get allowsDynamicPricingLabel;
+
+  /// No description provided for @allowsDynamicPricingSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Staff can change the rate on New Order for this item. Catalog changes only affect new orders.'**
+  String get allowsDynamicPricingSubtitle;
+
+  /// No description provided for @orderLineRateLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate for this order (₹)'**
+  String get orderLineRateLabel;
+
+  /// No description provided for @orderLineRateHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Catalog default can be changed for this rental'**
+  String get orderLineRateHint;
+
   /// No description provided for @continueWithoutDueDate.
   ///
   /// In en, this message translates to:

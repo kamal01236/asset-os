@@ -478,6 +478,7 @@ class LocalRepository {
           openEnded: line.openEnded,
           fulfillment: line.fulfillment,
           manualSaleAmountPaise: line.manualSaleAmountPaise,
+          rateAmountOverride: line.rateAmountOverride,
         ),
       );
     }
@@ -521,6 +522,9 @@ class LocalRepository {
       final List<DateTime?> lineDues = <DateTime?>[];
       final List<int> lineBaseAmounts = <int>[];
       final List<int> lineDurationUnits = <int>[];
+      final List<BillingMode> lineBillingModes = <BillingMode>[];
+      final List<int> lineRateAmounts = <int>[];
+      final List<int> lineLateFees = <int>[];
       int baseAmount = 0;
       int lateFeePerDay = 0;
 
@@ -529,6 +533,23 @@ class LocalRepository {
         final InventoryItemRow row = itemRows[i];
         final LineFulfillment fulfillment = line.fulfillment;
         lineFulfillments.add(fulfillment);
+
+        final BillingMode lineMode = BillingMode.parse(row.billingMode);
+        final int catalogRate = row.rateAmount < 0 ? 0 : row.rateAmount;
+        final int catalogLate = row.lateFeePerDay < 0 ? 0 : row.lateFeePerDay;
+        int effectiveRate = catalogRate;
+        if (line.rateAmountOverride != null) {
+          if (!row.allowsDynamicPricing) {
+            throw ArgumentError(
+              'Rate override requires item to allow dynamic pricing: ${row.id}',
+            );
+          }
+          effectiveRate =
+              line.rateAmountOverride! < 0 ? 0 : line.rateAmountOverride!;
+        }
+        lineBillingModes.add(lineMode);
+        lineRateAmounts.add(effectiveRate);
+        lineLateFees.add(catalogLate);
 
         if (line.usesManualAmount) {
           final int saleAmount = line.manualSaleAmountPaise!;
@@ -540,7 +561,6 @@ class LocalRepository {
           continue;
         }
 
-        final BillingMode lineMode = BillingMode.parse(row.billingMode);
         final bool lineOpenEnded = line.openEnded ?? openEnded;
         lineOpenEndedFlags.add(lineOpenEnded);
 
@@ -553,7 +573,7 @@ class LocalRepository {
           lineDues.add(null);
           lineBaseAmounts.add(0);
           lineDurationUnits.add(0);
-          lateFeePerDay += row.lateFeePerDay;
+          lateFeePerDay += catalogLate;
           continue;
         }
 
@@ -568,7 +588,7 @@ class LocalRepository {
         );
         final int lineBase = computeBaseAmount(
           mode: lineMode,
-          rateAmount: row.rateAmount,
+          rateAmount: effectiveRate,
           start: now,
           due: lineDue,
         );
@@ -576,7 +596,7 @@ class LocalRepository {
         lineBaseAmounts.add(lineBase);
         lineDurationUnits.add(lineUnits);
         baseAmount += lineBase;
-        lateFeePerDay += row.lateFeePerDay;
+        lateFeePerDay += catalogLate;
       }
 
       DateTime? dueAt;
@@ -616,7 +636,7 @@ class LocalRepository {
         snapshotIndex = 0;
       }
       final BillingMode mode = billingModeOverride ??
-          BillingMode.parse(itemRows[snapshotIndex].billingMode);
+          lineBillingModes[snapshotIndex];
       final Iterable<MapEntry<int, bool>> rentOpenFlags = lineOpenEndedFlags
           .asMap()
           .entries
@@ -640,7 +660,7 @@ class LocalRepository {
           qrCode: qrCode,
           nickname: Value<String?>(storedNick),
           billingMode: Value<String>(mode.name),
-          rateAmount: Value<int>(itemRows[snapshotIndex].rateAmount),
+          rateAmount: Value<int>(lineRateAmounts[snapshotIndex]),
           lateFeePerDay: Value<int>(lateFeePerDay),
           baseAmount: Value<int>(baseAmount),
           lateAmount: const Value<int>(0),
@@ -680,6 +700,9 @@ class LocalRepository {
             returnedAt: Value<DateTime?>(closesAtCreate ? now : null),
             baseAmount: Value<int>(lineBaseAmounts[i]),
             lateAmount: const Value<int>(0),
+            billingMode: Value<String>(lineBillingModes[i].name),
+            rateAmount: Value<int>(lineRateAmounts[i]),
+            lateFeePerDay: Value<int>(lineLateFees[i]),
             fulfillment: Value<String>(fulfillment.storageValue),
           ),
         );
@@ -859,8 +882,8 @@ class LocalRepository {
         final int lineLate;
         if (rental.dueAt == null) {
           lineBase = computeBaseAmount(
-            mode: BillingMode.parse(item?.billingMode),
-            rateAmount: item?.rateAmount ?? 0,
+            mode: BillingMode.parse(link.billingMode),
+            rateAmount: link.rateAmount,
             start: rental.startedAt,
             due: now,
           );
@@ -870,7 +893,7 @@ class LocalRepository {
           lineLate = computeLateAmount(
             due: rental.dueAt!,
             asOf: now,
-            lateFeePerDay: item?.lateFeePerDay ?? 0,
+            lateFeePerDay: link.lateFeePerDay,
           );
         }
         computed.add((link: link, item: item, base: lineBase, late: lineLate));
@@ -962,10 +985,7 @@ class LocalRepository {
         parentDeposit += link.depositApplied;
         if (link.returnedAt == null &&
             LineFulfillment.parse(link.fulfillment) == LineFulfillment.rent) {
-          final InventoryItemRow? item = await (_db.select(_db.inventoryItems)
-                ..where((t) => t.id.equals(link.itemId)))
-              .getSingleOrNull();
-          openLateFeePerDay += item?.lateFeePerDay ?? 0;
+          openLateFeePerDay += link.lateFeePerDay;
         }
       }
       final int parentTotal = parentBase + parentLate;
@@ -1124,10 +1144,7 @@ class LocalRepository {
         parentDeposit += link.depositApplied;
         if (link.returnedAt == null &&
             LineFulfillment.parse(link.fulfillment) == LineFulfillment.rent) {
-          final InventoryItemRow? item = await (_db.select(_db.inventoryItems)
-                ..where((t) => t.id.equals(link.itemId)))
-              .getSingleOrNull();
-          openLateFeePerDay += item?.lateFeePerDay ?? 0;
+          openLateFeePerDay += link.lateFeePerDay;
         }
       }
       final int parentTotal = parentBase + parentLate;
@@ -2071,6 +2088,7 @@ class LocalRepository {
     String currencyCode = 'INR',
     bool dueDateOptional = false,
     bool requiresUnitIdentity = false,
+    bool allowsDynamicPricing = false,
     ResourceType defaultItemKind = ResourceType.rental,
     Map<String, Object?> metadata = const <String, Object?>{},
   }) async {
@@ -2109,6 +2127,7 @@ class LocalRepository {
         ),
         dueDateOptional: Value<bool>(dueDateOptional),
         requiresUnitIdentity: Value<bool>(requiresUnitIdentity),
+        allowsDynamicPricing: Value<bool>(allowsDynamicPricing),
         defaultItemKind: Value<String>(defaultItemKind.storageValue),
         metadata: Value<String?>(encodeMetadata(metadata)),
       ),
@@ -2167,6 +2186,7 @@ class LocalRepository {
           ),
           dueDateOptional: Value<bool>(item.dueDateOptional),
           requiresUnitIdentity: Value<bool>(item.requiresUnitIdentity),
+          allowsDynamicPricing: const Value<bool>(false),
           defaultItemKind: Value<String>(item.defaultItemKind.storageValue),
         ),
       );
@@ -2189,6 +2209,7 @@ class LocalRepository {
     String? currencyCode,
     bool? dueDateOptional,
     bool? requiresUnitIdentity,
+    bool? allowsDynamicPricing,
     ResourceType? defaultItemKind,
     Map<String, Object?>? metadata,
   }) async {
@@ -2258,6 +2279,9 @@ class LocalRepository {
         requiresUnitIdentity: requiresUnitIdentity == null
             ? const Value.absent()
             : Value<bool>(requiresUnitIdentity),
+        allowsDynamicPricing: allowsDynamicPricing == null
+            ? const Value.absent()
+            : Value<bool>(allowsDynamicPricing),
         defaultItemKind: defaultItemKind == null
             ? const Value.absent()
             : Value<String>(defaultItemKind.storageValue),
@@ -2524,6 +2548,10 @@ class LocalRepository {
               baseAmount: Value<int>(line.baseAmount),
               lateAmount: Value<int>(line.lateAmount),
               depositApplied: Value<int>(line.depositApplied),
+              billingMode: Value<String>(line.billingMode.name),
+              rateAmount: Value<int>(line.rateAmount),
+              lateFeePerDay: Value<int>(line.lateFeePerDay),
+              fulfillment: Value<String>(line.fulfillment.storageValue),
             ),
           );
         }
@@ -2580,6 +2608,7 @@ class LocalRepository {
       currencyCode: Value<String>(item.currencyCode),
       dueDateOptional: Value<bool>(item.dueDateOptional),
       requiresUnitIdentity: Value<bool>(item.requiresUnitIdentity),
+      allowsDynamicPricing: Value<bool>(item.allowsDynamicPricing),
       defaultItemKind: Value<String>(item.defaultItemKind.storageValue),
       metadata: Value<String?>(encodeMetadata(item.metadata)),
     );
@@ -2625,6 +2654,7 @@ class LocalRepository {
       currencyCode: row.currencyCode,
       dueDateOptional: row.dueDateOptional,
       requiresUnitIdentity: row.requiresUnitIdentity,
+      allowsDynamicPricing: row.allowsDynamicPricing,
       defaultItemKind: ResourceType.parse(row.defaultItemKind),
       metadata: decodeMetadata(row.metadata),
     );
@@ -2665,9 +2695,9 @@ class LocalRepository {
           baseAmount: link.baseAmount,
           lateAmount: link.lateAmount,
           depositApplied: link.depositApplied,
-          lateFeePerDay: item?.lateFeePerDay ?? 0,
-          billingMode: BillingMode.parse(item?.billingMode),
-          rateAmount: item?.rateAmount ?? 0,
+          lateFeePerDay: link.lateFeePerDay,
+          billingMode: BillingMode.parse(link.billingMode),
+          rateAmount: link.rateAmount,
           fulfillment: LineFulfillment.parse(link.fulfillment),
         ),
       );

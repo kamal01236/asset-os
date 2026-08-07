@@ -1150,9 +1150,9 @@ void main() {
   });
 
   group('schema', () {
-    test('schemaVersion is 15 with money loan tables', () async {
+    test('schemaVersion is 16 with money loan tables', () async {
       final LocalRepository repo = await bootRepo();
-      expect(repo.database.schemaVersion, 15);
+      expect(repo.database.schemaVersion, 16);
     });
 
     test('createMoneyLoan defaults prepaymentAllocation to interestThenPrincipal',

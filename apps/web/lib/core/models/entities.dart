@@ -211,6 +211,7 @@ class InventoryItem {
     this.currencyCode = 'INR',
     this.dueDateOptional = false,
     this.requiresUnitIdentity = true,
+    this.allowsDynamicPricing = false,
     this.defaultItemKind = ResourceType.rental,
     this.metadata = const <String, Object?>{},
   });
@@ -230,6 +231,8 @@ class InventoryItem {
   final bool dueDateOptional;
   /// Parent catalog (e.g. Novels): each unit needs name/id at issue.
   final bool requiresUnitIdentity;
+  /// When true, New Order may override [rateAmount] for a rental line.
+  final bool allowsDynamicPricing;
   /// Catalog [ResourceType] (column still named `defaultItemKind`).
   final ResourceType defaultItemKind;
   /// Dynamic field values keyed by [FieldDef] id.
@@ -250,6 +253,7 @@ class InventoryItem {
     String? currencyCode,
     bool? dueDateOptional,
     bool? requiresUnitIdentity,
+    bool? allowsDynamicPricing,
     ResourceType? defaultItemKind,
     Map<String, Object?>? metadata,
   }) => InventoryItem(
@@ -267,6 +271,7 @@ class InventoryItem {
     currencyCode: currencyCode ?? this.currencyCode,
     dueDateOptional: dueDateOptional ?? this.dueDateOptional,
     requiresUnitIdentity: requiresUnitIdentity ?? this.requiresUnitIdentity,
+    allowsDynamicPricing: allowsDynamicPricing ?? this.allowsDynamicPricing,
     defaultItemKind: defaultItemKind ?? this.defaultItemKind,
     metadata: metadata ?? this.metadata,
   );
@@ -286,6 +291,7 @@ class InventoryItem {
     'currencyCode': currencyCode,
     'dueDateOptional': dueDateOptional,
     'requiresUnitIdentity': requiresUnitIdentity,
+    'allowsDynamicPricing': allowsDynamicPricing,
     'defaultItemKind': defaultItemKind.storageValue,
     'metadata': metadata,
   };
@@ -305,6 +311,7 @@ class InventoryItem {
     currencyCode: (json['currencyCode'] as String?) ?? 'INR',
     dueDateOptional: (json['dueDateOptional'] as bool?) ?? false,
     requiresUnitIdentity: (json['requiresUnitIdentity'] as bool?) ?? true,
+    allowsDynamicPricing: (json['allowsDynamicPricing'] as bool?) ?? false,
     defaultItemKind: ResourceType.parse(json['defaultItemKind'] as String?),
     metadata: json['metadata'] is Map
         ? Map<String, Object?>.from(json['metadata'] as Map)
@@ -404,6 +411,7 @@ class RentalLineInput {
     this.openEnded,
     this.fulfillment = LineFulfillment.rent,
     this.manualSaleAmountPaise,
+    this.rateAmountOverride,
   });
 
   final String itemId;
@@ -424,6 +432,9 @@ class RentalLineInput {
 
   /// Required when [fulfillment] is sell or job (paise, > 0).
   final int? manualSaleAmountPaise;
+
+  /// When set, overrides catalog rate for this rent line (requires item allowsDynamicPricing).
+  final int? rateAmountOverride;
 
   bool get isSell => fulfillment == LineFulfillment.sell;
 
@@ -461,9 +472,9 @@ class RentalLine {
   final int depositApplied;
   /// Catalog late fee used for open-line estimates (paise/day).
   final int lateFeePerDay;
-  /// Catalog billing mode used for open-ended accrual estimates.
+  /// Billing mode frozen at issue.
   final BillingMode billingMode;
-  /// Catalog rate (paise) used for open-ended accrual estimates.
+  /// Rate (paise) frozen at issue (catalog or dynamic override).
   final int rateAmount;
   final LineFulfillment fulfillment;
 

@@ -140,5 +140,143 @@ void main() {
       expect(created.baseAmount, 2000);
       expect(created.totalAmount, 2000);
     });
+
+    test('dynamic rate override freezes on line; catalog edit does not change open rental',
+        () async {
+      final LocalRepository repository = await bootRepo();
+      await repository.addInventory(
+        name: 'Dynamic Cam',
+        category: 'Camera',
+        units: 2,
+        billingMode: BillingMode.daily,
+        rateAmount: 100000,
+        lateFeePerDay: 1000,
+        allowsDynamicPricing: true,
+        dueDateOptional: true,
+      );
+      final InventoryItem cam = (await repository.listInventory())
+          .firstWhere((InventoryItem i) => i.name == 'Dynamic Cam');
+      final Customer customer = await ensureCustomer(repository);
+
+      await repository.createRental(
+        customer: customer,
+        lines: <RentalLineInput>[
+          RentalLineInput(
+            itemId: cam.id,
+            instanceName: 'Body A',
+            shortCode: 'CAM-DYN',
+            openEnded: true,
+            rateAmountOverride: 75000,
+          ),
+        ],
+        openEnded: true,
+      );
+
+      Rental open = (await repository.listRentals()).first;
+      expect(open.lines.single.rateAmount, 75000);
+      expect(open.rateAmount, 75000);
+      expect(open.baseAmount, 0);
+
+      await repository.updateInventory(
+        id: cam.id,
+        name: cam.name,
+        category: cam.category,
+        units: cam.totalUnits,
+        rateAmount: 200000,
+      );
+
+      open = (await repository.listRentals())
+          .firstWhere((Rental r) => r.id == open.id);
+      expect(open.lines.single.rateAmount, 75000);
+
+      // Open-ended return accrues at frozen override, not catalog 200000.
+      final AppDatabase db = repository.database;
+      await (db.update(db.rentals)..where((t) => t.id.equals(open.id))).write(
+        RentalsCompanion(
+          startedAt: Value<DateTime>(
+            DateTime.now().subtract(const Duration(days: 2)),
+          ),
+        ),
+      );
+      await repository.returnRental(open.id);
+      final Rental returned = (await repository.listRentals())
+          .firstWhere((Rental r) => r.id == open.id);
+      expect(returned.lines.single.rateAmount, 75000);
+      expect(returned.baseAmount, 150000);
+    });
+
+    test('rate override rejected when item disallows dynamic pricing', () async {
+      final LocalRepository repository = await bootRepo();
+      await repository.addInventory(
+        name: 'Fixed Rate Book',
+        category: 'Library',
+        units: 1,
+        billingMode: BillingMode.weekly,
+        rateAmount: 5000,
+        allowsDynamicPricing: false,
+      );
+      final InventoryItem book = (await repository.listInventory())
+          .firstWhere((InventoryItem i) => i.name == 'Fixed Rate Book');
+      final Customer customer = await ensureCustomer(repository);
+
+      expect(
+        () => repository.createRental(
+          customer: customer,
+          lines: <RentalLineInput>[
+            RentalLineInput(
+              itemId: book.id,
+              instanceName: 'Copy 1',
+              shortCode: 'BK-FIX',
+              rateAmountOverride: 3000,
+            ),
+          ],
+          durationUnits: 1,
+        ),
+        throwsA(isA<ArgumentError>()),
+      );
+    });
+
+    test('fixed-due rental baseAmount unchanged after catalog rate edit', () async {
+      final LocalRepository repository = await bootRepo();
+      await repository.addInventory(
+        name: 'Tripod',
+        category: 'Camera',
+        units: 3,
+        billingMode: BillingMode.weekly,
+        rateAmount: 4000,
+        allowsDynamicPricing: true,
+      );
+      final InventoryItem item = (await repository.listInventory())
+          .firstWhere((InventoryItem i) => i.name == 'Tripod');
+      final Customer customer = await ensureCustomer(repository);
+
+      await repository.createRental(
+        customer: customer,
+        lines: <RentalLineInput>[
+          RentalLineInput(
+            itemId: item.id,
+            instanceName: 'Tripod A',
+            shortCode: 'TRI-01',
+            rateAmountOverride: 3500,
+          ),
+        ],
+        durationUnits: 1,
+      );
+      final Rental created = (await repository.listRentals()).first;
+      expect(created.baseAmount, 3500);
+      expect(created.lines.single.rateAmount, 3500);
+
+      await repository.updateInventory(
+        id: item.id,
+        name: item.name,
+        category: item.category,
+        units: item.totalUnits,
+        rateAmount: 9000,
+      );
+      final Rental after = (await repository.listRentals())
+          .firstWhere((Rental r) => r.id == created.id);
+      expect(after.baseAmount, 3500);
+      expect(after.lines.single.rateAmount, 3500);
+    });
   });
 }

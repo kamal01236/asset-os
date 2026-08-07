@@ -1295,6 +1295,20 @@ class AppLocalizationsHi extends AppLocalizations {
       'निश्चित वापसी तिथि के बिना जारी करने की अनुमति दें (वापसी तक शुल्क बढ़ता रहेगा)।';
 
   @override
+  String get allowsDynamicPricingLabel => 'गतिशील मूल्य अनुमति दें';
+
+  @override
+  String get allowsDynamicPricingSubtitle =>
+      'नए ऑर्डर पर इस आइटम की दर बदली जा सकती है। कैटलॉग बदलाव केवल नए ऑर्डर पर लागू होते हैं।';
+
+  @override
+  String get orderLineRateLabel => 'इस ऑर्डर की दर (₹)';
+
+  @override
+  String get orderLineRateHint =>
+      'इस किराए के लिए कैटलॉग दर बदली जा सकती है';
+
+  @override
   String get continueWithoutDueDate => 'देय तिथि के बिना जारी रखें';
 
   @override
