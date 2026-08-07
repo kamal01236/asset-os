@@ -403,6 +403,55 @@ class AppLocalizationsEn extends AppLocalizations {
   String get resourceUpdated => 'Resource updated.';
 
   @override
+  String get hideFromNewOrderAction => 'Hide from New Order';
+
+  @override
+  String get restoreToCatalogAction => 'Restore to catalog';
+
+  @override
+  String get deleteResourcePermanentlyAction => 'Delete permanently';
+
+  @override
+  String get confirmHideResourceTitle => 'Hide this resource?';
+
+  @override
+  String get confirmHideResourceBody =>
+      'It will no longer appear in New Order or the default Resources list. You can restore it later.';
+
+  @override
+  String get confirmRestoreResourceTitle => 'Restore this resource?';
+
+  @override
+  String get confirmRestoreResourceBody =>
+      'It will show again in New Order and the Resources list.';
+
+  @override
+  String get confirmDeleteResourceTitle => 'Delete permanently?';
+
+  @override
+  String get confirmDeleteResourceBody =>
+      'This cannot be undone. Only unused resources with no order history can be deleted.';
+
+  @override
+  String get deleteResourceBlockedMessage =>
+      'Can\'t delete — this resource appears on past or open orders. Hide it instead.';
+
+  @override
+  String get resourceHiddenSnack => 'Resource hidden from New Order.';
+
+  @override
+  String get resourceRestoredSnack => 'Resource restored to catalog.';
+
+  @override
+  String get resourceDeletedSnack => 'Resource deleted.';
+
+  @override
+  String get showHiddenResourcesFilter => 'Show hidden';
+
+  @override
+  String get resourceHiddenBadge => 'Hidden';
+
+  @override
   String get customerProfileTitle => 'Customer profile';
 
   @override
@@ -855,6 +904,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lateFeePerDayHint => 'Optional, e.g. 5';
+
+  @override
+  String get securityDepositLabel => 'Security deposit (₹)';
+
+  @override
+  String get securityDepositHint => 'e.g. 500';
+
+  @override
+  String get securityDepositHelper =>
+      'Suggested advance per unit on rental orders';
+
+  @override
+  String securityDepositShort(String amount) {
+    return 'Security $amount';
+  }
 
   @override
   String get pricingSectionTitle => 'Rental pricing';
@@ -1860,6 +1924,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get timelineTitleAutoVacated => 'Auto vacated';
 
   @override
+  String get timelineTitlePaymentReceived => 'Payment received';
+
+  @override
   String get timelineSubtitleCreatedOrderFlow =>
       'Created from phone-first order flow.';
 
@@ -1879,6 +1946,92 @@ class AppLocalizationsEn extends AppLocalizations {
   String timelineSubtitleReplacementFor(String orderId) {
     return 'Replacement for $orderId.';
   }
+
+  @override
+  String timelineSubtitlePaymentReceived(
+    String received,
+    String sell,
+    String advance,
+  ) {
+    return 'Received $received · sell $sell · advance $advance';
+  }
+
+  @override
+  String get orderPaymentTitle => 'Payment';
+
+  @override
+  String get orderPaymentHeading => 'Collect payment';
+
+  @override
+  String get orderPaymentSubtitle =>
+      'Sold items are due now. Security is held as order advance and applied on return.';
+
+  @override
+  String get paymentMinSoldLabel => 'Minimum payment (sold items)';
+
+  @override
+  String get paymentSellPaidLabel => 'Sell paid';
+
+  @override
+  String get paymentSellDiscountLabel => 'Sell discount';
+
+  @override
+  String get paymentSellOutstandingLabel => 'Sell still due';
+
+  @override
+  String get paymentSecurityLabel => 'Rental security / advance (₹)';
+
+  @override
+  String get paymentSecurityHint => 'Suggested from catalog; edit as needed';
+
+  @override
+  String get paymentSecurityHelper => 'Held on this order until return';
+
+  @override
+  String get paymentAmountReceivedLabel => 'Amount received (₹)';
+
+  @override
+  String get paymentAmountReceivedHint => 'Cash collected now';
+
+  @override
+  String get paymentTreatExcessAsDiscount => 'Treat excess as discount';
+
+  @override
+  String get paymentTreatExcessAsDiscountHint =>
+      'Cap advance at the security amount above; do not hold extra';
+
+  @override
+  String get paymentAllocationPreview => 'Allocation preview';
+
+  @override
+  String get paymentPreviewSellCovered => 'Toward sold items';
+
+  @override
+  String get paymentPreviewSellDiscount => 'Sell discount';
+
+  @override
+  String get paymentPreviewAdvance => 'Advance to hold';
+
+  @override
+  String get paymentPreviewRemainingSell => 'Sell remaining after this payment';
+
+  @override
+  String get paymentConfirmAction => 'Confirm payment';
+
+  @override
+  String get paymentSkipAction => 'Skip';
+
+  @override
+  String get paymentPayLaterAction => 'Pay later';
+
+  @override
+  String get paymentPayAction => 'Pay';
+
+  @override
+  String get paymentAddAdvanceAction => 'Add advance';
+
+  @override
+  String get unpaidSellBadge => 'Unpaid';
 
   @override
   String get timelineSubtitleAllLinesReturned => 'All lines returned by staff.';

@@ -47,6 +47,11 @@ class InventoryItems extends Table {
       text().withDefault(const Constant('rental'))();
   /// JSON map of dynamic field values ([FieldDef] ids → values).
   TextColumn get metadata => text().nullable()();
+  /// When false, hidden from New Order and the default Resources list.
+  BoolColumn get catalogActive => boolean().withDefault(const Constant(true))();
+  /// Suggested security/advance per unit for rent-like items (paise).
+  IntColumn get securityDepositPaise =>
+      integer().withDefault(const Constant(0))();
 
   @override
   Set<Column<Object>> get primaryKey => <Column<Object>>{id};
@@ -76,6 +81,10 @@ class Rentals extends Table {
   IntColumn get depositApplied => integer().withDefault(const Constant(0))();
   /// Token/advance held on this order (paise). Original amount; applied tracked separately.
   IntColumn get depositAmount => integer().withDefault(const Constant(0))();
+  /// Cash applied toward sell lines (paise).
+  IntColumn get sellPaidPaise => integer().withDefault(const Constant(0))();
+  /// Forgiven sell shortfall (paise); unpaid sell = sell due − paid − discount.
+  IntColumn get sellDiscountPaise => integer().withDefault(const Constant(0))();
   /// `open` | `completed` | `cancelled`
   TextColumn get orderStatus => text().withDefault(const Constant('open'))();
   /// Template workflow status id (nullable; null → derive from [orderStatus]).

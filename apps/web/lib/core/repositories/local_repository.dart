@@ -10,6 +10,7 @@ import '../loans/loan_balance.dart';
 import '../loans/loan_models.dart';
 import '../models/entities.dart';
 import '../models/unknown_customer.dart';
+import '../orders/order_payment.dart';
 import '../pricing/rental_pricing.dart';
 import '../reports/report_widgets.dart';
 import '../search/search_scope.dart';
@@ -162,7 +163,8 @@ class LocalRepository {
     if (await selectedIndustryTemplateId() != null) {
       return false;
     }
-    final List<InventoryItem> inventory = await listInventory();
+    final List<InventoryItem> inventory =
+        await listInventory(includeInactive: true);
     return inventory.isEmpty;
   }
 
@@ -377,9 +379,12 @@ class LocalRepository {
     return query.watch().map((rows) => rows.map(_mapCustomer).toList());
   }
 
-  Stream<List<InventoryItem>> watchInventory() {
+  Stream<List<InventoryItem>> watchInventory({bool includeInactive = false}) {
     final query = _db.select(_db.inventoryItems)
       ..orderBy([(t) => OrderingTerm(expression: t.name)]);
+    if (!includeInactive) {
+      query.where((t) => t.catalogActive.equals(true));
+    }
     return query.watch().map((rows) => rows.map(_mapInventory).toList());
   }
 
@@ -395,8 +400,30 @@ class LocalRepository {
   }
 
   Future<List<Customer>> listCustomers() => watchCustomers().first;
-  Future<List<InventoryItem>> listInventory() => watchInventory().first;
+  Future<List<InventoryItem>> listInventory({bool includeInactive = false}) =>
+      watchInventory(includeInactive: includeInactive).first;
   Future<List<Rental>> listRentals() => watchRentals().first;
+
+  /// Soft-archive or restore a catalog resource for New Order / Resources list.
+  Future<void> setInventoryCatalogActive(
+    String id, {
+    required bool active,
+  }) async {
+    await (_db.update(_db.inventoryItems)..where((t) => t.id.equals(id))).write(
+      InventoryItemsCompanion(catalogActive: Value<bool>(active)),
+    );
+  }
+
+  /// Hard-delete only when no [RentalItems] reference the catalog id.
+  Future<void> deleteInventoryIfUnused(String id) async {
+    final List<RentalItemRow> refs = await (_db.select(_db.rentalItems)
+          ..where((t) => t.itemId.equals(id)))
+        .get();
+    if (refs.isNotEmpty) {
+      throw InventoryInUseException(id, referenceCount: refs.length);
+    }
+    await (_db.delete(_db.inventoryItems)..where((t) => t.id.equals(id))).go();
+  }
 
   /// Normalize short codes for storage and uniqueness checks.
   static String normalizeShortCode(String value) => value.trim().toUpperCase();
@@ -904,6 +931,110 @@ class LocalRepository {
     });
 
     return rentalId;
+  }
+
+  /// Sell line charges due on [rental] (paise).
+  int sellDuePaise(Rental rental) => rental.sellDuePaise;
+
+  /// Suggested rental security from catalog [InventoryItem.securityDepositPaise] × rent lines.
+  Future<int> suggestedSecurityPaise(String rentalId) async {
+    final Rental? rental = await _findRental(rentalId);
+    if (rental == null) {
+      return 0;
+    }
+    final List<InventoryItem> inventory =
+        await listInventory(includeInactive: true);
+    final Map<String, InventoryItem> byId = <String, InventoryItem>{
+      for (final InventoryItem item in inventory) item.id: item,
+    };
+    return computeSuggestedSecurityPaise(rental, byId);
+  }
+
+  /// Same as [suggestedSecurityPaise] with an in-memory catalog map.
+  int suggestedSecurityPaiseFor(
+    Rental rental,
+    Map<String, InventoryItem> inventoryById,
+  ) =>
+      computeSuggestedSecurityPaise(rental, inventoryById);
+
+  /// Record cash received after order create: sell first, then advance/security.
+  ///
+  /// When [amountReceivedPaise] is less than outstanding sell, the shortfall is
+  /// stored as sell discount. Excess over [securityPaise] becomes more advance
+  /// unless [treatExcessAsDiscount] caps advance at [securityPaise].
+  Future<Rental> recordOrderPayment({
+    required String rentalId,
+    required int amountReceivedPaise,
+    required int securityPaise,
+    bool treatExcessAsDiscount = false,
+  }) async {
+    if (amountReceivedPaise < 0) {
+      throw ArgumentError('Amount received cannot be negative');
+    }
+    if (securityPaise < 0) {
+      throw ArgumentError('Security amount cannot be negative');
+    }
+
+    final DateTime now = DateTime.now();
+    return _db.transaction(() async {
+      final Rental? rental = await _findRental(rentalId);
+      if (rental == null) {
+        throw ArgumentError('Rental not found: $rentalId');
+      }
+      if (rental.orderStatus == OrderStatus.cancelled) {
+        throw ArgumentError('Cannot record payment on a cancelled order');
+      }
+
+      final OrderPaymentAllocation allocation = allocateOrderPayment(
+        sellOutstandingPaise: rental.sellOutstandingPaise,
+        amountReceivedPaise: amountReceivedPaise,
+        securityPaise: securityPaise,
+        treatExcessAsDiscount: treatExcessAsDiscount,
+      );
+
+      final int nextSellPaid = rental.sellPaidPaise + allocation.sellPaidDelta;
+      final int nextSellDiscount =
+          rental.sellDiscountPaise + allocation.sellDiscountDelta;
+      final int nextDeposit =
+          rental.depositAmount + allocation.advanceDelta;
+
+      await (_db.update(_db.rentals)..where((t) => t.id.equals(rentalId)))
+          .write(
+        RentalsCompanion(
+          sellPaidPaise: Value<int>(nextSellPaid),
+          sellDiscountPaise: Value<int>(nextSellDiscount),
+          depositAmount: Value<int>(nextDeposit),
+        ),
+      );
+
+      final List<String> subtitleArgs = <String>[
+        formatMoney(amountReceivedPaise),
+        formatMoney(allocation.sellPaidDelta),
+        formatMoney(allocation.advanceDelta),
+      ];
+      final String subtitle = encodeTimelineSubtitle(
+        TimelineSubtitleKey.paymentReceived,
+        args: subtitleArgs,
+        discountFormatted: allocation.sellDiscountDelta > 0
+            ? formatMoney(allocation.sellDiscountDelta)
+            : null,
+      );
+
+      await _db.into(_db.rentalEvents).insert(
+        RentalEventsCompanion.insert(
+          rentalId: rentalId,
+          title: TimelineTitleKey.paymentReceived,
+          subtitle: subtitle,
+          at: now,
+        ),
+      );
+
+      final Rental? updated = await _findRental(rentalId);
+      if (updated == null) {
+        throw StateError('Rental missing after payment: $rentalId');
+      }
+      return updated;
+    });
   }
 
   Future<void> _assertShortCodeAvailable(String normalizedCode) async {
@@ -2626,6 +2757,7 @@ class LocalRepository {
     bool allowsDynamicPricing = false,
     ResourceType defaultItemKind = ResourceType.rental,
     Map<String, Object?> metadata = const <String, Object?>{},
+    int securityDepositPaise = 0,
   }) async {
     final String trimmedName = name.trim();
     final String trimmedCategory = category.trim();
@@ -2667,6 +2799,9 @@ class LocalRepository {
         allowsDynamicPricing: Value<bool>(allowsDynamicPricing),
         defaultItemKind: Value<String>(defaultItemKind.storageValue),
         metadata: Value<String?>(encodeMetadata(metadata)),
+        securityDepositPaise: Value<int>(
+          securityDepositPaise < 0 ? 0 : securityDepositPaise,
+        ),
       ),
     );
   }
@@ -2684,7 +2819,8 @@ class LocalRepository {
       return const TemplateImportResult(added: 0, skipped: 0);
     }
 
-    final List<InventoryItem> existing = await listInventory();
+    final List<InventoryItem> existing =
+        await listInventory(includeInactive: true);
     final Set<String> existingNames = existing
         .map((item) => item.name.trim().toLowerCase())
         .toSet();
@@ -2752,6 +2888,7 @@ class LocalRepository {
     bool? allowsDynamicPricing,
     ResourceType? defaultItemKind,
     Map<String, Object?>? metadata,
+    int? securityDepositPaise,
   }) async {
     final String trimmedName = name.trim();
     final String trimmedCategory = category.trim();
@@ -2833,6 +2970,9 @@ class LocalRepository {
         metadata: metadata == null
             ? const Value.absent()
             : Value<String?>(encodeMetadata(metadata)),
+        securityDepositPaise: securityDepositPaise == null
+            ? const Value.absent()
+            : Value<int>(securityDepositPaise < 0 ? 0 : securityDepositPaise),
       ),
     );
   }
@@ -3063,6 +3203,8 @@ class LocalRepository {
             totalAmount: Value<int>(rental.totalAmount),
             depositApplied: Value<int>(rental.depositApplied),
             depositAmount: Value<int>(rental.depositAmount),
+            sellPaidPaise: Value<int>(rental.sellPaidPaise),
+            sellDiscountPaise: Value<int>(rental.sellDiscountPaise),
             orderStatus: Value<String>(rental.orderStatus.storageValue),
             workflowStatus: Value<String?>(rental.workflowStatus),
             durationUnits: Value<int>(rental.durationUnits),
@@ -3163,6 +3305,9 @@ class LocalRepository {
       allowsDynamicPricing: Value<bool>(item.allowsDynamicPricing),
       defaultItemKind: Value<String>(item.defaultItemKind.storageValue),
       metadata: Value<String?>(encodeMetadata(item.metadata)),
+      securityDepositPaise: Value<int>(
+        item.securityDepositPaise < 0 ? 0 : item.securityDepositPaise,
+      ),
     );
   }
 
@@ -3215,6 +3360,8 @@ class LocalRepository {
       allowsDynamicPricing: row.allowsDynamicPricing,
       defaultItemKind: ResourceType.parse(row.defaultItemKind),
       metadata: decodeMetadata(row.metadata),
+      catalogActive: row.catalogActive,
+      securityDepositPaise: row.securityDepositPaise,
     );
   }
 
@@ -3279,6 +3426,8 @@ class LocalRepository {
       totalAmount: row.totalAmount,
       depositApplied: row.depositApplied,
       depositAmount: row.depositAmount,
+      sellPaidPaise: row.sellPaidPaise,
+      sellDiscountPaise: row.sellDiscountPaise,
       orderStatus: OrderStatus.parse(row.orderStatus),
       workflowStatus: row.workflowStatus,
       durationUnits: row.durationUnits,

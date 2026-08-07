@@ -13,7 +13,7 @@ import '../../core/repositories/local_repository.dart';
 import '../../core/validation/input_formatters.dart';
 import '../../core/validation/text_rules.dart';
 import '../../core/widgets/ui_primitives.dart';
-import 'rental_detail_nav.dart';
+import 'order_payment_screen.dart';
 
 /// New Order flow: items first (with running total), then customer, then
 /// order summary (sample bill), then generate.
@@ -112,7 +112,6 @@ class _OrderLineDraft {
 class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _depositTopUpController = TextEditingController();
   final List<_OrderLineDraft> _lines = <_OrderLineDraft>[];
   final Map<String, List<String>> _availableCodesByItem = <String, List<String>>{};
 
@@ -156,7 +155,6 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
   void dispose() {
     _phoneController.dispose();
     _nameController.dispose();
-    _depositTopUpController.dispose();
     for (final _OrderLineDraft line in _lines) {
       line.dispose();
     }
@@ -747,18 +745,6 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
     return inputs;
   }
 
-  int _depositTopUpPaise() {
-    final String raw = _depositTopUpController.text.trim();
-    if (raw.isEmpty) {
-      return 0;
-    }
-    final double? rupees = double.tryParse(raw);
-    if (rupees == null || rupees <= 0) {
-      return 0;
-    }
-    return (rupees * 100).round();
-  }
-
   bool _validateCustomerOrSnack() {
     if (_noPhone) {
       final String name = _nameController.text.trim();
@@ -841,13 +827,11 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
         customer: customer,
         lines: _buildLineInputs(catalog),
         nickname: nickname,
-        depositTopUpPaise: _depositTopUpPaise(),
       );
       if (!mounted) {
         return;
       }
-      // Parent rentals row insert already refreshes rentalsProvider; open detail.
-      pushReplacementRentalDetail(context, rentalId: rentalId);
+      pushOrderPayment(context, rentalId: rentalId, afterCreate: true);
     } catch (error) {
       if (mounted) {
         setState(() => _submitting = false);
@@ -980,7 +964,6 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
     List<InventoryItem> inventory,
   ) {
     final int total = _orderTotal(inventory);
-    final int deposit = _depositTopUpPaise();
     final List<Widget> billLines = <Widget>[];
     for (final _OrderLineDraft draft in _lines) {
       final InventoryItem? item = _itemFor(draft, inventory);
@@ -1067,13 +1050,6 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
               fontWeight: FontWeight.w700,
             ),
       ),
-      if (deposit > 0) ...<Widget>[
-        const SizedBox(height: 8),
-        Text(
-          '${l10n.orderDepositLabel}: ${formatMoney(deposit)}',
-          style: Theme.of(context).textTheme.bodyMedium,
-        ),
-      ],
     ];
   }
 
@@ -1188,29 +1164,7 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
           status: AssetStatus.archived,
         ),
       ],
-      const SizedBox(height: 8),
-      _buildOptionalAdvanceTile(l10n),
     ];
-  }
-
-  Widget _buildOptionalAdvanceTile(AppLocalizations l10n) {
-    return ExpansionTile(
-      tilePadding: EdgeInsets.zero,
-      childrenPadding: EdgeInsets.zero,
-      title: Text(l10n.depositTopUpOptionalLabel),
-      children: <Widget>[
-        TextField(
-          controller: _depositTopUpController,
-          keyboardType: TextInputType.number,
-          inputFormatters: <TextInputFormatter>[kDigitsOnlyInputFormatter],
-          decoration: InputDecoration(
-            labelText: l10n.orderDepositLabel,
-            hintText: l10n.depositTopUpOptionalHint,
-          ),
-          onChanged: (_) => setState(() {}),
-        ),
-      ],
-    );
   }
 
   List<Widget> _buildFormStep(
@@ -1255,10 +1209,6 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
               fontWeight: FontWeight.w700,
             ),
       ),
-      if (_skipCustomerStep) ...<Widget>[
-        const SizedBox(height: 8),
-        _buildOptionalAdvanceTile(l10n),
-      ],
     ];
   }
 

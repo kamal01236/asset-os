@@ -898,7 +898,7 @@ void main() {
   group('schema', () {
     test('schemaVersion is 19 with interestAccrual column', () async {
       final LocalRepository repo = await bootRepo();
-      expect(repo.database.schemaVersion, 20);
+      expect(repo.database.schemaVersion, 22);
     });
 
     test('createMoneyLoan defaults prepaymentAllocation to interestThenPrincipal',

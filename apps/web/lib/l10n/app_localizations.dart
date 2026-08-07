@@ -830,6 +830,96 @@ abstract class AppLocalizations {
   /// **'Resource updated.'**
   String get resourceUpdated;
 
+  /// No description provided for @hideFromNewOrderAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide from New Order'**
+  String get hideFromNewOrderAction;
+
+  /// No description provided for @restoreToCatalogAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore to catalog'**
+  String get restoreToCatalogAction;
+
+  /// No description provided for @deleteResourcePermanentlyAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete permanently'**
+  String get deleteResourcePermanentlyAction;
+
+  /// No description provided for @confirmHideResourceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide this resource?'**
+  String get confirmHideResourceTitle;
+
+  /// No description provided for @confirmHideResourceBody.
+  ///
+  /// In en, this message translates to:
+  /// **'It will no longer appear in New Order or the default Resources list. You can restore it later.'**
+  String get confirmHideResourceBody;
+
+  /// No description provided for @confirmRestoreResourceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore this resource?'**
+  String get confirmRestoreResourceTitle;
+
+  /// No description provided for @confirmRestoreResourceBody.
+  ///
+  /// In en, this message translates to:
+  /// **'It will show again in New Order and the Resources list.'**
+  String get confirmRestoreResourceBody;
+
+  /// No description provided for @confirmDeleteResourceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete permanently?'**
+  String get confirmDeleteResourceTitle;
+
+  /// No description provided for @confirmDeleteResourceBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This cannot be undone. Only unused resources with no order history can be deleted.'**
+  String get confirmDeleteResourceBody;
+
+  /// No description provided for @deleteResourceBlockedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t delete — this resource appears on past or open orders. Hide it instead.'**
+  String get deleteResourceBlockedMessage;
+
+  /// No description provided for @resourceHiddenSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Resource hidden from New Order.'**
+  String get resourceHiddenSnack;
+
+  /// No description provided for @resourceRestoredSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Resource restored to catalog.'**
+  String get resourceRestoredSnack;
+
+  /// No description provided for @resourceDeletedSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Resource deleted.'**
+  String get resourceDeletedSnack;
+
+  /// No description provided for @showHiddenResourcesFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'Show hidden'**
+  String get showHiddenResourcesFilter;
+
+  /// No description provided for @resourceHiddenBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden'**
+  String get resourceHiddenBadge;
+
   /// No description provided for @customerProfileTitle.
   ///
   /// In en, this message translates to:
@@ -1615,6 +1705,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Optional, e.g. 5'**
   String get lateFeePerDayHint;
+
+  /// No description provided for @securityDepositLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Security deposit (₹)'**
+  String get securityDepositLabel;
+
+  /// No description provided for @securityDepositHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. 500'**
+  String get securityDepositHint;
+
+  /// No description provided for @securityDepositHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggested advance per unit on rental orders'**
+  String get securityDepositHelper;
+
+  /// No description provided for @securityDepositShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Security {amount}'**
+  String securityDepositShort(String amount);
 
   /// No description provided for @pricingSectionTitle.
   ///
@@ -3338,6 +3452,12 @@ abstract class AppLocalizations {
   /// **'Auto vacated'**
   String get timelineTitleAutoVacated;
 
+  /// No description provided for @timelineTitlePaymentReceived.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment received'**
+  String get timelineTitlePaymentReceived;
+
   /// No description provided for @timelineSubtitleCreatedOrderFlow.
   ///
   /// In en, this message translates to:
@@ -3367,6 +3487,166 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Replacement for {orderId}.'**
   String timelineSubtitleReplacementFor(String orderId);
+
+  /// No description provided for @timelineSubtitlePaymentReceived.
+  ///
+  /// In en, this message translates to:
+  /// **'Received {received} · sell {sell} · advance {advance}'**
+  String timelineSubtitlePaymentReceived(
+    String received,
+    String sell,
+    String advance,
+  );
+
+  /// No description provided for @orderPaymentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment'**
+  String get orderPaymentTitle;
+
+  /// No description provided for @orderPaymentHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Collect payment'**
+  String get orderPaymentHeading;
+
+  /// No description provided for @orderPaymentSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sold items are due now. Security is held as order advance and applied on return.'**
+  String get orderPaymentSubtitle;
+
+  /// No description provided for @paymentMinSoldLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimum payment (sold items)'**
+  String get paymentMinSoldLabel;
+
+  /// No description provided for @paymentSellPaidLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Sell paid'**
+  String get paymentSellPaidLabel;
+
+  /// No description provided for @paymentSellDiscountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Sell discount'**
+  String get paymentSellDiscountLabel;
+
+  /// No description provided for @paymentSellOutstandingLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Sell still due'**
+  String get paymentSellOutstandingLabel;
+
+  /// No description provided for @paymentSecurityLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Rental security / advance (₹)'**
+  String get paymentSecurityLabel;
+
+  /// No description provided for @paymentSecurityHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggested from catalog; edit as needed'**
+  String get paymentSecurityHint;
+
+  /// No description provided for @paymentSecurityHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Held on this order until return'**
+  String get paymentSecurityHelper;
+
+  /// No description provided for @paymentAmountReceivedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount received (₹)'**
+  String get paymentAmountReceivedLabel;
+
+  /// No description provided for @paymentAmountReceivedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash collected now'**
+  String get paymentAmountReceivedHint;
+
+  /// No description provided for @paymentTreatExcessAsDiscount.
+  ///
+  /// In en, this message translates to:
+  /// **'Treat excess as discount'**
+  String get paymentTreatExcessAsDiscount;
+
+  /// No description provided for @paymentTreatExcessAsDiscountHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Cap advance at the security amount above; do not hold extra'**
+  String get paymentTreatExcessAsDiscountHint;
+
+  /// No description provided for @paymentAllocationPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Allocation preview'**
+  String get paymentAllocationPreview;
+
+  /// No description provided for @paymentPreviewSellCovered.
+  ///
+  /// In en, this message translates to:
+  /// **'Toward sold items'**
+  String get paymentPreviewSellCovered;
+
+  /// No description provided for @paymentPreviewSellDiscount.
+  ///
+  /// In en, this message translates to:
+  /// **'Sell discount'**
+  String get paymentPreviewSellDiscount;
+
+  /// No description provided for @paymentPreviewAdvance.
+  ///
+  /// In en, this message translates to:
+  /// **'Advance to hold'**
+  String get paymentPreviewAdvance;
+
+  /// No description provided for @paymentPreviewRemainingSell.
+  ///
+  /// In en, this message translates to:
+  /// **'Sell remaining after this payment'**
+  String get paymentPreviewRemainingSell;
+
+  /// No description provided for @paymentConfirmAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm payment'**
+  String get paymentConfirmAction;
+
+  /// No description provided for @paymentSkipAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get paymentSkipAction;
+
+  /// No description provided for @paymentPayLaterAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay later'**
+  String get paymentPayLaterAction;
+
+  /// No description provided for @paymentPayAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay'**
+  String get paymentPayAction;
+
+  /// No description provided for @paymentAddAdvanceAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Add advance'**
+  String get paymentAddAdvanceAction;
+
+  /// No description provided for @unpaidSellBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpaid'**
+  String get unpaidSellBadge;
 
   /// No description provided for @timelineSubtitleAllLinesReturned.
   ///

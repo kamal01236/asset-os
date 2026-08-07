@@ -404,6 +404,55 @@ class AppLocalizationsHi extends AppLocalizations {
   String get resourceUpdated => 'संसाधन अपडेट हो गया।';
 
   @override
+  String get hideFromNewOrderAction => 'नए ऑर्डर से छिपाएँ';
+
+  @override
+  String get restoreToCatalogAction => 'कैटलॉग में पुनर्स्थापित करें';
+
+  @override
+  String get deleteResourcePermanentlyAction => 'स्थायी रूप से हटाएँ';
+
+  @override
+  String get confirmHideResourceTitle => 'यह संसाधन छिपाएँ?';
+
+  @override
+  String get confirmHideResourceBody =>
+      'यह नए ऑर्डर और डिफ़ॉल्ट संसाधन सूची में नहीं दिखेगा। बाद में पुनर्स्थापित कर सकते हैं।';
+
+  @override
+  String get confirmRestoreResourceTitle => 'यह संसाधन पुनर्स्थापित करें?';
+
+  @override
+  String get confirmRestoreResourceBody =>
+      'यह फिर से नए ऑर्डर और संसाधन सूची में दिखेगा।';
+
+  @override
+  String get confirmDeleteResourceTitle => 'स्थायी रूप से हटाएँ?';
+
+  @override
+  String get confirmDeleteResourceBody =>
+      'यह पूर्ववत नहीं हो सकता। केवल बिना ऑर्डर इतिहास वाले अनुपयोगी संसाधन हटाए जा सकते हैं।';
+
+  @override
+  String get deleteResourceBlockedMessage =>
+      'हटा नहीं सकते — यह संसाधन पिछले या खुले ऑर्डर में है। इसके बजाय छिपाएँ।';
+
+  @override
+  String get resourceHiddenSnack => 'संसाधन नए ऑर्डर से छिपा दिया गया।';
+
+  @override
+  String get resourceRestoredSnack => 'संसाधन कैटलॉग में पुनर्स्थापित हो गया।';
+
+  @override
+  String get resourceDeletedSnack => 'संसाधन हटा दिया गया।';
+
+  @override
+  String get showHiddenResourcesFilter => 'छिपे हुए दिखाएँ';
+
+  @override
+  String get resourceHiddenBadge => 'छिपा हुआ';
+
+  @override
   String get customerProfileTitle => 'ग्राहक प्रोफ़ाइल';
 
   @override
@@ -857,6 +906,21 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get lateFeePerDayHint => 'वैकल्पिक, जैसे 5';
+
+  @override
+  String get securityDepositLabel => 'सिक्योरिटी जमा (₹)';
+
+  @override
+  String get securityDepositHint => 'जैसे 500';
+
+  @override
+  String get securityDepositHelper =>
+      'किराया ऑर्डर पर प्रति यूनिट सुझाई गई अग्रिम';
+
+  @override
+  String securityDepositShort(String amount) {
+    return 'सिक्योरिटी $amount';
+  }
 
   @override
   String get pricingSectionTitle => 'किराया मूल्य';
@@ -1859,6 +1923,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get timelineTitleAutoVacated => 'स्वतः खाली';
 
   @override
+  String get timelineTitlePaymentReceived => 'भुगतान प्राप्त';
+
+  @override
   String get timelineSubtitleCreatedOrderFlow =>
       'फ़ोन-फ़र्स्ट ऑर्डर फ़्लो से बनाया गया।';
 
@@ -1878,6 +1945,92 @@ class AppLocalizationsHi extends AppLocalizations {
   String timelineSubtitleReplacementFor(String orderId) {
     return '$orderId का प्रतिस्थापन।';
   }
+
+  @override
+  String timelineSubtitlePaymentReceived(
+    String received,
+    String sell,
+    String advance,
+  ) {
+    return 'प्राप्त $received · बिक्री $sell · अग्रिम $advance';
+  }
+
+  @override
+  String get orderPaymentTitle => 'भुगतान';
+
+  @override
+  String get orderPaymentHeading => 'भुगतान लें';
+
+  @override
+  String get orderPaymentSubtitle =>
+      'बेची गई वस्तुएँ अभी देय हैं। सिक्योरिटी ऑर्डर अग्रिम के रूप में रखी जाती है और वापसी पर लगाई जाती है।';
+
+  @override
+  String get paymentMinSoldLabel => 'न्यूनतम भुगतान (बेची वस्तुएँ)';
+
+  @override
+  String get paymentSellPaidLabel => 'बिक्री भुगतान';
+
+  @override
+  String get paymentSellDiscountLabel => 'बिक्री छूट';
+
+  @override
+  String get paymentSellOutstandingLabel => 'बिक्री अभी बाकी';
+
+  @override
+  String get paymentSecurityLabel => 'किराया सिक्योरिटी / अग्रिम (₹)';
+
+  @override
+  String get paymentSecurityHint => 'कैटलॉग से सुझाव; आवश्यकतानुसार बदलें';
+
+  @override
+  String get paymentSecurityHelper => 'वापसी तक इस ऑर्डर पर रखी जाएगी';
+
+  @override
+  String get paymentAmountReceivedLabel => 'प्राप्त राशि (₹)';
+
+  @override
+  String get paymentAmountReceivedHint => 'अभी नकद प्राप्त';
+
+  @override
+  String get paymentTreatExcessAsDiscount => 'अतिरिक्त को छूट मानें';
+
+  @override
+  String get paymentTreatExcessAsDiscountHint =>
+      'अग्रिम को ऊपर दी सिक्योरिटी तक सीमित रखें; अतिरिक्त न रखें';
+
+  @override
+  String get paymentAllocationPreview => 'आवंटन पूर्वावलोकन';
+
+  @override
+  String get paymentPreviewSellCovered => 'बेची वस्तुओं की ओर';
+
+  @override
+  String get paymentPreviewSellDiscount => 'बिक्री छूट';
+
+  @override
+  String get paymentPreviewAdvance => 'रखी जाने वाली अग्रिम';
+
+  @override
+  String get paymentPreviewRemainingSell => 'इस भुगतान के बाद बिक्री शेष';
+
+  @override
+  String get paymentConfirmAction => 'भुगतान पुष्टि करें';
+
+  @override
+  String get paymentSkipAction => 'छोड़ें';
+
+  @override
+  String get paymentPayLaterAction => 'बाद में भुगतान';
+
+  @override
+  String get paymentPayAction => 'भुगतान करें';
+
+  @override
+  String get paymentAddAdvanceAction => 'अग्रिम जोड़ें';
+
+  @override
+  String get unpaidSellBadge => 'बकाया';
 
   @override
   String get timelineSubtitleAllLinesReturned =>

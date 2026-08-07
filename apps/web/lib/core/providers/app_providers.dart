@@ -93,6 +93,11 @@ final inventoryProvider = StreamProvider<List<InventoryItem>>((ref) {
   return ref.watch(repositoryProvider).watchInventory();
 });
 
+/// All catalog rows including soft-archived (Resources list / detail).
+final allInventoryProvider = StreamProvider<List<InventoryItem>>((ref) {
+  return ref.watch(repositoryProvider).watchInventory(includeInactive: true);
+});
+
 final rentalsProvider = StreamProvider<List<Rental>>((ref) {
   return ref.watch(repositoryProvider).watchRentals();
 });

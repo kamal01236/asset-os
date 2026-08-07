@@ -622,6 +622,32 @@ class $InventoryItemsTable extends InventoryItems
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _catalogActiveMeta = const VerificationMeta(
+    'catalogActive',
+  );
+  @override
+  late final GeneratedColumn<bool> catalogActive = GeneratedColumn<bool>(
+    'catalog_active',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("catalog_active" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
+  static const VerificationMeta _securityDepositPaiseMeta =
+      const VerificationMeta('securityDepositPaise');
+  @override
+  late final GeneratedColumn<int> securityDepositPaise = GeneratedColumn<int>(
+    'security_deposit_paise',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -642,6 +668,8 @@ class $InventoryItemsTable extends InventoryItems
     allowsDynamicPricing,
     defaultItemKind,
     metadata,
+    catalogActive,
+    securityDepositPaise,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -801,6 +829,24 @@ class $InventoryItemsTable extends InventoryItems
         metadata.isAcceptableOrUnknown(data['metadata']!, _metadataMeta),
       );
     }
+    if (data.containsKey('catalog_active')) {
+      context.handle(
+        _catalogActiveMeta,
+        catalogActive.isAcceptableOrUnknown(
+          data['catalog_active']!,
+          _catalogActiveMeta,
+        ),
+      );
+    }
+    if (data.containsKey('security_deposit_paise')) {
+      context.handle(
+        _securityDepositPaiseMeta,
+        securityDepositPaise.isAcceptableOrUnknown(
+          data['security_deposit_paise']!,
+          _securityDepositPaiseMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -882,6 +928,14 @@ class $InventoryItemsTable extends InventoryItems
         DriftSqlType.string,
         data['${effectivePrefix}metadata'],
       ),
+      catalogActive: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}catalog_active'],
+      )!,
+      securityDepositPaise: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}security_deposit_paise'],
+      )!,
     );
   }
 
@@ -929,6 +983,12 @@ class InventoryItemRow extends DataClass
 
   /// JSON map of dynamic field values ([FieldDef] ids → values).
   final String? metadata;
+
+  /// When false, hidden from New Order and the default Resources list.
+  final bool catalogActive;
+
+  /// Suggested security/advance per unit for rent-like items (paise).
+  final int securityDepositPaise;
   const InventoryItemRow({
     required this.id,
     required this.name,
@@ -948,6 +1008,8 @@ class InventoryItemRow extends DataClass
     required this.allowsDynamicPricing,
     required this.defaultItemKind,
     this.metadata,
+    required this.catalogActive,
+    required this.securityDepositPaise,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -976,6 +1038,8 @@ class InventoryItemRow extends DataClass
     if (!nullToAbsent || metadata != null) {
       map['metadata'] = Variable<String>(metadata);
     }
+    map['catalog_active'] = Variable<bool>(catalogActive);
+    map['security_deposit_paise'] = Variable<int>(securityDepositPaise);
     return map;
   }
 
@@ -1005,6 +1069,8 @@ class InventoryItemRow extends DataClass
       metadata: metadata == null && nullToAbsent
           ? const Value.absent()
           : Value(metadata),
+      catalogActive: Value(catalogActive),
+      securityDepositPaise: Value(securityDepositPaise),
     );
   }
 
@@ -1036,6 +1102,10 @@ class InventoryItemRow extends DataClass
       ),
       defaultItemKind: serializer.fromJson<String>(json['defaultItemKind']),
       metadata: serializer.fromJson<String?>(json['metadata']),
+      catalogActive: serializer.fromJson<bool>(json['catalogActive']),
+      securityDepositPaise: serializer.fromJson<int>(
+        json['securityDepositPaise'],
+      ),
     );
   }
   @override
@@ -1060,6 +1130,8 @@ class InventoryItemRow extends DataClass
       'allowsDynamicPricing': serializer.toJson<bool>(allowsDynamicPricing),
       'defaultItemKind': serializer.toJson<String>(defaultItemKind),
       'metadata': serializer.toJson<String?>(metadata),
+      'catalogActive': serializer.toJson<bool>(catalogActive),
+      'securityDepositPaise': serializer.toJson<int>(securityDepositPaise),
     };
   }
 
@@ -1082,6 +1154,8 @@ class InventoryItemRow extends DataClass
     bool? allowsDynamicPricing,
     String? defaultItemKind,
     Value<String?> metadata = const Value.absent(),
+    bool? catalogActive,
+    int? securityDepositPaise,
   }) => InventoryItemRow(
     id: id ?? this.id,
     name: name ?? this.name,
@@ -1103,6 +1177,8 @@ class InventoryItemRow extends DataClass
     allowsDynamicPricing: allowsDynamicPricing ?? this.allowsDynamicPricing,
     defaultItemKind: defaultItemKind ?? this.defaultItemKind,
     metadata: metadata.present ? metadata.value : this.metadata,
+    catalogActive: catalogActive ?? this.catalogActive,
+    securityDepositPaise: securityDepositPaise ?? this.securityDepositPaise,
   );
   InventoryItemRow copyWithCompanion(InventoryItemsCompanion data) {
     return InventoryItemRow(
@@ -1146,6 +1222,12 @@ class InventoryItemRow extends DataClass
           ? data.defaultItemKind.value
           : this.defaultItemKind,
       metadata: data.metadata.present ? data.metadata.value : this.metadata,
+      catalogActive: data.catalogActive.present
+          ? data.catalogActive.value
+          : this.catalogActive,
+      securityDepositPaise: data.securityDepositPaise.present
+          ? data.securityDepositPaise.value
+          : this.securityDepositPaise,
     );
   }
 
@@ -1169,7 +1251,9 @@ class InventoryItemRow extends DataClass
           ..write('unitCodePrefix: $unitCodePrefix, ')
           ..write('allowsDynamicPricing: $allowsDynamicPricing, ')
           ..write('defaultItemKind: $defaultItemKind, ')
-          ..write('metadata: $metadata')
+          ..write('metadata: $metadata, ')
+          ..write('catalogActive: $catalogActive, ')
+          ..write('securityDepositPaise: $securityDepositPaise')
           ..write(')'))
         .toString();
   }
@@ -1194,6 +1278,8 @@ class InventoryItemRow extends DataClass
     allowsDynamicPricing,
     defaultItemKind,
     metadata,
+    catalogActive,
+    securityDepositPaise,
   );
   @override
   bool operator ==(Object other) =>
@@ -1216,7 +1302,9 @@ class InventoryItemRow extends DataClass
           other.unitCodePrefix == this.unitCodePrefix &&
           other.allowsDynamicPricing == this.allowsDynamicPricing &&
           other.defaultItemKind == this.defaultItemKind &&
-          other.metadata == this.metadata);
+          other.metadata == this.metadata &&
+          other.catalogActive == this.catalogActive &&
+          other.securityDepositPaise == this.securityDepositPaise);
 }
 
 class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
@@ -1238,6 +1326,8 @@ class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
   final Value<bool> allowsDynamicPricing;
   final Value<String> defaultItemKind;
   final Value<String?> metadata;
+  final Value<bool> catalogActive;
+  final Value<int> securityDepositPaise;
   final Value<int> rowid;
   const InventoryItemsCompanion({
     this.id = const Value.absent(),
@@ -1258,6 +1348,8 @@ class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
     this.allowsDynamicPricing = const Value.absent(),
     this.defaultItemKind = const Value.absent(),
     this.metadata = const Value.absent(),
+    this.catalogActive = const Value.absent(),
+    this.securityDepositPaise = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   InventoryItemsCompanion.insert({
@@ -1279,6 +1371,8 @@ class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
     this.allowsDynamicPricing = const Value.absent(),
     this.defaultItemKind = const Value.absent(),
     this.metadata = const Value.absent(),
+    this.catalogActive = const Value.absent(),
+    this.securityDepositPaise = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        name = Value(name),
@@ -1306,6 +1400,8 @@ class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
     Expression<bool>? allowsDynamicPricing,
     Expression<String>? defaultItemKind,
     Expression<String>? metadata,
+    Expression<bool>? catalogActive,
+    Expression<int>? securityDepositPaise,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -1329,6 +1425,9 @@ class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
         'allows_dynamic_pricing': allowsDynamicPricing,
       if (defaultItemKind != null) 'default_item_kind': defaultItemKind,
       if (metadata != null) 'metadata': metadata,
+      if (catalogActive != null) 'catalog_active': catalogActive,
+      if (securityDepositPaise != null)
+        'security_deposit_paise': securityDepositPaise,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -1352,6 +1451,8 @@ class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
     Value<bool>? allowsDynamicPricing,
     Value<String>? defaultItemKind,
     Value<String?>? metadata,
+    Value<bool>? catalogActive,
+    Value<int>? securityDepositPaise,
     Value<int>? rowid,
   }) {
     return InventoryItemsCompanion(
@@ -1373,6 +1474,8 @@ class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
       allowsDynamicPricing: allowsDynamicPricing ?? this.allowsDynamicPricing,
       defaultItemKind: defaultItemKind ?? this.defaultItemKind,
       metadata: metadata ?? this.metadata,
+      catalogActive: catalogActive ?? this.catalogActive,
+      securityDepositPaise: securityDepositPaise ?? this.securityDepositPaise,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1438,6 +1541,12 @@ class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
     if (metadata.present) {
       map['metadata'] = Variable<String>(metadata.value);
     }
+    if (catalogActive.present) {
+      map['catalog_active'] = Variable<bool>(catalogActive.value);
+    }
+    if (securityDepositPaise.present) {
+      map['security_deposit_paise'] = Variable<int>(securityDepositPaise.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -1465,6 +1574,8 @@ class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
           ..write('allowsDynamicPricing: $allowsDynamicPricing, ')
           ..write('defaultItemKind: $defaultItemKind, ')
           ..write('metadata: $metadata, ')
+          ..write('catalogActive: $catalogActive, ')
+          ..write('securityDepositPaise: $securityDepositPaise, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -1643,6 +1754,30 @@ class $RentalsTable extends Rentals with TableInfo<$RentalsTable, RentalRow> {
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _sellPaidPaiseMeta = const VerificationMeta(
+    'sellPaidPaise',
+  );
+  @override
+  late final GeneratedColumn<int> sellPaidPaise = GeneratedColumn<int>(
+    'sell_paid_paise',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _sellDiscountPaiseMeta = const VerificationMeta(
+    'sellDiscountPaise',
+  );
+  @override
+  late final GeneratedColumn<int> sellDiscountPaise = GeneratedColumn<int>(
+    'sell_discount_paise',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   static const VerificationMeta _orderStatusMeta = const VerificationMeta(
     'orderStatus',
   );
@@ -1706,6 +1841,8 @@ class $RentalsTable extends Rentals with TableInfo<$RentalsTable, RentalRow> {
     totalAmount,
     depositApplied,
     depositAmount,
+    sellPaidPaise,
+    sellDiscountPaise,
     orderStatus,
     workflowStatus,
     durationUnits,
@@ -1833,6 +1970,24 @@ class $RentalsTable extends Rentals with TableInfo<$RentalsTable, RentalRow> {
         ),
       );
     }
+    if (data.containsKey('sell_paid_paise')) {
+      context.handle(
+        _sellPaidPaiseMeta,
+        sellPaidPaise.isAcceptableOrUnknown(
+          data['sell_paid_paise']!,
+          _sellPaidPaiseMeta,
+        ),
+      );
+    }
+    if (data.containsKey('sell_discount_paise')) {
+      context.handle(
+        _sellDiscountPaiseMeta,
+        sellDiscountPaise.isAcceptableOrUnknown(
+          data['sell_discount_paise']!,
+          _sellDiscountPaiseMeta,
+        ),
+      );
+    }
     if (data.containsKey('order_status')) {
       context.handle(
         _orderStatusMeta,
@@ -1938,6 +2093,14 @@ class $RentalsTable extends Rentals with TableInfo<$RentalsTable, RentalRow> {
         DriftSqlType.int,
         data['${effectivePrefix}deposit_amount'],
       )!,
+      sellPaidPaise: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sell_paid_paise'],
+      )!,
+      sellDiscountPaise: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sell_discount_paise'],
+      )!,
       orderStatus: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}order_status'],
@@ -1994,6 +2157,12 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
   /// Token/advance held on this order (paise). Original amount; applied tracked separately.
   final int depositAmount;
 
+  /// Cash applied toward sell lines (paise).
+  final int sellPaidPaise;
+
+  /// Forgiven sell shortfall (paise); unpaid sell = sell due − paid − discount.
+  final int sellDiscountPaise;
+
   /// `open` | `completed` | `cancelled`
   final String orderStatus;
 
@@ -2021,6 +2190,8 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
     required this.totalAmount,
     required this.depositApplied,
     required this.depositAmount,
+    required this.sellPaidPaise,
+    required this.sellDiscountPaise,
     required this.orderStatus,
     this.workflowStatus,
     required this.durationUnits,
@@ -2050,6 +2221,8 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
     map['total_amount'] = Variable<int>(totalAmount);
     map['deposit_applied'] = Variable<int>(depositApplied);
     map['deposit_amount'] = Variable<int>(depositAmount);
+    map['sell_paid_paise'] = Variable<int>(sellPaidPaise);
+    map['sell_discount_paise'] = Variable<int>(sellDiscountPaise);
     map['order_status'] = Variable<String>(orderStatus);
     if (!nullToAbsent || workflowStatus != null) {
       map['workflow_status'] = Variable<String>(workflowStatus);
@@ -2084,6 +2257,8 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
       totalAmount: Value(totalAmount),
       depositApplied: Value(depositApplied),
       depositAmount: Value(depositAmount),
+      sellPaidPaise: Value(sellPaidPaise),
+      sellDiscountPaise: Value(sellDiscountPaise),
       orderStatus: Value(orderStatus),
       workflowStatus: workflowStatus == null && nullToAbsent
           ? const Value.absent()
@@ -2116,6 +2291,8 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
       totalAmount: serializer.fromJson<int>(json['totalAmount']),
       depositApplied: serializer.fromJson<int>(json['depositApplied']),
       depositAmount: serializer.fromJson<int>(json['depositAmount']),
+      sellPaidPaise: serializer.fromJson<int>(json['sellPaidPaise']),
+      sellDiscountPaise: serializer.fromJson<int>(json['sellDiscountPaise']),
       orderStatus: serializer.fromJson<String>(json['orderStatus']),
       workflowStatus: serializer.fromJson<String?>(json['workflowStatus']),
       durationUnits: serializer.fromJson<int>(json['durationUnits']),
@@ -2143,6 +2320,8 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
       'totalAmount': serializer.toJson<int>(totalAmount),
       'depositApplied': serializer.toJson<int>(depositApplied),
       'depositAmount': serializer.toJson<int>(depositAmount),
+      'sellPaidPaise': serializer.toJson<int>(sellPaidPaise),
+      'sellDiscountPaise': serializer.toJson<int>(sellDiscountPaise),
       'orderStatus': serializer.toJson<String>(orderStatus),
       'workflowStatus': serializer.toJson<String?>(workflowStatus),
       'durationUnits': serializer.toJson<int>(durationUnits),
@@ -2166,6 +2345,8 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
     int? totalAmount,
     int? depositApplied,
     int? depositAmount,
+    int? sellPaidPaise,
+    int? sellDiscountPaise,
     String? orderStatus,
     Value<String?> workflowStatus = const Value.absent(),
     int? durationUnits,
@@ -2186,6 +2367,8 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
     totalAmount: totalAmount ?? this.totalAmount,
     depositApplied: depositApplied ?? this.depositApplied,
     depositAmount: depositAmount ?? this.depositAmount,
+    sellPaidPaise: sellPaidPaise ?? this.sellPaidPaise,
+    sellDiscountPaise: sellDiscountPaise ?? this.sellDiscountPaise,
     orderStatus: orderStatus ?? this.orderStatus,
     workflowStatus: workflowStatus.present
         ? workflowStatus.value
@@ -2232,6 +2415,12 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
       depositAmount: data.depositAmount.present
           ? data.depositAmount.value
           : this.depositAmount,
+      sellPaidPaise: data.sellPaidPaise.present
+          ? data.sellPaidPaise.value
+          : this.sellPaidPaise,
+      sellDiscountPaise: data.sellDiscountPaise.present
+          ? data.sellDiscountPaise.value
+          : this.sellDiscountPaise,
       orderStatus: data.orderStatus.present
           ? data.orderStatus.value
           : this.orderStatus,
@@ -2265,6 +2454,8 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
           ..write('totalAmount: $totalAmount, ')
           ..write('depositApplied: $depositApplied, ')
           ..write('depositAmount: $depositAmount, ')
+          ..write('sellPaidPaise: $sellPaidPaise, ')
+          ..write('sellDiscountPaise: $sellDiscountPaise, ')
           ..write('orderStatus: $orderStatus, ')
           ..write('workflowStatus: $workflowStatus, ')
           ..write('durationUnits: $durationUnits, ')
@@ -2274,7 +2465,7 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
   }
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     id,
     customerId,
     startedAt,
@@ -2290,11 +2481,13 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
     totalAmount,
     depositApplied,
     depositAmount,
+    sellPaidPaise,
+    sellDiscountPaise,
     orderStatus,
     workflowStatus,
     durationUnits,
     replacedFromRentalId,
-  );
+  ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2314,6 +2507,8 @@ class RentalRow extends DataClass implements Insertable<RentalRow> {
           other.totalAmount == this.totalAmount &&
           other.depositApplied == this.depositApplied &&
           other.depositAmount == this.depositAmount &&
+          other.sellPaidPaise == this.sellPaidPaise &&
+          other.sellDiscountPaise == this.sellDiscountPaise &&
           other.orderStatus == this.orderStatus &&
           other.workflowStatus == this.workflowStatus &&
           other.durationUnits == this.durationUnits &&
@@ -2336,6 +2531,8 @@ class RentalsCompanion extends UpdateCompanion<RentalRow> {
   final Value<int> totalAmount;
   final Value<int> depositApplied;
   final Value<int> depositAmount;
+  final Value<int> sellPaidPaise;
+  final Value<int> sellDiscountPaise;
   final Value<String> orderStatus;
   final Value<String?> workflowStatus;
   final Value<int> durationUnits;
@@ -2357,6 +2554,8 @@ class RentalsCompanion extends UpdateCompanion<RentalRow> {
     this.totalAmount = const Value.absent(),
     this.depositApplied = const Value.absent(),
     this.depositAmount = const Value.absent(),
+    this.sellPaidPaise = const Value.absent(),
+    this.sellDiscountPaise = const Value.absent(),
     this.orderStatus = const Value.absent(),
     this.workflowStatus = const Value.absent(),
     this.durationUnits = const Value.absent(),
@@ -2379,6 +2578,8 @@ class RentalsCompanion extends UpdateCompanion<RentalRow> {
     this.totalAmount = const Value.absent(),
     this.depositApplied = const Value.absent(),
     this.depositAmount = const Value.absent(),
+    this.sellPaidPaise = const Value.absent(),
+    this.sellDiscountPaise = const Value.absent(),
     this.orderStatus = const Value.absent(),
     this.workflowStatus = const Value.absent(),
     this.durationUnits = const Value.absent(),
@@ -2404,6 +2605,8 @@ class RentalsCompanion extends UpdateCompanion<RentalRow> {
     Expression<int>? totalAmount,
     Expression<int>? depositApplied,
     Expression<int>? depositAmount,
+    Expression<int>? sellPaidPaise,
+    Expression<int>? sellDiscountPaise,
     Expression<String>? orderStatus,
     Expression<String>? workflowStatus,
     Expression<int>? durationUnits,
@@ -2426,6 +2629,8 @@ class RentalsCompanion extends UpdateCompanion<RentalRow> {
       if (totalAmount != null) 'total_amount': totalAmount,
       if (depositApplied != null) 'deposit_applied': depositApplied,
       if (depositAmount != null) 'deposit_amount': depositAmount,
+      if (sellPaidPaise != null) 'sell_paid_paise': sellPaidPaise,
+      if (sellDiscountPaise != null) 'sell_discount_paise': sellDiscountPaise,
       if (orderStatus != null) 'order_status': orderStatus,
       if (workflowStatus != null) 'workflow_status': workflowStatus,
       if (durationUnits != null) 'duration_units': durationUnits,
@@ -2451,6 +2656,8 @@ class RentalsCompanion extends UpdateCompanion<RentalRow> {
     Value<int>? totalAmount,
     Value<int>? depositApplied,
     Value<int>? depositAmount,
+    Value<int>? sellPaidPaise,
+    Value<int>? sellDiscountPaise,
     Value<String>? orderStatus,
     Value<String?>? workflowStatus,
     Value<int>? durationUnits,
@@ -2473,6 +2680,8 @@ class RentalsCompanion extends UpdateCompanion<RentalRow> {
       totalAmount: totalAmount ?? this.totalAmount,
       depositApplied: depositApplied ?? this.depositApplied,
       depositAmount: depositAmount ?? this.depositAmount,
+      sellPaidPaise: sellPaidPaise ?? this.sellPaidPaise,
+      sellDiscountPaise: sellDiscountPaise ?? this.sellDiscountPaise,
       orderStatus: orderStatus ?? this.orderStatus,
       workflowStatus: workflowStatus ?? this.workflowStatus,
       durationUnits: durationUnits ?? this.durationUnits,
@@ -2529,6 +2738,12 @@ class RentalsCompanion extends UpdateCompanion<RentalRow> {
     if (depositAmount.present) {
       map['deposit_amount'] = Variable<int>(depositAmount.value);
     }
+    if (sellPaidPaise.present) {
+      map['sell_paid_paise'] = Variable<int>(sellPaidPaise.value);
+    }
+    if (sellDiscountPaise.present) {
+      map['sell_discount_paise'] = Variable<int>(sellDiscountPaise.value);
+    }
     if (orderStatus.present) {
       map['order_status'] = Variable<String>(orderStatus.value);
     }
@@ -2567,6 +2782,8 @@ class RentalsCompanion extends UpdateCompanion<RentalRow> {
           ..write('totalAmount: $totalAmount, ')
           ..write('depositApplied: $depositApplied, ')
           ..write('depositAmount: $depositAmount, ')
+          ..write('sellPaidPaise: $sellPaidPaise, ')
+          ..write('sellDiscountPaise: $sellDiscountPaise, ')
           ..write('orderStatus: $orderStatus, ')
           ..write('workflowStatus: $workflowStatus, ')
           ..write('durationUnits: $durationUnits, ')
@@ -6647,6 +6864,8 @@ typedef $$InventoryItemsTableCreateCompanionBuilder =
       Value<bool> allowsDynamicPricing,
       Value<String> defaultItemKind,
       Value<String?> metadata,
+      Value<bool> catalogActive,
+      Value<int> securityDepositPaise,
       Value<int> rowid,
     });
 typedef $$InventoryItemsTableUpdateCompanionBuilder =
@@ -6669,6 +6888,8 @@ typedef $$InventoryItemsTableUpdateCompanionBuilder =
       Value<bool> allowsDynamicPricing,
       Value<String> defaultItemKind,
       Value<String?> metadata,
+      Value<bool> catalogActive,
+      Value<int> securityDepositPaise,
       Value<int> rowid,
     });
 
@@ -6768,6 +6989,16 @@ class $$InventoryItemsTableFilterComposer
 
   ColumnFilters<String> get metadata => $composableBuilder(
     column: $table.metadata,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get catalogActive => $composableBuilder(
+    column: $table.catalogActive,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get securityDepositPaise => $composableBuilder(
+    column: $table.securityDepositPaise,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -6870,6 +7101,16 @@ class $$InventoryItemsTableOrderingComposer
     column: $table.metadata,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<bool> get catalogActive => $composableBuilder(
+    column: $table.catalogActive,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get securityDepositPaise => $composableBuilder(
+    column: $table.securityDepositPaise,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$InventoryItemsTableAnnotationComposer
@@ -6956,6 +7197,16 @@ class $$InventoryItemsTableAnnotationComposer
 
   GeneratedColumn<String> get metadata =>
       $composableBuilder(column: $table.metadata, builder: (column) => column);
+
+  GeneratedColumn<bool> get catalogActive => $composableBuilder(
+    column: $table.catalogActive,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get securityDepositPaise => $composableBuilder(
+    column: $table.securityDepositPaise,
+    builder: (column) => column,
+  );
 }
 
 class $$InventoryItemsTableTableManager
@@ -7013,6 +7264,8 @@ class $$InventoryItemsTableTableManager
                 Value<bool> allowsDynamicPricing = const Value.absent(),
                 Value<String> defaultItemKind = const Value.absent(),
                 Value<String?> metadata = const Value.absent(),
+                Value<bool> catalogActive = const Value.absent(),
+                Value<int> securityDepositPaise = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => InventoryItemsCompanion(
                 id: id,
@@ -7033,6 +7286,8 @@ class $$InventoryItemsTableTableManager
                 allowsDynamicPricing: allowsDynamicPricing,
                 defaultItemKind: defaultItemKind,
                 metadata: metadata,
+                catalogActive: catalogActive,
+                securityDepositPaise: securityDepositPaise,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -7055,6 +7310,8 @@ class $$InventoryItemsTableTableManager
                 Value<bool> allowsDynamicPricing = const Value.absent(),
                 Value<String> defaultItemKind = const Value.absent(),
                 Value<String?> metadata = const Value.absent(),
+                Value<bool> catalogActive = const Value.absent(),
+                Value<int> securityDepositPaise = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => InventoryItemsCompanion.insert(
                 id: id,
@@ -7075,6 +7332,8 @@ class $$InventoryItemsTableTableManager
                 allowsDynamicPricing: allowsDynamicPricing,
                 defaultItemKind: defaultItemKind,
                 metadata: metadata,
+                catalogActive: catalogActive,
+                securityDepositPaise: securityDepositPaise,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -7119,6 +7378,8 @@ typedef $$RentalsTableCreateCompanionBuilder =
       Value<int> totalAmount,
       Value<int> depositApplied,
       Value<int> depositAmount,
+      Value<int> sellPaidPaise,
+      Value<int> sellDiscountPaise,
       Value<String> orderStatus,
       Value<String?> workflowStatus,
       Value<int> durationUnits,
@@ -7142,6 +7403,8 @@ typedef $$RentalsTableUpdateCompanionBuilder =
       Value<int> totalAmount,
       Value<int> depositApplied,
       Value<int> depositAmount,
+      Value<int> sellPaidPaise,
+      Value<int> sellDiscountPaise,
       Value<String> orderStatus,
       Value<String?> workflowStatus,
       Value<int> durationUnits,
@@ -7230,6 +7493,16 @@ class $$RentalsTableFilterComposer
 
   ColumnFilters<int> get depositAmount => $composableBuilder(
     column: $table.depositAmount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sellPaidPaise => $composableBuilder(
+    column: $table.sellPaidPaise,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sellDiscountPaise => $composableBuilder(
+    column: $table.sellDiscountPaise,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -7338,6 +7611,16 @@ class $$RentalsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get sellPaidPaise => $composableBuilder(
+    column: $table.sellPaidPaise,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get sellDiscountPaise => $composableBuilder(
+    column: $table.sellDiscountPaise,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get orderStatus => $composableBuilder(
     column: $table.orderStatus,
     builder: (column) => ColumnOrderings(column),
@@ -7433,6 +7716,16 @@ class $$RentalsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<int> get sellPaidPaise => $composableBuilder(
+    column: $table.sellPaidPaise,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get sellDiscountPaise => $composableBuilder(
+    column: $table.sellDiscountPaise,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get orderStatus => $composableBuilder(
     column: $table.orderStatus,
     builder: (column) => column,
@@ -7497,6 +7790,8 @@ class $$RentalsTableTableManager
                 Value<int> totalAmount = const Value.absent(),
                 Value<int> depositApplied = const Value.absent(),
                 Value<int> depositAmount = const Value.absent(),
+                Value<int> sellPaidPaise = const Value.absent(),
+                Value<int> sellDiscountPaise = const Value.absent(),
                 Value<String> orderStatus = const Value.absent(),
                 Value<String?> workflowStatus = const Value.absent(),
                 Value<int> durationUnits = const Value.absent(),
@@ -7518,6 +7813,8 @@ class $$RentalsTableTableManager
                 totalAmount: totalAmount,
                 depositApplied: depositApplied,
                 depositAmount: depositAmount,
+                sellPaidPaise: sellPaidPaise,
+                sellDiscountPaise: sellDiscountPaise,
                 orderStatus: orderStatus,
                 workflowStatus: workflowStatus,
                 durationUnits: durationUnits,
@@ -7541,6 +7838,8 @@ class $$RentalsTableTableManager
                 Value<int> totalAmount = const Value.absent(),
                 Value<int> depositApplied = const Value.absent(),
                 Value<int> depositAmount = const Value.absent(),
+                Value<int> sellPaidPaise = const Value.absent(),
+                Value<int> sellDiscountPaise = const Value.absent(),
                 Value<String> orderStatus = const Value.absent(),
                 Value<String?> workflowStatus = const Value.absent(),
                 Value<int> durationUnits = const Value.absent(),
@@ -7562,6 +7861,8 @@ class $$RentalsTableTableManager
                 totalAmount: totalAmount,
                 depositApplied: depositApplied,
                 depositAmount: depositAmount,
+                sellPaidPaise: sellPaidPaise,
+                sellDiscountPaise: sellDiscountPaise,
                 orderStatus: orderStatus,
                 workflowStatus: workflowStatus,
                 durationUnits: durationUnits,

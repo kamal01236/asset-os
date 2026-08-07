@@ -13,6 +13,7 @@ import 'package:asset_os/core/providers/app_providers.dart';
 import 'package:asset_os/core/repositories/local_repository.dart';
 import 'package:asset_os/core/theme/app_theme.dart';
 import 'package:asset_os/core/widgets/ui_primitives.dart';
+import 'package:asset_os/features/orders/order_payment_screen.dart';
 
 import 'support/test_harness.dart';
 
@@ -140,8 +141,13 @@ void main() {
     });
     expect(created.baseAmount, 210000);
     expect(created.totalAmount, 210000);
+    expect(created.depositAmount, 0);
 
-    // Opens created order detail instead of bare pop.
+    // Post-create payment screen; rent-only can Skip to detail.
+    expect(find.byType(OrderPaymentScreen), findsOneWidget);
+    await tester.tap(find.text('Skip'));
+    await _settle(tester, ticks: 25);
+
     expect(find.byType(RentalDetailScreen), findsOneWidget);
     expect(find.textContaining(shortOrderId(created.id)), findsWidgets);
 

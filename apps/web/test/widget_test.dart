@@ -90,7 +90,7 @@ void main() {
     final ProviderContainer container = await _pumpAppShell(tester);
 
     expect(find.text('Needs attention'), findsOneWidget);
-    expect(find.textContaining('Workshop set A'), findsOneWidget);
+    expect(find.textContaining('DRL-001'), findsOneWidget);
 
     await tester.tap(find.text('Due Today').first);
     await pumpFrames(tester);

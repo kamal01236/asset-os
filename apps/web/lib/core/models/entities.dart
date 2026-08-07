@@ -215,6 +215,8 @@ class InventoryItem {
     this.allowsDynamicPricing = false,
     this.defaultItemKind = ResourceType.rental,
     this.metadata = const <String, Object?>{},
+    this.catalogActive = true,
+    this.securityDepositPaise = 0,
   });
 
   final String id;
@@ -240,6 +242,10 @@ class InventoryItem {
   final ResourceType defaultItemKind;
   /// Dynamic field values keyed by [FieldDef] id.
   final Map<String, Object?> metadata;
+  /// When false, hidden from New Order and the default Resources list.
+  final bool catalogActive;
+  /// Suggested security/advance per unit for rent-like items (paise).
+  final int securityDepositPaise;
 
   bool get isSale => defaultItemKind == ResourceType.sale;
 
@@ -266,6 +272,8 @@ class InventoryItem {
     bool? allowsDynamicPricing,
     ResourceType? defaultItemKind,
     Map<String, Object?>? metadata,
+    bool? catalogActive,
+    int? securityDepositPaise,
   }) => InventoryItem(
     id: id,
     name: name,
@@ -285,6 +293,8 @@ class InventoryItem {
     allowsDynamicPricing: allowsDynamicPricing ?? this.allowsDynamicPricing,
     defaultItemKind: defaultItemKind ?? this.defaultItemKind,
     metadata: metadata ?? this.metadata,
+    catalogActive: catalogActive ?? this.catalogActive,
+    securityDepositPaise: securityDepositPaise ?? this.securityDepositPaise,
   );
 
   Map<String, dynamic> toJson() => <String, dynamic>{
@@ -306,6 +316,8 @@ class InventoryItem {
     'allowsDynamicPricing': allowsDynamicPricing,
     'defaultItemKind': defaultItemKind.storageValue,
     'metadata': metadata,
+    'catalogActive': catalogActive,
+    'securityDepositPaise': securityDepositPaise,
   };
 
   factory InventoryItem.fromJson(Map<String, dynamic> json) => InventoryItem(
@@ -329,6 +341,8 @@ class InventoryItem {
     metadata: json['metadata'] is Map
         ? Map<String, Object?>.from(json['metadata'] as Map)
         : const <String, Object?>{},
+    catalogActive: (json['catalogActive'] as bool?) ?? true,
+    securityDepositPaise: (json['securityDepositPaise'] as int?) ?? 0,
   );
 }
 
@@ -636,6 +650,18 @@ class DuplicateActiveShortCodeException implements Exception {
   String toString() => 'Duplicate active short code: $shortCode';
 }
 
+/// Thrown when hard-deleting inventory that still has rental line references.
+class InventoryInUseException implements Exception {
+  InventoryInUseException(this.itemId, {this.referenceCount = 0});
+
+  final String itemId;
+  final int referenceCount;
+
+  @override
+  String toString() =>
+      'Inventory item $itemId is referenced by $referenceCount order line(s)';
+}
+
 /// Deposit wallet ledger entry types (stored as snake_case in Drift).
 enum DepositLedgerType {
   topUp,
@@ -756,6 +782,8 @@ class Rental {
     this.totalAmount = 0,
     this.depositApplied = 0,
     this.depositAmount = 0,
+    this.sellPaidPaise = 0,
+    this.sellDiscountPaise = 0,
     this.orderStatus = OrderStatus.open,
     this.workflowStatus,
     this.durationUnits = 1,
@@ -784,6 +812,10 @@ class Rental {
   final int depositApplied;
   /// Token/advance on this order (paise); original amount set at create.
   final int depositAmount;
+  /// Cash applied toward sell lines (paise).
+  final int sellPaidPaise;
+  /// Forgiven sell shortfall (paise).
+  final int sellDiscountPaise;
   final OrderStatus orderStatus;
   /// Template workflow status id; null means derive from [orderStatus].
   final String? workflowStatus;
@@ -824,6 +856,23 @@ class Rental {
   /// Remaining unapplied order deposit (paise).
   int get depositRemaining =>
       (depositAmount - depositApplied).clamp(0, depositAmount);
+
+  /// Sum of sell line charges due at issue (paise).
+  int get sellDuePaise {
+    int sum = 0;
+    for (final RentalLine line in lines) {
+      if (line.isSell) {
+        sum += line.baseAmount;
+      }
+    }
+    return sum;
+  }
+
+  /// Sell still unpaid after paid + discount (paise).
+  int get sellOutstandingPaise =>
+      (sellDuePaise - sellPaidPaise - sellDiscountPaise).clamp(0, sellDuePaise);
+
+  bool get hasUnpaidSell => sellOutstandingPaise > 0;
 
   bool get hasDueDate => dueAt != null;
 
@@ -914,6 +963,8 @@ class Rental {
     int? totalAmount,
     int? depositApplied,
     int? depositAmount,
+    int? sellPaidPaise,
+    int? sellDiscountPaise,
     OrderStatus? orderStatus,
     String? workflowStatus,
     int? durationUnits,
@@ -938,6 +989,8 @@ class Rental {
     totalAmount: totalAmount ?? this.totalAmount,
     depositApplied: depositApplied ?? this.depositApplied,
     depositAmount: depositAmount ?? this.depositAmount,
+    sellPaidPaise: sellPaidPaise ?? this.sellPaidPaise,
+    sellDiscountPaise: sellDiscountPaise ?? this.sellDiscountPaise,
     orderStatus: orderStatus ?? this.orderStatus,
     workflowStatus: workflowStatus ?? this.workflowStatus,
     durationUnits: durationUnits ?? this.durationUnits,
@@ -964,6 +1017,8 @@ class Rental {
     'totalAmount': totalAmount,
     'depositApplied': depositApplied,
     'depositAmount': depositAmount,
+    'sellPaidPaise': sellPaidPaise,
+    'sellDiscountPaise': sellDiscountPaise,
     'orderStatus': orderStatus.storageValue,
     'workflowStatus': workflowStatus,
     'durationUnits': durationUnits,
@@ -1021,6 +1076,8 @@ class Rental {
       totalAmount: (json['totalAmount'] as int?) ?? 0,
       depositApplied: (json['depositApplied'] as int?) ?? 0,
       depositAmount: (json['depositAmount'] as int?) ?? 0,
+      sellPaidPaise: (json['sellPaidPaise'] as int?) ?? 0,
+      sellDiscountPaise: (json['sellDiscountPaise'] as int?) ?? 0,
       orderStatus: orderStatus,
       workflowStatus: json['workflowStatus'] as String?,
       durationUnits: (json['durationUnits'] as int?) ?? 1,

@@ -22,6 +22,7 @@ abstract final class TimelineTitleKey {
   static const statusChanged = 'status_changed';
   static const dueExtended = 'due_extended';
   static const autoVacated = 'auto_vacated';
+  static const paymentReceived = 'payment_received';
 }
 
 /// Stable subtitle keys (optionally with `|`-separated args). See [encodeTimelineSubtitle].
@@ -47,6 +48,7 @@ abstract final class TimelineSubtitleKey {
   static const statusChanged = 'status_changed';
   static const dueExtended = 'due_extended';
   static const autoVacated = 'auto_vacated';
+  static const paymentReceived = 'payment_received';
 }
 
 const String _kDiscountPrefix = 'd:';
@@ -120,6 +122,8 @@ String localizeTimelineTitle(AppLocalizations l10n, String raw) {
     case TimelineTitleKey.autoVacated:
     case 'Auto vacated':
       return l10n.timelineTitleAutoVacated;
+    case TimelineTitleKey.paymentReceived:
+      return l10n.timelineTitlePaymentReceived;
     default:
       return raw;
   }
@@ -306,6 +310,11 @@ String? _subtitleForKey(
         return l10n.timelineSubtitleAutoVacatedGeneric;
       }
       return l10n.timelineSubtitleAutoVacated(args[0], int.tryParse(args[1]) ?? 0);
+    case TimelineSubtitleKey.paymentReceived:
+      if (args.length < 3) {
+        return null;
+      }
+      return l10n.timelineSubtitlePaymentReceived(args[0], args[1], args[2]);
     default:
       return null;
   }
