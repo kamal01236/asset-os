@@ -24,7 +24,7 @@ void main() {
       expect(item.category, kCategoryGeneral);
       expect(item.defaultItemKind, ResourceType.sale);
       expect(item.isSale, isTrue);
-      expect(repository.database.schemaVersion, 18);
+      expect(repository.database.schemaVersion, 19);
     });
 
     test('ResourceType.parse maps legacy general to sale', () {
@@ -82,6 +82,7 @@ void main() {
       final Rental order = (await repository.listRentals()).single;
       expect(order.isActive, isFalse);
       expect(order.orderStatus, OrderStatus.completed);
+      expect(order.workflowStatus, 'sold');
       expect(order.returnedAt, isNotNull);
       expect(order.baseAmount, 25000);
       expect(order.lines.single.fulfillment, LineFulfillment.sell);

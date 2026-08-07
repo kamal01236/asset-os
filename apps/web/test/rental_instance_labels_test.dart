@@ -165,7 +165,7 @@ void main() {
     test('schema v6 tables include line id primary key', () async {
       final AppDatabase db = AppDatabase(NativeDatabase.memory());
       addTearDown(db.close);
-      expect(db.schemaVersion, 18);
+      expect(db.schemaVersion, 19);
 
       await db.into(db.customers).insert(
         CustomersCompanion.insert(

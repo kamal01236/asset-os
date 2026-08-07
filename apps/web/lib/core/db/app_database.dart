@@ -24,7 +24,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 18;
+  int get schemaVersion => 19;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -361,6 +361,17 @@ class AppDatabase extends _$AppDatabase {
             interest_accrual = 'daily365',
             rate_period = 'yearly'
           WHERE rate_period = 'daily'
+        ''');
+      }
+      if (from < 19) {
+        await m.addColumn(rentalItems, rentalItems.returnDisposition);
+        // Closed rent lines without disposition were normal returns.
+        await customStatement('''
+          UPDATE rental_items
+          SET return_disposition = 'returned'
+          WHERE returned_at IS NOT NULL
+            AND return_disposition IS NULL
+            AND fulfillment = 'rent'
         ''');
       }
     },

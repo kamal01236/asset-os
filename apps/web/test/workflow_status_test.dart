@@ -26,6 +26,89 @@ void main() {
       expect(kSalonWorkflow.terminal.isTerminal, isTrue);
     });
 
+    test('terminalWorkflowStatusForOrder by fulfillment mix', () {
+      expect(
+        terminalWorkflowStatusForOrder(
+          workflow: kRentalWorkflow,
+          hasRent: false,
+          hasJob: false,
+          hasSell: true,
+        ),
+        kSoldWorkflowStatusId,
+      );
+      expect(
+        terminalWorkflowStatusForOrder(
+          workflow: kRentalWorkflow,
+          hasRent: true,
+          hasJob: false,
+          hasSell: false,
+        ),
+        'returned',
+      );
+      expect(
+        terminalWorkflowStatusForOrder(
+          workflow: kRentalWorkflow,
+          hasRent: false,
+          hasJob: true,
+          hasSell: false,
+        ),
+        kDoneWorkflowStatusId,
+      );
+      expect(
+        terminalWorkflowStatusForOrder(
+          workflow: kJobWorkflow,
+          hasRent: false,
+          hasJob: true,
+          hasSell: false,
+        ),
+        'done',
+      );
+      expect(
+        terminalWorkflowStatusForOrder(
+          workflow: kBoutiqueWorkflow,
+          hasRent: false,
+          hasJob: false,
+          hasSell: true,
+        ),
+        kSoldWorkflowStatusId,
+      );
+      expect(
+        terminalWorkflowStatusForOrder(
+          workflow: kRentalWorkflow,
+          hasRent: true,
+          hasJob: true,
+          hasSell: true,
+        ),
+        'returned',
+      );
+    });
+
+    test('sold status localizes and effectiveWorkflowStatusId keeps it', () {
+      expect(
+        localizedWorkflowStatusLabel(const Locale('en'), kSoldWorkflowStatusId),
+        'Sold',
+      );
+      expect(
+        localizedWorkflowStatusLabel(const Locale('hi'), kSoldWorkflowStatusId),
+        'बिक गया',
+      );
+      expect(
+        effectiveWorkflowStatusId(
+          stored: kSoldWorkflowStatusId,
+          orderStatus: OrderStatus.completed,
+          workflow: kRentalWorkflow,
+        ),
+        kSoldWorkflowStatusId,
+      );
+      expect(
+        resolveWorkflowStatusDisplay(
+          workflow: kRentalWorkflow,
+          statusId: kSoldWorkflowStatusId,
+        )?.labelEn,
+        'Sold',
+      );
+    });
+
     test('library and camera use rental; boutique/parlour/salon/mechanic mapped', () {
       expect(industryTemplateById('library')!.workflowId, kRentalWorkflowId);
       expect(industryTemplateById('camera')!.workflowId, kRentalWorkflowId);
@@ -33,6 +116,11 @@ void main() {
       expect(industryTemplateById('parlour')!.workflowId, kJobWorkflowId);
       expect(industryTemplateById('salon')!.workflowId, kSalonWorkflowId);
       expect(industryTemplateById('mechanic')!.workflowId, kJobWorkflowId);
+      expect(industryTemplateById('marriage_decor')!.workflowId, kRentalWorkflowId);
+      expect(industryTemplateById('temple')!.workflowId, kRentalWorkflowId);
+      expect(industryTemplateById('mobile_repair')!.workflowId, kJobWorkflowId);
+      expect(industryTemplateById('laptop_repair')!.workflowId, kJobWorkflowId);
+      expect(industryTemplateById('tailor')!.workflowId, kJobWorkflowId);
     });
 
     test('deriveWorkflowStatusFromOrderStatus', () {
@@ -170,6 +258,130 @@ void main() {
       order = (await repository.listRentals()).single;
       expect(order.orderStatus, OrderStatus.completed);
       expect(order.workflowStatus, 'done');
+    });
+
+    test('sale-only create stores sold not returned under rental workflow',
+        () async {
+      final LocalRepository repository = await bootRepo();
+      await repository.setActiveWorkflowId(kRentalWorkflowId);
+      await repository.addInventory(
+        name: 'Tripod',
+        category: 'Camera',
+        units: 2,
+        billingMode: BillingMode.daily,
+        rateAmount: 10000,
+        requiresUnitIdentity: false,
+      );
+      final InventoryItem item = (await repository.listInventory()).single;
+      final Customer customer = await ensureCustomer(repository);
+
+      await repository.createRental(
+        customer: customer,
+        lines: <RentalLineInput>[
+          RentalLineInput(
+            itemId: item.id,
+            instanceName: 'Tripod',
+            shortCode: 'TRI-1',
+            fulfillment: LineFulfillment.sell,
+            manualSaleAmountPaise: 25000,
+          ),
+        ],
+      );
+
+      final Rental order = (await repository.listRentals()).single;
+      expect(order.orderStatus, OrderStatus.completed);
+      expect(order.workflowStatus, kSoldWorkflowStatusId);
+      expect(order.workflowStatus, isNot('returned'));
+      expect(
+        localizedWorkflowStatusLabel(
+          const Locale('en'),
+          order.workflowStatus,
+        ),
+        'Sold',
+      );
+    });
+
+    test('rent return still closes at returned under rental workflow', () async {
+      final LocalRepository repository = await bootRepo();
+      await repository.setActiveWorkflowId(kRentalWorkflowId);
+      await repository.addInventory(
+        name: 'Book',
+        category: 'Library',
+        units: 1,
+        billingMode: BillingMode.weekly,
+        rateAmount: 3000,
+      );
+      final InventoryItem item = (await repository.listInventory()).single;
+      final Customer customer = await ensureCustomer(repository);
+
+      await repository.createRental(
+        customer: customer,
+        lines: <RentalLineInput>[
+          RentalLineInput(
+            itemId: item.id,
+            instanceName: 'Book',
+            shortCode: 'BK-1',
+          ),
+        ],
+      );
+
+      Rental order = (await repository.listRentals()).single;
+      expect(order.workflowStatus, 'booked');
+      expect(order.orderStatus, OrderStatus.open);
+
+      await repository.returnRental(order.id);
+      order = (await repository.listRentals()).single;
+      expect(order.orderStatus, OrderStatus.completed);
+      expect(order.workflowStatus, 'returned');
+    });
+
+    test('all-job under rental workflow closes at done not returned', () async {
+      final LocalRepository repository = await bootRepo();
+      await repository.setActiveWorkflowId(kRentalWorkflowId);
+      await repository.addInventory(
+        name: 'Repair',
+        category: 'Service',
+        units: 1,
+        billingMode: BillingMode.fixed,
+        rateAmount: 40000,
+        requiresUnitIdentity: false,
+        defaultItemKind: ResourceType.job,
+      );
+      final InventoryItem item = (await repository.listInventory()).single;
+      final Customer customer = await ensureCustomer(repository);
+
+      await repository.createRental(
+        customer: customer,
+        lines: <RentalLineInput>[
+          RentalLineInput(
+            itemId: item.id,
+            instanceName: 'Repair',
+            shortCode: 'REP-1',
+            fulfillment: LineFulfillment.job,
+            manualSaleAmountPaise: 40000,
+          ),
+        ],
+      );
+
+      Rental order = (await repository.listRentals()).single;
+      expect(order.workflowStatus, 'booked');
+      expect(order.orderStatus, OrderStatus.open);
+
+      await repository.completeJobLines(
+        order.id,
+        <String>[order.lines.single.id],
+      );
+      order = (await repository.listRentals()).single;
+      expect(order.orderStatus, OrderStatus.completed);
+      expect(order.workflowStatus, kDoneWorkflowStatusId);
+      expect(order.workflowStatus, isNot('returned'));
+      expect(
+        localizedWorkflowStatusLabel(
+          const Locale('en'),
+          order.workflowStatus,
+        ),
+        'Done',
+      );
     });
 
     test('cancel keeps OrderStatus.cancelled without forcing terminal', () async {

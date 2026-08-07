@@ -91,6 +91,19 @@ const String kSalonWorkflowId = 'salon';
 /// Default when prefs / template omit a workflow.
 const String kDefaultWorkflowId = kRentalWorkflowId;
 
+/// Sale-only terminal (not part of rental pipeline steps; display/storage id).
+const String kSoldWorkflowStatusId = 'sold';
+
+const WorkflowStatus kSoldWorkflowStatus = WorkflowStatus(
+  id: kSoldWorkflowStatusId,
+  labelEn: 'Sold',
+  labelHi: 'बिक गया',
+  isTerminal: true,
+);
+
+/// Job-style terminal id used when the active pipeline would say "returned".
+const String kDoneWorkflowStatusId = 'done';
+
 /// Rental: booked → issued → returned.
 const WorkflowDefinition kRentalWorkflow = WorkflowDefinition(
   id: kRentalWorkflowId,
@@ -221,6 +234,9 @@ WorkflowStatus? workflowStatusById(String? statusId) {
   if (statusId == null || statusId.isEmpty) {
     return null;
   }
+  if (statusId == kSoldWorkflowStatusId) {
+    return kSoldWorkflowStatus;
+  }
   for (final WorkflowDefinition workflow in kWorkflowDefinitions) {
     final WorkflowStatus? found = workflow.byId(statusId);
     if (found != null) {
@@ -236,6 +252,36 @@ String localizedWorkflowStatusLabel(Locale locale, String? statusId) {
     return statusId ?? '';
   }
   return status.localizedLabel(locale);
+}
+
+/// Resolve a status for display: active pipeline first, then global catalog.
+WorkflowStatus? resolveWorkflowStatusDisplay({
+  required WorkflowDefinition workflow,
+  required String? statusId,
+}) {
+  return workflow.byId(statusId) ?? workflowStatusById(statusId);
+}
+
+/// Terminal workflow id for a fully closed order, by fulfillment mix.
+///
+/// Sale-only must not store rental `returned`. All-job under a rental pipeline
+/// prefers `done`. Orders with rent keep the active template terminal.
+String terminalWorkflowStatusForOrder({
+  required WorkflowDefinition workflow,
+  required bool hasRent,
+  required bool hasJob,
+  required bool hasSell,
+}) {
+  if (hasSell && !hasRent && !hasJob) {
+    return kSoldWorkflowStatusId;
+  }
+  if (hasJob && !hasRent) {
+    if (workflow.terminal.id == kDoneWorkflowStatusId) {
+      return workflow.terminal.id;
+    }
+    return kDoneWorkflowStatusId;
+  }
+  return workflow.terminal.id;
 }
 
 /// Derive a workflow status id when the column is null (legacy rows).
@@ -260,7 +306,9 @@ String? effectiveWorkflowStatusId({
   required WorkflowDefinition workflow,
 }) {
   if (stored != null && stored.isNotEmpty) {
-    if (workflow.byId(stored) != null) {
+    // Keep pipeline ids and fulfillment-aware terminals (e.g. sold / done)
+    // even when they are not steps on the active workflow.
+    if (workflow.byId(stored) != null || workflowStatusById(stored) != null) {
       return stored;
     }
   }

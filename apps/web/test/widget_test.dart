@@ -304,7 +304,6 @@ void main() {
                       : const <SearchSuggestion>[];
               return ScopedSearchField(
                 hintText: 'Search inventory',
-                minLengthHint: 'Type at least 1 character',
                 noResultsText: 'No matches',
                 suggestions: suggestions,
                 onQueryChanged: (String value) {

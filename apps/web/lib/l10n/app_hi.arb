@@ -628,6 +628,35 @@
   "returnAllAction": "सभी वापस करें",
   "replaceLineAction": "बदलें",
   "selectLinesToReturn": "वापसी के लिए पंक्तियाँ चुनें",
+  "returnByQuantityHint": "प्रत्येक वस्तु के लिए वापसी संख्या चुनें",
+  "skuIssuedReturnedRemaining": "जारी {issued} · वापस {returned} · अभी बाहर {remaining}",
+  "@skuIssuedReturnedRemaining": {
+    "placeholders": {
+      "issued": {"type": "int"},
+      "returned": {"type": "int"},
+      "remaining": {"type": "int"}
+    }
+  },
+  "returnQtyLabel": "वापसी संख्या",
+  "markRemainingLostAction": "बाकी खोया चिह्नित करें",
+  "markSelectedLostAction": "चयनित खोया चिह्नित करें",
+  "confirmMarkLostTitle": "इकाइयाँ खोई चिह्नित करें?",
+  "confirmMarkLostBody": "{count} इकाई(याँ) बिना स्टॉक वापस किए बंद करें। अगर कुछ अभी बाहर है तो ऑर्डर खुला रहेगा।",
+  "@confirmMarkLostBody": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "confirmMarkLostAction": "खोया चिह्नित करें",
+  "unitsLostSnack": "{count} इकाई(याँ) खोई चिह्नित।",
+  "@unitsLostSnack": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "lineLostLabel": "खोया",
+  "lostLinesHeading": "खोया",
+  "pickUnitsToReturn": "वापसी के लिए इकाइयाँ चुनें",
   "openLinesHeading": "बाहर",
   "returnedLinesHeading": "वापस हुए",
   "lineReturnedLabel": "वापस",
@@ -720,7 +749,6 @@
       "min": {"type": "int"}
     }
   },
-  "searchTypeMinChars": "कम से कम 1 अक्षर लिखें",
   "searchCustomersHint": "नाम या फ़ोन से खोजें",
   "searchNoResults": "कोई मिलान नहीं",
   "dueDateOptionalLabel": "देय तिथि वैकल्पिक",
@@ -962,13 +990,13 @@
   "timelineTitleJobOpened": "जॉब खोला गया",
   "timelineTitleReturned": "वापस किया",
   "timelineTitlePartialReturn": "आंशिक वापसी",
+  "timelineTitleUnitsLost": "इकाइयाँ खोईं",
   "timelineTitleJobsCompleted": "जॉब पूर्ण",
   "timelineTitleJobCompleted": "जॉब पूर्ण हुआ",
   "timelineTitleOrderCancelled": "ऑर्डर रद्द",
   "timelineTitleNoteAdded": "नोट जोड़ा गया",
   "timelineTitleDueToday": "आज देय",
   "timelineTitleRentalOpened": "किराया खोला गया",
-  "timelineTitleIssued": "जारी",
   "timelineTitleStatusChanged": "स्थिति बदली",
 
   "timelineSubtitleCreatedOrderFlow": "फ़ोन-फ़र्स्ट ऑर्डर फ़्लो से बनाया गया।",
@@ -988,6 +1016,21 @@
     "placeholders": {
       "returned": {"type": "int"},
       "total": {"type": "int"}
+    }
+  },
+  "timelineSubtitlePartialReturnQty": "वापस: {summary} ({total} में से {returned} पंक्तियाँ)।",
+  "@timelineSubtitlePartialReturnQty": {
+    "placeholders": {
+      "summary": {"type": "String"},
+      "returned": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "timelineSubtitleUnitsLostQty": "खोया चिह्नित: {summary} ({count} इकाइयाँ)।",
+  "@timelineSubtitleUnitsLostQty": {
+    "placeholders": {
+      "summary": {"type": "String"},
+      "count": {"type": "int"}
     }
   },
   "timelineSubtitleAllJobsComplete": "सभी जॉब पंक्तियाँ पूर्ण चिह्नित।",
@@ -1099,6 +1142,8 @@
     }
   },
   "reportStatusReturnedBit": "[वापस]",
+  "reportStatusSoldBit": "[बिका]",
+  "reportStatusCompletedBit": "[पूर्ण]",
   "reportLinesPartialBit": " | पंक्तियाँ {open} खुली/{returned} वापस",
   "@reportLinesPartialBit": {
     "placeholders": {

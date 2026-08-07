@@ -32,7 +32,6 @@ class SearchSuggestion {
 class ScopedSearchField extends StatefulWidget {
   const ScopedSearchField({
     required this.hintText,
-    required this.minLengthHint,
     required this.noResultsText,
     required this.suggestions,
     required this.onQueryChanged,
@@ -46,9 +45,6 @@ class ScopedSearchField extends StatefulWidget {
   });
 
   final String hintText;
-
-  /// Kept for call-site compatibility; unused now that min length is 1.
-  final String minLengthHint;
   final String noResultsText;
   final List<SearchSuggestion> suggestions;
   final ValueChanged<String> onQueryChanged;

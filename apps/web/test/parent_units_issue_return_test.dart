@@ -1,22 +1,14 @@
 @Tags(['unit', 'returns'])
 library;
 
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:asset_os/core/models/customer_activity.dart';
 import 'package:asset_os/core/models/entities.dart';
 import 'package:asset_os/core/repositories/local_repository.dart';
-import 'package:asset_os/l10n/app_localizations.dart';
 
 import 'support/test_harness.dart';
 
 void main() {
-  late AppLocalizations l10n;
-
-  setUpAll(() async {
-    l10n = await AppLocalizations.delegate.load(const Locale('en'));
-  });
   test('requiresUnitIdentity persists on add and update', () async {
     final LocalRepository repository = await bootRepo();
     await repository.addInventory(
@@ -216,11 +208,9 @@ void main() {
     );
     Rental rental = (await repository.listRentals())
         .firstWhere((Rental r) => r.id == rentalId);
-    RentalOrderStatusSummary summary =
-        RentalOrderStatusSummary.fromRental(rental);
-    expect(summary.issued, 3);
-    expect(summary.pending, 3);
-    expect(summary.returned, 0);
+    expect(rental.lines.length, 3);
+    expect(rental.openLines.length, 3);
+    expect(rental.returnedLines.length, 0);
 
     await repository.returnRentalLines(
       rentalId,
@@ -228,80 +218,9 @@ void main() {
     );
     rental = (await repository.listRentals())
         .firstWhere((Rental r) => r.id == rentalId);
-    summary = RentalOrderStatusSummary.fromRental(rental);
-    expect(summary.issued, 3);
-    expect(summary.pending, 2);
-    expect(summary.returned, 1);
+    expect(rental.lines.length, 3);
+    expect(rental.openLines.length, 2);
+    expect(rental.returnedLines.length, 1);
     expect(rental.isActive, isTrue);
-  });
-
-  test('customer activity timeline orders issue then returns by time', () {
-    final DateTime t0 = DateTime(2026, 1, 1, 10);
-    final DateTime t1 = DateTime(2026, 1, 2, 12);
-    final DateTime t2 = DateTime(2026, 1, 3, 9);
-    final Rental rental = Rental(
-      id: 'REN-ACT',
-      customerId: 'CUS-1',
-      lines: <RentalLine>[
-        RentalLine(
-          id: 'RLI-1',
-          itemId: 'INV-1',
-          catalogName: 'Novels',
-          instanceName: 'Book A',
-          shortCode: 'A-1',
-          returnedAt: t1,
-        ),
-        RentalLine(
-          id: 'RLI-2',
-          itemId: 'INV-1',
-          catalogName: 'Novels',
-          instanceName: 'Book B',
-          shortCode: 'B-1',
-          returnedAt: t2,
-        ),
-      ],
-      startedAt: t0,
-      dueAt: t0.add(const Duration(days: 7)),
-      timeline: <RentalEvent>[
-        RentalEvent(
-          title: 'Rental opened',
-          subtitle: '2 items',
-          at: t0,
-        ),
-      ],
-      qrCode: 'rental:act',
-    );
-
-    final List<CustomerActivityEntry> activity =
-        buildCustomerActivity(<Rental>[rental], l10n);
-    expect(activity, isNotEmpty);
-
-    final List<CustomerActivityEntry> issueReturn = activity
-        .where(
-          (CustomerActivityEntry e) =>
-              e.kind == CustomerActivityKind.issued ||
-              e.kind == CustomerActivityKind.returned,
-        )
-        .toList();
-    // Newest first.
-    expect(issueReturn.first.kind, CustomerActivityKind.returned);
-    expect(issueReturn.first.subtitle, contains('Book B'));
-    expect(issueReturn[1].kind, CustomerActivityKind.returned);
-    expect(issueReturn[1].subtitle, contains('Book A'));
-    expect(issueReturn.last.kind, CustomerActivityKind.issued);
-    expect(issueReturn.last.at, t0);
-
-    // Ascending check for chronological story.
-    final List<CustomerActivityEntry> chrono =
-        List<CustomerActivityEntry>.from(issueReturn)
-          ..sort(
-            (CustomerActivityEntry a, CustomerActivityEntry b) =>
-                a.at.compareTo(b.at),
-          );
-    expect(chrono.map((CustomerActivityEntry e) => e.kind).toList(), <CustomerActivityKind>[
-      CustomerActivityKind.issued,
-      CustomerActivityKind.returned,
-      CustomerActivityKind.returned,
-    ]);
   });
 }

@@ -113,6 +113,8 @@ class RentalItems extends Table {
   IntColumn get lateFeePerDay => integer().withDefault(const Constant(0))();
   /// `rent` | `sell` — how this line was issued.
   TextColumn get fulfillment => text().withDefault(const Constant('rent'))();
+  /// How a closed rent line settled: `returned` | `lost` (null on open / legacy).
+  TextColumn get returnDisposition => text().nullable()();
 
   @override
   Set<Column<Object>> get primaryKey => <Column<Object>>{id};

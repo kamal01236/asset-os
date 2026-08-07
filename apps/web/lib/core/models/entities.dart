@@ -443,6 +443,25 @@ class RentalLineInput {
   bool get usesManualAmount => isSell || isJob;
 }
 
+/// How a closed rent line was settled (stock restore vs write-off).
+enum ReturnDisposition {
+  returned,
+  lost;
+
+  String get storageValue => name;
+
+  static ReturnDisposition? parse(String? raw) {
+    switch (raw) {
+      case 'returned':
+        return ReturnDisposition.returned;
+      case 'lost':
+        return ReturnDisposition.lost;
+      default:
+        return null;
+    }
+  }
+}
+
 /// One issued unit on a rental: catalog type + instance name/code.
 class RentalLine {
   const RentalLine({
@@ -459,6 +478,7 @@ class RentalLine {
     this.billingMode = BillingMode.weekly,
     this.rateAmount = 0,
     this.fulfillment = LineFulfillment.rent,
+    this.returnDisposition,
   });
 
   final String id;
@@ -477,6 +497,8 @@ class RentalLine {
   /// Rate (paise) frozen at issue (catalog or dynamic override).
   final int rateAmount;
   final LineFulfillment fulfillment;
+  /// Set when a rent line is closed; null on open lines / legacy sell-job.
+  final ReturnDisposition? returnDisposition;
 
   bool get isOpen => returnedAt == null;
 
@@ -485,6 +507,10 @@ class RentalLine {
   bool get isJob => fulfillment == LineFulfillment.job;
 
   bool get isRent => fulfillment == LineFulfillment.rent;
+
+  /// Closed rent line marked lost (no stock restore). Legacy null → returned.
+  bool get isLost =>
+      !isOpen && isRent && returnDisposition == ReturnDisposition.lost;
 
   int get totalAmount => baseAmount + lateAmount;
 
@@ -561,6 +587,7 @@ class RentalLine {
     'billingMode': billingMode.name,
     'rateAmount': rateAmount,
     'fulfillment': fulfillment.storageValue,
+    'returnDisposition': returnDisposition?.storageValue,
   };
 
   factory RentalLine.fromJson(Map<String, dynamic> json) => RentalLine(
@@ -580,6 +607,9 @@ class RentalLine {
     billingMode: BillingMode.parse(json['billingMode'] as String?),
     rateAmount: (json['rateAmount'] as int?) ?? 0,
     fulfillment: LineFulfillment.parse(json['fulfillment'] as String?),
+    returnDisposition: ReturnDisposition.parse(
+      json['returnDisposition'] as String?,
+    ),
   );
 }
 
@@ -660,6 +690,7 @@ class RentalReturnResult {
     required this.depositApplied,
     required this.depositBalanceAfter,
     this.returnedLineIds = const <String>[],
+    this.lostLineIds = const <String>[],
     this.rentalClosed = true,
   });
 
@@ -669,6 +700,8 @@ class RentalReturnResult {
   /// Remaining order deposit after apply (paise).
   final int depositBalanceAfter;
   final List<String> returnedLineIds;
+  /// Lines closed as lost (no stock restore) in this settle call.
+  final List<String> lostLineIds;
   /// True when the parent rental has no open rent lines left.
   final bool rentalClosed;
 

@@ -37,9 +37,6 @@ class NewOrderFlowScreen extends ConsumerStatefulWidget {
   ConsumerState<NewOrderFlowScreen> createState() => _NewOrderFlowScreenState();
 }
 
-/// Back-compat alias for call sites / older tests.
-typedef NewRentalFlowScreen = NewOrderFlowScreen;
-
 enum _OrderPhase { form, customer, summary }
 
 /// Soft upper bound for qty stepper (not stock-related).

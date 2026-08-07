@@ -14,11 +14,24 @@ import 'package:asset_os/l10n/app_localizations.dart';
 
 void main() {
   group('FieldDef registry', () {
-    test('starter defs cover duration, visits, barcode', () {
+    test('starter defs cover duration, visits, barcode, and household fields', () {
       expect(fieldDefById(kFieldEstimatedDuration)?.type, FieldValueType.number);
       expect(fieldDefById(kFieldMaxVisits)?.appliesTo(ResourceType.membership), isTrue);
       expect(fieldDefById(kFieldBarcode)?.appliesTo(ResourceType.rental), isTrue);
       expect(fieldDefById(kFieldBarcode)?.appliesTo(ResourceType.job), isFalse);
+      expect(fieldDefById(kFieldImei)?.type, FieldValueType.text);
+      expect(fieldDefById(kFieldImei)?.appliesTo(ResourceType.job), isTrue);
+      expect(fieldDefById(kFieldMeasurements)?.labelHi, isNotEmpty);
+      expect(fieldDefById(kFieldDriverName)?.appliesTo(ResourceType.rental), isTrue);
+      expect(fieldDefById(kFieldVillage)?.type, FieldValueType.text);
+      expect(fieldDefById(kFieldHoursRun)?.type, FieldValueType.number);
+      expect(fieldDefById(kFieldAcres)?.type, FieldValueType.number);
+      expect(fieldDefById(kFieldTrialDate)?.type, FieldValueType.date);
+      expect(fieldDefById(kFieldDeliveryDate)?.type, FieldValueType.date);
+      expect(
+        fieldDefById(kFieldDevicePasswordNote)?.appliesTo(ResourceType.job),
+        isTrue,
+      );
     });
 
     test('resolveExtraFields filters by type and template ids', () {

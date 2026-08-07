@@ -1093,6 +1093,48 @@ class AppLocalizationsHi extends AppLocalizations {
   String get selectLinesToReturn => 'वापसी के लिए पंक्तियाँ चुनें';
 
   @override
+  String get returnByQuantityHint => 'प्रत्येक वस्तु के लिए वापसी संख्या चुनें';
+
+  @override
+  String skuIssuedReturnedRemaining(int issued, int returned, int remaining) {
+    return 'जारी $issued · वापस $returned · अभी बाहर $remaining';
+  }
+
+  @override
+  String get returnQtyLabel => 'वापसी संख्या';
+
+  @override
+  String get markRemainingLostAction => 'बाकी खोया चिह्नित करें';
+
+  @override
+  String get markSelectedLostAction => 'चयनित खोया चिह्नित करें';
+
+  @override
+  String get confirmMarkLostTitle => 'इकाइयाँ खोई चिह्नित करें?';
+
+  @override
+  String confirmMarkLostBody(int count) {
+    return '$count इकाई(याँ) बिना स्टॉक वापस किए बंद करें। अगर कुछ अभी बाहर है तो ऑर्डर खुला रहेगा।';
+  }
+
+  @override
+  String get confirmMarkLostAction => 'खोया चिह्नित करें';
+
+  @override
+  String unitsLostSnack(int count) {
+    return '$count इकाई(याँ) खोई चिह्नित।';
+  }
+
+  @override
+  String get lineLostLabel => 'खोया';
+
+  @override
+  String get lostLinesHeading => 'खोया';
+
+  @override
+  String get pickUnitsToReturn => 'वापसी के लिए इकाइयाँ चुनें';
+
+  @override
   String get openLinesHeading => 'बाहर';
 
   @override
@@ -1277,9 +1319,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String minMeaningfulTextError(int min) {
     return 'कम से कम $min अक्षर दर्ज करें।';
   }
-
-  @override
-  String get searchTypeMinChars => 'कम से कम 1 अक्षर लिखें';
 
   @override
   String get searchCustomersHint => 'नाम या फ़ोन से खोजें';
@@ -1735,6 +1774,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get timelineTitlePartialReturn => 'आंशिक वापसी';
 
   @override
+  String get timelineTitleUnitsLost => 'इकाइयाँ खोईं';
+
+  @override
   String get timelineTitleJobsCompleted => 'जॉब पूर्ण';
 
   @override
@@ -1751,9 +1793,6 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get timelineTitleRentalOpened => 'किराया खोला गया';
-
-  @override
-  String get timelineTitleIssued => 'जारी';
 
   @override
   String get timelineTitleStatusChanged => 'स्थिति बदली';
@@ -1790,6 +1829,20 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String timelineSubtitlePartialReturnLines(int returned, int total) {
     return '$total में से $returned पंक्तियाँ वापस।';
+  }
+
+  @override
+  String timelineSubtitlePartialReturnQty(
+    String summary,
+    int returned,
+    int total,
+  ) {
+    return 'वापस: $summary ($total में से $returned पंक्तियाँ)।';
+  }
+
+  @override
+  String timelineSubtitleUnitsLostQty(String summary, int count) {
+    return 'खोया चिह्नित: $summary ($count इकाइयाँ)।';
   }
 
   @override
@@ -1896,6 +1949,12 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get reportStatusReturnedBit => '[वापस]';
+
+  @override
+  String get reportStatusSoldBit => '[बिका]';
+
+  @override
+  String get reportStatusCompletedBit => '[पूर्ण]';
 
   @override
   String reportLinesPartialBit(int open, int returned) {

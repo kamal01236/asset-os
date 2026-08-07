@@ -628,6 +628,35 @@
   "returnAllAction": "Return all",
   "replaceLineAction": "Replace",
   "selectLinesToReturn": "Select lines to return",
+  "returnByQuantityHint": "Choose how many to return for each item",
+  "skuIssuedReturnedRemaining": "Issued {issued} · Returned {returned} · Still out {remaining}",
+  "@skuIssuedReturnedRemaining": {
+    "placeholders": {
+      "issued": {"type": "int"},
+      "returned": {"type": "int"},
+      "remaining": {"type": "int"}
+    }
+  },
+  "returnQtyLabel": "Return qty",
+  "markRemainingLostAction": "Mark remaining lost",
+  "markSelectedLostAction": "Mark selected lost",
+  "confirmMarkLostTitle": "Mark units lost?",
+  "confirmMarkLostBody": "Close {count} unit(s) without restoring stock. Order stays open if anything is still out.",
+  "@confirmMarkLostBody": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "confirmMarkLostAction": "Mark lost",
+  "unitsLostSnack": "Marked {count} unit(s) lost.",
+  "@unitsLostSnack": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "lineLostLabel": "Lost",
+  "lostLinesHeading": "Lost",
+  "pickUnitsToReturn": "Pick units to return",
   "openLinesHeading": "Out",
   "returnedLinesHeading": "Returned",
   "lineReturnedLabel": "Returned",
@@ -720,7 +749,6 @@
       "min": {"type": "int"}
     }
   },
-  "searchTypeMinChars": "Type at least 1 character",
   "searchCustomersHint": "Search by name or phone",
   "searchNoResults": "No matches",
   "dueDateOptionalLabel": "Due date optional",
@@ -962,13 +990,13 @@
   "timelineTitleJobOpened": "Job opened",
   "timelineTitleReturned": "Returned",
   "timelineTitlePartialReturn": "Partial return",
+  "timelineTitleUnitsLost": "Units lost",
   "timelineTitleJobsCompleted": "Jobs completed",
   "timelineTitleJobCompleted": "Job completed",
   "timelineTitleOrderCancelled": "Order cancelled",
   "timelineTitleNoteAdded": "Note added",
   "timelineTitleDueToday": "Due today",
   "timelineTitleRentalOpened": "Rental opened",
-  "timelineTitleIssued": "Issued",
   "timelineTitleStatusChanged": "Status changed",
 
   "timelineSubtitleCreatedOrderFlow": "Created from phone-first order flow.",
@@ -988,6 +1016,21 @@
     "placeholders": {
       "returned": {"type": "int"},
       "total": {"type": "int"}
+    }
+  },
+  "timelineSubtitlePartialReturnQty": "Returned {summary} ({returned} of {total} lines).",
+  "@timelineSubtitlePartialReturnQty": {
+    "placeholders": {
+      "summary": {"type": "String"},
+      "returned": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "timelineSubtitleUnitsLostQty": "Marked lost: {summary} ({count} units).",
+  "@timelineSubtitleUnitsLostQty": {
+    "placeholders": {
+      "summary": {"type": "String"},
+      "count": {"type": "int"}
     }
   },
   "timelineSubtitleAllJobsComplete": "All job lines marked complete.",
@@ -1099,6 +1142,8 @@
     }
   },
   "reportStatusReturnedBit": "[returned]",
+  "reportStatusSoldBit": "[sold]",
+  "reportStatusCompletedBit": "[completed]",
   "reportLinesPartialBit": " | lines {open} open/{returned} returned",
   "@reportLinesPartialBit": {
     "placeholders": {

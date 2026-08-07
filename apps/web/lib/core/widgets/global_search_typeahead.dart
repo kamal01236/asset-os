@@ -186,7 +186,6 @@ class _GlobalSearchTypeaheadState extends ConsumerState<GlobalSearchTypeahead> {
       controller: _controller,
       autofocus: widget.autofocus,
       hintText: widget.hintText ?? l10n.searchAnything,
-      minLengthHint: l10n.searchTypeMinChars,
       noResultsText: l10n.searchNoResults,
       suggestions: _suggestions,
       onQueryChanged: _onQueryChanged,

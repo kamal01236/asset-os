@@ -617,11 +617,22 @@ class LocalRepository {
 
       final bool allSold =
           lineFulfillments.every((LineFulfillment f) => f == LineFulfillment.sell);
+      final bool hasSell =
+          lineFulfillments.any((LineFulfillment f) => f == LineFulfillment.sell);
+      final bool hasRent =
+          lineFulfillments.any((LineFulfillment f) => f == LineFulfillment.rent);
+      final bool hasJob =
+          lineFulfillments.any((LineFulfillment f) => f == LineFulfillment.job);
       final OrderStatus orderStatus =
           allSold ? OrderStatus.completed : OrderStatus.open;
       final WorkflowDefinition workflow = activeWorkflow();
       final String workflowStatusId = allSold
-          ? workflow.terminal.id
+          ? terminalWorkflowStatusForOrder(
+              workflow: workflow,
+              hasRent: hasRent,
+              hasJob: hasJob,
+              hasSell: hasSell,
+            )
           : workflow.initial.id;
       int snapshotIndex = 0;
       for (var i = 0; i < lineOpenEndedFlags.length; i++) {
@@ -749,12 +760,6 @@ class LocalRepository {
         }
       }
 
-      final bool hasSell =
-          lineFulfillments.any((LineFulfillment f) => f == LineFulfillment.sell);
-      final bool hasRent =
-          lineFulfillments.any((LineFulfillment f) => f == LineFulfillment.rent);
-      final bool hasJob =
-          lineFulfillments.any((LineFulfillment f) => f == LineFulfillment.job);
       final String eventTitle;
       final String eventSubtitle;
       if (replacedFrom != null) {
@@ -824,6 +829,28 @@ class LocalRepository {
     return returnRentalLines(rentalId, openIds);
   }
 
+  /// Resolves [quantitiesByItemId] to open rent line ids (oldest first per SKU).
+  Future<RentalReturnResult?> returnRentalQuantities(
+    String rentalId,
+    Map<String, int> quantitiesByItemId, {
+    int? chargedTotalPaise,
+    String? note,
+  }) async {
+    final List<String> lineIds = await _resolveOpenRentLineIdsByQuantity(
+      rentalId,
+      quantitiesByItemId,
+    );
+    if (lineIds.isEmpty) {
+      return null;
+    }
+    return returnRentalLines(
+      rentalId,
+      lineIds,
+      chargedTotalPaise: chargedTotalPaise,
+      note: note,
+    );
+  }
+
   /// Settles selected open lines; closes parent when none remain open.
   ///
   /// [chargedTotalPaise] caps the batch total (remainder treated as discount).
@@ -831,6 +858,117 @@ class LocalRepository {
   Future<RentalReturnResult?> returnRentalLines(
     String rentalId,
     List<String> lineIds, {
+    int? chargedTotalPaise,
+    String? note,
+  }) async {
+    return _settleOpenRentLines(
+      rentalId: rentalId,
+      lineIds: lineIds,
+      disposition: ReturnDisposition.returned,
+      restoreStock: true,
+      chargedTotalPaise: chargedTotalPaise,
+      note: note,
+    );
+  }
+
+  /// Closes open rent lines as lost (no stock restore); same close rules.
+  Future<RentalReturnResult?> markRentalLinesLost(
+    String rentalId,
+    List<String> lineIds, {
+    int? chargedTotalPaise,
+    String? note,
+  }) async {
+    return _settleOpenRentLines(
+      rentalId: rentalId,
+      lineIds: lineIds,
+      disposition: ReturnDisposition.lost,
+      restoreStock: false,
+      chargedTotalPaise: chargedTotalPaise,
+      note: note,
+    );
+  }
+
+  /// Marks [quantitiesByItemId] open rent units lost (oldest first per SKU).
+  Future<RentalReturnResult?> markRentalQuantitiesLost(
+    String rentalId,
+    Map<String, int> quantitiesByItemId, {
+    int? chargedTotalPaise,
+    String? note,
+  }) async {
+    final List<String> lineIds = await _resolveOpenRentLineIdsByQuantity(
+      rentalId,
+      quantitiesByItemId,
+    );
+    if (lineIds.isEmpty) {
+      return null;
+    }
+    return markRentalLinesLost(
+      rentalId,
+      lineIds,
+      chargedTotalPaise: chargedTotalPaise,
+      note: note,
+    );
+  }
+
+  Future<List<String>> _resolveOpenRentLineIdsByQuantity(
+    String rentalId,
+    Map<String, int> quantitiesByItemId,
+  ) async {
+    if (quantitiesByItemId.isEmpty) {
+      return const <String>[];
+    }
+    final List<RentalItemRow> links = await (_db.select(_db.rentalItems)
+          ..where((t) => t.rentalId.equals(rentalId)))
+        .get();
+    final Map<String, List<RentalItemRow>> openByItem =
+        <String, List<RentalItemRow>>{};
+    for (final RentalItemRow link in links) {
+      if (link.returnedAt != null) {
+        continue;
+      }
+      if (LineFulfillment.parse(link.fulfillment) != LineFulfillment.rent) {
+        continue;
+      }
+      openByItem.putIfAbsent(link.itemId, () => <RentalItemRow>[]).add(link);
+    }
+    final List<String> resolved = <String>[];
+    for (final MapEntry<String, int> entry in quantitiesByItemId.entries) {
+      final int qty = entry.value;
+      if (qty <= 0) {
+        continue;
+      }
+      final List<RentalItemRow> open =
+          openByItem[entry.key] ?? const <RentalItemRow>[];
+      final int take = qty < open.length ? qty : open.length;
+      for (int i = 0; i < take; i++) {
+        resolved.add(open[i].id);
+      }
+    }
+    return resolved;
+  }
+
+  static String _itemQtySummary({
+    required List<RentalItemRow> lines,
+    required Map<String, String> catalogNames,
+  }) {
+    final Map<String, int> counts = <String, int>{};
+    for (final RentalItemRow link in lines) {
+      counts[link.itemId] = (counts[link.itemId] ?? 0) + 1;
+    }
+    final List<String> parts = <String>[];
+    for (final MapEntry<String, int> entry in counts.entries) {
+      final String name = catalogNames[entry.key] ?? entry.key;
+      parts.add(entry.value <= 1 ? name : '$name × ${entry.value}');
+    }
+    return parts.join(', ');
+  }
+
+  /// Shared settle path for return (stock restore) and lost (no restore).
+  Future<RentalReturnResult?> _settleOpenRentLines({
+    required String rentalId,
+    required List<String> lineIds,
+    required ReturnDisposition disposition,
+    required bool restoreStock,
     int? chargedTotalPaise,
     String? note,
   }) async {
@@ -858,7 +996,7 @@ class LocalRepository {
       final List<RentalItemRow> links = await (_db.select(_db.rentalItems)
             ..where((t) => t.rentalId.equals(rentalId)))
           .get();
-      final List<RentalItemRow> toReturn = links
+      final List<RentalItemRow> toSettle = links
           .where(
             (RentalItemRow link) =>
                 wanted.contains(link.id) &&
@@ -866,7 +1004,7 @@ class LocalRepository {
                 LineFulfillment.parse(link.fulfillment) == LineFulfillment.rent,
           )
           .toList();
-      if (toReturn.isEmpty) {
+      if (toSettle.isEmpty) {
         return null;
       }
 
@@ -876,10 +1014,14 @@ class LocalRepository {
       final List<({RentalItemRow link, InventoryItemRow? item, int base, int late})>
           computed =
           <({RentalItemRow link, InventoryItemRow? item, int base, int late})>[];
-      for (final RentalItemRow link in toReturn) {
+      final Map<String, String> catalogNames = <String, String>{};
+      for (final RentalItemRow link in toSettle) {
         final InventoryItemRow? item = await (_db.select(_db.inventoryItems)
               ..where((t) => t.id.equals(link.itemId)))
             .getSingleOrNull();
+        if (item != null) {
+          catalogNames[item.id] = item.name;
+        }
         final int lineBase;
         final int lineLate;
         if (rental.dueAt == null) {
@@ -915,7 +1057,7 @@ class LocalRepository {
 
       int batchTotal = 0;
       int batchDeposit = 0;
-      final List<String> returnedIds = <String>[];
+      final List<String> settledIds = <String>[];
       final Map<String, int> stockBump = <String, int>{};
 
       for (int i = 0; i < computed.length; i++) {
@@ -933,7 +1075,7 @@ class LocalRepository {
         depositRemaining -= lineDeposit;
         batchTotal += lineCharged;
         batchDeposit += lineDeposit;
-        returnedIds.add(link.id);
+        settledIds.add(link.id);
 
         await (_db.update(_db.rentalItems)..where((t) => t.id.equals(link.id)))
             .write(
@@ -942,10 +1084,11 @@ class LocalRepository {
             baseAmount: Value<int>(settled.base),
             lateAmount: Value<int>(settled.late),
             depositApplied: Value<int>(lineDeposit),
+            returnDisposition: Value<String?>(disposition.storageValue),
           ),
         );
 
-        if (item != null) {
+        if (restoreStock && item != null) {
           stockBump[item.id] = (stockBump[item.id] ?? 0) + 1;
         }
       }
@@ -994,8 +1137,25 @@ class LocalRepository {
       final OrderStatus nextStatus =
           noOpenWork ? OrderStatus.completed : OrderStatus.open;
       final WorkflowDefinition workflow = activeWorkflow();
+      final bool hasSell = refreshed.any(
+        (RentalItemRow l) =>
+            LineFulfillment.parse(l.fulfillment) == LineFulfillment.sell,
+      );
+      final bool hasRent = refreshed.any(
+        (RentalItemRow l) =>
+            LineFulfillment.parse(l.fulfillment) == LineFulfillment.rent,
+      );
+      final bool hasJob = refreshed.any(
+        (RentalItemRow l) =>
+            LineFulfillment.parse(l.fulfillment) == LineFulfillment.job,
+      );
       final String? nextWorkflow = noOpenWork
-          ? workflow.terminal.id
+          ? terminalWorkflowStatusForOrder(
+              workflow: workflow,
+              hasRent: hasRent,
+              hasJob: hasJob,
+              hasSell: hasSell,
+            )
           : effectiveWorkflowStatusId(
               stored: rental.workflowStatus,
               orderStatus: OrderStatus.open,
@@ -1017,17 +1177,32 @@ class LocalRepository {
         ),
       );
 
-      final String subtitleKey = noOpenWork
-          ? (parentLate > 0
-                ? TimelineSubtitleKey.allLinesReturnedLate
-                : TimelineSubtitleKey.allLinesReturned)
-          : TimelineSubtitleKey.partialReturnLines;
-      final List<String> subtitleArgs = noOpenWork
-          ? const <String>[]
-          : <String>[
-              '${returnedIds.length}',
-              '${refreshed.length}',
-            ];
+      final String itemSummary = _itemQtySummary(
+        lines: toSettle,
+        catalogNames: catalogNames,
+      );
+      final String titleKey;
+      final String subtitleKey;
+      final List<String> subtitleArgs;
+      if (disposition == ReturnDisposition.lost) {
+        titleKey = TimelineTitleKey.unitsLost;
+        subtitleKey = TimelineSubtitleKey.unitsLostQty;
+        subtitleArgs = <String>[itemSummary, '${settledIds.length}'];
+      } else if (noOpenWork) {
+        titleKey = TimelineTitleKey.returned;
+        subtitleKey = parentLate > 0
+            ? TimelineSubtitleKey.allLinesReturnedLate
+            : TimelineSubtitleKey.allLinesReturned;
+        subtitleArgs = const <String>[];
+      } else {
+        titleKey = TimelineTitleKey.partialReturn;
+        subtitleKey = TimelineSubtitleKey.partialReturnQty;
+        subtitleArgs = <String>[
+          itemSummary,
+          '${settledIds.length}',
+          '${refreshed.length}',
+        ];
+      }
       final String subtitle = encodeTimelineSubtitle(
         subtitleKey,
         args: subtitleArgs,
@@ -1038,9 +1213,7 @@ class LocalRepository {
       await _db.into(_db.rentalEvents).insert(
         RentalEventsCompanion.insert(
           rentalId: rentalId,
-          title: noOpenWork
-              ? TimelineTitleKey.returned
-              : TimelineTitleKey.partialReturn,
+          title: titleKey,
           subtitle: subtitle,
           at: now,
         ),
@@ -1052,14 +1225,14 @@ class LocalRepository {
           orderStatus: OrderStatus.open,
           workflow: workflow,
         );
-        if (fromStatus != workflow.terminal.id) {
+        if (fromStatus != nextWorkflow) {
           await _db.into(_db.rentalEvents).insert(
             RentalEventsCompanion.insert(
               rentalId: rentalId,
               title: TimelineTitleKey.statusChanged,
               subtitle: encodeTimelineSubtitle(
                 TimelineSubtitleKey.statusChanged,
-                args: <String>[fromStatus ?? '', workflow.terminal.id],
+                args: <String>[fromStatus ?? '', nextWorkflow ?? ''],
               ),
               at: now,
             ),
@@ -1067,13 +1240,15 @@ class LocalRepository {
         }
       }
 
+      final bool isLost = disposition == ReturnDisposition.lost;
       return RentalReturnResult(
         rentalId: rentalId,
         totalAmount: batchTotal,
         depositApplied: batchDeposit,
         depositBalanceAfter:
             (rental.depositAmount - parentDeposit).clamp(0, rental.depositAmount),
-        returnedLineIds: returnedIds,
+        returnedLineIds: isLost ? const <String>[] : settledIds,
+        lostLineIds: isLost ? settledIds : const <String>[],
         rentalClosed: noOpenWork,
       );
     });
@@ -1158,9 +1333,26 @@ class LocalRepository {
         orderStatus: OrderStatus.open,
         workflow: workflow,
       );
+      final bool hasSell = refreshed.any(
+        (RentalItemRow l) =>
+            LineFulfillment.parse(l.fulfillment) == LineFulfillment.sell,
+      );
+      final bool hasRent = refreshed.any(
+        (RentalItemRow l) =>
+            LineFulfillment.parse(l.fulfillment) == LineFulfillment.rent,
+      );
+      final bool hasJob = refreshed.any(
+        (RentalItemRow l) =>
+            LineFulfillment.parse(l.fulfillment) == LineFulfillment.job,
+      );
       final String? nextWorkflow;
       if (noOpenWork) {
-        nextWorkflow = workflow.terminal.id;
+        nextWorkflow = terminalWorkflowStatusForOrder(
+          workflow: workflow,
+          hasRent: hasRent,
+          hasJob: hasJob,
+          hasSell: hasSell,
+        );
       } else {
         final WorkflowStatus? advanced = workflow.immediateNext(fromStatus);
         nextWorkflow = advanced != null && !advanced.isTerminal
@@ -2640,6 +2832,12 @@ class LocalRepository {
               rateAmount: Value<int>(line.rateAmount),
               lateFeePerDay: Value<int>(line.lateFeePerDay),
               fulfillment: Value<String>(line.fulfillment.storageValue),
+              returnDisposition: Value<String?>(
+                line.returnDisposition?.storageValue ??
+                    (lineReturned != null && line.isRent
+                        ? ReturnDisposition.returned.storageValue
+                        : null),
+              ),
             ),
           );
         }
@@ -2787,6 +2985,7 @@ class LocalRepository {
           billingMode: BillingMode.parse(link.billingMode),
           rateAmount: link.rateAmount,
           fulfillment: LineFulfillment.parse(link.fulfillment),
+          returnDisposition: ReturnDisposition.parse(link.returnDisposition),
         ),
       );
     }

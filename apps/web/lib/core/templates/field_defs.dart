@@ -51,6 +51,15 @@ const String kExtraFieldIdsPrefsKey = 'asset_os_extra_field_ids';
 const String kFieldEstimatedDuration = 'estimated_duration';
 const String kFieldMaxVisits = 'max_visits';
 const String kFieldBarcode = 'barcode';
+const String kFieldImei = 'imei';
+const String kFieldMeasurements = 'measurements';
+const String kFieldDriverName = 'driver_name';
+const String kFieldVillage = 'village';
+const String kFieldHoursRun = 'hours_run';
+const String kFieldAcres = 'acres';
+const String kFieldTrialDate = 'trial_date';
+const String kFieldDeliveryDate = 'delivery_date';
+const String kFieldDevicePasswordNote = 'device_password_note';
 
 /// Starter defs for values that are not already first-class columns.
 const List<FieldDef> kFieldDefs = <FieldDef>[
@@ -84,6 +93,82 @@ const List<FieldDef> kFieldDefs = <FieldDef>[
       ResourceType.sale,
       ResourceType.loan,
     ],
+  ),
+  FieldDef(
+    id: kFieldImei,
+    type: FieldValueType.text,
+    labelEn: 'IMEI',
+    labelHi: 'IMEI',
+    resourceTypes: <ResourceType>[
+      ResourceType.job,
+      ResourceType.sale,
+    ],
+  ),
+  FieldDef(
+    id: kFieldMeasurements,
+    type: FieldValueType.text,
+    labelEn: 'Measurements',
+    labelHi: 'नाप',
+    resourceTypes: <ResourceType>[
+      ResourceType.job,
+      ResourceType.service,
+    ],
+  ),
+  FieldDef(
+    id: kFieldDriverName,
+    type: FieldValueType.text,
+    labelEn: 'Driver name',
+    labelHi: 'ड्राइवर का नाम',
+    resourceTypes: <ResourceType>[ResourceType.rental],
+  ),
+  FieldDef(
+    id: kFieldVillage,
+    type: FieldValueType.text,
+    labelEn: 'Village',
+    labelHi: 'गाँव',
+    resourceTypes: <ResourceType>[ResourceType.rental],
+  ),
+  FieldDef(
+    id: kFieldHoursRun,
+    type: FieldValueType.number,
+    labelEn: 'Hours run',
+    labelHi: 'चालू घंटे',
+    resourceTypes: <ResourceType>[ResourceType.rental],
+  ),
+  FieldDef(
+    id: kFieldAcres,
+    type: FieldValueType.number,
+    labelEn: 'Acres',
+    labelHi: 'एकड़',
+    resourceTypes: <ResourceType>[ResourceType.rental],
+  ),
+  FieldDef(
+    id: kFieldTrialDate,
+    type: FieldValueType.date,
+    labelEn: 'Trial date',
+    labelHi: 'ट्रायल तारीख',
+    resourceTypes: <ResourceType>[
+      ResourceType.job,
+      ResourceType.service,
+    ],
+  ),
+  FieldDef(
+    id: kFieldDeliveryDate,
+    type: FieldValueType.date,
+    labelEn: 'Delivery date',
+    labelHi: 'डिलीवरी तारीख',
+    resourceTypes: <ResourceType>[
+      ResourceType.job,
+      ResourceType.service,
+      ResourceType.sale,
+    ],
+  ),
+  FieldDef(
+    id: kFieldDevicePasswordNote,
+    type: FieldValueType.text,
+    labelEn: 'Device password note',
+    labelHi: 'डिवाइस पासवर्ड नोट',
+    resourceTypes: <ResourceType>[ResourceType.job],
   ),
 ];
 

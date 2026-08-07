@@ -1976,6 +1976,78 @@ abstract class AppLocalizations {
   /// **'Select lines to return'**
   String get selectLinesToReturn;
 
+  /// No description provided for @returnByQuantityHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose how many to return for each item'**
+  String get returnByQuantityHint;
+
+  /// No description provided for @skuIssuedReturnedRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'Issued {issued} · Returned {returned} · Still out {remaining}'**
+  String skuIssuedReturnedRemaining(int issued, int returned, int remaining);
+
+  /// No description provided for @returnQtyLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Return qty'**
+  String get returnQtyLabel;
+
+  /// No description provided for @markRemainingLostAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark remaining lost'**
+  String get markRemainingLostAction;
+
+  /// No description provided for @markSelectedLostAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark selected lost'**
+  String get markSelectedLostAction;
+
+  /// No description provided for @confirmMarkLostTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark units lost?'**
+  String get confirmMarkLostTitle;
+
+  /// No description provided for @confirmMarkLostBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Close {count} unit(s) without restoring stock. Order stays open if anything is still out.'**
+  String confirmMarkLostBody(int count);
+
+  /// No description provided for @confirmMarkLostAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark lost'**
+  String get confirmMarkLostAction;
+
+  /// No description provided for @unitsLostSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Marked {count} unit(s) lost.'**
+  String unitsLostSnack(int count);
+
+  /// No description provided for @lineLostLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Lost'**
+  String get lineLostLabel;
+
+  /// No description provided for @lostLinesHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Lost'**
+  String get lostLinesHeading;
+
+  /// No description provided for @pickUnitsToReturn.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick units to return'**
+  String get pickUnitsToReturn;
+
   /// No description provided for @openLinesHeading.
   ///
   /// In en, this message translates to:
@@ -2299,12 +2371,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Enter at least {min} characters.'**
   String minMeaningfulTextError(int min);
-
-  /// No description provided for @searchTypeMinChars.
-  ///
-  /// In en, this message translates to:
-  /// **'Type at least 1 character'**
-  String get searchTypeMinChars;
 
   /// No description provided for @searchCustomersHint.
   ///
@@ -3116,6 +3182,12 @@ abstract class AppLocalizations {
   /// **'Partial return'**
   String get timelineTitlePartialReturn;
 
+  /// No description provided for @timelineTitleUnitsLost.
+  ///
+  /// In en, this message translates to:
+  /// **'Units lost'**
+  String get timelineTitleUnitsLost;
+
   /// No description provided for @timelineTitleJobsCompleted.
   ///
   /// In en, this message translates to:
@@ -3151,12 +3223,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Rental opened'**
   String get timelineTitleRentalOpened;
-
-  /// No description provided for @timelineTitleIssued.
-  ///
-  /// In en, this message translates to:
-  /// **'Issued'**
-  String get timelineTitleIssued;
 
   /// No description provided for @timelineTitleStatusChanged.
   ///
@@ -3211,6 +3277,22 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Returned {returned} of {total} lines.'**
   String timelineSubtitlePartialReturnLines(int returned, int total);
+
+  /// No description provided for @timelineSubtitlePartialReturnQty.
+  ///
+  /// In en, this message translates to:
+  /// **'Returned {summary} ({returned} of {total} lines).'**
+  String timelineSubtitlePartialReturnQty(
+    String summary,
+    int returned,
+    int total,
+  );
+
+  /// No description provided for @timelineSubtitleUnitsLostQty.
+  ///
+  /// In en, this message translates to:
+  /// **'Marked lost: {summary} ({count} units).'**
+  String timelineSubtitleUnitsLostQty(String summary, int count);
 
   /// No description provided for @timelineSubtitleAllJobsComplete.
   ///
@@ -3355,6 +3437,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'[returned]'**
   String get reportStatusReturnedBit;
+
+  /// No description provided for @reportStatusSoldBit.
+  ///
+  /// In en, this message translates to:
+  /// **'[sold]'**
+  String get reportStatusSoldBit;
+
+  /// No description provided for @reportStatusCompletedBit.
+  ///
+  /// In en, this message translates to:
+  /// **'[completed]'**
+  String get reportStatusCompletedBit;
 
   /// No description provided for @reportLinesPartialBit.
   ///

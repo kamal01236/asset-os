@@ -253,7 +253,6 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
               child: ScopedSearchField(
                 controller: _searchController,
                 hintText: l10n.searchTransactionsHint,
-                minLengthHint: l10n.searchTypeMinChars,
                 noResultsText: l10n.searchNoResults,
                 suggestions: const <SearchSuggestion>[],
                 showSuggestionList: false,

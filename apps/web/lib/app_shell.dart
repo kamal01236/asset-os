@@ -35,7 +35,7 @@ import 'features/transactions/transactions_screen.dart';
 
 export 'features/home/home_screen.dart' show HomeScreen;
 export 'features/orders/new_order_flow_screen.dart'
-    show NewOrderFlowScreen, NewRentalFlowScreen;
+    show NewOrderFlowScreen;
 
 /// Registers [RentalDetailScreen] for New Order navigation (avoids circular import).
 void ensureRentalDetailNavRegistered() {
@@ -345,7 +345,6 @@ class _RentalsScreenState extends ConsumerState<RentalsScreen> {
             ScopedSearchField(
               controller: _searchController,
               hintText: l10n.searchOrdersHint,
-              minLengthHint: l10n.searchTypeMinChars,
               noResultsText: l10n.searchNoResults,
               suggestions: const <SearchSuggestion>[],
               showSuggestionList: false,
@@ -554,7 +553,6 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
             ScopedSearchField(
               controller: _searchController,
               hintText: l10n.searchInventoryHint,
-              minLengthHint: l10n.searchTypeMinChars,
               noResultsText: l10n.searchNoResults,
               suggestions: _suggestions,
               onQueryChanged: _onQueryChanged,
@@ -727,7 +725,6 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
         ScopedSearchField(
           controller: _searchController,
           hintText: l10n.searchCustomersHint,
-          minLengthHint: l10n.searchTypeMinChars,
           noResultsText: l10n.searchNoResults,
           suggestions: _suggestions,
           onQueryChanged: _onQueryChanged,
@@ -1026,6 +1023,87 @@ class GlobalActionsButton extends StatelessWidget {
   }
 }
 
+String _closedLineStatusLabel(AppLocalizations l10n, RentalLine line) {
+  if (line.isSell) {
+    return l10n.soldLineBadge;
+  }
+  if (line.isJob) {
+    return l10n.completedJobLineBadge;
+  }
+  if (line.isLost) {
+    return l10n.lineLostLabel;
+  }
+  return l10n.lineReturnedLabel;
+}
+
+String _closedLinesHeading(AppLocalizations l10n, List<RentalLine> closed) {
+  final bool anyRent = closed.any((RentalLine l) => l.isRent);
+  final bool anySell = closed.any((RentalLine l) => l.isSell);
+  final bool anyJob = closed.any((RentalLine l) => l.isJob);
+  final bool anyLost = closed.any((RentalLine l) => l.isLost);
+  final bool anyReturnedRent =
+      closed.any((RentalLine l) => l.isRent && !l.isLost);
+  if (anySell && !anyRent && !anyJob) {
+    return l10n.soldLineBadge;
+  }
+  if (anyJob && !anyRent && !anySell) {
+    return l10n.completedJobLineBadge;
+  }
+  if (anyLost && !anyReturnedRent && !anySell && !anyJob) {
+    return l10n.lostLinesHeading;
+  }
+  return l10n.returnedLinesHeading;
+}
+
+/// Open rent lines grouped by catalog item (SKU), preserving first-seen order.
+List<MapEntry<String, List<RentalLine>>> _groupRentLinesByItemId(
+  List<RentalLine> lines,
+) {
+  final Map<String, List<RentalLine>> grouped = <String, List<RentalLine>>{};
+  final List<String> order = <String>[];
+  for (final RentalLine line in lines) {
+    if (!grouped.containsKey(line.itemId)) {
+      order.add(line.itemId);
+      grouped[line.itemId] = <RentalLine>[];
+    }
+    grouped[line.itemId]!.add(line);
+  }
+  return order
+      .map(
+        (String itemId) => MapEntry<String, List<RentalLine>>(
+          itemId,
+          grouped[itemId]!,
+        ),
+      )
+      .toList();
+}
+
+List<String> _resolveReturnLineIds({
+  required Rental rental,
+  required Map<String, int> qtyByItemId,
+  required Set<String> selectedLineIds,
+  required Map<String, bool> identityRequiredByItemId,
+}) {
+  final Set<String> resolved = <String>{...selectedLineIds};
+  for (final MapEntry<String, int> entry in qtyByItemId.entries) {
+    if (identityRequiredByItemId[entry.key] ?? true) {
+      continue;
+    }
+    final int qty = entry.value;
+    if (qty <= 0) {
+      continue;
+    }
+    final List<RentalLine> open = rental.openRentLines
+        .where((RentalLine l) => l.itemId == entry.key)
+        .toList();
+    final int take = qty < open.length ? qty : open.length;
+    for (int i = 0; i < take; i++) {
+      resolved.add(open[i].id);
+    }
+  }
+  return resolved.toList();
+}
+
 class RentalDetailScreen extends ConsumerStatefulWidget {
   const RentalDetailScreen({
     required this.rentalId,
@@ -1041,12 +1119,19 @@ class RentalDetailScreen extends ConsumerStatefulWidget {
 class _RentalDetailScreenState extends ConsumerState<RentalDetailScreen> {
   final Set<String> _selectedRentLineIds = <String>{};
   final Set<String> _selectedJobLineIds = <String>{};
+  final Map<String, int> _returnQtyByItemId = <String, int>{};
 
   @override
   Widget build(BuildContext context) {
     final AppLocalizations l10n = context.l10n;
     final AsyncValue<List<Rental>> rentalsAsync = ref.watch(rentalsProvider);
     final AsyncValue<List<Customer>> customersAsync = ref.watch(customersProvider);
+    final List<InventoryItem> inventory =
+        ref.watch(inventoryProvider).asData?.value ?? const <InventoryItem>[];
+    final Map<String, bool> identityRequiredByItemId = <String, bool>{
+      for (final InventoryItem item in inventory)
+        item.id: item.requiresUnitIdentity,
+    };
 
     if (rentalsAsync.isLoading || customersAsync.isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -1064,7 +1149,10 @@ class _RentalDetailScreenState extends ConsumerState<RentalDetailScreen> {
       orderStatus: rental.orderStatus,
       workflow: workflow,
     );
-    final WorkflowStatus? workflowStatus = workflow.byId(workflowStatusId);
+    final WorkflowStatus? workflowStatus = resolveWorkflowStatusDisplay(
+      workflow: workflow,
+      statusId: workflowStatusId,
+    );
     final List<WorkflowStatus> nextStatuses =
         rental.isActive ? workflow.nextAllowed(workflowStatusId) : const <WorkflowStatus>[];
     final int lateShown = rental.lateAmountAsOf(now);
@@ -1080,6 +1168,14 @@ class _RentalDetailScreenState extends ConsumerState<RentalDetailScreen> {
         _selectedRentLineIds.where(openRentIds.contains).toSet();
     final Set<String> selectedJobIds =
         _selectedJobLineIds.where(openJobIds.contains).toSet();
+    final List<String> batchReturnIds = _resolveReturnLineIds(
+      rental: rental,
+      qtyByItemId: _returnQtyByItemId,
+      selectedLineIds: selectedRentIds,
+      identityRequiredByItemId: identityRequiredByItemId,
+    );
+    final List<MapEntry<String, List<RentalLine>>> openRentGroups =
+        _groupRentLinesByItemId(openRentLines);
 
     return Scaffold(
       appBar: AppBar(
@@ -1249,30 +1345,210 @@ class _RentalDetailScreenState extends ConsumerState<RentalDetailScreen> {
                   ],
                   if (rental.isActive && openRentLines.isNotEmpty) ...<Widget>[
                     const SizedBox(height: 4),
-                    Text(l10n.selectLinesToReturn),
-                    ...openRentLines.map((RentalLine line) {
-                      final bool selected = selectedRentIds.contains(line.id);
-                      final int lineTotal = line.totalAmountAsOf(
-                        rental.startedAt,
-                        rental.dueAt,
-                        now,
-                      );
-                      return CheckboxListTile(
-                        contentPadding: EdgeInsets.zero,
-                        dense: true,
-                        value: selected,
-                        onChanged: (bool? value) {
-                          setState(() {
-                            if (value == true) {
-                              _selectedRentLineIds.add(line.id);
-                            } else {
-                              _selectedRentLineIds.remove(line.id);
-                            }
-                          });
-                        },
-                        title: Text(line.displayLabel),
-                        subtitle: Text(
-                          '${l10n.lineOpenLabel} · ${formatMoney(lineTotal)}',
+                    Text(l10n.returnByQuantityHint),
+                    ...openRentGroups.map((MapEntry<String, List<RentalLine>> group) {
+                      final String itemId = group.key;
+                      final List<RentalLine> openGroup = group.value;
+                      final List<RentalLine> allForSku = rental.lines
+                          .where(
+                            (RentalLine l) =>
+                                l.itemId == itemId && l.isRent,
+                          )
+                          .toList();
+                      final int issued = allForSku.length;
+                      final int returnedCount =
+                          allForSku.where((RentalLine l) => !l.isOpen).length;
+                      final int remaining = openGroup.length;
+                      final String catalogName =
+                          openGroup.first.catalogName.trim().isEmpty
+                              ? itemId
+                              : openGroup.first.catalogName.trim();
+                      final bool needsIdentity =
+                          identityRequiredByItemId[itemId] ?? true;
+                      final int returnQty =
+                          (_returnQtyByItemId[itemId] ?? 0).clamp(0, remaining);
+
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 10),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Text(
+                              catalogName,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleSmall
+                                  ?.copyWith(fontWeight: FontWeight.w700),
+                            ),
+                            Text(
+                              l10n.skuIssuedReturnedRemaining(
+                                issued,
+                                returnedCount,
+                                remaining,
+                              ),
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                            if (needsIdentity) ...<Widget>[
+                              const SizedBox(height: 4),
+                              Text(
+                                l10n.pickUnitsToReturn,
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                              ...openGroup.map((RentalLine line) {
+                                  final bool selected =
+                                      selectedRentIds.contains(line.id);
+                                  final int lineTotal = line.totalAmountAsOf(
+                                    rental.startedAt,
+                                    rental.dueAt,
+                                    now,
+                                  );
+                                  return CheckboxListTile(
+                                    contentPadding: EdgeInsets.zero,
+                                    dense: true,
+                                    value: selected,
+                                    onChanged: (bool? value) {
+                                      setState(() {
+                                        if (value == true) {
+                                          _selectedRentLineIds.add(line.id);
+                                        } else {
+                                          _selectedRentLineIds.remove(line.id);
+                                        }
+                                      });
+                                    },
+                                    title: Text(line.displayLabel),
+                                    subtitle: Text(
+                                      '${l10n.lineOpenLabel} · ${formatMoney(lineTotal)}',
+                                    ),
+                                  );
+                                }),
+                              if (selectedRentIds.any(
+                                (String id) => openGroup
+                                    .any((RentalLine l) => l.id == id),
+                              ))
+                                Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: TextButton(
+                                    onPressed: () async {
+                                      final List<String> lostIds = openGroup
+                                          .where(
+                                            (RentalLine l) =>
+                                                selectedRentIds.contains(l.id),
+                                          )
+                                          .map((RentalLine l) => l.id)
+                                          .toList();
+                                      final bool done =
+                                          await _confirmAndMarkLinesLost(
+                                        context: context,
+                                        ref: ref,
+                                        rental: rental,
+                                        lineIds: lostIds,
+                                      );
+                                      if (!done || !mounted) {
+                                        return;
+                                      }
+                                      setState(() {
+                                        _selectedRentLineIds.removeAll(lostIds);
+                                      });
+                                      final Rental? updated = (await ref
+                                              .read(repositoryProvider)
+                                              .listRentals())
+                                          .cast<Rental?>()
+                                          .firstWhere(
+                                            (Rental? r) => r?.id == rental.id,
+                                            orElse: () => null,
+                                          );
+                                      if (!mounted) {
+                                        return;
+                                      }
+                                      if (updated == null || !updated.isActive) {
+                                        Navigator.of(this.context).pop();
+                                      }
+                                    },
+                                    child: Text(l10n.markSelectedLostAction),
+                                  ),
+                                ),
+                            ] else ...<Widget>[
+                              const SizedBox(height: 6),
+                              Row(
+                                children: <Widget>[
+                                  Text(l10n.returnQtyLabel),
+                                  const Spacer(),
+                                  IconButton(
+                                    tooltip: l10n.returnQtyLabel,
+                                    onPressed: returnQty <= 0
+                                        ? null
+                                        : () {
+                                            setState(() {
+                                              _returnQtyByItemId[itemId] =
+                                                  returnQty - 1;
+                                            });
+                                          },
+                                    icon: const Icon(
+                                      Icons.remove_circle_outline,
+                                    ),
+                                  ),
+                                  Text(
+                                    '$returnQty',
+                                    style:
+                                        Theme.of(context).textTheme.titleMedium,
+                                  ),
+                                  IconButton(
+                                    tooltip: l10n.returnQtyLabel,
+                                    onPressed: returnQty >= remaining
+                                        ? null
+                                        : () {
+                                            setState(() {
+                                              _returnQtyByItemId[itemId] =
+                                                  returnQty + 1;
+                                            });
+                                          },
+                                    icon: const Icon(Icons.add_circle_outline),
+                                  ),
+                                ],
+                              ),
+                              Align(
+                                alignment: Alignment.centerLeft,
+                                child: TextButton(
+                                  onPressed: remaining == 0
+                                      ? null
+                                      : () async {
+                                          final bool done =
+                                              await _confirmAndMarkLinesLost(
+                                            context: context,
+                                            ref: ref,
+                                            rental: rental,
+                                            lineIds: openGroup
+                                                .map((RentalLine l) => l.id)
+                                                .toList(),
+                                          );
+                                          if (!done || !mounted) {
+                                            return;
+                                          }
+                                          setState(() {
+                                            _returnQtyByItemId.remove(itemId);
+                                          });
+                                          final Rental? updated = (await ref
+                                                  .read(repositoryProvider)
+                                                  .listRentals())
+                                              .cast<Rental?>()
+                                              .firstWhere(
+                                                (Rental? r) =>
+                                                    r?.id == rental.id,
+                                                orElse: () => null,
+                                              );
+                                          if (!mounted) {
+                                            return;
+                                          }
+                                          if (updated == null ||
+                                              !updated.isActive) {
+                                            Navigator.of(this.context).pop();
+                                          }
+                                        },
+                                  child: Text(l10n.markRemainingLostAction),
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
                       );
                     }),
@@ -1305,7 +1581,7 @@ class _RentalDetailScreenState extends ConsumerState<RentalDetailScreen> {
                   if (closedLines.isNotEmpty) ...<Widget>[
                     const SizedBox(height: 8),
                     Text(
-                      l10n.returnedLinesHeading,
+                      _closedLinesHeading(l10n, closedLines),
                       style: Theme.of(context).textTheme.titleSmall,
                     ),
                     ...closedLines.map(
@@ -1313,11 +1589,7 @@ class _RentalDetailScreenState extends ConsumerState<RentalDetailScreen> {
                         padding: const EdgeInsets.only(bottom: 4, top: 4),
                         child: Text(
                           '• ${line.displayLabel} — '
-                          '${line.isSell
-                              ? l10n.soldLineBadge
-                              : line.isJob
-                                  ? l10n.completedJobLineBadge
-                                  : l10n.lineReturnedLabel} · '
+                          '${_closedLineStatusLabel(l10n, line)} · '
                           '${formatMoney(line.totalAmount)}'
                           '${line.depositApplied > 0 ? ' · ${l10n.depositAppliedLabel(formatMoney(line.depositApplied))}' : ''}',
                         ),
@@ -1383,15 +1655,14 @@ class _RentalDetailScreenState extends ConsumerState<RentalDetailScreen> {
                   if (rental.isActive && openRentLines.isNotEmpty) ...<Widget>[
                     Builder(
                       builder: (BuildContext context) {
-                        final List<RentalLine> settleLines =
-                            selectedRentIds.isEmpty
-                                ? openRentLines
-                                : openRentLines
-                                    .where(
-                                      (RentalLine l) =>
-                                          selectedRentIds.contains(l.id),
-                                    )
-                                    .toList();
+                        final List<RentalLine> settleLines = batchReturnIds.isEmpty
+                            ? openRentLines
+                            : openRentLines
+                                .where(
+                                  (RentalLine l) =>
+                                      batchReturnIds.contains(l.id),
+                                )
+                                .toList();
                         int previewTotal = 0;
                         for (final RentalLine line in settleLines) {
                           previewTotal += line.totalAmountAsOf(
@@ -1580,7 +1851,7 @@ class _RentalDetailScreenState extends ConsumerState<RentalDetailScreen> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: FilledButton(
-                      onPressed: selectedRentIds.isEmpty
+                      onPressed: batchReturnIds.isEmpty
                           ? null
                           : () async {
                               final bool done = await _confirmAndReturnRental(
@@ -1588,7 +1859,7 @@ class _RentalDetailScreenState extends ConsumerState<RentalDetailScreen> {
                                 ref: ref,
                                 rental: rental,
                                 customer: customer,
-                                lineIds: selectedRentIds.toList(),
+                                lineIds: batchReturnIds,
                               );
                               if (!done || !mounted) {
                                 return;
@@ -1607,7 +1878,10 @@ class _RentalDetailScreenState extends ConsumerState<RentalDetailScreen> {
                               if (updated == null || !updated.isActive) {
                                 Navigator.of(this.context).pop();
                               } else {
-                                setState(() => _selectedRentLineIds.clear());
+                                setState(() {
+                                  _selectedRentLineIds.clear();
+                                  _returnQtyByItemId.clear();
+                                });
                               }
                             },
                       child: Text(l10n.returnSelectedAction),
@@ -3076,6 +3350,70 @@ String _returnSettlementSnack(AppLocalizations l10n, RentalReturnResult result) 
     formatMoney(result.depositApplied),
     formatMoney(result.depositBalanceAfter),
   );
+}
+
+Future<bool> _confirmAndMarkLinesLost({
+  required BuildContext context,
+  required WidgetRef ref,
+  required Rental rental,
+  required List<String> lineIds,
+}) async {
+  final AppLocalizations l10n = context.l10n;
+  final Set<String> wanted = lineIds.toSet();
+  final List<RentalLine> targets = rental.openRentLines
+      .where((RentalLine l) => wanted.contains(l.id))
+      .toList();
+  if (targets.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l10n.noLinesSelected)),
+    );
+    return false;
+  }
+
+  final bool? confirmed = await showDialog<bool>(
+    context: context,
+    builder: (BuildContext dialogContext) {
+      return AlertDialog(
+        title: Text(l10n.confirmMarkLostTitle),
+        content: Text(l10n.confirmMarkLostBody(targets.length)),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(l10n.confirmMarkLostAction),
+          ),
+        ],
+      );
+    },
+  );
+  if (confirmed != true || !context.mounted) {
+    return false;
+  }
+
+  final RentalReturnResult? result = await ref
+      .read(repositoryProvider)
+      .markRentalLinesLost(
+        rental.id,
+        targets.map((RentalLine l) => l.id).toList(),
+      );
+  if (!context.mounted) {
+    return result != null;
+  }
+  if (result == null) {
+    return false;
+  }
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(
+        '${l10n.unitsLostSnack(result.lostLineIds.length)} '
+        '${_returnSettlementSnack(l10n, result)}',
+      ),
+    ),
+  );
+  return true;
 }
 
 Future<bool> _confirmAndCompleteJobs({

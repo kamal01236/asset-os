@@ -301,6 +301,233 @@ void main() {
       expect(returnEvent.subtitle, contains('d:'));
       expect(returnEvent.subtitle, contains('Staff goodwill'));
     });
+
+    test('returnRentalQuantities multi-step by itemId; last closes', () async {
+      final LocalRepository repository = await bootRepo();
+      final Customer customer = await ensureCustomer(repository);
+
+      await repository.addInventory(
+        name: 'Scaffold',
+        category: 'Construction',
+        units: 10,
+        billingMode: BillingMode.fixed,
+        rateAmount: 1000,
+        requiresUnitIdentity: false,
+      );
+      final InventoryItem scaffold = (await repository.listInventory())
+          .firstWhere((InventoryItem i) => i.name == 'Scaffold');
+
+      await repository.createRental(
+        customer: customer,
+        lines: List<RentalLineInput>.generate(
+          10,
+          (int i) => RentalLineInput(
+            itemId: scaffold.id,
+            instanceName: 'Unit ${i + 1}',
+            shortCode: 'SC-${i + 1}',
+          ),
+        ),
+      );
+      final Rental created = (await repository.listRentals()).first;
+      expect(created.openRentLines, hasLength(10));
+
+      final RentalReturnResult? first = await repository.returnRentalQuantities(
+        created.id,
+        <String, int>{scaffold.id: 3},
+      );
+      expect(first, isNotNull);
+      expect(first!.rentalClosed, isFalse);
+      expect(first.returnedLineIds, hasLength(3));
+
+      Rental mid = (await repository.listRentals())
+          .firstWhere((Rental r) => r.id == created.id);
+      expect(mid.openRentLines, hasLength(7));
+      expect(mid.returnedLines, hasLength(3));
+      expect(
+        mid.returnedLines.every(
+          (RentalLine l) =>
+              l.returnDisposition == ReturnDisposition.returned,
+        ),
+        isTrue,
+      );
+
+      InventoryItem stock = (await repository.listInventory())
+          .firstWhere((InventoryItem i) => i.id == scaffold.id);
+      expect(stock.availableUnits, 3);
+
+      final RentalEvent partialEvent = mid.timeline.firstWhere(
+        (RentalEvent e) => e.title == TimelineTitleKey.partialReturn,
+      );
+      expect(
+        partialEvent.subtitle,
+        startsWith(TimelineSubtitleKey.partialReturnQty),
+      );
+      expect(partialEvent.subtitle, contains('Scaffold × 3'));
+
+      final RentalReturnResult? second = await repository.returnRentalQuantities(
+        created.id,
+        <String, int>{scaffold.id: 4},
+      );
+      expect(second!.rentalClosed, isFalse);
+      expect(second.returnedLineIds, hasLength(4));
+
+      mid = (await repository.listRentals())
+          .firstWhere((Rental r) => r.id == created.id);
+      expect(mid.openRentLines, hasLength(3));
+      expect(
+        mid.timeline
+            .where((RentalEvent e) => e.title == TimelineTitleKey.partialReturn)
+            .length,
+        2,
+      );
+
+      final RentalReturnResult? last = await repository.returnRentalQuantities(
+        created.id,
+        <String, int>{scaffold.id: 3},
+      );
+      expect(last!.rentalClosed, isTrue);
+
+      final Rental closed = (await repository.listRentals())
+          .firstWhere((Rental r) => r.id == created.id);
+      expect(closed.isActive, isFalse);
+      expect(closed.openRentLines, isEmpty);
+      stock = (await repository.listInventory())
+          .firstWhere((InventoryItem i) => i.id == scaffold.id);
+      expect(stock.availableUnits, 10);
+    });
+
+    test('mark lost short-closes without stock restore', () async {
+      final LocalRepository repository = await bootRepo();
+      final Customer customer = await ensureCustomer(repository);
+
+      await repository.addInventory(
+        name: 'Pipe',
+        category: 'Construction',
+        units: 5,
+        billingMode: BillingMode.fixed,
+        rateAmount: 2000,
+        requiresUnitIdentity: false,
+      );
+      final InventoryItem pipe = (await repository.listInventory())
+          .firstWhere((InventoryItem i) => i.name == 'Pipe');
+
+      await repository.createRental(
+        customer: customer,
+        lines: List<RentalLineInput>.generate(
+          5,
+          (int i) => RentalLineInput(
+            itemId: pipe.id,
+            instanceName: 'Pipe ${i + 1}',
+            shortCode: 'PP-${i + 1}',
+          ),
+        ),
+      );
+      final Rental rental = (await repository.listRentals()).first;
+
+      await repository.returnRentalQuantities(
+        rental.id,
+        <String, int>{pipe.id: 3},
+      );
+      InventoryItem stock = (await repository.listInventory())
+          .firstWhere((InventoryItem i) => i.id == pipe.id);
+      expect(stock.availableUnits, 3);
+
+      final RentalReturnResult? lost = await repository.markRentalQuantitiesLost(
+        rental.id,
+        <String, int>{pipe.id: 2},
+      );
+      expect(lost, isNotNull);
+      expect(lost!.rentalClosed, isTrue);
+      expect(lost.lostLineIds, hasLength(2));
+      expect(lost.returnedLineIds, isEmpty);
+
+      stock = (await repository.listInventory())
+          .firstWhere((InventoryItem i) => i.id == pipe.id);
+      expect(stock.availableUnits, 3);
+
+      final Rental closed = (await repository.listRentals())
+          .firstWhere((Rental r) => r.id == rental.id);
+      expect(closed.isActive, isFalse);
+      expect(
+        closed.lines.where((RentalLine l) => l.isLost),
+        hasLength(2),
+      );
+      expect(
+        closed.timeline.any(
+          (RentalEvent e) => e.title == TimelineTitleKey.unitsLost,
+        ),
+        isTrue,
+      );
+      final RentalEvent lostEvent = closed.timeline.firstWhere(
+        (RentalEvent e) => e.title == TimelineTitleKey.unitsLost,
+      );
+      expect(
+        lostEvent.subtitle,
+        startsWith(TimelineSubtitleKey.unitsLostQty),
+      );
+      expect(lostEvent.subtitle, contains('Pipe × 2'));
+    });
+
+    test('identity-required items still return by explicit line ids', () async {
+      final LocalRepository repository = await bootRepo();
+      final Customer customer = await ensureCustomer(repository);
+
+      await repository.addInventory(
+        name: 'Camera',
+        category: 'AV',
+        units: 3,
+        billingMode: BillingMode.fixed,
+        rateAmount: 5000,
+        requiresUnitIdentity: true,
+      );
+      final InventoryItem camera = (await repository.listInventory())
+          .firstWhere((InventoryItem i) => i.name == 'Camera');
+
+      await repository.createRental(
+        customer: customer,
+        lines: <RentalLineInput>[
+          RentalLineInput(
+            itemId: camera.id,
+            instanceName: 'Body A',
+            shortCode: 'CAM-A',
+          ),
+          RentalLineInput(
+            itemId: camera.id,
+            instanceName: 'Body B',
+            shortCode: 'CAM-B',
+          ),
+          RentalLineInput(
+            itemId: camera.id,
+            instanceName: 'Body C',
+            shortCode: 'CAM-C',
+          ),
+        ],
+      );
+      final Rental rental = (await repository.listRentals()).first;
+      final String lineB = rental.openRentLines
+          .firstWhere((RentalLine l) => l.shortCode == 'CAM-B')
+          .id;
+
+      final RentalReturnResult? first = await repository.returnRentalLines(
+        rental.id,
+        <String>[lineB],
+      );
+      expect(first!.returnedLineIds, <String>[lineB]);
+      expect(first.rentalClosed, isFalse);
+
+      Rental mid = (await repository.listRentals())
+          .firstWhere((Rental r) => r.id == rental.id);
+      expect(
+        mid.openRentLines.map((RentalLine l) => l.shortCode).toList()..sort(),
+        <String>['CAM-A', 'CAM-C'],
+      );
+
+      final RentalReturnResult? rest = await repository.returnRentalLines(
+        rental.id,
+        mid.openRentLines.map((RentalLine l) => l.id).toList(),
+      );
+      expect(rest!.rentalClosed, isTrue);
+    });
   });
 
   group('cancel order', () {

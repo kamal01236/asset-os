@@ -25,7 +25,7 @@ const List<HomeModuleId> kDefaultHomeModules = <HomeModuleId>[
   HomeModuleId.needsAttention,
 ];
 
-/// Pure rental packs (camera, farm, event, tools, office).
+/// Pure rental packs (camera, farm, event, decor, temple, tools, office).
 const List<HomeModuleId> kRentalHomeModules = kDefaultHomeModules;
 
 /// Library template adds recent activity for borrow/return tracking feel.

@@ -12,6 +12,7 @@ abstract final class TimelineTitleKey {
   static const jobOpened = 'job_opened';
   static const returned = 'returned';
   static const partialReturn = 'partial_return';
+  static const unitsLost = 'units_lost';
   static const jobsCompleted = 'jobs_completed';
   static const jobCompleted = 'job_completed';
   static const orderCancelled = 'order_cancelled';
@@ -31,6 +32,8 @@ abstract final class TimelineSubtitleKey {
   static const allLinesReturned = 'all_lines_returned';
   static const allLinesReturnedLate = 'all_lines_returned_late';
   static const partialReturnLines = 'partial_return_lines';
+  static const partialReturnQty = 'partial_return_qty';
+  static const unitsLostQty = 'units_lost_qty';
   static const allJobsComplete = 'all_jobs_complete';
   static const jobsCompletedCount = 'jobs_completed_count';
   static const cancelSettlement = 'cancel_settlement';
@@ -83,6 +86,9 @@ String localizeTimelineTitle(AppLocalizations l10n, String raw) {
     case TimelineTitleKey.partialReturn:
     case 'Partial return':
       return l10n.timelineTitlePartialReturn;
+    case TimelineTitleKey.unitsLost:
+    case 'Units lost':
+      return l10n.timelineTitleUnitsLost;
     case TimelineTitleKey.jobsCompleted:
     case 'Jobs completed':
       return l10n.timelineTitleJobsCompleted;
@@ -213,6 +219,25 @@ String? _subtitleForKey(
         return null;
       }
       return l10n.timelineSubtitlePartialReturnLines(returned, total);
+    case TimelineSubtitleKey.partialReturnQty:
+      if (args.length < 3) {
+        return null;
+      }
+      final int? returned = int.tryParse(args[1]);
+      final int? total = int.tryParse(args[2]);
+      if (returned == null || total == null) {
+        return null;
+      }
+      return l10n.timelineSubtitlePartialReturnQty(args[0], returned, total);
+    case TimelineSubtitleKey.unitsLostQty:
+      if (args.length < 2) {
+        return null;
+      }
+      final int? count = int.tryParse(args[1]);
+      if (count == null) {
+        return null;
+      }
+      return l10n.timelineSubtitleUnitsLostQty(args[0], count);
     case TimelineSubtitleKey.allJobsComplete:
       return l10n.timelineSubtitleAllJobsComplete;
     case TimelineSubtitleKey.jobsCompletedCount:

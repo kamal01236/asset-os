@@ -1091,6 +1091,48 @@ class AppLocalizationsEn extends AppLocalizations {
   String get selectLinesToReturn => 'Select lines to return';
 
   @override
+  String get returnByQuantityHint => 'Choose how many to return for each item';
+
+  @override
+  String skuIssuedReturnedRemaining(int issued, int returned, int remaining) {
+    return 'Issued $issued · Returned $returned · Still out $remaining';
+  }
+
+  @override
+  String get returnQtyLabel => 'Return qty';
+
+  @override
+  String get markRemainingLostAction => 'Mark remaining lost';
+
+  @override
+  String get markSelectedLostAction => 'Mark selected lost';
+
+  @override
+  String get confirmMarkLostTitle => 'Mark units lost?';
+
+  @override
+  String confirmMarkLostBody(int count) {
+    return 'Close $count unit(s) without restoring stock. Order stays open if anything is still out.';
+  }
+
+  @override
+  String get confirmMarkLostAction => 'Mark lost';
+
+  @override
+  String unitsLostSnack(int count) {
+    return 'Marked $count unit(s) lost.';
+  }
+
+  @override
+  String get lineLostLabel => 'Lost';
+
+  @override
+  String get lostLinesHeading => 'Lost';
+
+  @override
+  String get pickUnitsToReturn => 'Pick units to return';
+
+  @override
   String get openLinesHeading => 'Out';
 
   @override
@@ -1276,9 +1318,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String minMeaningfulTextError(int min) {
     return 'Enter at least $min characters.';
   }
-
-  @override
-  String get searchTypeMinChars => 'Type at least 1 character';
 
   @override
   String get searchCustomersHint => 'Search by name or phone';
@@ -1736,6 +1775,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get timelineTitlePartialReturn => 'Partial return';
 
   @override
+  String get timelineTitleUnitsLost => 'Units lost';
+
+  @override
   String get timelineTitleJobsCompleted => 'Jobs completed';
 
   @override
@@ -1752,9 +1794,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get timelineTitleRentalOpened => 'Rental opened';
-
-  @override
-  String get timelineTitleIssued => 'Issued';
 
   @override
   String get timelineTitleStatusChanged => 'Status changed';
@@ -1790,6 +1829,20 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String timelineSubtitlePartialReturnLines(int returned, int total) {
     return 'Returned $returned of $total lines.';
+  }
+
+  @override
+  String timelineSubtitlePartialReturnQty(
+    String summary,
+    int returned,
+    int total,
+  ) {
+    return 'Returned $summary ($returned of $total lines).';
+  }
+
+  @override
+  String timelineSubtitleUnitsLostQty(String summary, int count) {
+    return 'Marked lost: $summary ($count units).';
   }
 
   @override
@@ -1897,6 +1950,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reportStatusReturnedBit => '[returned]';
+
+  @override
+  String get reportStatusSoldBit => '[sold]';
+
+  @override
+  String get reportStatusCompletedBit => '[completed]';
 
   @override
   String reportLinesPartialBit(int open, int returned) {

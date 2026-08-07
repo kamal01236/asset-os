@@ -8,6 +8,7 @@ import 'package:asset_os/core/models/entities.dart';
 import 'package:asset_os/core/reports/report_widgets.dart';
 import 'package:asset_os/core/repositories/local_repository.dart';
 import 'package:asset_os/core/templates/industry_templates.dart';
+import 'package:asset_os/core/templates/workflows.dart';
 
 import 'support/test_harness.dart';
 
@@ -167,6 +168,8 @@ void main() {
         <ResourceType>[
           ResourceType.service,
           ResourceType.job,
+          ResourceType.membership,
+          ResourceType.sale,
           ResourceType.rental,
         ],
       );
@@ -206,6 +209,8 @@ void main() {
         'camera',
         'farm',
         'event',
+        'marriage_decor',
+        'birthday_decor',
         'construction',
         'office',
       ]) {
@@ -217,6 +222,126 @@ void main() {
           reason: id,
         );
       }
+    });
+
+    test('household packs resolve with expected workflows and fields', () {
+      const List<String> householdIds = <String>[
+        'marriage_decor',
+        'birthday_decor',
+        'farm',
+        'temple',
+        'mobile_repair',
+        'laptop_repair',
+        'tailor',
+        'parlour',
+        'salon',
+      ];
+      expect(
+        kIndustryTemplates.map((IndustryTemplate t) => t.id),
+        containsAll(householdIds),
+      );
+
+      final IndustryTemplate marriage = industryTemplateById('marriage_decor')!;
+      expect(marriage.name, 'Marriage Decorations');
+      expect(marriage.nameHi, isNotEmpty);
+      expect(marriage.descriptionHi, isNotEmpty);
+      expect(marriage.workflowId, kRentalWorkflowId);
+      expect(marriage.items, isNotEmpty);
+
+      final IndustryTemplate birthday = industryTemplateById('birthday_decor')!;
+      expect(birthday.name, 'Birthday Decorations');
+      expect(birthday.workflowId, kRentalWorkflowId);
+
+      final IndustryTemplate farm = industryTemplateById('farm')!;
+      expect(
+        farm.extraFieldIds,
+        containsAll(<String>[
+          'driver_name',
+          'village',
+          'hours_run',
+          'acres',
+        ]),
+      );
+      expect(
+        farm.items.map((TemplateInventoryItem i) => i.name),
+        containsAll(<String>['Tractor', 'Harvester', 'Water Tanker']),
+      );
+
+      final IndustryTemplate temple = industryTemplateById('temple')!;
+      expect(temple.workflowId, kRentalWorkflowId);
+      expect(
+        temple.enabledResourceTypes,
+        <ResourceType>[ResourceType.rental, ResourceType.sale],
+      );
+
+      final IndustryTemplate mobile = industryTemplateById('mobile_repair')!;
+      expect(mobile.workflowId, kJobWorkflowId);
+      expect(mobile.extraFieldIds, contains('imei'));
+      expect(
+        mobile.enabledResourceTypes,
+        <ResourceType>[ResourceType.job, ResourceType.sale],
+      );
+
+      final IndustryTemplate laptop = industryTemplateById('laptop_repair')!;
+      expect(laptop.workflowId, kJobWorkflowId);
+      expect(laptop.extraFieldIds, contains('device_password_note'));
+
+      final IndustryTemplate tailor = industryTemplateById('tailor')!;
+      expect(tailor.workflowId, kJobWorkflowId);
+      expect(
+        tailor.extraFieldIds,
+        containsAll(<String>['measurements', 'trial_date', 'delivery_date']),
+      );
+
+      final IndustryTemplate parlour = industryTemplateById('parlour')!;
+      expect(
+        parlour.enabledResourceTypes,
+        containsAll(<ResourceType>[
+          ResourceType.service,
+          ResourceType.membership,
+          ResourceType.sale,
+        ]),
+      );
+      expect(parlour.nameHi, isNotEmpty);
+
+      final IndustryTemplate salon = industryTemplateById('salon')!;
+      expect(
+        salon.enabledResourceTypes,
+        containsAll(<ResourceType>[
+          ResourceType.service,
+          ResourceType.membership,
+          ResourceType.sale,
+        ]),
+      );
+    });
+
+    test('activate apply smoke for rental and job household packs', () async {
+      final LocalRepository repo = await bootRepo(seedDemo: false);
+
+      final IndustryTemplate marriage = industryTemplateById('marriage_decor')!;
+      await repo.completeIndustryOnboarding(marriage);
+      expect(await repo.selectedIndustryTemplateId(), 'marriage_decor');
+      expect(repo.enabledResourceTypes(), <ResourceType>[ResourceType.rental]);
+      expect(repo.extraFieldIds(), contains('barcode'));
+      expect((await repo.listInventory()).length, marriage.items.length);
+
+      final IndustryTemplate mobile = industryTemplateById('mobile_repair')!;
+      await repo.activateIndustryTemplate(mobile);
+      expect(await repo.selectedIndustryTemplateId(), 'mobile_repair');
+      expect(
+        repo.enabledResourceTypes(),
+        <ResourceType>[ResourceType.job, ResourceType.sale],
+      );
+      expect(repo.extraFieldIds(), contains('imei'));
+      // Switch does not wipe prior inventory; optional import is separate.
+      expect(
+        (await repo.listInventory()).length,
+        greaterThanOrEqualTo(marriage.items.length),
+      );
+
+      final TemplateImportResult imported =
+          await repo.importTemplateInventory(mobile.items);
+      expect(imported.added, mobile.items.length);
     });
 
     test('library enables rental and loan with library home modules', () {
@@ -318,11 +443,17 @@ void main() {
           inventory.firstWhere((InventoryItem i) => i.name == 'Facial');
       final InventoryItem steamer =
           inventory.firstWhere((InventoryItem i) => i.name == 'Steamer Kit');
+      final InventoryItem membership = inventory
+          .firstWhere((InventoryItem i) => i.name == 'Monthly Membership');
+      final InventoryItem hairOil =
+          inventory.firstWhere((InventoryItem i) => i.name == 'Hair Oil');
 
       expect(facial.defaultItemKind, ResourceType.service);
       expect(facial.requiresUnitIdentity, isFalse);
       expect(steamer.defaultItemKind, ResourceType.rental);
       expect(steamer.requiresUnitIdentity, isFalse);
+      expect(membership.defaultItemKind, ResourceType.membership);
+      expect(hairOil.defaultItemKind, ResourceType.sale);
     });
 
     test('gym pack seeds membership and sale day pass', () async {

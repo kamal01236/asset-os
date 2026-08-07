@@ -168,7 +168,6 @@ void main() {
         Scaffold(
           body: ScopedSearchField(
             hintText: 'Search',
-            minLengthHint: 'Type at least 1 character',
             noResultsText: 'No matches',
             suggestions: const <SearchSuggestion>[],
             onQueryChanged: (_) {},

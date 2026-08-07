@@ -2673,6 +2673,18 @@ class $RentalItemsTable extends RentalItems
     requiredDuringInsert: false,
     defaultValue: const Constant('rent'),
   );
+  static const VerificationMeta _returnDispositionMeta = const VerificationMeta(
+    'returnDisposition',
+  );
+  @override
+  late final GeneratedColumn<String> returnDisposition =
+      GeneratedColumn<String>(
+        'return_disposition',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -2688,6 +2700,7 @@ class $RentalItemsTable extends RentalItems
     rateAmount,
     lateFeePerDay,
     fulfillment,
+    returnDisposition,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2797,6 +2810,15 @@ class $RentalItemsTable extends RentalItems
         ),
       );
     }
+    if (data.containsKey('return_disposition')) {
+      context.handle(
+        _returnDispositionMeta,
+        returnDisposition.isAcceptableOrUnknown(
+          data['return_disposition']!,
+          _returnDispositionMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -2858,6 +2880,10 @@ class $RentalItemsTable extends RentalItems
         DriftSqlType.string,
         data['${effectivePrefix}fulfillment'],
       )!,
+      returnDisposition: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}return_disposition'],
+      ),
     );
   }
 
@@ -2902,6 +2928,9 @@ class RentalItemRow extends DataClass implements Insertable<RentalItemRow> {
 
   /// `rent` | `sell` — how this line was issued.
   final String fulfillment;
+
+  /// How a closed rent line settled: `returned` | `lost` (null on open / legacy).
+  final String? returnDisposition;
   const RentalItemRow({
     required this.id,
     required this.rentalId,
@@ -2916,6 +2945,7 @@ class RentalItemRow extends DataClass implements Insertable<RentalItemRow> {
     required this.rateAmount,
     required this.lateFeePerDay,
     required this.fulfillment,
+    this.returnDisposition,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2935,6 +2965,9 @@ class RentalItemRow extends DataClass implements Insertable<RentalItemRow> {
     map['rate_amount'] = Variable<int>(rateAmount);
     map['late_fee_per_day'] = Variable<int>(lateFeePerDay);
     map['fulfillment'] = Variable<String>(fulfillment);
+    if (!nullToAbsent || returnDisposition != null) {
+      map['return_disposition'] = Variable<String>(returnDisposition);
+    }
     return map;
   }
 
@@ -2955,6 +2988,9 @@ class RentalItemRow extends DataClass implements Insertable<RentalItemRow> {
       rateAmount: Value(rateAmount),
       lateFeePerDay: Value(lateFeePerDay),
       fulfillment: Value(fulfillment),
+      returnDisposition: returnDisposition == null && nullToAbsent
+          ? const Value.absent()
+          : Value(returnDisposition),
     );
   }
 
@@ -2977,6 +3013,9 @@ class RentalItemRow extends DataClass implements Insertable<RentalItemRow> {
       rateAmount: serializer.fromJson<int>(json['rateAmount']),
       lateFeePerDay: serializer.fromJson<int>(json['lateFeePerDay']),
       fulfillment: serializer.fromJson<String>(json['fulfillment']),
+      returnDisposition: serializer.fromJson<String?>(
+        json['returnDisposition'],
+      ),
     );
   }
   @override
@@ -2996,6 +3035,7 @@ class RentalItemRow extends DataClass implements Insertable<RentalItemRow> {
       'rateAmount': serializer.toJson<int>(rateAmount),
       'lateFeePerDay': serializer.toJson<int>(lateFeePerDay),
       'fulfillment': serializer.toJson<String>(fulfillment),
+      'returnDisposition': serializer.toJson<String?>(returnDisposition),
     };
   }
 
@@ -3013,6 +3053,7 @@ class RentalItemRow extends DataClass implements Insertable<RentalItemRow> {
     int? rateAmount,
     int? lateFeePerDay,
     String? fulfillment,
+    Value<String?> returnDisposition = const Value.absent(),
   }) => RentalItemRow(
     id: id ?? this.id,
     rentalId: rentalId ?? this.rentalId,
@@ -3027,6 +3068,9 @@ class RentalItemRow extends DataClass implements Insertable<RentalItemRow> {
     rateAmount: rateAmount ?? this.rateAmount,
     lateFeePerDay: lateFeePerDay ?? this.lateFeePerDay,
     fulfillment: fulfillment ?? this.fulfillment,
+    returnDisposition: returnDisposition.present
+        ? returnDisposition.value
+        : this.returnDisposition,
   );
   RentalItemRow copyWithCompanion(RentalItemsCompanion data) {
     return RentalItemRow(
@@ -3061,6 +3105,9 @@ class RentalItemRow extends DataClass implements Insertable<RentalItemRow> {
       fulfillment: data.fulfillment.present
           ? data.fulfillment.value
           : this.fulfillment,
+      returnDisposition: data.returnDisposition.present
+          ? data.returnDisposition.value
+          : this.returnDisposition,
     );
   }
 
@@ -3079,7 +3126,8 @@ class RentalItemRow extends DataClass implements Insertable<RentalItemRow> {
           ..write('billingMode: $billingMode, ')
           ..write('rateAmount: $rateAmount, ')
           ..write('lateFeePerDay: $lateFeePerDay, ')
-          ..write('fulfillment: $fulfillment')
+          ..write('fulfillment: $fulfillment, ')
+          ..write('returnDisposition: $returnDisposition')
           ..write(')'))
         .toString();
   }
@@ -3099,6 +3147,7 @@ class RentalItemRow extends DataClass implements Insertable<RentalItemRow> {
     rateAmount,
     lateFeePerDay,
     fulfillment,
+    returnDisposition,
   );
   @override
   bool operator ==(Object other) =>
@@ -3116,7 +3165,8 @@ class RentalItemRow extends DataClass implements Insertable<RentalItemRow> {
           other.billingMode == this.billingMode &&
           other.rateAmount == this.rateAmount &&
           other.lateFeePerDay == this.lateFeePerDay &&
-          other.fulfillment == this.fulfillment);
+          other.fulfillment == this.fulfillment &&
+          other.returnDisposition == this.returnDisposition);
 }
 
 class RentalItemsCompanion extends UpdateCompanion<RentalItemRow> {
@@ -3133,6 +3183,7 @@ class RentalItemsCompanion extends UpdateCompanion<RentalItemRow> {
   final Value<int> rateAmount;
   final Value<int> lateFeePerDay;
   final Value<String> fulfillment;
+  final Value<String?> returnDisposition;
   final Value<int> rowid;
   const RentalItemsCompanion({
     this.id = const Value.absent(),
@@ -3148,6 +3199,7 @@ class RentalItemsCompanion extends UpdateCompanion<RentalItemRow> {
     this.rateAmount = const Value.absent(),
     this.lateFeePerDay = const Value.absent(),
     this.fulfillment = const Value.absent(),
+    this.returnDisposition = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   RentalItemsCompanion.insert({
@@ -3164,6 +3216,7 @@ class RentalItemsCompanion extends UpdateCompanion<RentalItemRow> {
     this.rateAmount = const Value.absent(),
     this.lateFeePerDay = const Value.absent(),
     this.fulfillment = const Value.absent(),
+    this.returnDisposition = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        rentalId = Value(rentalId),
@@ -3182,6 +3235,7 @@ class RentalItemsCompanion extends UpdateCompanion<RentalItemRow> {
     Expression<int>? rateAmount,
     Expression<int>? lateFeePerDay,
     Expression<String>? fulfillment,
+    Expression<String>? returnDisposition,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -3198,6 +3252,7 @@ class RentalItemsCompanion extends UpdateCompanion<RentalItemRow> {
       if (rateAmount != null) 'rate_amount': rateAmount,
       if (lateFeePerDay != null) 'late_fee_per_day': lateFeePerDay,
       if (fulfillment != null) 'fulfillment': fulfillment,
+      if (returnDisposition != null) 'return_disposition': returnDisposition,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -3216,6 +3271,7 @@ class RentalItemsCompanion extends UpdateCompanion<RentalItemRow> {
     Value<int>? rateAmount,
     Value<int>? lateFeePerDay,
     Value<String>? fulfillment,
+    Value<String?>? returnDisposition,
     Value<int>? rowid,
   }) {
     return RentalItemsCompanion(
@@ -3232,6 +3288,7 @@ class RentalItemsCompanion extends UpdateCompanion<RentalItemRow> {
       rateAmount: rateAmount ?? this.rateAmount,
       lateFeePerDay: lateFeePerDay ?? this.lateFeePerDay,
       fulfillment: fulfillment ?? this.fulfillment,
+      returnDisposition: returnDisposition ?? this.returnDisposition,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -3278,6 +3335,9 @@ class RentalItemsCompanion extends UpdateCompanion<RentalItemRow> {
     if (fulfillment.present) {
       map['fulfillment'] = Variable<String>(fulfillment.value);
     }
+    if (returnDisposition.present) {
+      map['return_disposition'] = Variable<String>(returnDisposition.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -3300,6 +3360,7 @@ class RentalItemsCompanion extends UpdateCompanion<RentalItemRow> {
           ..write('rateAmount: $rateAmount, ')
           ..write('lateFeePerDay: $lateFeePerDay, ')
           ..write('fulfillment: $fulfillment, ')
+          ..write('returnDisposition: $returnDisposition, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -7465,6 +7526,7 @@ typedef $$RentalItemsTableCreateCompanionBuilder =
       Value<int> rateAmount,
       Value<int> lateFeePerDay,
       Value<String> fulfillment,
+      Value<String?> returnDisposition,
       Value<int> rowid,
     });
 typedef $$RentalItemsTableUpdateCompanionBuilder =
@@ -7482,6 +7544,7 @@ typedef $$RentalItemsTableUpdateCompanionBuilder =
       Value<int> rateAmount,
       Value<int> lateFeePerDay,
       Value<String> fulfillment,
+      Value<String?> returnDisposition,
       Value<int> rowid,
     });
 
@@ -7556,6 +7619,11 @@ class $$RentalItemsTableFilterComposer
 
   ColumnFilters<String> get fulfillment => $composableBuilder(
     column: $table.fulfillment,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get returnDisposition => $composableBuilder(
+    column: $table.returnDisposition,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -7633,6 +7701,11 @@ class $$RentalItemsTableOrderingComposer
     column: $table.fulfillment,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get returnDisposition => $composableBuilder(
+    column: $table.returnDisposition,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$RentalItemsTableAnnotationComposer
@@ -7700,6 +7773,11 @@ class $$RentalItemsTableAnnotationComposer
     column: $table.fulfillment,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get returnDisposition => $composableBuilder(
+    column: $table.returnDisposition,
+    builder: (column) => column,
+  );
 }
 
 class $$RentalItemsTableTableManager
@@ -7746,6 +7824,7 @@ class $$RentalItemsTableTableManager
                 Value<int> rateAmount = const Value.absent(),
                 Value<int> lateFeePerDay = const Value.absent(),
                 Value<String> fulfillment = const Value.absent(),
+                Value<String?> returnDisposition = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => RentalItemsCompanion(
                 id: id,
@@ -7761,6 +7840,7 @@ class $$RentalItemsTableTableManager
                 rateAmount: rateAmount,
                 lateFeePerDay: lateFeePerDay,
                 fulfillment: fulfillment,
+                returnDisposition: returnDisposition,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -7778,6 +7858,7 @@ class $$RentalItemsTableTableManager
                 Value<int> rateAmount = const Value.absent(),
                 Value<int> lateFeePerDay = const Value.absent(),
                 Value<String> fulfillment = const Value.absent(),
+                Value<String?> returnDisposition = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => RentalItemsCompanion.insert(
                 id: id,
@@ -7793,6 +7874,7 @@ class $$RentalItemsTableTableManager
                 rateAmount: rateAmount,
                 lateFeePerDay: lateFeePerDay,
                 fulfillment: fulfillment,
+                returnDisposition: returnDisposition,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

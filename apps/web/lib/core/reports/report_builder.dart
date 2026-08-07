@@ -433,8 +433,9 @@ class ReportBuilder {
       for (final Rental rental in byCustomer[customerId]!) {
         final String itemNames = rental.lines
             .map((RentalLine line) {
-              final String statusBit =
-                  line.isOpen ? '' : ' ${l10n.reportStatusReturnedBit}';
+              final String statusBit = line.isOpen
+                  ? ''
+                  : ' ${_reportClosedLineStatusBit(l10n, line)}';
               if (line.catalogName.trim().isEmpty) {
                 final String fallback =
                     itemsById[line.itemId]?.name ?? line.itemId;
@@ -565,4 +566,14 @@ class ReportBuilder {
     }
     return '${text.substring(0, keep)}$suffix';
   }
+}
+
+String _reportClosedLineStatusBit(AppLocalizations l10n, RentalLine line) {
+  if (line.isSell) {
+    return l10n.reportStatusSoldBit;
+  }
+  if (line.isJob) {
+    return l10n.reportStatusCompletedBit;
+  }
+  return l10n.reportStatusReturnedBit;
 }
