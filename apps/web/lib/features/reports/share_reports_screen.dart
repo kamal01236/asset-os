@@ -116,6 +116,12 @@ class _ShareReportsScreenState extends ConsumerState<ShareReportsScreen> {
                 onSelected: (_) =>
                     setState(() => _type = ReportType.inventoryWise),
               ),
+              ChoiceChip(
+                label: Text(l10n.reportTypeUnitOccupancy),
+                selected: _type == ReportType.unitOccupancy,
+                onSelected: (_) =>
+                    setState(() => _type = ReportType.unitOccupancy),
+              ),
             ],
           ),
           const SizedBox(height: 16),

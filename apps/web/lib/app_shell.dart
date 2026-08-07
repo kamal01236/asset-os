@@ -1827,6 +1827,19 @@ class _RentalDetailScreenState extends ConsumerState<RentalDetailScreen> {
             ),
             if (rental.isActive && openRentLines.isNotEmpty) ...<Widget>[
               const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () => _extendRentalDue(
+                    context: context,
+                    ref: ref,
+                    rental: rental,
+                  ),
+                  icon: const Icon(Icons.event_available_outlined),
+                  label: Text(l10n.extendAction),
+                ),
+              ),
+              const SizedBox(height: 8),
               Row(
                 children: <Widget>[
                   Expanded(
@@ -2004,6 +2017,7 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
   final TextEditingController _notesController = TextEditingController();
   final TextEditingController _rateController = TextEditingController();
   final TextEditingController _lateFeeController = TextEditingController();
+  final TextEditingController _unitCodePrefixController = TextEditingController();
   final DynamicFieldEditors _extraFields = DynamicFieldEditors();
   String? _selectedCategory;
   BillingMode _billingMode = BillingMode.weekly;
@@ -2019,6 +2033,7 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
     _notesController.dispose();
     _rateController.dispose();
     _lateFeeController.dispose();
+    _unitCodePrefixController.dispose();
     _extraFields.dispose();
     super.dispose();
   }
@@ -2040,6 +2055,7 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
     _notesController.text = item.notes ?? '';
     _rateController.text = paiseToRupeesField(item.rateAmount);
     _lateFeeController.text = paiseToRupeesField(item.lateFeePerDay);
+    _unitCodePrefixController.text = item.unitCodePrefix ?? '';
     _billingMode = item.billingMode;
     _dueDateOptional = item.dueDateOptional;
     _requiresUnitIdentity = item.requiresUnitIdentity;
@@ -2122,6 +2138,8 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
       lateFeePerDay: parseRupeesToPaise(_lateFeeController.text),
       dueDateOptional: _dueDateOptional,
       requiresUnitIdentity: _requiresUnitIdentity,
+      unitCodePrefix: _unitCodePrefixController.text,
+      updateUnitCodePrefix: true,
       allowsDynamicPricing: _allowsDynamicPricing,
       defaultItemKind: kind,
       metadata: _extraFields.collect(fields),
@@ -2196,6 +2214,16 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
                       decoration: InputDecoration(
                         labelText: l10n.totalUnitsLabel,
                         helperText: l10n.totalUnitsHelper,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: _unitCodePrefixController,
+                      textCapitalization: TextCapitalization.characters,
+                      decoration: InputDecoration(
+                        labelText: l10n.unitCodePrefixLabel,
+                        hintText: l10n.unitCodePrefixHint,
+                        helperText: l10n.unitCodePrefixHelper,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -2334,9 +2362,18 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
                               ? l10n.requiresUnitIdentityLabel
                               : l10n.labelsAutoAssignedHint,
                         ),
-                        subtitle: item.requiresUnitIdentity
-                            ? Text(l10n.inventoryInstancesNote)
-                            : null,
+                        subtitle: () {
+                          final List<String> bits = <String>[
+                            if (item.requiresUnitIdentity)
+                              l10n.inventoryInstancesNote,
+                            if (item.hasUnitCodePool)
+                              '${l10n.unitCodePrefixLabel}: ${item.unitCodePrefix}',
+                          ];
+                          if (bits.isEmpty) {
+                            return null;
+                          }
+                          return Text(bits.join('\n'));
+                        }(),
                       ),
                     ),
                     const SizedBox(height: 10),
@@ -2770,6 +2807,7 @@ class _AddInventoryFlowScreenState extends ConsumerState<AddInventoryFlowScreen>
   final TextEditingController _notesController = TextEditingController();
   final TextEditingController _rateController = TextEditingController(text: '0');
   final TextEditingController _lateFeeController = TextEditingController(text: '0');
+  final TextEditingController _unitCodePrefixController = TextEditingController();
   final DynamicFieldEditors _extraFields = DynamicFieldEditors();
   late String _selectedCategory;
   BillingMode _billingMode = BillingMode.weekly;
@@ -2794,6 +2832,7 @@ class _AddInventoryFlowScreenState extends ConsumerState<AddInventoryFlowScreen>
     _notesController.dispose();
     _rateController.dispose();
     _lateFeeController.dispose();
+    _unitCodePrefixController.dispose();
     _extraFields.dispose();
     super.dispose();
   }
@@ -2845,6 +2884,16 @@ class _AddInventoryFlowScreenState extends ConsumerState<AddInventoryFlowScreen>
             controller: _unitsController,
             keyboardType: TextInputType.number,
             decoration: InputDecoration(labelText: l10n.unitsLabel),
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            controller: _unitCodePrefixController,
+            textCapitalization: TextCapitalization.characters,
+            decoration: InputDecoration(
+              labelText: l10n.unitCodePrefixLabel,
+              hintText: l10n.unitCodePrefixHint,
+              helperText: l10n.unitCodePrefixHelper,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
@@ -3007,6 +3056,7 @@ class _AddInventoryFlowScreenState extends ConsumerState<AddInventoryFlowScreen>
                     lateFeePerDay: parseRupeesToPaise(_lateFeeController.text),
                     dueDateOptional: _dueDateOptional,
                     requiresUnitIdentity: _requiresUnitIdentity,
+                    unitCodePrefix: _unitCodePrefixController.text,
                     allowsDynamicPricing: _allowsDynamicPricing,
                     defaultItemKind: kind,
                     metadata: _extraFields.collect(fields),
@@ -3473,6 +3523,54 @@ Future<bool> _confirmAndCompleteJobs({
     SnackBar(content: Text(l10n.jobsCompletedSnack)),
   );
   return true;
+}
+
+Future<void> _extendRentalDue({
+  required BuildContext context,
+  required WidgetRef ref,
+  required Rental rental,
+}) async {
+  final AppLocalizations l10n = context.l10n;
+  final DateTime now = DateTime.now();
+  final DateTime today = DateTime(now.year, now.month, now.day);
+  final DateTime currentDue = rental.dueAt == null
+      ? today
+      : DateTime(rental.dueAt!.year, rental.dueAt!.month, rental.dueAt!.day);
+  final DateTime firstAllowed = currentDue.isBefore(today)
+      ? today
+      : currentDue.add(const Duration(days: 1));
+  final DateTime? picked = await showDatePicker(
+    context: context,
+    locale: indiaDatePickerLocale(context),
+    initialDate: firstAllowed,
+    firstDate: firstAllowed,
+    lastDate: today.add(const Duration(days: 365 * 5)),
+    helpText: l10n.extendDueTitle,
+  );
+  if (picked == null || !context.mounted) {
+    return;
+  }
+  try {
+    final bool ok = await ref.read(repositoryProvider).extendRentalDue(
+          rental.id,
+          picked,
+        );
+    if (!context.mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(ok ? l10n.extendDueSuccess : l10n.extendDueInvalid),
+      ),
+    );
+  } on ArgumentError {
+    if (!context.mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l10n.extendDueInvalid)),
+    );
+  }
 }
 
 Future<bool> _confirmAndReturnRental({

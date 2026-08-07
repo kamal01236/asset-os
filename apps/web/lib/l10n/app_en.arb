@@ -129,6 +129,21 @@
   "shareAction": "Share",
   "extendPlaceholder": "Extend is a placeholder action.",
   "sharePlaceholder": "Share is a placeholder action.",
+  "extendDueTitle": "Extend due date",
+  "extendDueSuccess": "Due date extended.",
+  "extendDueInvalid": "Pick a date after the current due date.",
+  "unitCodePrefixLabel": "Code prefix",
+  "unitCodePrefixHint": "e.g. SEAT or CAM",
+  "unitCodePrefixHelper": "Builds short codes PREFIX-001…N from total units.",
+  "pickShortCodeLabel": "Short code",
+  "pickShortCodeHint": "Pick an available code",
+  "noAvailableUnitCodes": "No available codes in the pool.",
+  "seatPaymentDueLabel": "{code} payment due",
+  "@seatPaymentDueLabel": {
+    "placeholders": {
+      "code": {"type": "String"}
+    }
+  },
   "editResourceTitle": "Edit resource",
   "resourceDetailTitle": "Resource detail",
   "editTooltip": "Edit",
@@ -373,6 +388,25 @@
   "reportTypeSummary": "Summary",
   "reportTypeCustomerWise": "Customer-wise",
   "reportTypeResourcesWise": "Resources-wise",
+  "reportTypeUnitOccupancy": "Unit occupancy",
+  "reportNoUnitPools": "No resources with a unit code prefix.",
+  "reportUnitOccupancyItemHeading": "{name} ({total} units)",
+  "@reportUnitOccupancyItemHeading": {
+    "placeholders": {
+      "name": {"type": "String"},
+      "total": {"type": "int"}
+    }
+  },
+  "reportUnitOccupancyRow": "{code} · {status} · {customer}",
+  "@reportUnitOccupancyRow": {
+    "placeholders": {
+      "code": {"type": "String"},
+      "status": {"type": "String"},
+      "customer": {"type": "String"}
+    }
+  },
+  "reportUnitStatusOccupied": "Occupied",
+  "reportUnitStatusAvailable": "Available",
   "reportPeriodLabel": "Period",
   "reportPeriodDaily": "Daily",
   "reportPeriodWeekly": "Weekly",
@@ -998,6 +1032,8 @@
   "timelineTitleDueToday": "Due today",
   "timelineTitleRentalOpened": "Rental opened",
   "timelineTitleStatusChanged": "Status changed",
+  "timelineTitleDueExtended": "Due extended",
+  "timelineTitleAutoVacated": "Auto vacated",
 
   "timelineSubtitleCreatedOrderFlow": "Created from phone-first order flow.",
   "timelineSubtitleCreatedOrderFlowSale": "Created from phone-first order flow (sale).",
@@ -1065,6 +1101,28 @@
       "to": {"type": "String"}
     }
   },
+  "timelineSubtitleDueExtended": "Due moved {from} → {to}.",
+  "@timelineSubtitleDueExtended": {
+    "placeholders": {
+      "from": {"type": "String"},
+      "to": {"type": "String"}
+    }
+  },
+  "timelineSubtitleDueExtendedSet": "Due set to {to}.",
+  "@timelineSubtitleDueExtendedSet": {
+    "placeholders": {
+      "to": {"type": "String"}
+    }
+  },
+  "timelineSubtitleDueExtendedGeneric": "Due date extended.",
+  "timelineSubtitleAutoVacated": "Auto-vacated {summary} ({count} units).",
+  "@timelineSubtitleAutoVacated": {
+    "placeholders": {
+      "summary": {"type": "String"},
+      "count": {"type": "int"}
+    }
+  },
+  "timelineSubtitleAutoVacatedGeneric": "Overdue open units auto-vacated.",
   "timelineSubtitleDiscountBit": "Discount {amount}.",
   "@timelineSubtitleDiscountBit": {
     "placeholders": {

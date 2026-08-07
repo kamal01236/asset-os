@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../db/app_database.dart';
 import '../home/home_modules.dart';
+import '../inventory/unit_code_pool.dart';
 import '../l10n/timeline_l10n.dart';
 import '../loans/loan_balance.dart';
 import '../loans/loan_models.dart';
@@ -16,6 +17,8 @@ import '../templates/field_defs.dart';
 import '../templates/industry_templates.dart';
 import '../templates/workflows.dart';
 import '../validation/text_rules.dart';
+export '../inventory/unit_code_pool.dart'
+    show generateUnitPool, normalizeUnitCodePrefix, UnitOccupancyRow;
 export '../loans/loan_models.dart';
 export '../loans/loan_balance.dart'
     show
@@ -416,6 +419,107 @@ class LocalRepository {
       n += 1;
     } while (usedCodes.contains(code));
     return code;
+  }
+
+  /// Available codes from an item's prefix pool (open rent lines excluded).
+  Future<List<String>> listAvailableUnitCodes(String itemId) async {
+    final InventoryItemRow? row = await (_db.select(_db.inventoryItems)
+          ..where((t) => t.id.equals(itemId)))
+        .getSingleOrNull();
+    if (row == null) {
+      return const <String>[];
+    }
+    final String prefix = normalizeUnitCodePrefix(row.unitCodePrefix);
+    if (prefix.isEmpty) {
+      return const <String>[];
+    }
+    final List<String> pool = generateUnitPool(
+      prefix: prefix,
+      total: row.totalUnits,
+    );
+    if (pool.isEmpty) {
+      return const <String>[];
+    }
+    final Set<String> taken = await _activeShortCodes();
+    return pool
+        .where((String code) => !taken.contains(normalizeShortCode(code)))
+        .toList(growable: false);
+  }
+
+  /// Occupancy table for an item with a unit-code prefix pool.
+  Future<List<UnitOccupancyRow>> listUnitOccupancy(String itemId) async {
+    final InventoryItemRow? row = await (_db.select(_db.inventoryItems)
+          ..where((t) => t.id.equals(itemId)))
+        .getSingleOrNull();
+    if (row == null) {
+      return const <UnitOccupancyRow>[];
+    }
+    final String prefix = normalizeUnitCodePrefix(row.unitCodePrefix);
+    if (prefix.isEmpty) {
+      return const <UnitOccupancyRow>[];
+    }
+    final List<String> pool = generateUnitPool(
+      prefix: prefix,
+      total: row.totalUnits,
+    );
+    final List<RentalItemRow> links = await _db.select(_db.rentalItems).get();
+    final Map<String, RentalItemRow> openByCode = <String, RentalItemRow>{};
+    for (final RentalItemRow link in links) {
+      if (link.returnedAt != null || link.itemId != itemId) {
+        continue;
+      }
+      if (LineFulfillment.parse(link.fulfillment) != LineFulfillment.rent) {
+        continue;
+      }
+      openByCode[normalizeShortCode(link.shortCode)] = link;
+    }
+    final Map<String, CustomerRow> customersById = <String, CustomerRow>{};
+    final List<UnitOccupancyRow> rows = <UnitOccupancyRow>[];
+    for (final String code in pool) {
+      final RentalItemRow? link = openByCode[code];
+      if (link == null) {
+        rows.add(UnitOccupancyRow(code: code, occupied: false));
+        continue;
+      }
+      final RentalRow? rental = await (_db.select(_db.rentals)
+            ..where((t) => t.id.equals(link.rentalId)))
+          .getSingleOrNull();
+      CustomerRow? customer;
+      if (rental != null) {
+        customer = customersById[rental.customerId];
+        if (customer == null) {
+          customer = await (_db.select(_db.customers)
+                ..where((t) => t.id.equals(rental.customerId)))
+              .getSingleOrNull();
+          if (customer != null) {
+            customersById[rental.customerId] = customer;
+          }
+        }
+      }
+      rows.add(
+        UnitOccupancyRow(
+          code: code,
+          occupied: true,
+          customerName: customer?.name,
+          customerId: customer?.id,
+          rentalId: link.rentalId,
+          instanceName: link.instanceName,
+        ),
+      );
+    }
+    return rows;
+  }
+
+  Future<Set<String>> _activeShortCodes() async {
+    final List<RentalItemRow> links = await _db.select(_db.rentalItems).get();
+    final Set<String> taken = <String>{};
+    for (final RentalItemRow link in links) {
+      if (link.returnedAt != null) {
+        continue;
+      }
+      taken.add(normalizeShortCode(link.shortCode));
+    }
+    return taken;
   }
 
   Future<String> createRental({
@@ -971,6 +1075,7 @@ class LocalRepository {
     required bool restoreStock,
     int? chargedTotalPaise,
     String? note,
+    bool autoVacate = false,
   }) async {
     if (lineIds.isEmpty) {
       return null;
@@ -1187,6 +1292,10 @@ class LocalRepository {
       if (disposition == ReturnDisposition.lost) {
         titleKey = TimelineTitleKey.unitsLost;
         subtitleKey = TimelineSubtitleKey.unitsLostQty;
+        subtitleArgs = <String>[itemSummary, '${settledIds.length}'];
+      } else if (autoVacate) {
+        titleKey = TimelineTitleKey.autoVacated;
+        subtitleKey = TimelineSubtitleKey.autoVacated;
         subtitleArgs = <String>[itemSummary, '${settledIds.length}'];
       } else if (noOpenWork) {
         titleKey = TimelineTitleKey.returned;
@@ -1417,6 +1526,151 @@ class LocalRepository {
         rentalClosed: noOpenWork,
       );
     });
+  }
+
+  /// Moves [dueAt] forward for an open rental; keeps the same lines and short codes.
+  ///
+  /// [newDueAt] must be today or later, and strictly after the current due date
+  /// when one is set. Recomputes open rent line base charges through the new due.
+  Future<bool> extendRentalDue(String rentalId, DateTime newDueAt) async {
+    final DateTime now = DateTime.now();
+    final DateTime today = DateTime(now.year, now.month, now.day);
+    final DateTime newDueDay = DateTime(
+      newDueAt.year,
+      newDueAt.month,
+      newDueAt.day,
+      23,
+      59,
+      59,
+    );
+    final DateTime newDueDateOnly =
+        DateTime(newDueAt.year, newDueAt.month, newDueAt.day);
+    if (newDueDateOnly.isBefore(today)) {
+      throw ArgumentError('New due date must be today or later');
+    }
+
+    return _db.transaction(() async {
+      final RentalRow? rental = await (_db.select(_db.rentals)
+            ..where((t) => t.id.equals(rentalId)))
+          .getSingleOrNull();
+      if (rental == null ||
+          OrderStatus.parse(rental.orderStatus) != OrderStatus.open) {
+        return false;
+      }
+      if (rental.dueAt != null) {
+        final DateTime currentDue = DateTime(
+          rental.dueAt!.year,
+          rental.dueAt!.month,
+          rental.dueAt!.day,
+        );
+        if (!newDueDateOnly.isAfter(currentDue)) {
+          throw ArgumentError('New due date must be after the current due date');
+        }
+      }
+
+      final List<RentalItemRow> links = await (_db.select(_db.rentalItems)
+            ..where((t) => t.rentalId.equals(rentalId)))
+          .get();
+      int parentBase = 0;
+      int parentLate = 0;
+      int parentDeposit = rental.depositApplied;
+      for (final RentalItemRow link in links) {
+        if (link.returnedAt != null) {
+          parentBase += link.baseAmount;
+          parentLate += link.lateAmount;
+          continue;
+        }
+        if (LineFulfillment.parse(link.fulfillment) != LineFulfillment.rent) {
+          parentBase += link.baseAmount;
+          parentLate += link.lateAmount;
+          continue;
+        }
+        final int lineBase = computeBaseAmount(
+          mode: BillingMode.parse(link.billingMode),
+          rateAmount: link.rateAmount,
+          start: rental.startedAt,
+          due: newDueDay,
+        );
+        await (_db.update(_db.rentalItems)..where((t) => t.id.equals(link.id)))
+            .write(
+          RentalItemsCompanion(
+            baseAmount: Value<int>(lineBase),
+            lateAmount: const Value<int>(0),
+          ),
+        );
+        parentBase += lineBase;
+      }
+
+      await (_db.update(_db.rentals)..where((t) => t.id.equals(rentalId))).write(
+        RentalsCompanion(
+          dueAt: Value<DateTime?>(newDueDay),
+          baseAmount: Value<int>(parentBase),
+          lateAmount: Value<int>(parentLate),
+          totalAmount: Value<int>(
+            computeTotalAmount(baseAmount: parentBase, lateAmount: parentLate),
+          ),
+          depositApplied: Value<int>(parentDeposit),
+        ),
+      );
+
+      await _db.into(_db.rentalEvents).insert(
+        RentalEventsCompanion.insert(
+          rentalId: rentalId,
+          title: TimelineTitleKey.dueExtended,
+          subtitle: encodeTimelineSubtitle(
+            TimelineSubtitleKey.dueExtended,
+            args: <String>[
+              rental.dueAt == null
+                  ? ''
+                  : '${rental.dueAt!.year}-${rental.dueAt!.month.toString().padLeft(2, '0')}-${rental.dueAt!.day.toString().padLeft(2, '0')}',
+              '${newDueDateOnly.year}-${newDueDateOnly.month.toString().padLeft(2, '0')}-${newDueDateOnly.day.toString().padLeft(2, '0')}',
+            ],
+          ),
+          at: now,
+        ),
+      );
+      return true;
+    });
+  }
+
+  /// Settles open rent lines on rentals whose due date is before [asOf]'s calendar day.
+  ///
+  /// Idempotent: already-closed or due-today rentals are skipped. Restores stock
+  /// and frees short codes via the normal return path.
+  Future<int> autoVacateOverdueRentals({DateTime? asOf}) async {
+    final DateTime clock = asOf ?? DateTime.now();
+    final DateTime today = DateTime(clock.year, clock.month, clock.day);
+    final List<Rental> rentals = await listRentals();
+    int vacated = 0;
+    for (final Rental rental in rentals) {
+      if (!rental.isActive || rental.dueAt == null) {
+        continue;
+      }
+      final DateTime dueDay = DateTime(
+        rental.dueAt!.year,
+        rental.dueAt!.month,
+        rental.dueAt!.day,
+      );
+      if (!dueDay.isBefore(today)) {
+        continue;
+      }
+      final List<String> openIds =
+          rental.openRentLines.map((RentalLine l) => l.id).toList();
+      if (openIds.isEmpty) {
+        continue;
+      }
+      final RentalReturnResult? result = await _settleOpenRentLines(
+        rentalId: rental.id,
+        lineIds: openIds,
+        disposition: ReturnDisposition.returned,
+        restoreStock: true,
+        autoVacate: true,
+      );
+      if (result != null) {
+        vacated += 1;
+      }
+    }
+    return vacated;
   }
 
   /// Advances the order along the active workflow (immediate next, or [toStatusId]).
@@ -2368,6 +2622,7 @@ class LocalRepository {
     String currencyCode = 'INR',
     bool dueDateOptional = false,
     bool requiresUnitIdentity = false,
+    String? unitCodePrefix,
     bool allowsDynamicPricing = false,
     ResourceType defaultItemKind = ResourceType.rental,
     Map<String, Object?> metadata = const <String, Object?>{},
@@ -2386,6 +2641,7 @@ class LocalRepository {
         'Notes must be at least $kMinMeaningfulTextLength characters when set',
       );
     }
+    final String? storedPrefix = _storedUnitCodePrefix(unitCodePrefix);
     final String stamp = _nextStamp();
     await _db.into(_db.inventoryItems).insert(
       InventoryItemsCompanion.insert(
@@ -2407,6 +2663,7 @@ class LocalRepository {
         ),
         dueDateOptional: Value<bool>(dueDateOptional),
         requiresUnitIdentity: Value<bool>(requiresUnitIdentity),
+        unitCodePrefix: Value<String?>(storedPrefix),
         allowsDynamicPricing: Value<bool>(allowsDynamicPricing),
         defaultItemKind: Value<String>(defaultItemKind.storageValue),
         metadata: Value<String?>(encodeMetadata(metadata)),
@@ -2466,6 +2723,7 @@ class LocalRepository {
           ),
           dueDateOptional: Value<bool>(item.dueDateOptional),
           requiresUnitIdentity: Value<bool>(item.requiresUnitIdentity),
+          unitCodePrefix: Value<String?>(_storedUnitCodePrefix(item.unitCodePrefix)),
           allowsDynamicPricing: const Value<bool>(false),
           defaultItemKind: Value<String>(item.defaultItemKind.storageValue),
         ),
@@ -2489,6 +2747,8 @@ class LocalRepository {
     String? currencyCode,
     bool? dueDateOptional,
     bool? requiresUnitIdentity,
+    String? unitCodePrefix,
+    bool updateUnitCodePrefix = false,
     bool? allowsDynamicPricing,
     ResourceType? defaultItemKind,
     Map<String, Object?>? metadata,
@@ -2525,6 +2785,10 @@ class LocalRepository {
     }
     nextAvailable = nextAvailable.clamp(0, nextTotal);
 
+    final Value<String?> prefixValue = updateUnitCodePrefix
+        ? Value<String?>(_storedUnitCodePrefix(unitCodePrefix))
+        : const Value.absent();
+
     await (_db.update(_db.inventoryItems)..where((t) => t.id.equals(id))).write(
       InventoryItemsCompanion(
         name: Value<String>(trimmedName),
@@ -2559,6 +2823,7 @@ class LocalRepository {
         requiresUnitIdentity: requiresUnitIdentity == null
             ? const Value.absent()
             : Value<bool>(requiresUnitIdentity),
+        unitCodePrefix: prefixValue,
         allowsDynamicPricing: allowsDynamicPricing == null
             ? const Value.absent()
             : Value<bool>(allowsDynamicPricing),
@@ -2894,10 +3159,16 @@ class LocalRepository {
       currencyCode: Value<String>(item.currencyCode),
       dueDateOptional: Value<bool>(item.dueDateOptional),
       requiresUnitIdentity: Value<bool>(item.requiresUnitIdentity),
+      unitCodePrefix: Value<String?>(_storedUnitCodePrefix(item.unitCodePrefix)),
       allowsDynamicPricing: Value<bool>(item.allowsDynamicPricing),
       defaultItemKind: Value<String>(item.defaultItemKind.storageValue),
       metadata: Value<String?>(encodeMetadata(item.metadata)),
     );
+  }
+
+  String? _storedUnitCodePrefix(String? raw) {
+    final String normalized = normalizeUnitCodePrefix(raw);
+    return normalized.isEmpty ? null : normalized;
   }
 
   Customer _mapCustomer(CustomerRow row) {
@@ -2940,6 +3211,7 @@ class LocalRepository {
       currencyCode: row.currencyCode,
       dueDateOptional: row.dueDateOptional,
       requiresUnitIdentity: row.requiresUnitIdentity,
+      unitCodePrefix: row.unitCodePrefix,
       allowsDynamicPricing: row.allowsDynamicPricing,
       defaultItemKind: ResourceType.parse(row.defaultItemKind),
       metadata: decodeMetadata(row.metadata),

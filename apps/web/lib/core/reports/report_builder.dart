@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 
 import '../config/app_branding.dart';
+import '../inventory/unit_code_pool.dart';
 import '../l10n/india_date_format.dart';
 import '../l10n/l10n_ext.dart';
 import '../loans/loan_balance.dart';
@@ -56,6 +57,8 @@ class ReportBuilder {
         body = _buildCustomerWise(l10n, range, customers, inventory, rentals, clock);
       case ReportType.inventoryWise:
         body = _buildInventoryWise(l10n, range, inventory, rentals);
+      case ReportType.unitOccupancy:
+        body = _buildUnitOccupancy(l10n, customers, inventory, rentals);
     }
     final String header =
         '${l10n.reportHeader(appName)}\n${formatIndiaDate(range.start)} → ${formatIndiaDate(range.end)}\n';
@@ -189,6 +192,14 @@ class ReportBuilder {
           moneyLoans: moneyLoans,
           direction: MoneyLoanDirection.taken,
           clock: clock,
+        );
+      case ReportWidgetId.unitOccupancy:
+        return _buildUnitOccupancy(
+          l10n,
+          customers,
+          inventory,
+          rentals,
+          title: title,
         );
     }
   }
@@ -546,6 +557,79 @@ class ReportBuilder {
       final List<String> labels = activeLabels[item.id] ?? const <String>[];
       for (final String label in labels) {
         lines.add('  - $label');
+      }
+    }
+    return lines.join('\n');
+  }
+
+  String _buildUnitOccupancy(
+    AppLocalizations l10n,
+    List<Customer> customers,
+    List<InventoryItem> inventory,
+    List<Rental> rentals, {
+    String? title,
+  }) {
+    final Map<String, Customer> customersById = <String, Customer>{
+      for (final Customer c in customers) c.id: c,
+    };
+    final Map<String, ({String rentalId, String customerId, String instanceName})>
+        occupiedByCode = <String, ({String rentalId, String customerId, String instanceName})>{};
+    for (final Rental rental in rentals.where((Rental r) => r.isActive)) {
+      for (final RentalLine line in rental.openRentLines) {
+        final String code = line.shortCode.trim().toUpperCase();
+        if (code.isEmpty) {
+          continue;
+        }
+        occupiedByCode[code] = (
+          rentalId: rental.id,
+          customerId: rental.customerId,
+          instanceName: line.instanceName,
+        );
+      }
+    }
+
+    final List<InventoryItem> poolItems = inventory
+        .where((InventoryItem i) => i.hasUnitCodePool)
+        .toList()
+      ..sort((InventoryItem a, InventoryItem b) => a.name.compareTo(b.name));
+
+    final String heading = title ?? l10n.reportTypeUnitOccupancy;
+    if (poolItems.isEmpty) {
+      return '$heading\n${l10n.reportNoUnitPools}';
+    }
+
+    final List<String> lines = <String>[heading];
+    for (final InventoryItem item in poolItems) {
+      lines.add(l10n.reportUnitOccupancyItemHeading(item.name, item.totalUnits));
+      final List<String> pool = generateUnitPool(
+        prefix: item.unitCodePrefix!,
+        total: item.totalUnits,
+      );
+      for (final String code in pool) {
+        final occupied = occupiedByCode[code];
+        if (occupied == null) {
+          lines.add(
+            l10n.reportUnitOccupancyRow(
+              code,
+              l10n.reportUnitStatusAvailable,
+              '—',
+            ),
+          );
+        } else {
+          final Customer? customer = customersById[occupied.customerId];
+          final String who = customer?.name.trim().isNotEmpty == true
+              ? customer!.name
+              : (occupied.instanceName.trim().isNotEmpty
+                  ? occupied.instanceName
+                  : occupied.customerId);
+          lines.add(
+            l10n.reportUnitOccupancyRow(
+              code,
+              l10n.reportUnitStatusOccupied,
+              who,
+            ),
+          );
+        }
       }
     }
     return lines.join('\n');

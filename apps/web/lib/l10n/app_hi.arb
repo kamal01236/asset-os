@@ -129,6 +129,21 @@
   "shareAction": "शेयर",
   "extendPlaceholder": "बढ़ाना एक प्लेसहोल्डर कार्रवाई है।",
   "sharePlaceholder": "शेयर एक प्लेसहोल्डर कार्रवाई है।",
+  "extendDueTitle": "देय तिथि बढ़ाएँ",
+  "extendDueSuccess": "देय तिथि बढ़ाई गई।",
+  "extendDueInvalid": "वर्तमान देय तिथि के बाद की तारीख चुनें।",
+  "unitCodePrefixLabel": "कोड उपसर्ग",
+  "unitCodePrefixHint": "जैसे SEAT या CAM",
+  "unitCodePrefixHelper": "कुल इकाइयों से PREFIX-001…N छोटे कोड बनाता है।",
+  "pickShortCodeLabel": "छोटा कोड",
+  "pickShortCodeHint": "उपलब्ध कोड चुनें",
+  "noAvailableUnitCodes": "पूल में कोई उपलब्ध कोड नहीं।",
+  "seatPaymentDueLabel": "{code} भुगतान देय",
+  "@seatPaymentDueLabel": {
+    "placeholders": {
+      "code": {"type": "String"}
+    }
+  },
   "editResourceTitle": "संसाधन संपादित करें",
   "resourceDetailTitle": "संसाधन विवरण",
   "editTooltip": "संपादित करें",
@@ -373,6 +388,25 @@
   "reportTypeSummary": "सारांश",
   "reportTypeCustomerWise": "ग्राहक-वार",
   "reportTypeResourcesWise": "संसाधन-वार",
+  "reportTypeUnitOccupancy": "यूनिट अधिभोग",
+  "reportNoUnitPools": "कोड उपसर्ग वाले कोई संसाधन नहीं।",
+  "reportUnitOccupancyItemHeading": "{name} ({total} इकाइयाँ)",
+  "@reportUnitOccupancyItemHeading": {
+    "placeholders": {
+      "name": {"type": "String"},
+      "total": {"type": "int"}
+    }
+  },
+  "reportUnitOccupancyRow": "{code} · {status} · {customer}",
+  "@reportUnitOccupancyRow": {
+    "placeholders": {
+      "code": {"type": "String"},
+      "status": {"type": "String"},
+      "customer": {"type": "String"}
+    }
+  },
+  "reportUnitStatusOccupied": "अधिग्रहित",
+  "reportUnitStatusAvailable": "उपलब्ध",
   "reportPeriodLabel": "अवधि",
   "reportPeriodDaily": "दैनिक",
   "reportPeriodWeekly": "साप्ताहिक",
@@ -998,6 +1032,8 @@
   "timelineTitleDueToday": "आज देय",
   "timelineTitleRentalOpened": "किराया खोला गया",
   "timelineTitleStatusChanged": "स्थिति बदली",
+  "timelineTitleDueExtended": "देय बढ़ाया",
+  "timelineTitleAutoVacated": "स्वतः खाली",
 
   "timelineSubtitleCreatedOrderFlow": "फ़ोन-फ़र्स्ट ऑर्डर फ़्लो से बनाया गया।",
   "timelineSubtitleCreatedOrderFlowSale": "फ़ोन-फ़र्स्ट ऑर्डर फ़्लो से बनाया गया (बिक्री)।",
@@ -1065,6 +1101,28 @@
       "to": {"type": "String"}
     }
   },
+  "timelineSubtitleDueExtended": "देय {from} → {to} किया गया।",
+  "@timelineSubtitleDueExtended": {
+    "placeholders": {
+      "from": {"type": "String"},
+      "to": {"type": "String"}
+    }
+  },
+  "timelineSubtitleDueExtendedSet": "देय {to} पर सेट।",
+  "@timelineSubtitleDueExtendedSet": {
+    "placeholders": {
+      "to": {"type": "String"}
+    }
+  },
+  "timelineSubtitleDueExtendedGeneric": "देय तिथि बढ़ाई गई।",
+  "timelineSubtitleAutoVacated": "स्वतः खाली: {summary} ({count} इकाइयाँ)।",
+  "@timelineSubtitleAutoVacated": {
+    "placeholders": {
+      "summary": {"type": "String"},
+      "count": {"type": "int"}
+    }
+  },
+  "timelineSubtitleAutoVacatedGeneric": "अतिदेय खुली इकाइयाँ स्वतः खाली की गईं।",
   "timelineSubtitleDiscountBit": "छूट {amount}।",
   "@timelineSubtitleDiscountBit": {
     "placeholders": {

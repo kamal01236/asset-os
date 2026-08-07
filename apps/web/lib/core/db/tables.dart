@@ -37,6 +37,8 @@ class InventoryItems extends Table {
   /// When true, each issued unit needs instance name + short code (parent catalog).
   BoolColumn get requiresUnitIdentity =>
       boolean().withDefault(const Constant(false))();
+  /// Optional short-code pool prefix (e.g. `SEAT` → SEAT-001…N from [totalUnits]).
+  TextColumn get unitCodePrefix => text().nullable()();
   /// When true, New Order may override catalog [rateAmount] for that rental line.
   BoolColumn get allowsDynamicPricing =>
       boolean().withDefault(const Constant(false))();

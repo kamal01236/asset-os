@@ -20,6 +20,8 @@ abstract final class TimelineTitleKey {
   static const dueToday = 'due_today';
   static const rentalOpened = 'rental_opened';
   static const statusChanged = 'status_changed';
+  static const dueExtended = 'due_extended';
+  static const autoVacated = 'auto_vacated';
 }
 
 /// Stable subtitle keys (optionally with `|`-separated args). See [encodeTimelineSubtitle].
@@ -43,6 +45,8 @@ abstract final class TimelineSubtitleKey {
   static const closedAtCounter = 'closed_at_counter';
   static const manualWalkIn = 'manual_walk_in';
   static const statusChanged = 'status_changed';
+  static const dueExtended = 'due_extended';
+  static const autoVacated = 'auto_vacated';
 }
 
 const String _kDiscountPrefix = 'd:';
@@ -110,6 +114,12 @@ String localizeTimelineTitle(AppLocalizations l10n, String raw) {
     case TimelineTitleKey.statusChanged:
     case 'Status changed':
       return l10n.timelineTitleStatusChanged;
+    case TimelineTitleKey.dueExtended:
+    case 'Due extended':
+      return l10n.timelineTitleDueExtended;
+    case TimelineTitleKey.autoVacated:
+    case 'Auto vacated':
+      return l10n.timelineTitleAutoVacated;
     default:
       return raw;
   }
@@ -281,6 +291,21 @@ String? _subtitleForKey(
       final String fromLabel = localizedWorkflowStatusLabel(locale, args[0]);
       final String toLabel = localizedWorkflowStatusLabel(locale, args[1]);
       return l10n.timelineSubtitleStatusChanged(fromLabel, toLabel);
+    case TimelineSubtitleKey.dueExtended:
+      if (args.length < 2) {
+        return l10n.timelineSubtitleDueExtendedGeneric;
+      }
+      final String from = args[0].trim();
+      final String to = args[1].trim();
+      if (from.isEmpty) {
+        return l10n.timelineSubtitleDueExtendedSet(to);
+      }
+      return l10n.timelineSubtitleDueExtended(from, to);
+    case TimelineSubtitleKey.autoVacated:
+      if (args.length < 2) {
+        return l10n.timelineSubtitleAutoVacatedGeneric;
+      }
+      return l10n.timelineSubtitleAutoVacated(args[0], int.tryParse(args[1]) ?? 0);
     default:
       return null;
   }

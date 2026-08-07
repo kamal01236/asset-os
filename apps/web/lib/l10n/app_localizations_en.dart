@@ -312,6 +312,39 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sharePlaceholder => 'Share is a placeholder action.';
 
   @override
+  String get extendDueTitle => 'Extend due date';
+
+  @override
+  String get extendDueSuccess => 'Due date extended.';
+
+  @override
+  String get extendDueInvalid => 'Pick a date after the current due date.';
+
+  @override
+  String get unitCodePrefixLabel => 'Code prefix';
+
+  @override
+  String get unitCodePrefixHint => 'e.g. SEAT or CAM';
+
+  @override
+  String get unitCodePrefixHelper =>
+      'Builds short codes PREFIX-001…N from total units.';
+
+  @override
+  String get pickShortCodeLabel => 'Short code';
+
+  @override
+  String get pickShortCodeHint => 'Pick an available code';
+
+  @override
+  String get noAvailableUnitCodes => 'No available codes in the pool.';
+
+  @override
+  String seatPaymentDueLabel(String code) {
+    return '$code payment due';
+  }
+
+  @override
   String get editResourceTitle => 'Edit resource';
 
   @override
@@ -721,6 +754,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reportTypeResourcesWise => 'Resources-wise';
+
+  @override
+  String get reportTypeUnitOccupancy => 'Unit occupancy';
+
+  @override
+  String get reportNoUnitPools => 'No resources with a unit code prefix.';
+
+  @override
+  String reportUnitOccupancyItemHeading(String name, int total) {
+    return '$name ($total units)';
+  }
+
+  @override
+  String reportUnitOccupancyRow(String code, String status, String customer) {
+    return '$code · $status · $customer';
+  }
+
+  @override
+  String get reportUnitStatusOccupied => 'Occupied';
+
+  @override
+  String get reportUnitStatusAvailable => 'Available';
 
   @override
   String get reportPeriodLabel => 'Period';
@@ -1799,6 +1854,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get timelineTitleStatusChanged => 'Status changed';
 
   @override
+  String get timelineTitleDueExtended => 'Due extended';
+
+  @override
+  String get timelineTitleAutoVacated => 'Auto vacated';
+
+  @override
   String get timelineSubtitleCreatedOrderFlow =>
       'Created from phone-first order flow.';
 
@@ -1881,6 +1942,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String timelineSubtitleStatusChanged(String from, String to) {
     return '$from → $to';
   }
+
+  @override
+  String timelineSubtitleDueExtended(String from, String to) {
+    return 'Due moved $from → $to.';
+  }
+
+  @override
+  String timelineSubtitleDueExtendedSet(String to) {
+    return 'Due set to $to.';
+  }
+
+  @override
+  String get timelineSubtitleDueExtendedGeneric => 'Due date extended.';
+
+  @override
+  String timelineSubtitleAutoVacated(String summary, int count) {
+    return 'Auto-vacated $summary ($count units).';
+  }
+
+  @override
+  String get timelineSubtitleAutoVacatedGeneric =>
+      'Overdue open units auto-vacated.';
 
   @override
   String timelineSubtitleDiscountBit(String amount) {

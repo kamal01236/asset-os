@@ -656,6 +656,66 @@ abstract class AppLocalizations {
   /// **'Share is a placeholder action.'**
   String get sharePlaceholder;
 
+  /// No description provided for @extendDueTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Extend due date'**
+  String get extendDueTitle;
+
+  /// No description provided for @extendDueSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Due date extended.'**
+  String get extendDueSuccess;
+
+  /// No description provided for @extendDueInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a date after the current due date.'**
+  String get extendDueInvalid;
+
+  /// No description provided for @unitCodePrefixLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Code prefix'**
+  String get unitCodePrefixLabel;
+
+  /// No description provided for @unitCodePrefixHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. SEAT or CAM'**
+  String get unitCodePrefixHint;
+
+  /// No description provided for @unitCodePrefixHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Builds short codes PREFIX-001…N from total units.'**
+  String get unitCodePrefixHelper;
+
+  /// No description provided for @pickShortCodeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Short code'**
+  String get pickShortCodeLabel;
+
+  /// No description provided for @pickShortCodeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick an available code'**
+  String get pickShortCodeHint;
+
+  /// No description provided for @noAvailableUnitCodes.
+  ///
+  /// In en, this message translates to:
+  /// **'No available codes in the pool.'**
+  String get noAvailableUnitCodes;
+
+  /// No description provided for @seatPaymentDueLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{code} payment due'**
+  String seatPaymentDueLabel(String code);
+
   /// No description provided for @editResourceTitle.
   ///
   /// In en, this message translates to:
@@ -1363,6 +1423,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Resources-wise'**
   String get reportTypeResourcesWise;
+
+  /// No description provided for @reportTypeUnitOccupancy.
+  ///
+  /// In en, this message translates to:
+  /// **'Unit occupancy'**
+  String get reportTypeUnitOccupancy;
+
+  /// No description provided for @reportNoUnitPools.
+  ///
+  /// In en, this message translates to:
+  /// **'No resources with a unit code prefix.'**
+  String get reportNoUnitPools;
+
+  /// No description provided for @reportUnitOccupancyItemHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} ({total} units)'**
+  String reportUnitOccupancyItemHeading(String name, int total);
+
+  /// No description provided for @reportUnitOccupancyRow.
+  ///
+  /// In en, this message translates to:
+  /// **'{code} · {status} · {customer}'**
+  String reportUnitOccupancyRow(String code, String status, String customer);
+
+  /// No description provided for @reportUnitStatusOccupied.
+  ///
+  /// In en, this message translates to:
+  /// **'Occupied'**
+  String get reportUnitStatusOccupied;
+
+  /// No description provided for @reportUnitStatusAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Available'**
+  String get reportUnitStatusAvailable;
 
   /// No description provided for @reportPeriodLabel.
   ///
@@ -3230,6 +3326,18 @@ abstract class AppLocalizations {
   /// **'Status changed'**
   String get timelineTitleStatusChanged;
 
+  /// No description provided for @timelineTitleDueExtended.
+  ///
+  /// In en, this message translates to:
+  /// **'Due extended'**
+  String get timelineTitleDueExtended;
+
+  /// No description provided for @timelineTitleAutoVacated.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto vacated'**
+  String get timelineTitleAutoVacated;
+
   /// No description provided for @timelineSubtitleCreatedOrderFlow.
   ///
   /// In en, this message translates to:
@@ -3347,6 +3455,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{from} → {to}'**
   String timelineSubtitleStatusChanged(String from, String to);
+
+  /// No description provided for @timelineSubtitleDueExtended.
+  ///
+  /// In en, this message translates to:
+  /// **'Due moved {from} → {to}.'**
+  String timelineSubtitleDueExtended(String from, String to);
+
+  /// No description provided for @timelineSubtitleDueExtendedSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Due set to {to}.'**
+  String timelineSubtitleDueExtendedSet(String to);
+
+  /// No description provided for @timelineSubtitleDueExtendedGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'Due date extended.'**
+  String get timelineSubtitleDueExtendedGeneric;
+
+  /// No description provided for @timelineSubtitleAutoVacated.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-vacated {summary} ({count} units).'**
+  String timelineSubtitleAutoVacated(String summary, int count);
+
+  /// No description provided for @timelineSubtitleAutoVacatedGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'Overdue open units auto-vacated.'**
+  String get timelineSubtitleAutoVacatedGeneric;
 
   /// No description provided for @timelineSubtitleDiscountBit.
   ///

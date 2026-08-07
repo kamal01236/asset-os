@@ -211,6 +211,7 @@ class InventoryItem {
     this.currencyCode = 'INR',
     this.dueDateOptional = false,
     this.requiresUnitIdentity = true,
+    this.unitCodePrefix,
     this.allowsDynamicPricing = false,
     this.defaultItemKind = ResourceType.rental,
     this.metadata = const <String, Object?>{},
@@ -231,6 +232,8 @@ class InventoryItem {
   final bool dueDateOptional;
   /// Parent catalog (e.g. Novels): each unit needs name/id at issue.
   final bool requiresUnitIdentity;
+  /// Optional pool prefix (`SEAT` → SEAT-001…N from [totalUnits]).
+  final String? unitCodePrefix;
   /// When true, New Order may override [rateAmount] for a rental line.
   final bool allowsDynamicPricing;
   /// Catalog [ResourceType] (column still named `defaultItemKind`).
@@ -241,6 +244,12 @@ class InventoryItem {
   bool get isSale => defaultItemKind == ResourceType.sale;
 
   bool get isJob => defaultItemKind == ResourceType.job;
+
+  /// True when a short-code pool can be derived from prefix + total units.
+  bool get hasUnitCodePool {
+    final String? prefix = unitCodePrefix?.trim();
+    return prefix != null && prefix.isNotEmpty && totalUnits > 0;
+  }
 
   InventoryItem copyWith({
     int? availableUnits,
@@ -253,6 +262,7 @@ class InventoryItem {
     String? currencyCode,
     bool? dueDateOptional,
     bool? requiresUnitIdentity,
+    String? unitCodePrefix,
     bool? allowsDynamicPricing,
     ResourceType? defaultItemKind,
     Map<String, Object?>? metadata,
@@ -271,6 +281,7 @@ class InventoryItem {
     currencyCode: currencyCode ?? this.currencyCode,
     dueDateOptional: dueDateOptional ?? this.dueDateOptional,
     requiresUnitIdentity: requiresUnitIdentity ?? this.requiresUnitIdentity,
+    unitCodePrefix: unitCodePrefix ?? this.unitCodePrefix,
     allowsDynamicPricing: allowsDynamicPricing ?? this.allowsDynamicPricing,
     defaultItemKind: defaultItemKind ?? this.defaultItemKind,
     metadata: metadata ?? this.metadata,
@@ -291,6 +302,7 @@ class InventoryItem {
     'currencyCode': currencyCode,
     'dueDateOptional': dueDateOptional,
     'requiresUnitIdentity': requiresUnitIdentity,
+    'unitCodePrefix': unitCodePrefix,
     'allowsDynamicPricing': allowsDynamicPricing,
     'defaultItemKind': defaultItemKind.storageValue,
     'metadata': metadata,
@@ -311,6 +323,7 @@ class InventoryItem {
     currencyCode: (json['currencyCode'] as String?) ?? 'INR',
     dueDateOptional: (json['dueDateOptional'] as bool?) ?? false,
     requiresUnitIdentity: (json['requiresUnitIdentity'] as bool?) ?? true,
+    unitCodePrefix: json['unitCodePrefix'] as String?,
     allowsDynamicPricing: (json['allowsDynamicPricing'] as bool?) ?? false,
     defaultItemKind: ResourceType.parse(json['defaultItemKind'] as String?),
     metadata: json['metadata'] is Map

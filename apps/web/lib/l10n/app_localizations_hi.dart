@@ -313,6 +313,39 @@ class AppLocalizationsHi extends AppLocalizations {
   String get sharePlaceholder => 'शेयर एक प्लेसहोल्डर कार्रवाई है।';
 
   @override
+  String get extendDueTitle => 'देय तिथि बढ़ाएँ';
+
+  @override
+  String get extendDueSuccess => 'देय तिथि बढ़ाई गई।';
+
+  @override
+  String get extendDueInvalid => 'वर्तमान देय तिथि के बाद की तारीख चुनें।';
+
+  @override
+  String get unitCodePrefixLabel => 'कोड उपसर्ग';
+
+  @override
+  String get unitCodePrefixHint => 'जैसे SEAT या CAM';
+
+  @override
+  String get unitCodePrefixHelper =>
+      'कुल इकाइयों से PREFIX-001…N छोटे कोड बनाता है।';
+
+  @override
+  String get pickShortCodeLabel => 'छोटा कोड';
+
+  @override
+  String get pickShortCodeHint => 'उपलब्ध कोड चुनें';
+
+  @override
+  String get noAvailableUnitCodes => 'पूल में कोई उपलब्ध कोड नहीं।';
+
+  @override
+  String seatPaymentDueLabel(String code) {
+    return '$code भुगतान देय';
+  }
+
+  @override
   String get editResourceTitle => 'संसाधन संपादित करें';
 
   @override
@@ -722,6 +755,28 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get reportTypeResourcesWise => 'संसाधन-वार';
+
+  @override
+  String get reportTypeUnitOccupancy => 'यूनिट अधिभोग';
+
+  @override
+  String get reportNoUnitPools => 'कोड उपसर्ग वाले कोई संसाधन नहीं।';
+
+  @override
+  String reportUnitOccupancyItemHeading(String name, int total) {
+    return '$name ($total इकाइयाँ)';
+  }
+
+  @override
+  String reportUnitOccupancyRow(String code, String status, String customer) {
+    return '$code · $status · $customer';
+  }
+
+  @override
+  String get reportUnitStatusOccupied => 'अधिग्रहित';
+
+  @override
+  String get reportUnitStatusAvailable => 'उपलब्ध';
 
   @override
   String get reportPeriodLabel => 'अवधि';
@@ -1798,6 +1853,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get timelineTitleStatusChanged => 'स्थिति बदली';
 
   @override
+  String get timelineTitleDueExtended => 'देय बढ़ाया';
+
+  @override
+  String get timelineTitleAutoVacated => 'स्वतः खाली';
+
+  @override
   String get timelineSubtitleCreatedOrderFlow =>
       'फ़ोन-फ़र्स्ट ऑर्डर फ़्लो से बनाया गया।';
 
@@ -1880,6 +1941,28 @@ class AppLocalizationsHi extends AppLocalizations {
   String timelineSubtitleStatusChanged(String from, String to) {
     return '$from → $to';
   }
+
+  @override
+  String timelineSubtitleDueExtended(String from, String to) {
+    return 'देय $from → $to किया गया।';
+  }
+
+  @override
+  String timelineSubtitleDueExtendedSet(String to) {
+    return 'देय $to पर सेट।';
+  }
+
+  @override
+  String get timelineSubtitleDueExtendedGeneric => 'देय तिथि बढ़ाई गई।';
+
+  @override
+  String timelineSubtitleAutoVacated(String summary, int count) {
+    return 'स्वतः खाली: $summary ($count इकाइयाँ)।';
+  }
+
+  @override
+  String get timelineSubtitleAutoVacatedGeneric =>
+      'अतिदेय खुली इकाइयाँ स्वतः खाली की गईं।';
 
   @override
   String timelineSubtitleDiscountBit(String amount) {

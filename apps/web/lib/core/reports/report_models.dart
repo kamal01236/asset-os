@@ -3,6 +3,7 @@ enum ReportType {
   summary,
   customerWise,
   inventoryWise,
+  unitOccupancy,
 }
 
 /// Period presets for report date ranges.

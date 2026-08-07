@@ -23,6 +23,7 @@ class TemplateInventoryItem {
     this.currencyCode = 'INR',
     this.defaultItemKind = ResourceType.rental,
     this.requiresUnitIdentity = false,
+    this.unitCodePrefix,
     this.dueDateOptional = false,
   });
 
@@ -39,6 +40,8 @@ class TemplateInventoryItem {
   final String currencyCode;
   final ResourceType defaultItemKind;
   final bool requiresUnitIdentity;
+  /// Optional short-code pool prefix seeded into catalog.
+  final String? unitCodePrefix;
   final bool dueDateOptional;
 
   String localizedName(Locale locale) =>
@@ -65,6 +68,7 @@ class TemplateInventoryItem {
       currencyCode: currencyCode,
       defaultItemKind: defaultItemKind,
       requiresUnitIdentity: requiresUnitIdentity,
+      unitCodePrefix: unitCodePrefix,
       dueDateOptional: dueDateOptional,
     );
   }
@@ -277,8 +281,8 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
     id: 'library',
     name: 'Library',
     nameHi: 'पुस्तकालय',
-    description: 'Books and study materials for lending counters.',
-    descriptionHi: 'उधार काउंटर के लिए किताबें और अध्ययन सामग्री।',
+    description: 'Books and reading seats for lending counters.',
+    descriptionHi: 'उधार काउंटर के लिए किताबें और बैठने की सीटें।',
     defaultHomeModules: kLibraryHomeModules,
     workflowId: kRentalWorkflowId,
     defaultReportWidgets: kLibraryReportWidgets,
@@ -333,6 +337,18 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
         defaultUnits: 4,
         billingMode: BillingMode.daily,
         rateAmount: 1000,
+      ),
+      TemplateInventoryItem(
+        name: 'Reading seat',
+        nameHi: 'पढ़ने की सीट',
+        category: 'Library',
+        categoryHi: 'पुस्तकालय',
+        defaultUnits: 40,
+        billingMode: BillingMode.monthly,
+        rateAmount: 50000, // ₹500/month
+        lateFeePerDay: 1000, // ₹10/day
+        requiresUnitIdentity: true,
+        unitCodePrefix: 'SEAT',
       ),
     ],
   ),

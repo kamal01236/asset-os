@@ -351,6 +351,11 @@ void main() {
         library.enabledResourceTypes,
         <ResourceType>[ResourceType.rental, ResourceType.loan],
       );
+      expect(
+        library.items.any((TemplateInventoryItem i) => i.name == 'Reading seat'),
+        isTrue,
+      );
+      expect(library.defaultReportWidgets, contains(ReportWidgetId.unitOccupancy));
     });
 
     test('money_lending enables financial with loan home/report presets', () {

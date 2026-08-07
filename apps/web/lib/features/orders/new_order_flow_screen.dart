@@ -114,6 +114,7 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _depositTopUpController = TextEditingController();
   final List<_OrderLineDraft> _lines = <_OrderLineDraft>[];
+  final Map<String, List<String>> _availableCodesByItem = <String, List<String>>{};
 
   Customer? _resolvedCustomer;
   List<Customer> _suggestions = const <Customer>[];
@@ -432,6 +433,20 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
       _applyFulfillmentDefaults(draft, item);
       _applyAutoLabels(index, item);
     });
+    if (itemId != null) {
+      _refreshAvailableCodes(itemId);
+    }
+  }
+
+  Future<void> _refreshAvailableCodes(String itemId) async {
+    final List<String> codes =
+        await ref.read(repositoryProvider).listAvailableUnitCodes(itemId);
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _availableCodesByItem[itemId] = codes;
+    });
   }
 
   InventoryItem? _itemFor(
@@ -651,11 +666,33 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
             final int nextIndex = (autoIndexByItem[item.id] ?? 0) + 1;
             autoIndexByItem[item.id] = nextIndex;
             instanceName = item.name;
-            shortCode = LocalRepository.generateAutoShortCode(
-              catalogName: item.name,
-              index: nextIndex,
-              usedCodes: usedCodes,
-            );
+            if (item.hasUnitCodePool) {
+              final List<String> pool =
+                  _availableCodesByItem[item.id] ?? const <String>[];
+              String? fromPool;
+              for (final String code in pool) {
+                if (!usedCodes
+                    .contains(LocalRepository.normalizeShortCode(code))) {
+                  fromPool = code;
+                  break;
+                }
+              }
+              if (fromPool != null) {
+                shortCode = fromPool;
+              } else {
+                shortCode = LocalRepository.generateAutoShortCode(
+                  catalogName: item.unitCodePrefix ?? item.name,
+                  index: nextIndex,
+                  usedCodes: usedCodes,
+                );
+              }
+            } else {
+              shortCode = LocalRepository.generateAutoShortCode(
+                catalogName: item.name,
+                index: nextIndex,
+                usedCodes: usedCodes,
+              );
+            }
             usedCodes.add(LocalRepository.normalizeShortCode(shortCode));
           }
         }
@@ -793,6 +830,12 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
               fallbackName: _nameController.text.trim(),
             );
         nickname = null;
+      }
+      for (final InventoryItem item in catalog) {
+        if (item.hasUnitCodePool) {
+          _availableCodesByItem[item.id] =
+              await repository.listAvailableUnitCodes(item.id);
+        }
       }
       final String rentalId = await repository.createRental(
         customer: customer,
@@ -1571,6 +1614,19 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
     final int slots = draft.identities.length < draft.quantity
         ? draft.identities.length
         : draft.quantity;
+    final bool usePool = selected.hasUnitCodePool;
+    if (usePool && !_availableCodesByItem.containsKey(selected.id)) {
+      _refreshAvailableCodes(selected.id);
+    }
+    final List<String> poolCodes =
+        List<String>.from(_availableCodesByItem[selected.id] ?? const <String>[]);
+    final Set<String> pickedInDraft = <String>{};
+    for (var i = 0; i < slots; i++) {
+      final String code = draft.identities[i].shortCodeController.text.trim();
+      if (code.isNotEmpty) {
+        pickedInDraft.add(LocalRepository.normalizeShortCode(code));
+      }
+    }
     final List<Widget> fields = <Widget>[];
     for (var u = 0; u < slots; u++) {
       final _UnitIdentityDraft unit = draft.identities[u];
@@ -1598,20 +1654,69 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
           ),
         ),
       );
-      fields.add(
-        Padding(
-          padding: const EdgeInsets.only(top: 8),
-          child: TextField(
-            controller: unit.shortCodeController,
-            textCapitalization: TextCapitalization.characters,
-            decoration: InputDecoration(
-              labelText: l10n.shortCodeLabel,
-              hintText: l10n.shortCodeHint,
+      if (usePool) {
+        final String current =
+            LocalRepository.normalizeShortCode(unit.shortCodeController.text);
+        final List<String> options = poolCodes
+            .where(
+              (String code) =>
+                  code == current ||
+                  !pickedInDraft.contains(
+                    LocalRepository.normalizeShortCode(code),
+                  ),
+            )
+            .toList();
+        if (current.isNotEmpty && !options.contains(current)) {
+          options.insert(0, current);
+        }
+        fields.add(
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: DropdownButtonFormField<String>(
+              key: ValueKey<String>('pool-code-$index-$u-$current'),
+              initialValue: current.isEmpty || !options.contains(current)
+                  ? null
+                  : current,
+              decoration: InputDecoration(
+                labelText: l10n.pickShortCodeLabel,
+                hintText: options.isEmpty
+                    ? l10n.noAvailableUnitCodes
+                    : l10n.pickShortCodeHint,
+              ),
+              items: options
+                  .map(
+                    (String code) => DropdownMenuItem<String>(
+                      value: code,
+                      child: Text(code),
+                    ),
+                  )
+                  .toList(),
+              onChanged: options.isEmpty
+                  ? null
+                  : (String? value) {
+                      setState(() {
+                        unit.shortCodeController.text = value ?? '';
+                      });
+                    },
             ),
-            onChanged: (_) => setState(() {}),
           ),
-        ),
-      );
+        );
+      } else {
+        fields.add(
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: TextField(
+              controller: unit.shortCodeController,
+              textCapitalization: TextCapitalization.characters,
+              decoration: InputDecoration(
+                labelText: l10n.shortCodeLabel,
+                hintText: l10n.shortCodeHint,
+              ),
+              onChanged: (_) => setState(() {}),
+            ),
+          ),
+        );
+      }
     }
     return fields;
   }

@@ -24,7 +24,7 @@ void main() {
       expect(item.category, kCategoryGeneral);
       expect(item.defaultItemKind, ResourceType.sale);
       expect(item.isSale, isTrue);
-      expect(repository.database.schemaVersion, 19);
+      expect(repository.database.schemaVersion, 20);
     });
 
     test('ResourceType.parse maps legacy general to sale', () {

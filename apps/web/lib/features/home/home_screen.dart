@@ -13,7 +13,7 @@ import '../loans/loan_detail_screen.dart';
 import '../loans/loans_list_screen.dart';
 
 /// Composes Home from enabled modules (search always present).
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({
     required this.onNewRental,
     required this.onReturnItem,
@@ -32,7 +32,49 @@ class HomeScreen extends ConsumerWidget {
   final ValueChanged<InventoryItem> onOpenInventory;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen>
+    with WidgetsBindingObserver {
+  bool _autoVacateRunning = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _runAutoVacate();
+    });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _runAutoVacate();
+    }
+  }
+
+  Future<void> _runAutoVacate() async {
+    if (_autoVacateRunning || !mounted) {
+      return;
+    }
+    _autoVacateRunning = true;
+    try {
+      await ref.read(repositoryProvider).autoVacateOverdueRentals();
+    } finally {
+      _autoVacateRunning = false;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final AsyncValue<List<InventoryItem>> inventoryAsync =
         ref.watch(inventoryProvider);
     final AsyncValue<List<Rental>> rentalsAsync = ref.watch(rentalsProvider);
@@ -101,9 +143,9 @@ class HomeScreen extends ConsumerWidget {
       case HomeModuleId.search:
         return GlobalSearchTypeahead(
           hintText: context.l10n.searchAnything,
-          onOpenCustomer: onOpenCustomer,
-          onOpenRental: onOpenRental,
-          onOpenInventory: onOpenInventory,
+          onOpenCustomer: widget.onOpenCustomer,
+          onOpenRental: widget.onOpenRental,
+          onOpenInventory: widget.onOpenInventory,
         );
       case HomeModuleId.kpis:
         return HomeKpisSection(
@@ -121,10 +163,10 @@ class HomeScreen extends ConsumerWidget {
           rentals: rentals,
           customers: customers,
           onClear: () => ref.read(homeFilterProvider.notifier).state = null,
-          onOpenRental: onOpenRental,
-          onOpenInventory: onOpenInventory,
-          onNewRental: onNewRental,
-          onAddInventory: onAddInventory,
+          onOpenRental: widget.onOpenRental,
+          onOpenInventory: widget.onOpenInventory,
+          onNewRental: widget.onNewRental,
+          onAddInventory: widget.onAddInventory,
         );
       case HomeModuleId.needsAttention:
         if (filter != null) {
@@ -133,7 +175,7 @@ class HomeScreen extends ConsumerWidget {
         return HomeNeedsAttentionSection(
           rentals: rentals,
           customers: customers,
-          onOpenRental: onOpenRental,
+          onOpenRental: widget.onOpenRental,
         );
       case HomeModuleId.pendingJobs:
         if (filter != null) {
@@ -142,7 +184,7 @@ class HomeScreen extends ConsumerWidget {
         return HomePendingJobsSection(
           rentals: rentals,
           customers: customers,
-          onOpenRental: onOpenRental,
+          onOpenRental: widget.onOpenRental,
         );
       case HomeModuleId.pendingLoans:
         if (filter != null) {
@@ -162,15 +204,15 @@ class HomeScreen extends ConsumerWidget {
         );
       case HomeModuleId.quickActions:
         return HomeQuickActionsSection(
-          onNewRental: onNewRental,
-          onReturnItem: onReturnItem,
-          onAddInventory: onAddInventory,
+          onNewRental: widget.onNewRental,
+          onReturnItem: widget.onReturnItem,
+          onAddInventory: widget.onAddInventory,
         );
       case HomeModuleId.recentActivity:
         return HomeRecentActivitySection(
           rentals: rentals,
           customers: customers,
-          onOpenRental: onOpenRental,
+          onOpenRental: widget.onOpenRental,
         );
       case HomeModuleId.suggestions:
         return const HomeSuggestionsSection();
@@ -768,7 +810,7 @@ List<Widget> _rentalCards(
     }
     cards.add(
       EntityCard(
-        title: _rentalLinesLabel(rental),
+        title: _attentionTitle(l10n, rental),
         subtitle:
             '${rentalPartyLabel(customer, rental)} · ${_rentalAmountSubtitle(l10n, rental)}',
         leadingIcon: Icons.assignment_outlined,
@@ -820,6 +862,26 @@ String _rentalLinesLabel(Rental rental) {
     return rental.id;
   }
   return source.map((RentalLine line) => line.displayLabel).join(', ');
+}
+
+String _attentionTitle(AppLocalizations l10n, Rental rental) {
+  final List<RentalLine> open = rental.openRentLines;
+  if (open.length == 1) {
+    final String code = open.first.shortCode.trim();
+    if (code.isNotEmpty) {
+      return l10n.seatPaymentDueLabel(code);
+    }
+  }
+  if (open.isNotEmpty) {
+    final List<String> codes = open
+        .map((RentalLine l) => l.shortCode.trim())
+        .where((String c) => c.isNotEmpty)
+        .toList();
+    if (codes.isNotEmpty && codes.length <= 3) {
+      return l10n.seatPaymentDueLabel(codes.join(', '));
+    }
+  }
+  return _rentalLinesLabel(rental);
 }
 
 String _rentalAmountSubtitle(AppLocalizations l10n, Rental rental) {

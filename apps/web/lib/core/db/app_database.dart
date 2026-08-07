@@ -24,7 +24,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 19;
+  int get schemaVersion => 20;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -373,6 +373,9 @@ class AppDatabase extends _$AppDatabase {
             AND return_disposition IS NULL
             AND fulfillment = 'rent'
         ''');
+      }
+      if (from < 20) {
+        await m.addColumn(inventoryItems, inventoryItems.unitCodePrefix);
       }
     },
   );

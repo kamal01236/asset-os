@@ -574,6 +574,17 @@ class $InventoryItemsTable extends InventoryItems
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _unitCodePrefixMeta = const VerificationMeta(
+    'unitCodePrefix',
+  );
+  @override
+  late final GeneratedColumn<String> unitCodePrefix = GeneratedColumn<String>(
+    'unit_code_prefix',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _allowsDynamicPricingMeta =
       const VerificationMeta('allowsDynamicPricing');
   @override
@@ -627,6 +638,7 @@ class $InventoryItemsTable extends InventoryItems
     currencyCode,
     dueDateOptional,
     requiresUnitIdentity,
+    unitCodePrefix,
     allowsDynamicPricing,
     defaultItemKind,
     metadata,
@@ -756,6 +768,15 @@ class $InventoryItemsTable extends InventoryItems
         ),
       );
     }
+    if (data.containsKey('unit_code_prefix')) {
+      context.handle(
+        _unitCodePrefixMeta,
+        unitCodePrefix.isAcceptableOrUnknown(
+          data['unit_code_prefix']!,
+          _unitCodePrefixMeta,
+        ),
+      );
+    }
     if (data.containsKey('allows_dynamic_pricing')) {
       context.handle(
         _allowsDynamicPricingMeta,
@@ -845,6 +866,10 @@ class $InventoryItemsTable extends InventoryItems
         DriftSqlType.bool,
         data['${effectivePrefix}requires_unit_identity'],
       )!,
+      unitCodePrefix: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}unit_code_prefix'],
+      ),
       allowsDynamicPricing: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}allows_dynamic_pricing'],
@@ -893,6 +918,9 @@ class InventoryItemRow extends DataClass
   /// When true, each issued unit needs instance name + short code (parent catalog).
   final bool requiresUnitIdentity;
 
+  /// Optional short-code pool prefix (e.g. `SEAT` → SEAT-001…N from [totalUnits]).
+  final String? unitCodePrefix;
+
   /// When true, New Order may override catalog [rateAmount] for that rental line.
   final bool allowsDynamicPricing;
 
@@ -916,6 +944,7 @@ class InventoryItemRow extends DataClass
     required this.currencyCode,
     required this.dueDateOptional,
     required this.requiresUnitIdentity,
+    this.unitCodePrefix,
     required this.allowsDynamicPricing,
     required this.defaultItemKind,
     this.metadata,
@@ -939,6 +968,9 @@ class InventoryItemRow extends DataClass
     map['currency_code'] = Variable<String>(currencyCode);
     map['due_date_optional'] = Variable<bool>(dueDateOptional);
     map['requires_unit_identity'] = Variable<bool>(requiresUnitIdentity);
+    if (!nullToAbsent || unitCodePrefix != null) {
+      map['unit_code_prefix'] = Variable<String>(unitCodePrefix);
+    }
     map['allows_dynamic_pricing'] = Variable<bool>(allowsDynamicPricing);
     map['default_item_kind'] = Variable<String>(defaultItemKind);
     if (!nullToAbsent || metadata != null) {
@@ -965,6 +997,9 @@ class InventoryItemRow extends DataClass
       currencyCode: Value(currencyCode),
       dueDateOptional: Value(dueDateOptional),
       requiresUnitIdentity: Value(requiresUnitIdentity),
+      unitCodePrefix: unitCodePrefix == null && nullToAbsent
+          ? const Value.absent()
+          : Value(unitCodePrefix),
       allowsDynamicPricing: Value(allowsDynamicPricing),
       defaultItemKind: Value(defaultItemKind),
       metadata: metadata == null && nullToAbsent
@@ -995,6 +1030,7 @@ class InventoryItemRow extends DataClass
       requiresUnitIdentity: serializer.fromJson<bool>(
         json['requiresUnitIdentity'],
       ),
+      unitCodePrefix: serializer.fromJson<String?>(json['unitCodePrefix']),
       allowsDynamicPricing: serializer.fromJson<bool>(
         json['allowsDynamicPricing'],
       ),
@@ -1020,6 +1056,7 @@ class InventoryItemRow extends DataClass
       'currencyCode': serializer.toJson<String>(currencyCode),
       'dueDateOptional': serializer.toJson<bool>(dueDateOptional),
       'requiresUnitIdentity': serializer.toJson<bool>(requiresUnitIdentity),
+      'unitCodePrefix': serializer.toJson<String?>(unitCodePrefix),
       'allowsDynamicPricing': serializer.toJson<bool>(allowsDynamicPricing),
       'defaultItemKind': serializer.toJson<String>(defaultItemKind),
       'metadata': serializer.toJson<String?>(metadata),
@@ -1041,6 +1078,7 @@ class InventoryItemRow extends DataClass
     String? currencyCode,
     bool? dueDateOptional,
     bool? requiresUnitIdentity,
+    Value<String?> unitCodePrefix = const Value.absent(),
     bool? allowsDynamicPricing,
     String? defaultItemKind,
     Value<String?> metadata = const Value.absent(),
@@ -1059,6 +1097,9 @@ class InventoryItemRow extends DataClass
     currencyCode: currencyCode ?? this.currencyCode,
     dueDateOptional: dueDateOptional ?? this.dueDateOptional,
     requiresUnitIdentity: requiresUnitIdentity ?? this.requiresUnitIdentity,
+    unitCodePrefix: unitCodePrefix.present
+        ? unitCodePrefix.value
+        : this.unitCodePrefix,
     allowsDynamicPricing: allowsDynamicPricing ?? this.allowsDynamicPricing,
     defaultItemKind: defaultItemKind ?? this.defaultItemKind,
     metadata: metadata.present ? metadata.value : this.metadata,
@@ -1095,6 +1136,9 @@ class InventoryItemRow extends DataClass
       requiresUnitIdentity: data.requiresUnitIdentity.present
           ? data.requiresUnitIdentity.value
           : this.requiresUnitIdentity,
+      unitCodePrefix: data.unitCodePrefix.present
+          ? data.unitCodePrefix.value
+          : this.unitCodePrefix,
       allowsDynamicPricing: data.allowsDynamicPricing.present
           ? data.allowsDynamicPricing.value
           : this.allowsDynamicPricing,
@@ -1122,6 +1166,7 @@ class InventoryItemRow extends DataClass
           ..write('currencyCode: $currencyCode, ')
           ..write('dueDateOptional: $dueDateOptional, ')
           ..write('requiresUnitIdentity: $requiresUnitIdentity, ')
+          ..write('unitCodePrefix: $unitCodePrefix, ')
           ..write('allowsDynamicPricing: $allowsDynamicPricing, ')
           ..write('defaultItemKind: $defaultItemKind, ')
           ..write('metadata: $metadata')
@@ -1145,6 +1190,7 @@ class InventoryItemRow extends DataClass
     currencyCode,
     dueDateOptional,
     requiresUnitIdentity,
+    unitCodePrefix,
     allowsDynamicPricing,
     defaultItemKind,
     metadata,
@@ -1167,6 +1213,7 @@ class InventoryItemRow extends DataClass
           other.currencyCode == this.currencyCode &&
           other.dueDateOptional == this.dueDateOptional &&
           other.requiresUnitIdentity == this.requiresUnitIdentity &&
+          other.unitCodePrefix == this.unitCodePrefix &&
           other.allowsDynamicPricing == this.allowsDynamicPricing &&
           other.defaultItemKind == this.defaultItemKind &&
           other.metadata == this.metadata);
@@ -1187,6 +1234,7 @@ class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
   final Value<String> currencyCode;
   final Value<bool> dueDateOptional;
   final Value<bool> requiresUnitIdentity;
+  final Value<String?> unitCodePrefix;
   final Value<bool> allowsDynamicPricing;
   final Value<String> defaultItemKind;
   final Value<String?> metadata;
@@ -1206,6 +1254,7 @@ class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
     this.currencyCode = const Value.absent(),
     this.dueDateOptional = const Value.absent(),
     this.requiresUnitIdentity = const Value.absent(),
+    this.unitCodePrefix = const Value.absent(),
     this.allowsDynamicPricing = const Value.absent(),
     this.defaultItemKind = const Value.absent(),
     this.metadata = const Value.absent(),
@@ -1226,6 +1275,7 @@ class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
     this.currencyCode = const Value.absent(),
     this.dueDateOptional = const Value.absent(),
     this.requiresUnitIdentity = const Value.absent(),
+    this.unitCodePrefix = const Value.absent(),
     this.allowsDynamicPricing = const Value.absent(),
     this.defaultItemKind = const Value.absent(),
     this.metadata = const Value.absent(),
@@ -1252,6 +1302,7 @@ class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
     Expression<String>? currencyCode,
     Expression<bool>? dueDateOptional,
     Expression<bool>? requiresUnitIdentity,
+    Expression<String>? unitCodePrefix,
     Expression<bool>? allowsDynamicPricing,
     Expression<String>? defaultItemKind,
     Expression<String>? metadata,
@@ -1273,6 +1324,7 @@ class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
       if (dueDateOptional != null) 'due_date_optional': dueDateOptional,
       if (requiresUnitIdentity != null)
         'requires_unit_identity': requiresUnitIdentity,
+      if (unitCodePrefix != null) 'unit_code_prefix': unitCodePrefix,
       if (allowsDynamicPricing != null)
         'allows_dynamic_pricing': allowsDynamicPricing,
       if (defaultItemKind != null) 'default_item_kind': defaultItemKind,
@@ -1296,6 +1348,7 @@ class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
     Value<String>? currencyCode,
     Value<bool>? dueDateOptional,
     Value<bool>? requiresUnitIdentity,
+    Value<String?>? unitCodePrefix,
     Value<bool>? allowsDynamicPricing,
     Value<String>? defaultItemKind,
     Value<String?>? metadata,
@@ -1316,6 +1369,7 @@ class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
       currencyCode: currencyCode ?? this.currencyCode,
       dueDateOptional: dueDateOptional ?? this.dueDateOptional,
       requiresUnitIdentity: requiresUnitIdentity ?? this.requiresUnitIdentity,
+      unitCodePrefix: unitCodePrefix ?? this.unitCodePrefix,
       allowsDynamicPricing: allowsDynamicPricing ?? this.allowsDynamicPricing,
       defaultItemKind: defaultItemKind ?? this.defaultItemKind,
       metadata: metadata ?? this.metadata,
@@ -1370,6 +1424,9 @@ class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
         requiresUnitIdentity.value,
       );
     }
+    if (unitCodePrefix.present) {
+      map['unit_code_prefix'] = Variable<String>(unitCodePrefix.value);
+    }
     if (allowsDynamicPricing.present) {
       map['allows_dynamic_pricing'] = Variable<bool>(
         allowsDynamicPricing.value,
@@ -1404,6 +1461,7 @@ class InventoryItemsCompanion extends UpdateCompanion<InventoryItemRow> {
           ..write('currencyCode: $currencyCode, ')
           ..write('dueDateOptional: $dueDateOptional, ')
           ..write('requiresUnitIdentity: $requiresUnitIdentity, ')
+          ..write('unitCodePrefix: $unitCodePrefix, ')
           ..write('allowsDynamicPricing: $allowsDynamicPricing, ')
           ..write('defaultItemKind: $defaultItemKind, ')
           ..write('metadata: $metadata, ')
@@ -6585,6 +6643,7 @@ typedef $$InventoryItemsTableCreateCompanionBuilder =
       Value<String> currencyCode,
       Value<bool> dueDateOptional,
       Value<bool> requiresUnitIdentity,
+      Value<String?> unitCodePrefix,
       Value<bool> allowsDynamicPricing,
       Value<String> defaultItemKind,
       Value<String?> metadata,
@@ -6606,6 +6665,7 @@ typedef $$InventoryItemsTableUpdateCompanionBuilder =
       Value<String> currencyCode,
       Value<bool> dueDateOptional,
       Value<bool> requiresUnitIdentity,
+      Value<String?> unitCodePrefix,
       Value<bool> allowsDynamicPricing,
       Value<String> defaultItemKind,
       Value<String?> metadata,
@@ -6688,6 +6748,11 @@ class $$InventoryItemsTableFilterComposer
 
   ColumnFilters<bool> get requiresUnitIdentity => $composableBuilder(
     column: $table.requiresUnitIdentity,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get unitCodePrefix => $composableBuilder(
+    column: $table.unitCodePrefix,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -6786,6 +6851,11 @@ class $$InventoryItemsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get unitCodePrefix => $composableBuilder(
+    column: $table.unitCodePrefix,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get allowsDynamicPricing => $composableBuilder(
     column: $table.allowsDynamicPricing,
     builder: (column) => ColumnOrderings(column),
@@ -6869,6 +6939,11 @@ class $$InventoryItemsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get unitCodePrefix => $composableBuilder(
+    column: $table.unitCodePrefix,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<bool> get allowsDynamicPricing => $composableBuilder(
     column: $table.allowsDynamicPricing,
     builder: (column) => column,
@@ -6934,6 +7009,7 @@ class $$InventoryItemsTableTableManager
                 Value<String> currencyCode = const Value.absent(),
                 Value<bool> dueDateOptional = const Value.absent(),
                 Value<bool> requiresUnitIdentity = const Value.absent(),
+                Value<String?> unitCodePrefix = const Value.absent(),
                 Value<bool> allowsDynamicPricing = const Value.absent(),
                 Value<String> defaultItemKind = const Value.absent(),
                 Value<String?> metadata = const Value.absent(),
@@ -6953,6 +7029,7 @@ class $$InventoryItemsTableTableManager
                 currencyCode: currencyCode,
                 dueDateOptional: dueDateOptional,
                 requiresUnitIdentity: requiresUnitIdentity,
+                unitCodePrefix: unitCodePrefix,
                 allowsDynamicPricing: allowsDynamicPricing,
                 defaultItemKind: defaultItemKind,
                 metadata: metadata,
@@ -6974,6 +7051,7 @@ class $$InventoryItemsTableTableManager
                 Value<String> currencyCode = const Value.absent(),
                 Value<bool> dueDateOptional = const Value.absent(),
                 Value<bool> requiresUnitIdentity = const Value.absent(),
+                Value<String?> unitCodePrefix = const Value.absent(),
                 Value<bool> allowsDynamicPricing = const Value.absent(),
                 Value<String> defaultItemKind = const Value.absent(),
                 Value<String?> metadata = const Value.absent(),
@@ -6993,6 +7071,7 @@ class $$InventoryItemsTableTableManager
                 currencyCode: currencyCode,
                 dueDateOptional: dueDateOptional,
                 requiresUnitIdentity: requiresUnitIdentity,
+                unitCodePrefix: unitCodePrefix,
                 allowsDynamicPricing: allowsDynamicPricing,
                 defaultItemKind: defaultItemKind,
                 metadata: metadata,
