@@ -43,6 +43,24 @@ class TemplateImportResult {
   final int skipped;
 }
 
+/// Result of [LocalRepository.applyTemplateInventorySelection].
+class TemplateApplyResult {
+  const TemplateApplyResult({
+    required this.added,
+    required this.reactivated,
+    required this.deactivated,
+    required this.skipped,
+  });
+
+  final int added;
+  final int reactivated;
+  final int deactivated;
+  final int skipped;
+
+  bool get hasChanges =>
+      added > 0 || reactivated > 0 || deactivated > 0;
+}
+
 class SearchResults {
   const SearchResults({
     required this.customers,
@@ -2810,7 +2828,8 @@ class LocalRepository {
   ///
   /// When [locale] is Hindi (`hi`), stores [TemplateInventoryItem.nameHi] /
   /// [TemplateInventoryItem.categoryHi]; otherwise English fields. Dedup uses the
-  /// resolved name.
+  /// resolved name. Inactive catalog rows still count as present (use
+  /// [applyTemplateInventorySelection] to reactivate).
   Future<TemplateImportResult> importTemplateInventory(
     List<TemplateInventoryItem> selected, {
     Locale locale = const Locale('en'),
@@ -2869,6 +2888,68 @@ class LocalRepository {
     }
 
     return TemplateImportResult(added: added, skipped: skipped);
+  }
+
+  /// Apply template picker keep/drop: import missing checked rows, reactivate
+  /// inactive checked matches, soft-deactivate active unchecked matches.
+  Future<TemplateApplyResult> applyTemplateInventorySelection({
+    required List<TemplateInventoryItem> checked,
+    required List<TemplateInventoryItem> unchecked,
+    Locale locale = const Locale('en'),
+  }) async {
+    final List<InventoryItem> existing =
+        await listInventory(includeInactive: true);
+    final Map<String, InventoryItem> byName = <String, InventoryItem>{
+      for (final InventoryItem item in existing)
+        item.name.trim().toLowerCase(): item,
+    };
+
+    int reactivated = 0;
+    int deactivated = 0;
+    int skipped = 0;
+    final List<TemplateInventoryItem> toImport = <TemplateInventoryItem>[];
+
+    for (final TemplateInventoryItem raw in checked) {
+      final TemplateInventoryItem item = raw.resolvedForLocale(locale);
+      final String key = item.name.trim().toLowerCase();
+      if (key.isEmpty) {
+        skipped += 1;
+        continue;
+      }
+      final InventoryItem? match = byName[key];
+      if (match == null) {
+        toImport.add(raw);
+      } else if (!match.catalogActive) {
+        await setInventoryCatalogActive(match.id, active: true);
+        byName[key] = match.copyWith(catalogActive: true);
+        reactivated += 1;
+      } else {
+        skipped += 1;
+      }
+    }
+
+    for (final TemplateInventoryItem raw in unchecked) {
+      final TemplateInventoryItem item = raw.resolvedForLocale(locale);
+      final String key = item.name.trim().toLowerCase();
+      if (key.isEmpty) {
+        continue;
+      }
+      final InventoryItem? match = byName[key];
+      if (match != null && match.catalogActive) {
+        await setInventoryCatalogActive(match.id, active: false);
+        byName[key] = match.copyWith(catalogActive: false);
+        deactivated += 1;
+      }
+    }
+
+    final TemplateImportResult imported =
+        await importTemplateInventory(toImport, locale: locale);
+    return TemplateApplyResult(
+      added: imported.added,
+      reactivated: reactivated,
+      deactivated: deactivated,
+      skipped: skipped + imported.skipped,
+    );
   }
 
   Future<void> updateInventory({

@@ -385,10 +385,21 @@
   },
   "adding": "Adding…",
   "addSelectedToResources": "Add selected to resources",
+  "applyTemplateSelection": "Apply",
+  "applyingTemplateSelection": "Applying…",
   "templateImportResult": "Added {added} items ({skipped} already present)",
   "@templateImportResult": {
     "placeholders": {
       "added": {"type": "int"},
+      "skipped": {"type": "int"}
+    }
+  },
+  "templateApplyResult": "Added {added}, restored {reactivated}, removed {deactivated} ({skipped} unchanged)",
+  "@templateApplyResult": {
+    "placeholders": {
+      "added": {"type": "int"},
+      "reactivated": {"type": "int"},
+      "deactivated": {"type": "int"},
       "skipped": {"type": "int"}
     }
   },

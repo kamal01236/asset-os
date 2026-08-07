@@ -766,8 +766,24 @@ class AppLocalizationsHi extends AppLocalizations {
   String get addSelectedToResources => 'चयनित को संसाधनों में जोड़ें';
 
   @override
+  String get applyTemplateSelection => 'लागू करें';
+
+  @override
+  String get applyingTemplateSelection => 'लागू हो रहा है…';
+
+  @override
   String templateImportResult(int added, int skipped) {
     return '$added वस्तुएँ जोड़ी गईं ($skipped पहले से मौजूद)';
+  }
+
+  @override
+  String templateApplyResult(
+    int added,
+    int reactivated,
+    int deactivated,
+    int skipped,
+  ) {
+    return '$added जोड़ीं, $reactivated पुनर्स्थापित, $deactivated हटाईं ($skipped अपरिवर्तित)';
   }
 
   @override

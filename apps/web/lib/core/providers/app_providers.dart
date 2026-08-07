@@ -89,11 +89,12 @@ final customersProvider = StreamProvider<List<Customer>>((ref) {
   return ref.watch(repositoryProvider).watchCustomers();
 });
 
+/// Active catalog only (Resources list, New Order, detail).
 final inventoryProvider = StreamProvider<List<InventoryItem>>((ref) {
   return ref.watch(repositoryProvider).watchInventory();
 });
 
-/// All catalog rows including soft-archived (Resources list / detail).
+/// All catalog rows including soft-archived (template picker hydrate / tests).
 final allInventoryProvider = StreamProvider<List<InventoryItem>>((ref) {
   return ref.watch(repositoryProvider).watchInventory(includeInactive: true);
 });

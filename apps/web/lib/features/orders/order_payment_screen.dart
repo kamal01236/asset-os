@@ -8,20 +8,16 @@ import '../../core/orders/order_payment.dart';
 import '../../core/pricing/rental_pricing.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/widgets/ui_primitives.dart';
-import 'rental_detail_nav.dart';
 
-/// Post-order payment: sell min due, editable rental security, amount received.
+/// Payment opened from order detail: sell min due, editable rental security,
+/// amount received.
 class OrderPaymentScreen extends ConsumerStatefulWidget {
   const OrderPaymentScreen({
     required this.rentalId,
-    this.afterCreate = false,
     super.key,
   });
 
   final String rentalId;
-
-  /// When true (right after New Order), Skip / Pay later returns to detail.
-  final bool afterCreate;
 
   @override
   ConsumerState<OrderPaymentScreen> createState() => _OrderPaymentScreenState();
@@ -74,7 +70,7 @@ class _OrderPaymentScreenState extends ConsumerState<OrderPaymentScreen> {
       if (!mounted) {
         return;
       }
-      _finishToDetail();
+      Navigator.of(context).pop();
     } catch (error) {
       if (!mounted) {
         return;
@@ -83,22 +79,6 @@ class _OrderPaymentScreenState extends ConsumerState<OrderPaymentScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('$error')),
       );
-    }
-  }
-
-  void _finishToDetail() {
-    if (widget.afterCreate) {
-      pushReplacementRentalDetail(context, rentalId: widget.rentalId);
-    } else {
-      Navigator.of(context).pop();
-    }
-  }
-
-  void _payLaterOrSkip({required bool sellDuePositive}) {
-    if (widget.afterCreate) {
-      pushReplacementRentalDetail(context, rentalId: widget.rentalId);
-    } else {
-      Navigator.of(context).pop();
     }
   }
 
@@ -136,8 +116,6 @@ class _OrderPaymentScreenState extends ConsumerState<OrderPaymentScreen> {
             preview.sellDiscountDelta)
         .clamp(0, sellOutstanding);
     final bool hasExcess = receivedPaise > sellOutstanding + securityPaise;
-    final bool canSkipWithoutPayLater =
-        sellOutstanding == 0 && widget.afterCreate;
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.orderPaymentTitle)),
@@ -158,28 +136,25 @@ class _OrderPaymentScreenState extends ConsumerState<OrderPaymentScreen> {
             amount: formatMoney(sellDue),
             emphasis: MoneyStackEmphasis.total,
           ),
-          if (rental.sellPaidPaise > 0 || rental.sellDiscountPaise > 0) ...<
-              Widget>[
+          if (rental.sellPaidPaise > 0)
             MoneyStack(
               label: l10n.paymentSellPaidLabel,
               amount: formatMoney(rental.sellPaidPaise),
               emphasis: MoneyStackEmphasis.muted,
             ),
-            if (rental.sellDiscountPaise > 0)
-              MoneyStack(
-                label: l10n.paymentSellDiscountLabel,
-                amount: formatMoney(rental.sellDiscountPaise),
-                emphasis: MoneyStackEmphasis.muted,
-              ),
+          if (rental.sellDiscountPaise > 0)
+            MoneyStack(
+              label: l10n.paymentSellDiscountLabel,
+              amount: formatMoney(rental.sellDiscountPaise),
+              emphasis: MoneyStackEmphasis.muted,
+            ),
+          if (sellOutstanding > 0)
             MoneyStack(
               label: l10n.paymentSellOutstandingLabel,
               amount: formatMoney(sellOutstanding),
-              emphasis: sellOutstanding > 0
-                  ? MoneyStackEmphasis.due
-                  : MoneyStackEmphasis.muted,
+              emphasis: MoneyStackEmphasis.due,
             ),
-          ],
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           TextField(
             controller: _securityController,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -208,21 +183,22 @@ class _OrderPaymentScreenState extends ConsumerState<OrderPaymentScreen> {
           ),
           if (hasExcess) ...<Widget>[
             const SizedBox(height: 8),
-            CheckboxListTile(
+            SwitchListTile(
               contentPadding: EdgeInsets.zero,
-              value: _treatExcessAsDiscount,
               title: Text(l10n.paymentTreatExcessAsDiscount),
               subtitle: Text(l10n.paymentTreatExcessAsDiscountHint),
-              controlAffinity: ListTileControlAffinity.leading,
-              onChanged: (bool? value) {
-                setState(() => _treatExcessAsDiscount = value ?? false);
+              value: _treatExcessAsDiscount,
+              onChanged: (bool value) {
+                setState(() => _treatExcessAsDiscount = value);
               },
             ),
           ],
           const SizedBox(height: 16),
           Text(
             l10n.paymentAllocationPreview,
-            style: Theme.of(context).textTheme.titleSmall,
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
           ),
           const SizedBox(height: 8),
           MoneyStack(
@@ -230,12 +206,11 @@ class _OrderPaymentScreenState extends ConsumerState<OrderPaymentScreen> {
             amount: formatMoney(preview.sellPaidDelta),
             emphasis: MoneyStackEmphasis.muted,
           ),
-          if (preview.sellDiscountDelta > 0)
-            MoneyStack(
-              label: l10n.paymentPreviewSellDiscount,
-              amount: formatMoney(preview.sellDiscountDelta),
-              emphasis: MoneyStackEmphasis.due,
-            ),
+          MoneyStack(
+            label: l10n.paymentPreviewSellDiscount,
+            amount: formatMoney(preview.sellDiscountDelta),
+            emphasis: MoneyStackEmphasis.muted,
+          ),
           MoneyStack(
             label: l10n.paymentPreviewAdvance,
             amount: formatMoney(preview.advanceDelta),
@@ -252,58 +227,27 @@ class _OrderPaymentScreenState extends ConsumerState<OrderPaymentScreen> {
       ),
       bottomNavigationBar: SafeArea(
         minimum: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: FilledButton(
-                onPressed: _submitting ? null : () => _confirm(rental),
-                child: Text(l10n.paymentConfirmAction),
-              ),
-            ),
-            if (widget.afterCreate) ...<Widget>[
-              const SizedBox(height: 8),
-              SizedBox(
-                width: double.infinity,
-                child: TextButton(
-                  onPressed: _submitting
-                      ? null
-                      : () => _payLaterOrSkip(
-                            sellDuePositive: sellOutstanding > 0,
-                          ),
-                  child: Text(
-                    canSkipWithoutPayLater
-                        ? l10n.paymentSkipAction
-                        : l10n.paymentPayLaterAction,
-                  ),
-                ),
-              ),
-            ],
-          ],
+        child: SizedBox(
+          width: double.infinity,
+          height: 48,
+          child: FilledButton(
+            onPressed: _submitting ? null : () => _confirm(rental),
+            child: Text(l10n.paymentConfirmAction),
+          ),
         ),
       ),
     );
   }
 }
 
-/// Opens payment for [rentalId]; [afterCreate] replaces the route stack to detail.
+/// Opens payment for [rentalId] from order detail (push; pop on confirm).
 void pushOrderPayment(
   BuildContext context, {
   required String rentalId,
-  bool afterCreate = false,
 }) {
-  final NavigatorState navigator = Navigator.of(context);
-  final MaterialPageRoute<void> route = MaterialPageRoute<void>(
-    builder: (_) => OrderPaymentScreen(
-      rentalId: rentalId,
-      afterCreate: afterCreate,
+  Navigator.of(context).push(
+    MaterialPageRoute<void>(
+      builder: (_) => OrderPaymentScreen(rentalId: rentalId),
     ),
   );
-  if (afterCreate) {
-    navigator.pushReplacement(route);
-  } else {
-    navigator.push(route);
-  }
 }

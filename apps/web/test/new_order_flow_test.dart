@@ -143,11 +143,8 @@ void main() {
     expect(created.totalAmount, 210000);
     expect(created.depositAmount, 0);
 
-    // Post-create payment screen; rent-only can Skip to detail.
-    expect(find.byType(OrderPaymentScreen), findsOneWidget);
-    await tester.tap(find.text('Skip'));
-    await _settle(tester, ticks: 25);
-
+    // Create opens order detail; Pay is available there (not auto payment).
+    expect(find.byType(OrderPaymentScreen), findsNothing);
     expect(find.byType(RentalDetailScreen), findsOneWidget);
     expect(find.textContaining(shortOrderId(created.id)), findsWidgets);
 

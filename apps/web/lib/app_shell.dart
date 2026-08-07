@@ -464,7 +464,6 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _query = '';
   List<SearchSuggestion> _suggestions = const <SearchSuggestion>[];
-  bool _showHidden = false;
 
   @override
   void dispose() {
@@ -496,24 +495,8 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
       return;
     }
     final AppLocalizations l10n = context.l10n;
-    List<InventoryItem> matches = results.inventory;
-    if (_showHidden) {
-      final List<InventoryItem> all =
-          ref.read(allInventoryProvider).asData?.value ??
-              const <InventoryItem>[];
-      final String q = trimmed.toLowerCase();
-      matches = all
-          .where(
-            (InventoryItem item) =>
-                item.name.toLowerCase().contains(q) ||
-                item.category.toLowerCase().contains(q) ||
-                item.id.toLowerCase().contains(q) ||
-                (item.notes?.toLowerCase().contains(q) ?? false),
-          )
-          .toList();
-    }
     setState(() {
-      _suggestions = matches
+      _suggestions = results.inventory
           .map(
             (InventoryItem item) => SearchSuggestion(
               id: item.id,
@@ -532,10 +515,6 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
 
   List<InventoryItem> _visibleInventory(List<InventoryItem> inventory) {
     List<InventoryItem> visible = inventory;
-    if (!_showHidden) {
-      visible =
-          visible.where((InventoryItem item) => item.catalogActive).toList();
-    }
     final InventoryListFilter? listFilter =
         ref.read(inventoryListFilterProvider);
     if (listFilter == InventoryListFilter.available) {
@@ -562,7 +541,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
   Widget build(BuildContext context) {
     final AppLocalizations l10n = context.l10n;
     final AsyncValue<List<InventoryItem>> inventoryAsync =
-        ref.watch(allInventoryProvider);
+        ref.watch(inventoryProvider);
     final InventoryListFilter? listFilter =
         ref.watch(inventoryListFilterProvider);
     return inventoryAsync.when(
@@ -585,23 +564,6 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                 );
                 widget.onOpenInventory(item);
               },
-            ),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: <Widget>[
-                FilterChip(
-                  label: Text(l10n.showHiddenResourcesFilter),
-                  selected: _showHidden,
-                  onSelected: (bool value) {
-                    setState(() => _showHidden = value);
-                    if (_query.trim().length >= kMinMeaningfulTextLength) {
-                      _onQueryChanged(_query);
-                    }
-                  },
-                ),
-              ],
             ),
             if (listFilter != null) ...<Widget>[
               const SizedBox(height: 12),
@@ -641,9 +603,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                   padding: const EdgeInsets.only(bottom: 10),
                   child: ListEntityRow(
                     title: item.name,
-                    secondary: item.catalogActive
-                        ? stockMeta
-                        : '${l10n.resourceHiddenBadge} · $stockMeta',
+                    secondary: stockMeta,
                     tertiary: l10n.inventoryRateSubtitle(
                       localizedBillingMode(l10n, item.billingMode),
                       formatMoney(
@@ -2215,7 +2175,7 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
       return;
     }
     final List<InventoryItem> inventory =
-        ref.read(allInventoryProvider).asData?.value ?? const <InventoryItem>[];
+        ref.read(inventoryProvider).asData?.value ?? const <InventoryItem>[];
     final int existingIndex =
         inventory.indexWhere((InventoryItem entry) => entry.id == widget.itemId);
     if (existingIndex < 0) {
@@ -2261,110 +2221,11 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
     );
   }
 
-  Future<void> _setCatalogActive(InventoryItem item, {required bool active}) async {
-    final AppLocalizations l10n = context.l10n;
-    final bool? confirmed = await showDialog<bool>(
-      context: context,
-      builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          title: Text(
-            active
-                ? l10n.confirmRestoreResourceTitle
-                : l10n.confirmHideResourceTitle,
-          ),
-          content: Text(
-            active
-                ? l10n.confirmRestoreResourceBody
-                : l10n.confirmHideResourceBody,
-          ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: Text(l10n.cancel),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: Text(
-                active
-                    ? l10n.restoreToCatalogAction
-                    : l10n.hideFromNewOrderAction,
-              ),
-            ),
-          ],
-        );
-      },
-    );
-    if (confirmed != true || !mounted) {
-      return;
-    }
-    await ref.read(repositoryProvider).setInventoryCatalogActive(
-          item.id,
-          active: active,
-        );
-    if (!mounted) {
-      return;
-    }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          active ? l10n.resourceRestoredSnack : l10n.resourceHiddenSnack,
-        ),
-      ),
-    );
-  }
-
-  Future<void> _deletePermanently(InventoryItem item) async {
-    final AppLocalizations l10n = context.l10n;
-    final bool? confirmed = await showDialog<bool>(
-      context: context,
-      builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          title: Text(l10n.confirmDeleteResourceTitle),
-          content: Text(l10n.confirmDeleteResourceBody),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: Text(l10n.cancel),
-            ),
-            FilledButton(
-              style: FilledButton.styleFrom(
-                backgroundColor: Theme.of(dialogContext).colorScheme.error,
-              ),
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: Text(l10n.deleteResourcePermanentlyAction),
-            ),
-          ],
-        );
-      },
-    );
-    if (confirmed != true || !mounted) {
-      return;
-    }
-    try {
-      await ref.read(repositoryProvider).deleteInventoryIfUnused(item.id);
-    } on InventoryInUseException {
-      if (!mounted) {
-        return;
-      }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.deleteResourceBlockedMessage)),
-      );
-      return;
-    }
-    if (!mounted) {
-      return;
-    }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.resourceDeletedSnack)),
-    );
-    Navigator.of(context).pop();
-  }
-
   @override
   Widget build(BuildContext context) {
     final AppLocalizations l10n = context.l10n;
     final AsyncValue<List<InventoryItem>> inventoryAsync =
-        ref.watch(allInventoryProvider);
+        ref.watch(inventoryProvider);
     return inventoryAsync.when(
       loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (Object error, StackTrace _) => Scaffold(body: Center(child: Text('$error'))),
@@ -2573,16 +2434,6 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
                       leadingIcon: Icons.inventory_2_outlined,
                       status: status,
                     ),
-                    if (!item.catalogActive) ...<Widget>[
-                      const SizedBox(height: 10),
-                      Card(
-                        child: ListTile(
-                          leading: const Icon(Icons.visibility_off_outlined),
-                          title: Text(l10n.resourceHiddenBadge),
-                          subtitle: Text(l10n.confirmHideResourceBody),
-                        ),
-                      ),
-                    ],
                     const SizedBox(height: 10),
                     Card(
                       child: ListTile(
@@ -2665,38 +2516,6 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
                       }
                       return metaCards;
                     }(),
-                    const SizedBox(height: 16),
-                    Text(
-                      l10n.actionActions,
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    if (item.catalogActive)
-                      OutlinedButton.icon(
-                        onPressed: () => _setCatalogActive(item, active: false),
-                        icon: const Icon(Icons.visibility_off_outlined),
-                        label: Text(l10n.hideFromNewOrderAction),
-                      )
-                    else
-                      OutlinedButton.icon(
-                        onPressed: () => _setCatalogActive(item, active: true),
-                        icon: const Icon(Icons.visibility_outlined),
-                        label: Text(l10n.restoreToCatalogAction),
-                      ),
-                    const SizedBox(height: 8),
-                    OutlinedButton.icon(
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Theme.of(context).colorScheme.error,
-                        side: BorderSide(
-                          color: Theme.of(context).colorScheme.error,
-                        ),
-                      ),
-                      onPressed: () => _deletePermanently(item),
-                      icon: const Icon(Icons.delete_outline),
-                      label: Text(l10n.deleteResourcePermanentlyAction),
-                    ),
                   ],
           ),
           bottomNavigationBar: _editing
@@ -2722,7 +2541,7 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
                     ],
                   ),
                 )
-              : item.catalogActive && item.availableUnits > 0
+              : item.availableUnits > 0
                   ? SafeArea(
                       minimum: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                       child: FilledButton(

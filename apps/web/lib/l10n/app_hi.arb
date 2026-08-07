@@ -385,10 +385,21 @@
   },
   "adding": "जोड़ा जा रहा है…",
   "addSelectedToResources": "चयनित को संसाधनों में जोड़ें",
+  "applyTemplateSelection": "लागू करें",
+  "applyingTemplateSelection": "लागू हो रहा है…",
   "templateImportResult": "{added} वस्तुएँ जोड़ी गईं ({skipped} पहले से मौजूद)",
   "@templateImportResult": {
     "placeholders": {
       "added": {"type": "int"},
+      "skipped": {"type": "int"}
+    }
+  },
+  "templateApplyResult": "{added} जोड़ीं, {reactivated} पुनर्स्थापित, {deactivated} हटाईं ({skipped} अपरिवर्तित)",
+  "@templateApplyResult": {
+    "placeholders": {
+      "added": {"type": "int"},
+      "reactivated": {"type": "int"},
+      "deactivated": {"type": "int"},
       "skipped": {"type": "int"}
     }
   },

@@ -198,14 +198,55 @@ class TemplateItemPickerScreen extends ConsumerStatefulWidget {
 class _TemplateItemPickerScreenState
     extends ConsumerState<TemplateItemPickerScreen> {
   late final Set<int> _selected;
+  bool _hydrating = true;
   bool _submitting = false;
 
   @override
   void initState() {
     super.initState();
+    // Missing items default checked; catalog hydrate adjusts active/inactive.
     _selected = Set<int>.from(
       List<int>.generate(widget.template.items.length, (int i) => i),
     );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _hydrateSelectionFromCatalog();
+    });
+  }
+
+  Future<void> _hydrateSelectionFromCatalog() async {
+    final Locale locale = Localizations.localeOf(context);
+    final List<InventoryItem> catalog = await ref
+        .read(repositoryProvider)
+        .listInventory(includeInactive: true);
+    final Map<String, InventoryItem> byName = <String, InventoryItem>{
+      for (final InventoryItem item in catalog)
+        item.name.trim().toLowerCase(): item,
+    };
+
+    final Set<int> next = <int>{};
+    for (int i = 0; i < widget.template.items.length; i++) {
+      final TemplateInventoryItem templateItem =
+          widget.template.items[i].resolvedForLocale(locale);
+      final String key = templateItem.name.trim().toLowerCase();
+      final InventoryItem? match = byName[key];
+      if (match == null) {
+        // Not in catalog yet — keep checked so Apply imports it.
+        next.add(i);
+      } else if (match.catalogActive) {
+        next.add(i);
+      }
+      // Inactive match stays unchecked (Apply will leave it inactive).
+    }
+
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _selected
+        ..clear()
+        ..addAll(next);
+      _hydrating = false;
+    });
   }
 
   void _selectAll() {
@@ -222,22 +263,33 @@ class _TemplateItemPickerScreenState
     setState(() => _selected.clear());
   }
 
-  Future<void> _importSelected() async {
-    if (_selected.isEmpty || _submitting) {
+  Future<void> _applySelection() async {
+    if (_submitting || _hydrating) {
       return;
     }
     final AppLocalizations l10n = context.l10n;
     final Locale locale = Localizations.localeOf(context);
-    final List<TemplateInventoryItem> selected = _selected
-        .map((int index) => widget.template.items[index])
-        .toList();
+    final List<TemplateInventoryItem> checked = <TemplateInventoryItem>[];
+    final List<TemplateInventoryItem> unchecked = <TemplateInventoryItem>[];
+    for (int i = 0; i < widget.template.items.length; i++) {
+      final TemplateInventoryItem item = widget.template.items[i];
+      if (_selected.contains(i)) {
+        checked.add(item);
+      } else {
+        unchecked.add(item);
+      }
+    }
     setState(() => _submitting = true);
-    final TemplateImportResult result = await ref
+    final TemplateApplyResult result = await ref
         .read(repositoryProvider)
-        .importTemplateInventory(selected, locale: locale);
-    if (result.added > 0) {
+        .applyTemplateInventorySelection(
+          checked: checked,
+          unchecked: unchecked,
+          locale: locale,
+        );
+    if (result.added > 0 || result.reactivated > 0) {
       final List<ResourceType> importedKinds = resourceTypesFromTemplateItems(
-        selected,
+        checked,
       );
       await ref
           .read(enabledResourceTypesProvider.notifier)
@@ -250,11 +302,16 @@ class _TemplateItemPickerScreenState
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          l10n.templateImportResult(result.added, result.skipped),
+          l10n.templateApplyResult(
+            result.added,
+            result.reactivated,
+            result.deactivated,
+            result.skipped,
+          ),
         ),
       ),
     );
-    if (result.added > 0) {
+    if (result.hasChanges) {
       ref.read(currentTabIndexProvider.notifier).state = kTabIndexInventory;
       Navigator.of(context).popUntil((Route<void> route) => route.isFirst);
     }
@@ -267,63 +324,71 @@ class _TemplateItemPickerScreenState
     final IndustryTemplate template = widget.template;
     return Scaffold(
       appBar: AppBar(title: Text(template.localizedName(locale))),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: <Widget>[
-          Text(
-            template.localizedDescription(locale),
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: <Widget>[
-              TextButton(onPressed: _selectAll, child: Text(l10n.selectAll)),
-              TextButton(onPressed: _clear, child: Text(l10n.clearSelection)),
-              const Spacer(),
-              Text(
-                l10n.selectedCount(_selected.length),
-                style: Theme.of(context).textTheme.labelLarge,
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          ...List<Widget>.generate(template.items.length, (int index) {
-            final TemplateInventoryItem item = template.items[index];
-            final bool checked = _selected.contains(index);
-            final String unitsLabel = item.defaultUnits == 1
-                ? l10n.unitSingular(item.defaultUnits)
-                : l10n.unitPlural(item.defaultUnits);
-            return CheckboxListTile(
-              value: checked,
-              contentPadding: EdgeInsets.zero,
-              title: Text(item.localizedName(locale)),
-              subtitle: Text(
-                l10n.templateItemSubtitle(
-                  item.localizedCategory(locale),
-                  unitsLabel,
+      body: _hydrating
+          ? const Center(child: CircularProgressIndicator())
+          : ListView(
+              padding: const EdgeInsets.all(16),
+              children: <Widget>[
+                Text(
+                  template.localizedDescription(locale),
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
-              ),
-              onChanged: (bool? value) {
-                setState(() {
-                  if (value == true) {
-                    _selected.add(index);
-                  } else {
-                    _selected.remove(index);
-                  }
-                });
-              },
-            );
-          }),
-        ],
-      ),
+                const SizedBox(height: 10),
+                Row(
+                  children: <Widget>[
+                    TextButton(
+                      onPressed: _selectAll,
+                      child: Text(l10n.selectAll),
+                    ),
+                    TextButton(
+                      onPressed: _clear,
+                      child: Text(l10n.clearSelection),
+                    ),
+                    const Spacer(),
+                    Text(
+                      l10n.selectedCount(_selected.length),
+                      style: Theme.of(context).textTheme.labelLarge,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                ...List<Widget>.generate(template.items.length, (int index) {
+                  final TemplateInventoryItem item = template.items[index];
+                  final bool checked = _selected.contains(index);
+                  final String unitsLabel = item.defaultUnits == 1
+                      ? l10n.unitSingular(item.defaultUnits)
+                      : l10n.unitPlural(item.defaultUnits);
+                  return CheckboxListTile(
+                    value: checked,
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(item.localizedName(locale)),
+                    subtitle: Text(
+                      l10n.templateItemSubtitle(
+                        item.localizedCategory(locale),
+                        unitsLabel,
+                      ),
+                    ),
+                    onChanged: (bool? value) {
+                      setState(() {
+                        if (value == true) {
+                          _selected.add(index);
+                        } else {
+                          _selected.remove(index);
+                        }
+                      });
+                    },
+                  );
+                }),
+              ],
+            ),
       bottomNavigationBar: SafeArea(
         minimum: const EdgeInsets.fromLTRB(16, 0, 16, 12),
         child: FilledButton(
-          onPressed: _selected.isEmpty || _submitting ? null : _importSelected,
+          onPressed: _hydrating || _submitting ? null : _applySelection,
           child: Text(
-            _submitting ? l10n.adding : l10n.addSelectedToResources,
+            _submitting ? l10n.applyingTemplateSelection : l10n.applyTemplateSelection,
           ),
         ),
       ),

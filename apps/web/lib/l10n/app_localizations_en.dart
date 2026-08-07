@@ -765,8 +765,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addSelectedToResources => 'Add selected to resources';
 
   @override
+  String get applyTemplateSelection => 'Apply';
+
+  @override
+  String get applyingTemplateSelection => 'Applying…';
+
+  @override
   String templateImportResult(int added, int skipped) {
     return 'Added $added items ($skipped already present)';
+  }
+
+  @override
+  String templateApplyResult(
+    int added,
+    int reactivated,
+    int deactivated,
+    int skipped,
+  ) {
+    return 'Added $added, restored $reactivated, removed $deactivated ($skipped unchanged)';
   }
 
   @override

@@ -112,4 +112,103 @@ void main() {
       expect(again.skipped, 1);
     });
   });
+
+  group('applyTemplateInventorySelection', () {
+    test('uncheck deactivates seeded item; re-check reactivates same row',
+        () async {
+      final LocalRepository repo = await bootRepo();
+      final IndustryTemplate marriage = industryTemplateById('marriage_decor')!;
+      final TemplateInventoryItem seedItem = marriage.items.first;
+
+      await repo.importTemplateInventory(<TemplateInventoryItem>[seedItem]);
+      final InventoryItem seeded = (await repo.listInventory()).single;
+      expect(seeded.catalogActive, isTrue);
+
+      final TemplateApplyResult drop = await repo.applyTemplateInventorySelection(
+        checked: const <TemplateInventoryItem>[],
+        unchecked: <TemplateInventoryItem>[seedItem],
+      );
+      expect(drop.deactivated, 1);
+      expect(drop.added, 0);
+      expect(drop.reactivated, 0);
+      expect(await repo.listInventory(), isEmpty);
+
+      final List<InventoryItem> inactive =
+          await repo.listInventory(includeInactive: true);
+      expect(inactive, hasLength(1));
+      expect(inactive.single.id, seeded.id);
+      expect(inactive.single.catalogActive, isFalse);
+
+      final TemplateApplyResult restore =
+          await repo.applyTemplateInventorySelection(
+        checked: <TemplateInventoryItem>[seedItem],
+        unchecked: const <TemplateInventoryItem>[],
+      );
+      expect(restore.reactivated, 1);
+      expect(restore.added, 0);
+      expect(restore.deactivated, 0);
+
+      final List<InventoryItem> active = await repo.listInventory();
+      expect(active, hasLength(1));
+      expect(active.single.id, seeded.id);
+      expect(active.single.catalogActive, isTrue);
+
+      final List<InventoryItem> all =
+          await repo.listInventory(includeInactive: true);
+      expect(all, hasLength(1));
+    });
+
+    test('order history keeps catalog name after deactivate', () async {
+      final LocalRepository repo = await bootRepo();
+      final IndustryTemplate marriage = industryTemplateById('marriage_decor')!;
+      final TemplateInventoryItem seedItem = marriage.items.first;
+
+      await repo.importTemplateInventory(<TemplateInventoryItem>[seedItem]);
+      final InventoryItem seeded = (await repo.listInventory()).single;
+      final Customer customer = await ensureCustomer(repo);
+
+      final String rentalId = await repo.createRental(
+        customer: customer,
+        lines: <RentalLineInput>[
+          RentalLineInput(
+            itemId: seeded.id,
+            instanceName: '${seeded.name} A',
+            shortCode: 'TMP-1',
+          ),
+        ],
+      );
+
+      await repo.applyTemplateInventorySelection(
+        checked: const <TemplateInventoryItem>[],
+        unchecked: <TemplateInventoryItem>[seedItem],
+      );
+      expect(await repo.listInventory(), isEmpty);
+
+      final Rental rental =
+          (await repo.listRentals()).firstWhere((Rental r) => r.id == rentalId);
+      expect(rental.lines, isNotEmpty);
+      expect(rental.lines.first.catalogName, seeded.name);
+      expect(rental.lines.first.itemId, seeded.id);
+    });
+
+    test('checked missing imports; unchecked missing is no-op', () async {
+      final LocalRepository repo = await bootRepo();
+      final IndustryTemplate marriage = industryTemplateById('marriage_decor')!;
+      final TemplateInventoryItem first = marriage.items[0];
+      final TemplateInventoryItem second = marriage.items[1];
+
+      final TemplateApplyResult result =
+          await repo.applyTemplateInventorySelection(
+        checked: <TemplateInventoryItem>[first],
+        unchecked: <TemplateInventoryItem>[second],
+      );
+      expect(result.added, 1);
+      expect(result.deactivated, 0);
+      expect(result.reactivated, 0);
+
+      final List<InventoryItem> active = await repo.listInventory();
+      expect(active, hasLength(1));
+      expect(active.single.name, first.name);
+    });
+  });
 }

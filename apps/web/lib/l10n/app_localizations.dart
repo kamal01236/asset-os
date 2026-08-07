@@ -1442,11 +1442,34 @@ abstract class AppLocalizations {
   /// **'Add selected to resources'**
   String get addSelectedToResources;
 
+  /// No description provided for @applyTemplateSelection.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
+  String get applyTemplateSelection;
+
+  /// No description provided for @applyingTemplateSelection.
+  ///
+  /// In en, this message translates to:
+  /// **'Applying…'**
+  String get applyingTemplateSelection;
+
   /// No description provided for @templateImportResult.
   ///
   /// In en, this message translates to:
   /// **'Added {added} items ({skipped} already present)'**
   String templateImportResult(int added, int skipped);
+
+  /// No description provided for @templateApplyResult.
+  ///
+  /// In en, this message translates to:
+  /// **'Added {added}, restored {reactivated}, removed {deactivated} ({skipped} unchanged)'**
+  String templateApplyResult(
+    int added,
+    int reactivated,
+    int deactivated,
+    int skipped,
+  );
 
   /// No description provided for @myWhatsAppTitle.
   ///

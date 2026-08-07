@@ -13,7 +13,7 @@ import '../../core/repositories/local_repository.dart';
 import '../../core/validation/input_formatters.dart';
 import '../../core/validation/text_rules.dart';
 import '../../core/widgets/ui_primitives.dart';
-import 'order_payment_screen.dart';
+import 'rental_detail_nav.dart';
 
 /// New Order flow: items first (with running total), then customer, then
 /// order summary (sample bill), then generate.
@@ -831,7 +831,8 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
       if (!mounted) {
         return;
       }
-      pushOrderPayment(context, rentalId: rentalId, afterCreate: true);
+      // Payment is collected from order detail (Pay), not auto-opened.
+      pushReplacementRentalDetail(context, rentalId: rentalId);
     } catch (error) {
       if (mounted) {
         setState(() => _submitting = false);
