@@ -622,6 +622,26 @@ class _TimelineRow extends StatelessWidget {
           formatIndiaDate(event.at),
           money,
         ),
+      LoanTimelineKind.periodEndSliceInterest =>
+        l10n.loanTimelinePeriodEndSlice(
+          formatMoney(
+            event.principalBasisPaise ?? 0,
+            currencyCode: loan.currencyCode,
+          ),
+          formatIndiaDate(event.from ?? event.at),
+          formatIndiaDate(event.through ?? event.at),
+          money,
+        ),
+      LoanTimelineKind.remainingPeriodInterest =>
+        l10n.loanTimelineRemainingPeriodInterest(
+          formatMoney(
+            event.principalBasisPaise ?? 0,
+            currencyCode: loan.currencyCode,
+          ),
+          money,
+        ),
+      LoanTimelineKind.principalAfterCapitalize =>
+        l10n.loanTimelinePrincipalNow(formatIndiaDate(event.at), money),
       LoanTimelineKind.payment => l10n.loanTimelinePayment(
           formatIndiaDate(event.at),
           money,
@@ -645,6 +665,9 @@ class _TimelineRow extends StatelessWidget {
               LoanTimelineKind.start => Icons.flag_outlined,
               LoanTimelineKind.interestSegment => Icons.trending_up,
               LoanTimelineKind.deferredSliceInterest => Icons.timelapse,
+              LoanTimelineKind.periodEndSliceInterest => Icons.trending_up,
+              LoanTimelineKind.remainingPeriodInterest => Icons.trending_up,
+              LoanTimelineKind.principalAfterCapitalize => Icons.account_balance_wallet_outlined,
               LoanTimelineKind.payment => Icons.payments_outlined,
               LoanTimelineKind.adjustment => Icons.tune,
               LoanTimelineKind.pendingAsOf => Icons.pending_actions_outlined,
@@ -656,7 +679,8 @@ class _TimelineRow extends StatelessWidget {
           Expanded(
             child: Text(
               text,
-              style: event.kind == LoanTimelineKind.pendingAsOf
+              style: event.kind == LoanTimelineKind.pendingAsOf ||
+                      event.kind == LoanTimelineKind.principalAfterCapitalize
                   ? Theme.of(context).textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.w700,
                       )

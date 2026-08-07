@@ -1228,6 +1228,29 @@
       "amount": {"type": "String"}
     }
   },
+  "loanTimelinePeriodEndSlice": "Interest on payment {repaid} ({from}–{to}) → {interest} (added to principal)",
+  "@loanTimelinePeriodEndSlice": {
+    "placeholders": {
+      "repaid": {"type": "String"},
+      "from": {"type": "String"},
+      "to": {"type": "String"},
+      "interest": {"type": "String"}
+    }
+  },
+  "loanTimelineRemainingPeriodInterest": "Interest on remaining {principal} for full period → {amount} (added to principal)",
+  "@loanTimelineRemainingPeriodInterest": {
+    "placeholders": {
+      "principal": {"type": "String"},
+      "amount": {"type": "String"}
+    }
+  },
+  "loanTimelinePrincipalNow": "{date} — Principal now {amount}",
+  "@loanTimelinePrincipalNow": {
+    "placeholders": {
+      "date": {"type": "String"},
+      "amount": {"type": "String"}
+    }
+  },
   "loanTimelinePayment": "{date} — Payment {amount} → principal {principal}",
   "@loanTimelinePayment": {
     "placeholders": {

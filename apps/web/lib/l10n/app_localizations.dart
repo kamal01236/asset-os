@@ -3713,6 +3713,29 @@ abstract class AppLocalizations {
     String amount,
   );
 
+  /// No description provided for @loanTimelinePeriodEndSlice.
+  ///
+  /// In en, this message translates to:
+  /// **'Interest on payment {repaid} ({from}–{to}) → {interest} (added to principal)'**
+  String loanTimelinePeriodEndSlice(
+    String repaid,
+    String from,
+    String to,
+    String interest,
+  );
+
+  /// No description provided for @loanTimelineRemainingPeriodInterest.
+  ///
+  /// In en, this message translates to:
+  /// **'Interest on remaining {principal} for full period → {amount} (added to principal)'**
+  String loanTimelineRemainingPeriodInterest(String principal, String amount);
+
+  /// No description provided for @loanTimelinePrincipalNow.
+  ///
+  /// In en, this message translates to:
+  /// **'{date} — Principal now {amount}'**
+  String loanTimelinePrincipalNow(String date, String amount);
+
   /// No description provided for @loanTimelinePayment.
   ///
   /// In en, this message translates to:

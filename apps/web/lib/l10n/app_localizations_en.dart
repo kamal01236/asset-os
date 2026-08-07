@@ -2111,6 +2111,26 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String loanTimelinePeriodEndSlice(
+    String repaid,
+    String from,
+    String to,
+    String interest,
+  ) {
+    return 'Interest on payment $repaid ($from–$to) → $interest (added to principal)';
+  }
+
+  @override
+  String loanTimelineRemainingPeriodInterest(String principal, String amount) {
+    return 'Interest on remaining $principal for full period → $amount (added to principal)';
+  }
+
+  @override
+  String loanTimelinePrincipalNow(String date, String amount) {
+    return '$date — Principal now $amount';
+  }
+
+  @override
   String loanTimelinePayment(String date, String amount, String principal) {
     return '$date — Payment $amount → principal $principal';
   }

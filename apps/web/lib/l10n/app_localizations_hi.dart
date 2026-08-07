@@ -2112,6 +2112,26 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
+  String loanTimelinePeriodEndSlice(
+    String repaid,
+    String from,
+    String to,
+    String interest,
+  ) {
+    return 'भुगतान $repaid पर ब्याज ($from–$to) → $interest (मूलधन में जोड़ा)';
+  }
+
+  @override
+  String loanTimelineRemainingPeriodInterest(String principal, String amount) {
+    return 'शेष $principal पर पूरी अवधि का ब्याज → $amount (मूलधन में जोड़ा)';
+  }
+
+  @override
+  String loanTimelinePrincipalNow(String date, String amount) {
+    return '$date — अब मूलधन $amount';
+  }
+
+  @override
   String loanTimelinePayment(String date, String amount, String principal) {
     return '$date — भुगतान $amount → मूलधन $principal';
   }

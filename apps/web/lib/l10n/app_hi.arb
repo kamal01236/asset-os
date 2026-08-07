@@ -1228,6 +1228,29 @@
       "amount": {"type": "String"}
     }
   },
+  "loanTimelinePeriodEndSlice": "भुगतान {repaid} पर ब्याज ({from}–{to}) → {interest} (मूलधन में जोड़ा)",
+  "@loanTimelinePeriodEndSlice": {
+    "placeholders": {
+      "repaid": {"type": "String"},
+      "from": {"type": "String"},
+      "to": {"type": "String"},
+      "interest": {"type": "String"}
+    }
+  },
+  "loanTimelineRemainingPeriodInterest": "शेष {principal} पर पूरी अवधि का ब्याज → {amount} (मूलधन में जोड़ा)",
+  "@loanTimelineRemainingPeriodInterest": {
+    "placeholders": {
+      "principal": {"type": "String"},
+      "amount": {"type": "String"}
+    }
+  },
+  "loanTimelinePrincipalNow": "{date} — अब मूलधन {amount}",
+  "@loanTimelinePrincipalNow": {
+    "placeholders": {
+      "date": {"type": "String"},
+      "amount": {"type": "String"}
+    }
+  },
   "loanTimelinePayment": "{date} — भुगतान {amount} → मूलधन {principal}",
   "@loanTimelinePayment": {
     "placeholders": {

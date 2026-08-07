@@ -4,8 +4,16 @@ import 'loan_models.dart';
 /// Readable timeline row kinds for the loan calculator surface.
 enum LoanTimelineKind {
   start,
+  /// Full-period interest when no mid-period slices (legacy / simple periods).
   interestSegment,
+  /// Mid-period preview: pro-rata interest on a repaid slice (adds at period end).
   deferredSliceInterest,
+  /// Period-end restatement of interest on one mid-period repayment.
+  periodEndSliceInterest,
+  /// Full-period interest on principal remaining at anniversary.
+  remainingPeriodInterest,
+  /// Principal after capitalizing period-end interest.
+  principalAfterCapitalize,
   payment,
   adjustment,
   pendingAsOf,
@@ -18,6 +26,7 @@ class LoanTimelineEvent {
     required this.at,
     required this.amountPaise,
     this.from,
+    this.through,
     this.toInterestPaise = 0,
     this.toPrincipalPaise = 0,
     this.note,
@@ -28,6 +37,8 @@ class LoanTimelineEvent {
   final LoanTimelineKind kind;
   final DateTime at;
   final DateTime? from;
+  /// End of accrual window when [at] is the posting date (period end).
+  final DateTime? through;
   final int amountPaise;
   final int toInterestPaise;
   final int toPrincipalPaise;
@@ -35,6 +46,22 @@ class LoanTimelineEvent {
   final String? entryId;
   /// Principal used when posting interest for a completed period / repaid slice.
   final int? principalBasisPaise;
+}
+
+class _DeferredSlice {
+  const _DeferredSlice({
+    required this.entryId,
+    required this.repaidPaise,
+    required this.from,
+    required this.to,
+    required this.interestPaise,
+  });
+
+  final String? entryId;
+  final int repaidPaise;
+  final DateTime from;
+  final DateTime to;
+  final int interestPaise;
 }
 
 /// Current scenario snapshot produced by [computeLoanScenario].
@@ -216,6 +243,7 @@ LoanScenario computeLoanScenario({
 
   int remainingPrincipal = loan.principalPaise < 0 ? 0 : loan.principalPaise;
   int deferredInterest = 0;
+  final List<_DeferredSlice> deferredSlices = <_DeferredSlice>[];
   int interestAccrued = 0;
   int totalPaid = 0;
   int totalAdjustments = 0;
@@ -232,6 +260,7 @@ LoanScenario computeLoanScenario({
     required int principalReduced,
     required DateTime periodStart,
     required DateTime at,
+    String? entryId,
   }) {
     if (principalReduced <= 0 || loan.rateBps <= 0) {
       return;
@@ -247,6 +276,15 @@ LoanScenario computeLoanScenario({
       return;
     }
     deferredInterest += slice;
+    deferredSlices.add(
+      _DeferredSlice(
+        entryId: entryId,
+        repaidPaise: principalReduced,
+        from: periodStart,
+        to: at,
+        interestPaise: slice,
+      ),
+    );
     interestAccrued += slice;
     timeline.add(
       LoanTimelineEvent(
@@ -255,6 +293,7 @@ LoanScenario computeLoanScenario({
         at: at,
         amountPaise: slice,
         principalBasisPaise: principalReduced,
+        entryId: entryId,
       ),
     );
   }
@@ -291,6 +330,7 @@ LoanScenario computeLoanScenario({
           principalReduced: toPrincipal,
           periodStart: periodStart,
           at: at,
+          entryId: entryId,
         );
       }
       return;
@@ -321,6 +361,7 @@ LoanScenario computeLoanScenario({
           principalReduced: toPrincipal,
           periodStart: periodStart,
           at: at,
+          entryId: entryId,
         );
       }
     } else if (amount < 0) {
@@ -363,21 +404,48 @@ LoanScenario computeLoanScenario({
     final int total = deferredInterest + remainingInterest;
     if (total <= 0) {
       deferredInterest = 0;
+      deferredSlices.clear();
       return;
     }
     // Deferred was already counted in interestAccrued at repayment time.
     interestAccrued += remainingInterest;
+
+    for (final _DeferredSlice slice in deferredSlices) {
+      timeline.add(
+        LoanTimelineEvent(
+          kind: LoanTimelineKind.periodEndSliceInterest,
+          from: slice.from,
+          through: slice.to,
+          at: periodEnd,
+          amountPaise: slice.interestPaise,
+          principalBasisPaise: slice.repaidPaise,
+          entryId: slice.entryId,
+        ),
+      );
+    }
+
+    if (remainingInterest > 0) {
+      timeline.add(
+        LoanTimelineEvent(
+          kind: LoanTimelineKind.remainingPeriodInterest,
+          from: periodStart,
+          at: periodEnd,
+          amountPaise: remainingInterest,
+          principalBasisPaise: remainingPrincipal,
+        ),
+      );
+    }
+
+    remainingPrincipal += total;
     timeline.add(
       LoanTimelineEvent(
-        kind: LoanTimelineKind.interestSegment,
-        from: periodStart,
+        kind: LoanTimelineKind.principalAfterCapitalize,
         at: periodEnd,
-        amountPaise: total,
-        principalBasisPaise: remainingPrincipal,
+        amountPaise: remainingPrincipal,
       ),
     );
-    remainingPrincipal += total;
     deferredInterest = 0;
+    deferredSlices.clear();
   }
 
   int entryIndex = 0;
