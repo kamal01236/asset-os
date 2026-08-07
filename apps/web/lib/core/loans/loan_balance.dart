@@ -269,7 +269,9 @@ DateTime resolveLoanAsOf({
 /// defer remainder-of-period interest; at each period anniversary, deferred
 /// interest plus full-period interest on the core outstanding either capitalizes
 /// (compound) or posts as unpaid interest without changing principal (simple).
-/// Simple repayments apply interest-first to unpaid interest, then principal.
+/// Repayments allocate by [MoneyLoan.prepaymentAllocation]: interest-first
+/// clears unpaid/deferred interest then principal; principal-only leaves
+/// unpaid interest unchanged.
 LoanScenario computeLoanScenario({
   required MoneyLoan loan,
   DateTime? now,
@@ -443,7 +445,10 @@ LoanScenario computeLoanScenario({
       int toInterest = 0;
       int toPrincipal = 0;
 
-      if (isSimple && remainingPay > 0 && unpaidInterestTotal() > 0) {
+      if (loan.prepaymentAllocation ==
+              MoneyPrepaymentAllocation.interestThenPrincipal &&
+          remainingPay > 0 &&
+          unpaidInterestTotal() > 0) {
         final int owed = unpaidInterestTotal();
         toInterest = remainingPay > owed ? owed : remainingPay;
         remainingPay -= toInterest;

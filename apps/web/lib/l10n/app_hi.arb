@@ -1160,11 +1160,15 @@
   "loanInterestKindLabel": "ब्याज",
   "loanInterestSimple": "सरल",
   "loanInterestCompound": "चक्रवृद्धि",
+  "loanPrepaymentAllocationLabel": "चुकौती लागू होती है",
+  "loanPrepaymentInterestFirst": "पहले ब्याज",
+  "loanPrepaymentPrincipalOnly": "केवल मूलधन",
+  "loanPrepaymentAllocationHint": "पहले ब्याज अवैतनिक ब्याज चुकाता है, फिर मूलधन। केवल मूलधन मूलधन घटाता है; अवैतनिक ब्याज अलग से चुकाने तक बना रहता है।",
   "loanRatePercentLabel": "दर",
   "loanRatePeriodLabel": "अवधि",
   "loanRateMonthly": "मासिक",
   "loanRateYearly": "वार्षिक",
-  "loanPeriodEndInterestHintSimple": "अवधि के बीच चुकौती और टॉप-अप बकाया समय का आनुपातिक ब्याज जोड़ते हैं। हर महीने या साल की सालगिरह पर वह ब्याज देय होता है, पर मूलधन में नहीं जुड़ता। चुकौती पहले अवैतनिक ब्याज चुकाती है, फिर मूलधन।",
+  "loanPeriodEndInterestHintSimple": "अवधि के बीच चुकौती और टॉप-अप बकाया समय का आनुपातिक ब्याज जोड़ते हैं। हर महीने या साल की सालगिरह पर वह ब्याज देय होता है, पर मूलधन में नहीं जुड़ता।",
   "loanPeriodEndInterestHintCompound": "अवधि के बीच चुकौती मूलधन घटाती है और बकाया समय का आनुपातिक ब्याज जोड़ती है। जोड़ा मूलधन अवधि अंत तक आनुपातिक ब्याज कमाता है। वह ब्याज, और पूरी अवधि बकाया मूलधन पर ब्याज, हर महीने या साल की सालगिरह पर मूलधन में जुड़ जाता है।",
   "loanRateInvalid": "मान्य दर दर्ज करें",
   "loanNoteOptionalLabel": "नोट (वैकल्पिक)",
@@ -1211,6 +1215,12 @@
       "rate": {"type": "String"},
       "period": {"type": "String"},
       "kind": {"type": "String"}
+    }
+  },
+  "loanPrepaymentSetupLabel": "चुकौती: {mode}",
+  "@loanPrepaymentSetupLabel": {
+    "placeholders": {
+      "mode": {"type": "String"}
     }
   },
   "loanTimelineStart": "{date} — कर्ज शुरू · {amount}",

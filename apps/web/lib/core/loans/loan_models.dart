@@ -35,6 +35,19 @@ enum MoneyRatePeriod {
   }
 }
 
+/// How repayments allocate between unpaid interest and principal.
+enum MoneyPrepaymentAllocation {
+  interestThenPrincipal,
+  principalOnly;
+
+  static MoneyPrepaymentAllocation parse(String? raw) {
+    if (raw == MoneyPrepaymentAllocation.principalOnly.name) {
+      return MoneyPrepaymentAllocation.principalOnly;
+    }
+    return MoneyPrepaymentAllocation.interestThenPrincipal;
+  }
+}
+
 enum MoneyLoanStatus {
   pending,
   closed,
@@ -106,6 +119,8 @@ class MoneyLoan {
     required this.interestStartedAt,
     required this.status,
     required this.createdAt,
+    this.prepaymentAllocation =
+        MoneyPrepaymentAllocation.interestThenPrincipal,
     this.interestEndedAt,
     this.closedAt,
     this.note,
@@ -122,6 +137,7 @@ class MoneyLoan {
   final MoneyRatePeriod ratePeriod;
   final DateTime interestStartedAt;
   final DateTime? interestEndedAt;
+  final MoneyPrepaymentAllocation prepaymentAllocation;
   final MoneyLoanStatus status;
   final DateTime? closedAt;
   final String? note;
@@ -138,6 +154,7 @@ class MoneyLoan {
     DateTime? interestStartedAt,
     DateTime? interestEndedAt,
     bool clearInterestEndedAt = false,
+    MoneyPrepaymentAllocation? prepaymentAllocation,
     MoneyLoanStatus? status,
     DateTime? closedAt,
     bool clearClosedAt = false,
@@ -157,6 +174,8 @@ class MoneyLoan {
       interestStartedAt: interestStartedAt ?? this.interestStartedAt,
       interestEndedAt:
           clearInterestEndedAt ? null : (interestEndedAt ?? this.interestEndedAt),
+      prepaymentAllocation:
+          prepaymentAllocation ?? this.prepaymentAllocation,
       status: status ?? this.status,
       closedAt: clearClosedAt ? null : (closedAt ?? this.closedAt),
       note: clearNote ? null : (note ?? this.note),

@@ -3499,6 +3499,30 @@ abstract class AppLocalizations {
   /// **'Compound'**
   String get loanInterestCompound;
 
+  /// No description provided for @loanPrepaymentAllocationLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Repayment applies to'**
+  String get loanPrepaymentAllocationLabel;
+
+  /// No description provided for @loanPrepaymentInterestFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Interest first'**
+  String get loanPrepaymentInterestFirst;
+
+  /// No description provided for @loanPrepaymentPrincipalOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Principal only'**
+  String get loanPrepaymentPrincipalOnly;
+
+  /// No description provided for @loanPrepaymentAllocationHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Interest first clears unpaid interest, then principal. Principal only reduces principal; unpaid interest stays until paid separately.'**
+  String get loanPrepaymentAllocationHint;
+
   /// No description provided for @loanRatePercentLabel.
   ///
   /// In en, this message translates to:
@@ -3526,7 +3550,7 @@ abstract class AppLocalizations {
   /// No description provided for @loanPeriodEndInterestHintSimple.
   ///
   /// In en, this message translates to:
-  /// **'Mid-period repayments and top-ups accrue pro-rata interest for time outstanding. At each month or year anniversary that interest is due but not added to principal. Repayments clear unpaid interest first, then principal.'**
+  /// **'Mid-period repayments and top-ups accrue pro-rata interest for time outstanding. At each month or year anniversary that interest is due but not added to principal.'**
   String get loanPeriodEndInterestHintSimple;
 
   /// No description provided for @loanPeriodEndInterestHintCompound.
@@ -3738,6 +3762,12 @@ abstract class AppLocalizations {
     String period,
     String kind,
   );
+
+  /// No description provided for @loanPrepaymentSetupLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Repayments: {mode}'**
+  String loanPrepaymentSetupLabel(String mode);
 
   /// No description provided for @loanTimelineStart.
   ///

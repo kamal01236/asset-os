@@ -1987,6 +1987,19 @@ class AppLocalizationsHi extends AppLocalizations {
   String get loanInterestCompound => 'चक्रवृद्धि';
 
   @override
+  String get loanPrepaymentAllocationLabel => 'चुकौती लागू होती है';
+
+  @override
+  String get loanPrepaymentInterestFirst => 'पहले ब्याज';
+
+  @override
+  String get loanPrepaymentPrincipalOnly => 'केवल मूलधन';
+
+  @override
+  String get loanPrepaymentAllocationHint =>
+      'पहले ब्याज अवैतनिक ब्याज चुकाता है, फिर मूलधन। केवल मूलधन मूलधन घटाता है; अवैतनिक ब्याज अलग से चुकाने तक बना रहता है।';
+
+  @override
   String get loanRatePercentLabel => 'दर';
 
   @override
@@ -2000,7 +2013,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get loanPeriodEndInterestHintSimple =>
-      'अवधि के बीच चुकौती और टॉप-अप बकाया समय का आनुपातिक ब्याज जोड़ते हैं। हर महीने या साल की सालगिरह पर वह ब्याज देय होता है, पर मूलधन में नहीं जुड़ता। चुकौती पहले अवैतनिक ब्याज चुकाती है, फिर मूलधन।';
+      'अवधि के बीच चुकौती और टॉप-अप बकाया समय का आनुपातिक ब्याज जोड़ते हैं। हर महीने या साल की सालगिरह पर वह ब्याज देय होता है, पर मूलधन में नहीं जुड़ता।';
 
   @override
   String get loanPeriodEndInterestHintCompound =>
@@ -2115,6 +2128,11 @@ class AppLocalizationsHi extends AppLocalizations {
     String kind,
   ) {
     return 'शुरू $start · देय $due · $rate $period · $kind';
+  }
+
+  @override
+  String loanPrepaymentSetupLabel(String mode) {
+    return 'चुकौती: $mode';
   }
 
   @override

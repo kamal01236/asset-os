@@ -1160,11 +1160,15 @@
   "loanInterestKindLabel": "Interest",
   "loanInterestSimple": "Simple",
   "loanInterestCompound": "Compound",
+  "loanPrepaymentAllocationLabel": "Repayment applies to",
+  "loanPrepaymentInterestFirst": "Interest first",
+  "loanPrepaymentPrincipalOnly": "Principal only",
+  "loanPrepaymentAllocationHint": "Interest first clears unpaid interest, then principal. Principal only reduces principal; unpaid interest stays until paid separately.",
   "loanRatePercentLabel": "Rate",
   "loanRatePeriodLabel": "Period",
   "loanRateMonthly": "Monthly",
   "loanRateYearly": "Yearly",
-  "loanPeriodEndInterestHintSimple": "Mid-period repayments and top-ups accrue pro-rata interest for time outstanding. At each month or year anniversary that interest is due but not added to principal. Repayments clear unpaid interest first, then principal.",
+  "loanPeriodEndInterestHintSimple": "Mid-period repayments and top-ups accrue pro-rata interest for time outstanding. At each month or year anniversary that interest is due but not added to principal.",
   "loanPeriodEndInterestHintCompound": "Mid-period repayments reduce principal and accrue pro-rata interest for time outstanding. Added principal accrues pro-rata until period end. That interest, plus full-period interest on what was outstanding the whole period, is added to principal at each month or year anniversary.",
   "loanRateInvalid": "Enter a valid rate",
   "loanNoteOptionalLabel": "Note (optional)",
@@ -1211,6 +1215,12 @@
       "rate": {"type": "String"},
       "period": {"type": "String"},
       "kind": {"type": "String"}
+    }
+  },
+  "loanPrepaymentSetupLabel": "Repayments: {mode}",
+  "@loanPrepaymentSetupLabel": {
+    "placeholders": {
+      "mode": {"type": "String"}
     }
   },
   "loanTimelineStart": "{date} — Loan started · {amount}",

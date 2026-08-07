@@ -731,6 +731,10 @@ class _SetupSummary extends StatelessWidget {
     final String kind = loan.interestKind == MoneyInterestKind.simple
         ? l10n.loanInterestSimple
         : l10n.loanInterestCompound;
+    final String prepaymentMode =
+        loan.prepaymentAllocation == MoneyPrepaymentAllocation.principalOnly
+            ? l10n.loanPrepaymentPrincipalOnly
+            : l10n.loanPrepaymentInterestFirst;
     final String start = formatIndiaDate(loan.interestStartedAt);
     final String due = loan.interestEndedAt == null
         ? l10n.loanDueNone
@@ -741,6 +745,13 @@ class _SetupSummary extends StatelessWidget {
       children: <Widget>[
         Text(
           l10n.loanSetupSummary(start, due, '$ratePct%', period, kind),
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          l10n.loanPrepaymentSetupLabel(prepaymentMode),
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),

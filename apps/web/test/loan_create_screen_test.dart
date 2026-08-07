@@ -81,6 +81,10 @@ void main() {
     expect(loans, hasLength(1));
     expect(loans.first.customerId, customer.id);
     expect(loans.first.principalPaise, 500000);
+    expect(
+      loans.first.prepaymentAllocation,
+      MoneyPrepaymentAllocation.interestThenPrincipal,
+    );
 
     expect(find.byType(LoanDetailScreen), findsOneWidget);
     expect(find.text('Loan not found'), findsNothing);

@@ -36,6 +36,8 @@ class _LoanCreateScreenState extends ConsumerState<LoanCreateScreen> {
   final TextEditingController _noteCtrl = TextEditingController();
   MoneyLoanDirection _direction = MoneyLoanDirection.given;
   MoneyInterestKind _interestKind = MoneyInterestKind.simple;
+  MoneyPrepaymentAllocation _prepaymentAllocation =
+      MoneyPrepaymentAllocation.interestThenPrincipal;
   MoneyRatePeriod _ratePeriod = MoneyRatePeriod.monthly;
   DateTime _startedAt = DateTime.now();
   DateTime? _endedAt;
@@ -366,6 +368,35 @@ class _LoanCreateScreenState extends ConsumerState<LoanCreateScreen> {
             },
           ),
           const SizedBox(height: 16),
+          Text(
+            l10n.loanPrepaymentAllocationLabel,
+            style: Theme.of(context).textTheme.titleSmall,
+          ),
+          const SizedBox(height: 8),
+          SegmentedButton<MoneyPrepaymentAllocation>(
+            segments: <ButtonSegment<MoneyPrepaymentAllocation>>[
+              ButtonSegment<MoneyPrepaymentAllocation>(
+                value: MoneyPrepaymentAllocation.interestThenPrincipal,
+                label: Text(l10n.loanPrepaymentInterestFirst),
+              ),
+              ButtonSegment<MoneyPrepaymentAllocation>(
+                value: MoneyPrepaymentAllocation.principalOnly,
+                label: Text(l10n.loanPrepaymentPrincipalOnly),
+              ),
+            ],
+            selected: <MoneyPrepaymentAllocation>{_prepaymentAllocation},
+            onSelectionChanged: (Set<MoneyPrepaymentAllocation> s) {
+              setState(() => _prepaymentAllocation = s.first);
+            },
+          ),
+          const SizedBox(height: 8),
+          Text(
+            l10n.loanPrepaymentAllocationHint,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+          ),
+          const SizedBox(height: 16),
           Row(
             children: <Widget>[
               Expanded(
@@ -490,6 +521,7 @@ class _LoanCreateScreenState extends ConsumerState<LoanCreateScreen> {
             interestKind: _interestKind,
             rateBps: rateBps,
             ratePeriod: _ratePeriod,
+            prepaymentAllocation: _prepaymentAllocation,
             note: note,
           );
       if (!mounted) {

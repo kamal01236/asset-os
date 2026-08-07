@@ -1704,6 +1704,8 @@ class LocalRepository {
     MoneyInterestKind interestKind = MoneyInterestKind.simple,
     int rateBps = 0,
     MoneyRatePeriod ratePeriod = MoneyRatePeriod.monthly,
+    MoneyPrepaymentAllocation prepaymentAllocation =
+        MoneyPrepaymentAllocation.interestThenPrincipal,
     DateTime? interestEndedAt,
     String? note,
     String currencyCode = 'INR',
@@ -1746,6 +1748,7 @@ class LocalRepository {
         ratePeriod: Value<String>(ratePeriod.name),
         interestStartedAt: start,
         interestEndedAt: Value<DateTime?>(ended),
+        prepaymentAllocation: Value<String>(prepaymentAllocation.name),
         status: Value<String>(MoneyLoanStatus.pending.name),
         note: Value<String?>(
           (trimmedNote == null || trimmedNote.isEmpty) ? null : trimmedNote,
@@ -2029,6 +2032,8 @@ class LocalRepository {
       ratePeriod: MoneyRatePeriod.parse(row.ratePeriod),
       interestStartedAt: row.interestStartedAt,
       interestEndedAt: row.interestEndedAt,
+      prepaymentAllocation:
+          MoneyPrepaymentAllocation.parse(row.prepaymentAllocation),
       status: MoneyLoanStatus.parse(row.status),
       closedAt: row.closedAt,
       note: row.note,

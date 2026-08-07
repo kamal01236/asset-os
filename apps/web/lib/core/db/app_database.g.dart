@@ -4681,6 +4681,18 @@ class $MoneyLoansTable extends MoneyLoans
         type: DriftSqlType.dateTime,
         requiredDuringInsert: false,
       );
+  static const VerificationMeta _prepaymentAllocationMeta =
+      const VerificationMeta('prepaymentAllocation');
+  @override
+  late final GeneratedColumn<String> prepaymentAllocation =
+      GeneratedColumn<String>(
+        'prepayment_allocation',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('interestThenPrincipal'),
+      );
   static const VerificationMeta _statusMeta = const VerificationMeta('status');
   @override
   late final GeneratedColumn<String> status = GeneratedColumn<String>(
@@ -4734,6 +4746,7 @@ class $MoneyLoansTable extends MoneyLoans
     ratePeriod,
     interestStartedAt,
     interestEndedAt,
+    prepaymentAllocation,
     status,
     closedAt,
     note,
@@ -4833,6 +4846,15 @@ class $MoneyLoansTable extends MoneyLoans
         ),
       );
     }
+    if (data.containsKey('prepayment_allocation')) {
+      context.handle(
+        _prepaymentAllocationMeta,
+        prepaymentAllocation.isAcceptableOrUnknown(
+          data['prepayment_allocation']!,
+          _prepaymentAllocationMeta,
+        ),
+      );
+    }
     if (data.containsKey('status')) {
       context.handle(
         _statusMeta,
@@ -4908,6 +4930,10 @@ class $MoneyLoansTable extends MoneyLoans
         DriftSqlType.dateTime,
         data['${effectivePrefix}interest_ended_at'],
       ),
+      prepaymentAllocation: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}prepayment_allocation'],
+      )!,
       status: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}status'],
@@ -4959,6 +4985,9 @@ class MoneyLoanRow extends DataClass implements Insertable<MoneyLoanRow> {
   /// Optional due / maturity; caps accrual when before as-of.
   final DateTime? interestEndedAt;
 
+  /// `interestThenPrincipal` | `principalOnly`
+  final String prepaymentAllocation;
+
   /// `pending` | `closed` | `cancelled`
   final String status;
   final DateTime? closedAt;
@@ -4975,6 +5004,7 @@ class MoneyLoanRow extends DataClass implements Insertable<MoneyLoanRow> {
     required this.ratePeriod,
     required this.interestStartedAt,
     this.interestEndedAt,
+    required this.prepaymentAllocation,
     required this.status,
     this.closedAt,
     this.note,
@@ -4995,6 +5025,7 @@ class MoneyLoanRow extends DataClass implements Insertable<MoneyLoanRow> {
     if (!nullToAbsent || interestEndedAt != null) {
       map['interest_ended_at'] = Variable<DateTime>(interestEndedAt);
     }
+    map['prepayment_allocation'] = Variable<String>(prepaymentAllocation);
     map['status'] = Variable<String>(status);
     if (!nullToAbsent || closedAt != null) {
       map['closed_at'] = Variable<DateTime>(closedAt);
@@ -5020,6 +5051,7 @@ class MoneyLoanRow extends DataClass implements Insertable<MoneyLoanRow> {
       interestEndedAt: interestEndedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(interestEndedAt),
+      prepaymentAllocation: Value(prepaymentAllocation),
       status: Value(status),
       closedAt: closedAt == null && nullToAbsent
           ? const Value.absent()
@@ -5047,6 +5079,9 @@ class MoneyLoanRow extends DataClass implements Insertable<MoneyLoanRow> {
         json['interestStartedAt'],
       ),
       interestEndedAt: serializer.fromJson<DateTime?>(json['interestEndedAt']),
+      prepaymentAllocation: serializer.fromJson<String>(
+        json['prepaymentAllocation'],
+      ),
       status: serializer.fromJson<String>(json['status']),
       closedAt: serializer.fromJson<DateTime?>(json['closedAt']),
       note: serializer.fromJson<String?>(json['note']),
@@ -5067,6 +5102,7 @@ class MoneyLoanRow extends DataClass implements Insertable<MoneyLoanRow> {
       'ratePeriod': serializer.toJson<String>(ratePeriod),
       'interestStartedAt': serializer.toJson<DateTime>(interestStartedAt),
       'interestEndedAt': serializer.toJson<DateTime?>(interestEndedAt),
+      'prepaymentAllocation': serializer.toJson<String>(prepaymentAllocation),
       'status': serializer.toJson<String>(status),
       'closedAt': serializer.toJson<DateTime?>(closedAt),
       'note': serializer.toJson<String?>(note),
@@ -5085,6 +5121,7 @@ class MoneyLoanRow extends DataClass implements Insertable<MoneyLoanRow> {
     String? ratePeriod,
     DateTime? interestStartedAt,
     Value<DateTime?> interestEndedAt = const Value.absent(),
+    String? prepaymentAllocation,
     String? status,
     Value<DateTime?> closedAt = const Value.absent(),
     Value<String?> note = const Value.absent(),
@@ -5102,6 +5139,7 @@ class MoneyLoanRow extends DataClass implements Insertable<MoneyLoanRow> {
     interestEndedAt: interestEndedAt.present
         ? interestEndedAt.value
         : this.interestEndedAt,
+    prepaymentAllocation: prepaymentAllocation ?? this.prepaymentAllocation,
     status: status ?? this.status,
     closedAt: closedAt.present ? closedAt.value : this.closedAt,
     note: note.present ? note.value : this.note,
@@ -5133,6 +5171,9 @@ class MoneyLoanRow extends DataClass implements Insertable<MoneyLoanRow> {
       interestEndedAt: data.interestEndedAt.present
           ? data.interestEndedAt.value
           : this.interestEndedAt,
+      prepaymentAllocation: data.prepaymentAllocation.present
+          ? data.prepaymentAllocation.value
+          : this.prepaymentAllocation,
       status: data.status.present ? data.status.value : this.status,
       closedAt: data.closedAt.present ? data.closedAt.value : this.closedAt,
       note: data.note.present ? data.note.value : this.note,
@@ -5153,6 +5194,7 @@ class MoneyLoanRow extends DataClass implements Insertable<MoneyLoanRow> {
           ..write('ratePeriod: $ratePeriod, ')
           ..write('interestStartedAt: $interestStartedAt, ')
           ..write('interestEndedAt: $interestEndedAt, ')
+          ..write('prepaymentAllocation: $prepaymentAllocation, ')
           ..write('status: $status, ')
           ..write('closedAt: $closedAt, ')
           ..write('note: $note, ')
@@ -5173,6 +5215,7 @@ class MoneyLoanRow extends DataClass implements Insertable<MoneyLoanRow> {
     ratePeriod,
     interestStartedAt,
     interestEndedAt,
+    prepaymentAllocation,
     status,
     closedAt,
     note,
@@ -5192,6 +5235,7 @@ class MoneyLoanRow extends DataClass implements Insertable<MoneyLoanRow> {
           other.ratePeriod == this.ratePeriod &&
           other.interestStartedAt == this.interestStartedAt &&
           other.interestEndedAt == this.interestEndedAt &&
+          other.prepaymentAllocation == this.prepaymentAllocation &&
           other.status == this.status &&
           other.closedAt == this.closedAt &&
           other.note == this.note &&
@@ -5209,6 +5253,7 @@ class MoneyLoansCompanion extends UpdateCompanion<MoneyLoanRow> {
   final Value<String> ratePeriod;
   final Value<DateTime> interestStartedAt;
   final Value<DateTime?> interestEndedAt;
+  final Value<String> prepaymentAllocation;
   final Value<String> status;
   final Value<DateTime?> closedAt;
   final Value<String?> note;
@@ -5225,6 +5270,7 @@ class MoneyLoansCompanion extends UpdateCompanion<MoneyLoanRow> {
     this.ratePeriod = const Value.absent(),
     this.interestStartedAt = const Value.absent(),
     this.interestEndedAt = const Value.absent(),
+    this.prepaymentAllocation = const Value.absent(),
     this.status = const Value.absent(),
     this.closedAt = const Value.absent(),
     this.note = const Value.absent(),
@@ -5242,6 +5288,7 @@ class MoneyLoansCompanion extends UpdateCompanion<MoneyLoanRow> {
     this.ratePeriod = const Value.absent(),
     required DateTime interestStartedAt,
     this.interestEndedAt = const Value.absent(),
+    this.prepaymentAllocation = const Value.absent(),
     this.status = const Value.absent(),
     this.closedAt = const Value.absent(),
     this.note = const Value.absent(),
@@ -5264,6 +5311,7 @@ class MoneyLoansCompanion extends UpdateCompanion<MoneyLoanRow> {
     Expression<String>? ratePeriod,
     Expression<DateTime>? interestStartedAt,
     Expression<DateTime>? interestEndedAt,
+    Expression<String>? prepaymentAllocation,
     Expression<String>? status,
     Expression<DateTime>? closedAt,
     Expression<String>? note,
@@ -5281,6 +5329,8 @@ class MoneyLoansCompanion extends UpdateCompanion<MoneyLoanRow> {
       if (ratePeriod != null) 'rate_period': ratePeriod,
       if (interestStartedAt != null) 'interest_started_at': interestStartedAt,
       if (interestEndedAt != null) 'interest_ended_at': interestEndedAt,
+      if (prepaymentAllocation != null)
+        'prepayment_allocation': prepaymentAllocation,
       if (status != null) 'status': status,
       if (closedAt != null) 'closed_at': closedAt,
       if (note != null) 'note': note,
@@ -5300,6 +5350,7 @@ class MoneyLoansCompanion extends UpdateCompanion<MoneyLoanRow> {
     Value<String>? ratePeriod,
     Value<DateTime>? interestStartedAt,
     Value<DateTime?>? interestEndedAt,
+    Value<String>? prepaymentAllocation,
     Value<String>? status,
     Value<DateTime?>? closedAt,
     Value<String?>? note,
@@ -5317,6 +5368,7 @@ class MoneyLoansCompanion extends UpdateCompanion<MoneyLoanRow> {
       ratePeriod: ratePeriod ?? this.ratePeriod,
       interestStartedAt: interestStartedAt ?? this.interestStartedAt,
       interestEndedAt: interestEndedAt ?? this.interestEndedAt,
+      prepaymentAllocation: prepaymentAllocation ?? this.prepaymentAllocation,
       status: status ?? this.status,
       closedAt: closedAt ?? this.closedAt,
       note: note ?? this.note,
@@ -5358,6 +5410,11 @@ class MoneyLoansCompanion extends UpdateCompanion<MoneyLoanRow> {
     if (interestEndedAt.present) {
       map['interest_ended_at'] = Variable<DateTime>(interestEndedAt.value);
     }
+    if (prepaymentAllocation.present) {
+      map['prepayment_allocation'] = Variable<String>(
+        prepaymentAllocation.value,
+      );
+    }
     if (status.present) {
       map['status'] = Variable<String>(status.value);
     }
@@ -5389,6 +5446,7 @@ class MoneyLoansCompanion extends UpdateCompanion<MoneyLoanRow> {
           ..write('ratePeriod: $ratePeriod, ')
           ..write('interestStartedAt: $interestStartedAt, ')
           ..write('interestEndedAt: $interestEndedAt, ')
+          ..write('prepaymentAllocation: $prepaymentAllocation, ')
           ..write('status: $status, ')
           ..write('closedAt: $closedAt, ')
           ..write('note: $note, ')
@@ -8118,6 +8176,7 @@ typedef $$MoneyLoansTableCreateCompanionBuilder =
       Value<String> ratePeriod,
       required DateTime interestStartedAt,
       Value<DateTime?> interestEndedAt,
+      Value<String> prepaymentAllocation,
       Value<String> status,
       Value<DateTime?> closedAt,
       Value<String?> note,
@@ -8136,6 +8195,7 @@ typedef $$MoneyLoansTableUpdateCompanionBuilder =
       Value<String> ratePeriod,
       Value<DateTime> interestStartedAt,
       Value<DateTime?> interestEndedAt,
+      Value<String> prepaymentAllocation,
       Value<String> status,
       Value<DateTime?> closedAt,
       Value<String?> note,
@@ -8199,6 +8259,11 @@ class $$MoneyLoansTableFilterComposer
 
   ColumnFilters<DateTime> get interestEndedAt => $composableBuilder(
     column: $table.interestEndedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get prepaymentAllocation => $composableBuilder(
+    column: $table.prepaymentAllocation,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -8282,6 +8347,11 @@ class $$MoneyLoansTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get prepaymentAllocation => $composableBuilder(
+    column: $table.prepaymentAllocation,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get status => $composableBuilder(
     column: $table.status,
     builder: (column) => ColumnOrderings(column),
@@ -8356,6 +8426,11 @@ class $$MoneyLoansTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get prepaymentAllocation => $composableBuilder(
+    column: $table.prepaymentAllocation,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get status =>
       $composableBuilder(column: $table.status, builder: (column) => column);
 
@@ -8410,6 +8485,7 @@ class $$MoneyLoansTableTableManager
                 Value<String> ratePeriod = const Value.absent(),
                 Value<DateTime> interestStartedAt = const Value.absent(),
                 Value<DateTime?> interestEndedAt = const Value.absent(),
+                Value<String> prepaymentAllocation = const Value.absent(),
                 Value<String> status = const Value.absent(),
                 Value<DateTime?> closedAt = const Value.absent(),
                 Value<String?> note = const Value.absent(),
@@ -8426,6 +8502,7 @@ class $$MoneyLoansTableTableManager
                 ratePeriod: ratePeriod,
                 interestStartedAt: interestStartedAt,
                 interestEndedAt: interestEndedAt,
+                prepaymentAllocation: prepaymentAllocation,
                 status: status,
                 closedAt: closedAt,
                 note: note,
@@ -8444,6 +8521,7 @@ class $$MoneyLoansTableTableManager
                 Value<String> ratePeriod = const Value.absent(),
                 required DateTime interestStartedAt,
                 Value<DateTime?> interestEndedAt = const Value.absent(),
+                Value<String> prepaymentAllocation = const Value.absent(),
                 Value<String> status = const Value.absent(),
                 Value<DateTime?> closedAt = const Value.absent(),
                 Value<String?> note = const Value.absent(),
@@ -8460,6 +8538,7 @@ class $$MoneyLoansTableTableManager
                 ratePeriod: ratePeriod,
                 interestStartedAt: interestStartedAt,
                 interestEndedAt: interestEndedAt,
+                prepaymentAllocation: prepaymentAllocation,
                 status: status,
                 closedAt: closedAt,
                 note: note,

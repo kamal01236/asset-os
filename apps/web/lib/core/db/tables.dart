@@ -182,6 +182,10 @@ class MoneyLoans extends Table {
   DateTimeColumn get interestStartedAt => dateTime()();
   /// Optional due / maturity; caps accrual when before as-of.
   DateTimeColumn get interestEndedAt => dateTime().nullable()();
+  /// `interestThenPrincipal` | `principalOnly`
+  TextColumn get prepaymentAllocation => text().withDefault(
+        const Constant('interestThenPrincipal'),
+      )();
   /// `pending` | `closed` | `cancelled`
   TextColumn get status => text().withDefault(const Constant('pending'))();
   DateTimeColumn get closedAt => dateTime().nullable()();

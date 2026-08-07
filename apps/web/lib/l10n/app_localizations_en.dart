@@ -1987,6 +1987,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loanInterestCompound => 'Compound';
 
   @override
+  String get loanPrepaymentAllocationLabel => 'Repayment applies to';
+
+  @override
+  String get loanPrepaymentInterestFirst => 'Interest first';
+
+  @override
+  String get loanPrepaymentPrincipalOnly => 'Principal only';
+
+  @override
+  String get loanPrepaymentAllocationHint =>
+      'Interest first clears unpaid interest, then principal. Principal only reduces principal; unpaid interest stays until paid separately.';
+
+  @override
   String get loanRatePercentLabel => 'Rate';
 
   @override
@@ -2000,7 +2013,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get loanPeriodEndInterestHintSimple =>
-      'Mid-period repayments and top-ups accrue pro-rata interest for time outstanding. At each month or year anniversary that interest is due but not added to principal. Repayments clear unpaid interest first, then principal.';
+      'Mid-period repayments and top-ups accrue pro-rata interest for time outstanding. At each month or year anniversary that interest is due but not added to principal.';
 
   @override
   String get loanPeriodEndInterestHintCompound =>
@@ -2114,6 +2127,11 @@ class AppLocalizationsEn extends AppLocalizations {
     String kind,
   ) {
     return 'Start $start · Due $due · $rate $period · $kind';
+  }
+
+  @override
+  String loanPrepaymentSetupLabel(String mode) {
+    return 'Repayments: $mode';
   }
 
   @override

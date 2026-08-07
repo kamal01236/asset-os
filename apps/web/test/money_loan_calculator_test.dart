@@ -727,6 +727,148 @@ void main() {
       expect(after.pendingPaise, 4900000 + after.unpaidInterestPaise);
     });
 
+    test('principalOnly repayment leaves unpaid interest intact', () {
+      final MoneyLoan loan = MoneyLoan(
+        id: 'MLN-prin-only',
+        customerId: 'C1',
+        direction: MoneyLoanDirection.given,
+        principalPaise: 10000000,
+        currencyCode: 'INR',
+        interestKind: MoneyInterestKind.simple,
+        rateBps: 1200,
+        ratePeriod: MoneyRatePeriod.yearly,
+        interestStartedAt: DateTime(2026, 1, 1),
+        prepaymentAllocation: MoneyPrepaymentAllocation.principalOnly,
+        status: MoneyLoanStatus.pending,
+        createdAt: DateTime(2027, 2, 1),
+        entries: <MoneyLoanEntry>[
+          MoneyLoanEntry(
+            id: 'E-repay-mid',
+            loanId: 'MLN-prin-only',
+            entryAt: DateTime(2026, 7, 1),
+            amountPaise: 5000000,
+            kind: MoneyLoanEntryKind.repayment,
+          ),
+          MoneyLoanEntry(
+            id: 'E-repay-after',
+            loanId: 'MLN-prin-only',
+            entryAt: DateTime(2027, 1, 15),
+            amountPaise: 1000000, // ₹10,000 after anniversary unpaid ₹9,000
+            kind: MoneyLoanEntryKind.repayment,
+          ),
+        ],
+      );
+
+      final LoanScenario after = computeLoanScenario(
+        loan: loan,
+        now: DateTime(2027, 1, 15),
+      );
+      // Same numbers as interest-first, but entire ₹10k reduces principal.
+      // Unpaid ₹9k stays; slice interest on ₹10k principal cut is deferred.
+      final LoanTimelineEvent pay = after.timeline.firstWhere(
+        (LoanTimelineEvent e) =>
+            e.kind == LoanTimelineKind.payment && e.entryId == 'E-repay-after',
+      );
+      expect(pay.toInterestPaise, 0);
+      expect(pay.toPrincipalPaise, 1000000);
+      expect(after.remainingPrincipalPaise, 4000000);
+      expect(after.unpaidInterestPaise, greaterThanOrEqualTo(900000));
+      expect(after.pendingPaise, 4000000 + after.unpaidInterestPaise);
+    });
+
+    test('interestThenPrincipal applies on Compound deferred interest', () {
+      final MoneyLoan loan = MoneyLoan(
+        id: 'MLN-cmp-int-first',
+        customerId: 'C1',
+        direction: MoneyLoanDirection.given,
+        principalPaise: 10000000,
+        currencyCode: 'INR',
+        interestKind: MoneyInterestKind.compound,
+        rateBps: 1200,
+        ratePeriod: MoneyRatePeriod.yearly,
+        interestStartedAt: DateTime(2026, 1, 1),
+        prepaymentAllocation: MoneyPrepaymentAllocation.interestThenPrincipal,
+        status: MoneyLoanStatus.pending,
+        createdAt: DateTime(2026, 8, 1),
+        entries: <MoneyLoanEntry>[
+          MoneyLoanEntry(
+            id: 'E1',
+            loanId: 'MLN-cmp-int-first',
+            entryAt: DateTime(2026, 4, 1),
+            amountPaise: 3000000,
+            kind: MoneyLoanEntryKind.repayment,
+          ),
+          MoneyLoanEntry(
+            id: 'E2',
+            loanId: 'MLN-cmp-int-first',
+            entryAt: DateTime(2026, 7, 1),
+            amountPaise: 2000000,
+            kind: MoneyLoanEntryKind.repayment,
+          ),
+        ],
+      );
+
+      final LoanScenario mid = computeLoanScenario(
+        loan: loan,
+        now: DateTime(2026, 7, 1),
+      );
+      // E1 deferred slice: 30000×12%×3/12 = ₹900
+      // E2 interest-first clears ₹900, then ₹19,100 principal
+      final LoanTimelineEvent e2Pay = mid.timeline.firstWhere(
+        (LoanTimelineEvent e) =>
+            e.kind == LoanTimelineKind.payment && e.entryId == 'E2',
+      );
+      expect(e2Pay.toInterestPaise, 90000);
+      expect(e2Pay.toPrincipalPaise, 1910000);
+      expect(mid.remainingPrincipalPaise, 5090000);
+    });
+
+    test('principalOnly on Compound skips deferred interest', () {
+      final MoneyLoan loan = MoneyLoan(
+        id: 'MLN-cmp-prin-only',
+        customerId: 'C1',
+        direction: MoneyLoanDirection.given,
+        principalPaise: 10000000,
+        currencyCode: 'INR',
+        interestKind: MoneyInterestKind.compound,
+        rateBps: 1200,
+        ratePeriod: MoneyRatePeriod.yearly,
+        interestStartedAt: DateTime(2026, 1, 1),
+        prepaymentAllocation: MoneyPrepaymentAllocation.principalOnly,
+        status: MoneyLoanStatus.pending,
+        createdAt: DateTime(2026, 8, 1),
+        entries: <MoneyLoanEntry>[
+          MoneyLoanEntry(
+            id: 'E1',
+            loanId: 'MLN-cmp-prin-only',
+            entryAt: DateTime(2026, 4, 1),
+            amountPaise: 3000000,
+            kind: MoneyLoanEntryKind.repayment,
+          ),
+          MoneyLoanEntry(
+            id: 'E2',
+            loanId: 'MLN-cmp-prin-only',
+            entryAt: DateTime(2026, 7, 1),
+            amountPaise: 2000000,
+            kind: MoneyLoanEntryKind.repayment,
+          ),
+        ],
+      );
+
+      final LoanScenario mid = computeLoanScenario(
+        loan: loan,
+        now: DateTime(2026, 7, 1),
+      );
+      final LoanTimelineEvent e2Pay = mid.timeline.firstWhere(
+        (LoanTimelineEvent e) =>
+            e.kind == LoanTimelineKind.payment && e.entryId == 'E2',
+      );
+      expect(e2Pay.toInterestPaise, 0);
+      expect(e2Pay.toPrincipalPaise, 2000000);
+      expect(mid.remainingPrincipalPaise, 5000000);
+      expect(mid.unpaidInterestPaise, greaterThan(0));
+    });
+
     test('Simple disbursement still increases principal', () {
       final MoneyLoan loan = MoneyLoan(
         id: 'MLN-add-simple',
@@ -993,9 +1135,59 @@ void main() {
   });
 
   group('schema', () {
-    test('schemaVersion is 14 with money loan tables', () async {
+    test('schemaVersion is 15 with money loan tables', () async {
       final LocalRepository repo = await bootRepo();
-      expect(repo.database.schemaVersion, 14);
+      expect(repo.database.schemaVersion, 15);
+    });
+
+    test('createMoneyLoan defaults prepaymentAllocation to interestThenPrincipal',
+        () async {
+      final LocalRepository repo = await bootRepo();
+      final customer = await ensureCustomer(repo);
+      final String loanId = await repo.createMoneyLoan(
+        customerId: customer.id,
+        direction: MoneyLoanDirection.given,
+        principalPaise: 100000,
+        interestStartedAt: DateTime(2026, 1, 1),
+      );
+      final MoneyLoan loan = (await repo.getMoneyLoan(loanId))!;
+      expect(
+        loan.prepaymentAllocation,
+        MoneyPrepaymentAllocation.interestThenPrincipal,
+      );
+    });
+
+    test('createMoneyLoan persists principalOnly allocation', () async {
+      final LocalRepository repo = await bootRepo();
+      final customer = await ensureCustomer(repo);
+      final String loanId = await repo.createMoneyLoan(
+        customerId: customer.id,
+        direction: MoneyLoanDirection.given,
+        principalPaise: 100000,
+        interestStartedAt: DateTime(2026, 1, 1),
+        prepaymentAllocation: MoneyPrepaymentAllocation.principalOnly,
+      );
+      final MoneyLoan loan = (await repo.getMoneyLoan(loanId))!;
+      expect(
+        loan.prepaymentAllocation,
+        MoneyPrepaymentAllocation.principalOnly,
+      );
+    });
+
+    test('MoneyPrepaymentAllocation.parse defaults unknown to interestThenPrincipal',
+        () {
+      expect(
+        MoneyPrepaymentAllocation.parse(null),
+        MoneyPrepaymentAllocation.interestThenPrincipal,
+      );
+      expect(
+        MoneyPrepaymentAllocation.parse(''),
+        MoneyPrepaymentAllocation.interestThenPrincipal,
+      );
+      expect(
+        MoneyPrepaymentAllocation.parse('principalOnly'),
+        MoneyPrepaymentAllocation.principalOnly,
+      );
     });
   });
 }
