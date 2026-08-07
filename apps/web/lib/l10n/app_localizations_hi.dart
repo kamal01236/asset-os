@@ -2160,10 +2160,20 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String loanTimelineDeferredAddSlice(
     String principal,
+    String fromDate,
+    String toDate,
+    String amount,
+  ) {
+    return 'जोड़े $principal पर ब्याज $fromDate से $toDate तक → $amount';
+  }
+
+  @override
+  String loanTimelineAccruedThroughAsOf(
+    String principal,
     String date,
     String amount,
   ) {
-    return 'जोड़े $principal पर ब्याज $date से अवधि अंत तक → $amount (अवधि अंत में जुड़ेगा)';
+    return '$principal पर $date तक अर्जित ब्याज → $amount (लंबित)';
   }
 
   @override

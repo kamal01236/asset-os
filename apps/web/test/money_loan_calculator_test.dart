@@ -97,11 +97,12 @@ void main() {
         loan: loan,
         now: DateTime(2026, 7, 1),
       );
-      // Slice interest: 50000 × 12% × 6/12 = ₹3,000 (deferred, not capitalized)
-      expect(midYear.interestAccruedPaise, 300000);
+      // Slice interest: 50000 × 12% × 6/12 = ₹3,000
+      // Core accrued through asOf: 50000 × 12% × 6/12 = ₹3,000
+      expect(midYear.interestAccruedPaise, 600000);
       expect(midYear.remainingPrincipalPaise, 5000000);
-      expect(midYear.unpaidInterestPaise, 300000);
-      expect(midYear.pendingPaise, 5300000);
+      expect(midYear.unpaidInterestPaise, 600000);
+      expect(midYear.pendingPaise, 5600000);
       expect(
         midYear.timeline.where(
           (LoanTimelineEvent e) => e.kind == LoanTimelineKind.interestSegment,
@@ -114,6 +115,12 @@ void main() {
       );
       expect(deferred.amountPaise, 300000);
       expect(deferred.principalBasisPaise, 5000000);
+      final LoanTimelineEvent accrued = midYear.timeline.firstWhere(
+        (LoanTimelineEvent e) =>
+            e.kind == LoanTimelineKind.accruedThroughAsOf,
+      );
+      expect(accrued.amountPaise, 300000);
+      expect(accrued.principalBasisPaise, 5000000);
       final LoanTimelineEvent payment = midYear.timeline.firstWhere(
         (LoanTimelineEvent e) => e.kind == LoanTimelineKind.payment,
       );
@@ -342,19 +349,24 @@ void main() {
         loan: loan,
         now: DateTime(2026, 7, 1),
       );
-      // Remainder on add: 50000 × 12% × 6/12 = ₹3,000
-      expect(midYear.interestAccruedPaise, 300000);
+      // Add on asOf → remainder through asOf is 0; core on ₹1L for 6mo = ₹6,000
+      expect(midYear.interestAccruedPaise, 600000);
       expect(midYear.remainingPrincipalPaise, 15000000);
-      expect(midYear.unpaidInterestPaise, 300000);
-      expect(midYear.pendingPaise, 15300000);
-      final LoanTimelineEvent deferredAdd = midYear.timeline.firstWhere(
-        (LoanTimelineEvent e) =>
-            e.kind == LoanTimelineKind.deferredAddSliceInterest,
+      expect(midYear.unpaidInterestPaise, 600000);
+      expect(midYear.pendingPaise, 15600000);
+      expect(
+        midYear.timeline.where(
+          (LoanTimelineEvent e) =>
+              e.kind == LoanTimelineKind.deferredAddSliceInterest,
+        ),
+        isEmpty,
       );
-      expect(deferredAdd.amountPaise, 300000);
-      expect(deferredAdd.principalBasisPaise, 5000000);
-      expect(deferredAdd.from, DateTime(2026, 7, 1));
-      expect(deferredAdd.through, DateTime(2027, 1, 1));
+      final LoanTimelineEvent accrued = midYear.timeline.firstWhere(
+        (LoanTimelineEvent e) =>
+            e.kind == LoanTimelineKind.accruedThroughAsOf,
+      );
+      expect(accrued.amountPaise, 600000);
+      expect(accrued.principalBasisPaise, 10000000);
 
       final LoanScenario after = computeLoanScenario(
         loan: loan,
@@ -488,15 +500,16 @@ void main() {
       );
 
       final int sliceInterest = (5000000 * 0.02 * 15 / 31).round();
+      final int coreInterest = (5000000 * 0.02 * 15 / 31).round();
 
       final LoanScenario midMonth = computeLoanScenario(
         loan: loan,
         now: DateTime(2026, 1, 16),
       );
-      expect(midMonth.interestAccruedPaise, sliceInterest);
+      expect(midMonth.interestAccruedPaise, sliceInterest + coreInterest);
       expect(midMonth.remainingPrincipalPaise, 5000000);
-      expect(midMonth.unpaidInterestPaise, sliceInterest);
-      expect(midMonth.pendingPaise, 5000000 + sliceInterest);
+      expect(midMonth.unpaidInterestPaise, sliceInterest + coreInterest);
+      expect(midMonth.pendingPaise, 5000000 + sliceInterest + coreInterest);
 
       final LoanScenario monthEnd = computeLoanScenario(
         loan: loan,
@@ -546,8 +559,10 @@ void main() {
         loan: loan,
         now: DateTime(2026, 1, 15),
       );
-      expect(midMonth.interestAccruedPaise, 0);
-      expect(midMonth.pendingPaise, 1000000);
+      final int midInterest = (1000000 * 0.02 * 14 / 31).round();
+      expect(midMonth.interestAccruedPaise, midInterest);
+      expect(midMonth.unpaidInterestPaise, midInterest);
+      expect(midMonth.pendingPaise, 1000000 + midInterest);
 
       final LoanScenario oneMonth = computeLoanScenario(
         loan: loan,

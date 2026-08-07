@@ -16,6 +16,8 @@ enum LoanTimelineKind {
   periodEndAddSliceInterest,
   /// Full-period interest on principal outstanding for the whole period.
   remainingPeriodInterest,
+  /// Mid-period: pro-rata interest on still-outstanding core through asOf.
+  accruedThroughAsOf,
   /// Principal after capitalizing period-end interest (compound).
   principalAfterCapitalize,
   /// Principal unchanged after posting period-end interest due (simple).
@@ -55,7 +57,7 @@ class LoanTimelineEvent {
   final int? principalBasisPaise;
 }
 
-enum _DeferredSliceKind { repayment, disbursement }
+enum _DeferredSliceKind { repayment, disbursement, openPeriod }
 
 class _DeferredSlice {
   const _DeferredSlice({
@@ -217,6 +219,46 @@ int proRataRemainderPeriodInterestPaise({
   }
   final double rate = rateBps / 10000.0;
   return (principalPaise * rate * remainder).round();
+}
+
+/// Pro-rata interest within one rate period from [from] to [to].
+int proRataWithinPeriodInterestPaise({
+  required int principalPaise,
+  required int rateBps,
+  required DateTime periodStart,
+  required DateTime from,
+  required DateTime to,
+  required DateTime periodEnd,
+  required MoneyRatePeriod ratePeriod,
+}) {
+  if (principalPaise <= 0 || rateBps <= 0) {
+    return 0;
+  }
+  final DateTime start = _dateOnly(periodStart);
+  final DateTime begin = _dateOnly(from);
+  final DateTime end = _dateOnly(to);
+  final DateTime boundary = _dateOnly(periodEnd);
+  if (!end.isAfter(begin)) {
+    return 0;
+  }
+  final double elapsedBegin = periodElapsedFraction(
+    periodStart: start,
+    at: begin,
+    periodEnd: boundary,
+    ratePeriod: ratePeriod,
+  );
+  final double elapsedEnd = periodElapsedFraction(
+    periodStart: start,
+    at: end,
+    periodEnd: boundary,
+    ratePeriod: ratePeriod,
+  );
+  final double fraction = (elapsedEnd - elapsedBegin).clamp(0.0, 1.0);
+  if (fraction <= 0) {
+    return 0;
+  }
+  final double rate = rateBps / 10000.0;
+  return (principalPaise * rate * fraction).round();
 }
 
 /// Interest for one completed period on [principalPaise] at [rateBps].
@@ -575,6 +617,112 @@ LoanScenario computeLoanScenario({
     }
   }
 
+  /// Cap mid-period add-slices at [asOf] and accrue core outstanding through
+  /// today. Does not capitalize — anniversary [postPeriodInterest] still owns
+  /// period-end posting.
+  void finalizeIncompletePeriodThroughAsOf({
+    required DateTime periodStart,
+    required DateTime periodEnd,
+  }) {
+    if (!asOf.isAfter(periodStart) || loan.rateBps <= 0) {
+      return;
+    }
+
+    // Cap disbursement deferred slices that were accrued to periodEnd.
+    for (int i = deferredSlices.length - 1; i >= 0; i--) {
+      final _DeferredSlice slice = deferredSlices[i];
+      if (slice.kind != _DeferredSliceKind.disbursement) {
+        continue;
+      }
+      final int capped = proRataWithinPeriodInterestPaise(
+        principalPaise: slice.basisPaise,
+        rateBps: loan.rateBps,
+        periodStart: periodStart,
+        from: slice.from,
+        to: asOf,
+        periodEnd: periodEnd,
+        ratePeriod: loan.ratePeriod,
+      );
+      final int delta = slice.interestPaise - capped;
+      if (delta == 0 && !slice.to.isAfter(asOf)) {
+        continue;
+      }
+      deferredInterest -= delta;
+      interestAccrued -= delta;
+      if (capped <= 0) {
+        deferredSlices.removeAt(i);
+      } else {
+        deferredSlices[i] = _DeferredSlice(
+          kind: slice.kind,
+          entryId: slice.entryId,
+          basisPaise: slice.basisPaise,
+          from: slice.from,
+          to: asOf,
+          interestPaise: capped,
+        );
+      }
+      // Update or drop matching timeline preview rows.
+      for (int t = timeline.length - 1; t >= 0; t--) {
+        final LoanTimelineEvent ev = timeline[t];
+        if (ev.kind != LoanTimelineKind.deferredAddSliceInterest) {
+          continue;
+        }
+        if (slice.entryId != null && ev.entryId != slice.entryId) {
+          continue;
+        }
+        if (capped <= 0) {
+          timeline.removeAt(t);
+        } else {
+          timeline[t] = LoanTimelineEvent(
+            kind: ev.kind,
+            from: ev.from,
+            through: asOf,
+            at: ev.at,
+            amountPaise: capped,
+            principalBasisPaise: ev.principalBasisPaise,
+            entryId: ev.entryId,
+          );
+        }
+        break;
+      }
+    }
+
+    final int corePrincipal =
+        (remainingPrincipal - periodDisbursementsPaise).clamp(0, remainingPrincipal);
+    final int coreInterest = proRataPeriodInterestPaise(
+      principalPaise: corePrincipal,
+      rateBps: loan.rateBps,
+      from: periodStart,
+      to: asOf,
+      ratePeriod: loan.ratePeriod,
+    );
+    if (coreInterest <= 0) {
+      return;
+    }
+    deferredInterest += coreInterest;
+    deferredSlices.add(
+      _DeferredSlice(
+        kind: _DeferredSliceKind.openPeriod,
+        entryId: null,
+        basisPaise: corePrincipal,
+        from: periodStart,
+        to: asOf,
+        interestPaise: coreInterest,
+      ),
+    );
+    interestAccrued += coreInterest;
+    timeline.add(
+      LoanTimelineEvent(
+        kind: LoanTimelineKind.accruedThroughAsOf,
+        from: periodStart,
+        through: asOf,
+        at: asOf,
+        amountPaise: coreInterest,
+        principalBasisPaise: corePrincipal,
+      ),
+    );
+  }
+
   void postPeriodInterest({
     required DateTime periodStart,
     required DateTime periodEnd,
@@ -718,8 +866,12 @@ LoanScenario computeLoanScenario({
       }
 
       if (periodEnd.isAfter(asOf)) {
-        // Incomplete period: keep deferred slice interest; no full-period
-        // interest on remaining principal until the anniversary.
+        // Incomplete period: include pro-rata interest through asOf on
+        // outstanding core (and cap add-slices at asOf). Do not capitalize.
+        finalizeIncompletePeriodThroughAsOf(
+          periodStart: periodStart,
+          periodEnd: periodEnd,
+        );
         break;
       }
 

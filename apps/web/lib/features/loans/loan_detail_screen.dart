@@ -826,6 +826,16 @@ class _TimelineRow extends StatelessWidget {
             currencyCode: loan.currencyCode,
           ),
           formatIndiaDate(event.from ?? event.at),
+          formatIndiaDate(event.through ?? event.at),
+          money,
+        ),
+      LoanTimelineKind.accruedThroughAsOf =>
+        l10n.loanTimelineAccruedThroughAsOf(
+          formatMoney(
+            event.principalBasisPaise ?? 0,
+            currencyCode: loan.currencyCode,
+          ),
+          formatIndiaDate(event.through ?? event.at),
           money,
         ),
       LoanTimelineKind.periodEndSliceInterest => simple
@@ -920,6 +930,7 @@ class _TimelineRow extends StatelessWidget {
               LoanTimelineKind.interestSegment => Icons.trending_up,
               LoanTimelineKind.deferredSliceInterest => Icons.timelapse,
               LoanTimelineKind.deferredAddSliceInterest => Icons.timelapse,
+              LoanTimelineKind.accruedThroughAsOf => Icons.timelapse,
               LoanTimelineKind.periodEndSliceInterest => Icons.trending_up,
               LoanTimelineKind.periodEndAddSliceInterest => Icons.trending_up,
               LoanTimelineKind.remainingPeriodInterest => Icons.trending_up,

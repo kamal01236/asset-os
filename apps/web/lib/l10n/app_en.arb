@@ -1247,8 +1247,17 @@
       "amount": {"type": "String"}
     }
   },
-  "loanTimelineDeferredAddSlice": "Interest on added {principal} from {date} → period end → {amount} (adds at period end)",
+  "loanTimelineDeferredAddSlice": "Interest on added {principal} from {fromDate} through {toDate} → {amount}",
   "@loanTimelineDeferredAddSlice": {
+    "placeholders": {
+      "principal": {"type": "String"},
+      "fromDate": {"type": "String"},
+      "toDate": {"type": "String"},
+      "amount": {"type": "String"}
+    }
+  },
+  "loanTimelineAccruedThroughAsOf": "Interest accrued on {principal} through {date} → {amount} (pending)",
+  "@loanTimelineAccruedThroughAsOf": {
     "placeholders": {
       "principal": {"type": "String"},
       "date": {"type": "String"},

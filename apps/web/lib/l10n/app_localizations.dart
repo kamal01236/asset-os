@@ -3800,8 +3800,19 @@ abstract class AppLocalizations {
   /// No description provided for @loanTimelineDeferredAddSlice.
   ///
   /// In en, this message translates to:
-  /// **'Interest on added {principal} from {date} → period end → {amount} (adds at period end)'**
+  /// **'Interest on added {principal} from {fromDate} through {toDate} → {amount}'**
   String loanTimelineDeferredAddSlice(
+    String principal,
+    String fromDate,
+    String toDate,
+    String amount,
+  );
+
+  /// No description provided for @loanTimelineAccruedThroughAsOf.
+  ///
+  /// In en, this message translates to:
+  /// **'Interest accrued on {principal} through {date} → {amount} (pending)'**
+  String loanTimelineAccruedThroughAsOf(
     String principal,
     String date,
     String amount,

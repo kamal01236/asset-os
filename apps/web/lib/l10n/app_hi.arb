@@ -1247,8 +1247,17 @@
       "amount": {"type": "String"}
     }
   },
-  "loanTimelineDeferredAddSlice": "जोड़े {principal} पर ब्याज {date} से अवधि अंत तक → {amount} (अवधि अंत में जुड़ेगा)",
+  "loanTimelineDeferredAddSlice": "जोड़े {principal} पर ब्याज {fromDate} से {toDate} तक → {amount}",
   "@loanTimelineDeferredAddSlice": {
+    "placeholders": {
+      "principal": {"type": "String"},
+      "fromDate": {"type": "String"},
+      "toDate": {"type": "String"},
+      "amount": {"type": "String"}
+    }
+  },
+  "loanTimelineAccruedThroughAsOf": "{principal} पर {date} तक अर्जित ब्याज → {amount} (लंबित)",
+  "@loanTimelineAccruedThroughAsOf": {
     "placeholders": {
       "principal": {"type": "String"},
       "date": {"type": "String"},
