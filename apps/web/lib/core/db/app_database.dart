@@ -24,7 +24,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 16;
+  int get schemaVersion => 17;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -333,6 +333,23 @@ class AppDatabase extends _$AppDatabase {
               ),
               0
             )
+        ''');
+      }
+      if (from < 17) {
+        await m.addColumn(moneyLoans, moneyLoans.capitalizationPolicy);
+        await m.addColumn(moneyLoans, moneyLoans.capitalizationCycle);
+        // simple → never; compound → onScheduledCycle (cycle from ratePeriod).
+        await customStatement('''
+          UPDATE money_loans
+          SET
+            capitalization_policy = CASE
+              WHEN interest_kind = 'compound' THEN 'onScheduledCycle'
+              ELSE 'never'
+            END,
+            capitalization_cycle = CASE
+              WHEN rate_period = 'yearly' THEN 'yearly'
+              ELSE 'monthly'
+            END
         ''');
       }
     },

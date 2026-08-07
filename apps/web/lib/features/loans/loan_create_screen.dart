@@ -36,7 +36,8 @@ class _LoanCreateScreenState extends ConsumerState<LoanCreateScreen> {
   final TextEditingController _rateCtrl = TextEditingController(text: '2');
   final TextEditingController _noteCtrl = TextEditingController();
   MoneyLoanDirection _direction = MoneyLoanDirection.given;
-  MoneyInterestKind _interestKind = MoneyInterestKind.simple;
+  MoneyCapitalizationPolicy _capPolicy = MoneyCapitalizationPolicy.never;
+  MoneyCapitalizationCycle _capCycle = MoneyCapitalizationCycle.monthly;
   MoneyPrepaymentAllocation _prepaymentAllocation =
       MoneyPrepaymentAllocation.interestThenPrincipal;
   MoneyRatePeriod _ratePeriod = MoneyRatePeriod.monthly;
@@ -417,23 +418,161 @@ class _LoanCreateScreenState extends ConsumerState<LoanCreateScreen> {
             ),
           ],
           const SizedBox(height: 8),
-          Text(l10n.loanInterestKindLabel, style: Theme.of(context).textTheme.titleSmall),
+          Text(
+            l10n.loanCalculationFrequencyLabel,
+            style: Theme.of(context).textTheme.titleSmall,
+          ),
           const SizedBox(height: 8),
-          SegmentedButton<MoneyInterestKind>(
-            segments: <ButtonSegment<MoneyInterestKind>>[
-              ButtonSegment<MoneyInterestKind>(
-                value: MoneyInterestKind.simple,
-                label: Text(l10n.loanInterestSimple),
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: TextField(
+                  controller: _rateCtrl,
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  decoration: InputDecoration(
+                    labelText: l10n.loanRatePercentLabel,
+                    border: const OutlineInputBorder(),
+                    suffixText: '%',
+                  ),
+                ),
               ),
-              ButtonSegment<MoneyInterestKind>(
-                value: MoneyInterestKind.compound,
-                label: Text(l10n.loanInterestCompound),
+              const SizedBox(width: 12),
+              Expanded(
+                child: DropdownButtonFormField<MoneyRatePeriod>(
+                  // ignore: deprecated_member_use
+                  value: _ratePeriod,
+                  items: <DropdownMenuItem<MoneyRatePeriod>>[
+                    DropdownMenuItem<MoneyRatePeriod>(
+                      value: MoneyRatePeriod.daily,
+                      child: Text(l10n.loanRateDaily),
+                    ),
+                    DropdownMenuItem<MoneyRatePeriod>(
+                      value: MoneyRatePeriod.monthly,
+                      child: Text(l10n.loanRateMonthly),
+                    ),
+                    DropdownMenuItem<MoneyRatePeriod>(
+                      value: MoneyRatePeriod.yearly,
+                      child: Text(l10n.loanRateYearly),
+                    ),
+                  ],
+                  onChanged: (MoneyRatePeriod? v) {
+                    if (v != null) {
+                      setState(() {
+                        _ratePeriod = v;
+                        if (_capPolicy ==
+                            MoneyCapitalizationPolicy.onScheduledCycle) {
+                          _capCycle =
+                              MoneyCapitalizationCycle.fromRatePeriod(v);
+                        }
+                      });
+                    }
+                  },
+                  decoration: InputDecoration(
+                    labelText: l10n.loanRatePeriodLabel,
+                    border: const OutlineInputBorder(),
+                  ),
+                ),
               ),
             ],
-            selected: <MoneyInterestKind>{_interestKind},
-            onSelectionChanged: (Set<MoneyInterestKind> s) {
-              setState(() => _interestKind = s.first);
+          ),
+          const SizedBox(height: 16),
+          Text(
+            l10n.loanCapitalizationPolicyLabel,
+            style: Theme.of(context).textTheme.titleSmall,
+          ),
+          const SizedBox(height: 8),
+          DropdownButtonFormField<MoneyCapitalizationPolicy>(
+            // ignore: deprecated_member_use
+            value: _capPolicy,
+            items: <DropdownMenuItem<MoneyCapitalizationPolicy>>[
+              DropdownMenuItem<MoneyCapitalizationPolicy>(
+                value: MoneyCapitalizationPolicy.never,
+                child: Text(l10n.loanCapPolicyNever),
+              ),
+              DropdownMenuItem<MoneyCapitalizationPolicy>(
+                value: MoneyCapitalizationPolicy.onPayment,
+                child: Text(l10n.loanCapPolicyOnPayment),
+              ),
+              DropdownMenuItem<MoneyCapitalizationPolicy>(
+                value: MoneyCapitalizationPolicy.onScheduledCycle,
+                child: Text(l10n.loanCapPolicyOnScheduledCycle),
+              ),
+              DropdownMenuItem<MoneyCapitalizationPolicy>(
+                value: MoneyCapitalizationPolicy.onBalanceDirectionChange,
+                child: Text(l10n.loanCapPolicyOnBalanceDirectionChange),
+              ),
+              DropdownMenuItem<MoneyCapitalizationPolicy>(
+                value: MoneyCapitalizationPolicy.onLoanClosure,
+                child: Text(l10n.loanCapPolicyOnLoanClosure),
+              ),
+              DropdownMenuItem<MoneyCapitalizationPolicy>(
+                value: MoneyCapitalizationPolicy.manual,
+                child: Text(l10n.loanCapPolicyManual),
+              ),
+            ],
+            onChanged: (MoneyCapitalizationPolicy? v) {
+              if (v != null) {
+                setState(() {
+                  _capPolicy = v;
+                  if (v == MoneyCapitalizationPolicy.onScheduledCycle) {
+                    _capCycle =
+                        MoneyCapitalizationCycle.fromRatePeriod(_ratePeriod);
+                  }
+                });
+              }
             },
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+            ),
+          ),
+          if (_capPolicy == MoneyCapitalizationPolicy.onScheduledCycle) ...<Widget>[
+            const SizedBox(height: 12),
+            DropdownButtonFormField<MoneyCapitalizationCycle>(
+              // ignore: deprecated_member_use
+              value: _capCycle,
+              items: <DropdownMenuItem<MoneyCapitalizationCycle>>[
+                DropdownMenuItem<MoneyCapitalizationCycle>(
+                  value: MoneyCapitalizationCycle.monthly,
+                  child: Text(l10n.loanCapCycleMonthly),
+                ),
+                DropdownMenuItem<MoneyCapitalizationCycle>(
+                  value: MoneyCapitalizationCycle.quarterly,
+                  child: Text(l10n.loanCapCycleQuarterly),
+                ),
+                DropdownMenuItem<MoneyCapitalizationCycle>(
+                  value: MoneyCapitalizationCycle.yearly,
+                  child: Text(l10n.loanCapCycleYearly),
+                ),
+              ],
+              onChanged: (MoneyCapitalizationCycle? v) {
+                if (v != null) {
+                  setState(() => _capCycle = v);
+                }
+              },
+              decoration: InputDecoration(
+                labelText: l10n.loanCapitalizationCycleLabel,
+                border: const OutlineInputBorder(),
+              ),
+            ),
+          ],
+          const SizedBox(height: 8),
+          Text(
+            switch (_capPolicy) {
+              MoneyCapitalizationPolicy.never => l10n.loanCapPolicyHintNever,
+              MoneyCapitalizationPolicy.onPayment =>
+                l10n.loanCapPolicyHintOnPayment,
+              MoneyCapitalizationPolicy.onScheduledCycle =>
+                l10n.loanCapPolicyHintOnScheduledCycle,
+              MoneyCapitalizationPolicy.onBalanceDirectionChange =>
+                l10n.loanCapPolicyHintOnBalanceDirectionChange,
+              MoneyCapitalizationPolicy.onLoanClosure =>
+                l10n.loanCapPolicyHintOnLoanClosure,
+              MoneyCapitalizationPolicy.manual => l10n.loanCapPolicyHintManual,
+            },
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
           ),
           const SizedBox(height: 16),
           Text(
@@ -460,58 +599,6 @@ class _LoanCreateScreenState extends ConsumerState<LoanCreateScreen> {
           const SizedBox(height: 8),
           Text(
             l10n.loanPrepaymentAllocationHint,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: <Widget>[
-              Expanded(
-                child: TextField(
-                  controller: _rateCtrl,
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
-                  decoration: InputDecoration(
-                    labelText: l10n.loanRatePercentLabel,
-                    border: const OutlineInputBorder(),
-                    suffixText: '%',
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: DropdownButtonFormField<MoneyRatePeriod>(
-                  // ignore: deprecated_member_use
-                  value: _ratePeriod,
-                  items: <DropdownMenuItem<MoneyRatePeriod>>[
-                    DropdownMenuItem<MoneyRatePeriod>(
-                      value: MoneyRatePeriod.monthly,
-                      child: Text(l10n.loanRateMonthly),
-                    ),
-                    DropdownMenuItem<MoneyRatePeriod>(
-                      value: MoneyRatePeriod.yearly,
-                      child: Text(l10n.loanRateYearly),
-                    ),
-                  ],
-                  onChanged: (MoneyRatePeriod? v) {
-                    if (v != null) {
-                      setState(() => _ratePeriod = v);
-                    }
-                  },
-                  decoration: InputDecoration(
-                    labelText: l10n.loanRatePeriodLabel,
-                    border: const OutlineInputBorder(),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            _interestKind == MoneyInterestKind.simple
-                ? l10n.loanPeriodEndInterestHintSimple
-                : l10n.loanPeriodEndInterestHintCompound,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
@@ -620,7 +707,8 @@ class _LoanCreateScreenState extends ConsumerState<LoanCreateScreen> {
             principalPaise: principal,
             interestStartedAt: _startedAt,
             interestEndedAt: _endedAt,
-            interestKind: _interestKind,
+            capitalizationPolicy: _capPolicy,
+            capitalizationCycle: _capCycle,
             rateBps: rateBps,
             ratePeriod: _ratePeriod,
             prepaymentAllocation: _prepaymentAllocation,

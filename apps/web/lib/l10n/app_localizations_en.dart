@@ -2054,6 +2054,58 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loanInterestCompound => 'Compound';
 
   @override
+  String get loanCalculationFrequencyLabel => 'Interest calculation';
+
+  @override
+  String get loanRateDaily => 'Daily';
+
+  @override
+  String get loanCapitalizationPolicyLabel => 'Capitalization';
+
+  @override
+  String get loanCapPolicyNever => 'Never';
+
+  @override
+  String get loanCapPolicyOnPayment => 'On payment';
+
+  @override
+  String get loanCapPolicyOnScheduledCycle => 'On schedule';
+
+  @override
+  String get loanCapPolicyOnBalanceDirectionChange => 'On direction change';
+
+  @override
+  String get loanCapPolicyOnLoanClosure => 'On closure';
+
+  @override
+  String get loanCapPolicyManual => 'Manual';
+
+  @override
+  String get loanCapitalizationCycleLabel => 'Capitalization cycle';
+
+  @override
+  String get loanCapCycleMonthly => 'Monthly';
+
+  @override
+  String get loanCapCycleQuarterly => 'Quarterly';
+
+  @override
+  String get loanCapCycleYearly => 'Yearly';
+
+  @override
+  String get loanCapitalizeInterestAction => 'Capitalize interest';
+
+  @override
+  String get loanCapitalizeInterestSnack =>
+      'Interest capitalized into principal';
+
+  @override
+  String get loanCapitalizeNothingSnack => 'No unpaid interest to capitalize';
+
+  @override
+  String get loanUnpaidInterestLabel => 'Unpaid interest';
+
+  @override
   String get loanPrepaymentAllocationLabel => 'Repayment applies to';
 
   @override
@@ -2080,11 +2132,35 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get loanPeriodEndInterestHintSimple =>
-      'Interest accrues between cash movements from the signed outstanding balance. Simple interest stays due separately and is not added to principal. Overpay earns reverse interest.';
+      'Interest always accrues into unpaid interest from the signed principal balance. Capitalization (adding unpaid to principal) follows the selected policy. Overpay earns reverse interest.';
 
   @override
   String get loanPeriodEndInterestHintCompound =>
-      'Interest accrues between cash movements from the signed outstanding balance and is added to principal before the next movement. Overpay earns reverse interest on the credit balance.';
+      'Interest always accrues into unpaid interest from the signed principal balance. Capitalization (adding unpaid to principal) follows the selected policy. Overpay earns reverse interest.';
+
+  @override
+  String get loanCapPolicyHintNever =>
+      'Principal stays fixed; unpaid interest grows separately. Outstanding = principal + unpaid.';
+
+  @override
+  String get loanCapPolicyHintOnPayment =>
+      'Unpaid interest is added to principal immediately before each repayment.';
+
+  @override
+  String get loanCapPolicyHintOnScheduledCycle =>
+      'Unpaid interest is added to principal on each capitalization cycle anniversary.';
+
+  @override
+  String get loanCapPolicyHintOnBalanceDirectionChange =>
+      'Unpaid interest is added to principal before a cash move that would flip outstanding from due to credit (or reverse).';
+
+  @override
+  String get loanCapPolicyHintOnLoanClosure =>
+      'Unpaid interest is added to principal when the loan is closed.';
+
+  @override
+  String get loanCapPolicyHintManual =>
+      'Unpaid interest is added to principal only when you tap Capitalize interest.';
 
   @override
   String get loanRateInvalid => 'Enter a valid rate';
@@ -2197,14 +2273,19 @@ class AppLocalizationsEn extends AppLocalizations {
     String due,
     String rate,
     String period,
-    String kind,
+    String policy,
   ) {
-    return 'Start $start · Due $due · $rate $period · $kind';
+    return 'Start $start · Due $due · $rate $period · $policy';
   }
 
   @override
   String loanPrepaymentSetupLabel(String mode) {
     return 'Repayments: $mode';
+  }
+
+  @override
+  String loanTimelineInterestCapitalized(String date, String amount) {
+    return '$date — Interest capitalized $amount → principal';
   }
 
   @override

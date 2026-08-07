@@ -3619,6 +3619,108 @@ abstract class AppLocalizations {
   /// **'Compound'**
   String get loanInterestCompound;
 
+  /// No description provided for @loanCalculationFrequencyLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Interest calculation'**
+  String get loanCalculationFrequencyLabel;
+
+  /// No description provided for @loanRateDaily.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily'**
+  String get loanRateDaily;
+
+  /// No description provided for @loanCapitalizationPolicyLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Capitalization'**
+  String get loanCapitalizationPolicyLabel;
+
+  /// No description provided for @loanCapPolicyNever.
+  ///
+  /// In en, this message translates to:
+  /// **'Never'**
+  String get loanCapPolicyNever;
+
+  /// No description provided for @loanCapPolicyOnPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'On payment'**
+  String get loanCapPolicyOnPayment;
+
+  /// No description provided for @loanCapPolicyOnScheduledCycle.
+  ///
+  /// In en, this message translates to:
+  /// **'On schedule'**
+  String get loanCapPolicyOnScheduledCycle;
+
+  /// No description provided for @loanCapPolicyOnBalanceDirectionChange.
+  ///
+  /// In en, this message translates to:
+  /// **'On direction change'**
+  String get loanCapPolicyOnBalanceDirectionChange;
+
+  /// No description provided for @loanCapPolicyOnLoanClosure.
+  ///
+  /// In en, this message translates to:
+  /// **'On closure'**
+  String get loanCapPolicyOnLoanClosure;
+
+  /// No description provided for @loanCapPolicyManual.
+  ///
+  /// In en, this message translates to:
+  /// **'Manual'**
+  String get loanCapPolicyManual;
+
+  /// No description provided for @loanCapitalizationCycleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Capitalization cycle'**
+  String get loanCapitalizationCycleLabel;
+
+  /// No description provided for @loanCapCycleMonthly.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly'**
+  String get loanCapCycleMonthly;
+
+  /// No description provided for @loanCapCycleQuarterly.
+  ///
+  /// In en, this message translates to:
+  /// **'Quarterly'**
+  String get loanCapCycleQuarterly;
+
+  /// No description provided for @loanCapCycleYearly.
+  ///
+  /// In en, this message translates to:
+  /// **'Yearly'**
+  String get loanCapCycleYearly;
+
+  /// No description provided for @loanCapitalizeInterestAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Capitalize interest'**
+  String get loanCapitalizeInterestAction;
+
+  /// No description provided for @loanCapitalizeInterestSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Interest capitalized into principal'**
+  String get loanCapitalizeInterestSnack;
+
+  /// No description provided for @loanCapitalizeNothingSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'No unpaid interest to capitalize'**
+  String get loanCapitalizeNothingSnack;
+
+  /// No description provided for @loanUnpaidInterestLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpaid interest'**
+  String get loanUnpaidInterestLabel;
+
   /// No description provided for @loanPrepaymentAllocationLabel.
   ///
   /// In en, this message translates to:
@@ -3670,14 +3772,50 @@ abstract class AppLocalizations {
   /// No description provided for @loanPeriodEndInterestHintSimple.
   ///
   /// In en, this message translates to:
-  /// **'Mid-period repayments and top-ups accrue pro-rata interest for time outstanding. At each month or year anniversary that interest is due but not added to principal.'**
+  /// **'Interest always accrues into unpaid interest from the signed principal balance. Capitalization (adding unpaid to principal) follows the selected policy. Overpay earns reverse interest.'**
   String get loanPeriodEndInterestHintSimple;
 
   /// No description provided for @loanPeriodEndInterestHintCompound.
   ///
   /// In en, this message translates to:
-  /// **'Mid-period repayments reduce principal and accrue pro-rata interest for time outstanding. Added principal accrues pro-rata until period end. That interest, plus full-period interest on what was outstanding the whole period, is added to principal at each month or year anniversary.'**
+  /// **'Interest always accrues into unpaid interest from the signed principal balance. Capitalization (adding unpaid to principal) follows the selected policy. Overpay earns reverse interest.'**
   String get loanPeriodEndInterestHintCompound;
+
+  /// No description provided for @loanCapPolicyHintNever.
+  ///
+  /// In en, this message translates to:
+  /// **'Principal stays fixed; unpaid interest grows separately. Outstanding = principal + unpaid.'**
+  String get loanCapPolicyHintNever;
+
+  /// No description provided for @loanCapPolicyHintOnPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpaid interest is added to principal immediately before each repayment.'**
+  String get loanCapPolicyHintOnPayment;
+
+  /// No description provided for @loanCapPolicyHintOnScheduledCycle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpaid interest is added to principal on each capitalization cycle anniversary.'**
+  String get loanCapPolicyHintOnScheduledCycle;
+
+  /// No description provided for @loanCapPolicyHintOnBalanceDirectionChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpaid interest is added to principal before a cash move that would flip outstanding from due to credit (or reverse).'**
+  String get loanCapPolicyHintOnBalanceDirectionChange;
+
+  /// No description provided for @loanCapPolicyHintOnLoanClosure.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpaid interest is added to principal when the loan is closed.'**
+  String get loanCapPolicyHintOnLoanClosure;
+
+  /// No description provided for @loanCapPolicyHintManual.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpaid interest is added to principal only when you tap Capitalize interest.'**
+  String get loanCapPolicyHintManual;
 
   /// No description provided for @loanRateInvalid.
   ///
@@ -3886,13 +4024,13 @@ abstract class AppLocalizations {
   /// No description provided for @loanSetupSummary.
   ///
   /// In en, this message translates to:
-  /// **'Start {start} · Due {due} · {rate} {period} · {kind}'**
+  /// **'Start {start} · Due {due} · {rate} {period} · {policy}'**
   String loanSetupSummary(
     String start,
     String due,
     String rate,
     String period,
-    String kind,
+    String policy,
   );
 
   /// No description provided for @loanPrepaymentSetupLabel.
@@ -3900,6 +4038,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Repayments: {mode}'**
   String loanPrepaymentSetupLabel(String mode);
+
+  /// No description provided for @loanTimelineInterestCapitalized.
+  ///
+  /// In en, this message translates to:
+  /// **'{date} — Interest capitalized {amount} → principal'**
+  String loanTimelineInterestCapitalized(String date, String amount);
 
   /// No description provided for @loanTimelineStart.
   ///

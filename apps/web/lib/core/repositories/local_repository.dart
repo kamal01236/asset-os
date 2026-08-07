@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../db/app_database.dart';
 import '../home/home_modules.dart';
 import '../l10n/timeline_l10n.dart';
+import '../loans/loan_balance.dart';
 import '../loans/loan_models.dart';
 import '../models/entities.dart';
 import '../models/unknown_customer.dart';
@@ -1726,7 +1727,9 @@ class LocalRepository {
     required MoneyLoanDirection direction,
     required int principalPaise,
     required DateTime interestStartedAt,
-    MoneyInterestKind interestKind = MoneyInterestKind.simple,
+    MoneyInterestKind? interestKind,
+    MoneyCapitalizationPolicy? capitalizationPolicy,
+    MoneyCapitalizationCycle? capitalizationCycle,
     int rateBps = 0,
     MoneyRatePeriod ratePeriod = MoneyRatePeriod.monthly,
     MoneyPrepaymentAllocation prepaymentAllocation =
@@ -1744,6 +1747,13 @@ class LocalRepository {
     if (rateBps < 0) {
       throw ArgumentError('Rate cannot be negative');
     }
+    final MoneyCapitalizationPolicy effectivePolicy = capitalizationPolicy ??
+        (interestKind == null
+            ? MoneyCapitalizationPolicy.never
+            : MoneyCapitalizationPolicy.fromLegacyInterestKind(interestKind));
+    final MoneyCapitalizationCycle effectiveCycle = capitalizationCycle ??
+        MoneyCapitalizationCycle.fromRatePeriod(ratePeriod);
+    final MoneyInterestKind legacyKind = effectivePolicy.legacyInterestKind;
     final DateTime start = DateTime(
       interestStartedAt.year,
       interestStartedAt.month,
@@ -1806,9 +1816,11 @@ class LocalRepository {
                 ? 'INR'
                 : currencyCode.trim().toUpperCase(),
           ),
-          interestKind: Value<String>(interestKind.name),
+          interestKind: Value<String>(legacyKind.name),
           rateBps: Value<int>(rateBps),
           ratePeriod: Value<String>(ratePeriod.name),
+          capitalizationPolicy: Value<String>(effectivePolicy.name),
+          capitalizationCycle: Value<String>(effectiveCycle.name),
           interestStartedAt: start,
           interestEndedAt: Value<DateTime?>(ended),
           prepaymentAllocation: Value<String>(prepaymentAllocation.name),
@@ -1849,6 +1861,8 @@ class LocalRepository {
     MoneyLoanDirection? direction,
     int? principalPaise,
     MoneyInterestKind? interestKind,
+    MoneyCapitalizationPolicy? capitalizationPolicy,
+    MoneyCapitalizationCycle? capitalizationCycle,
     int? rateBps,
     MoneyRatePeriod? ratePeriod,
     DateTime? interestStartedAt,
@@ -1873,6 +1887,14 @@ class LocalRepository {
     if (nextRate < 0) {
       throw ArgumentError('Rate cannot be negative');
     }
+    final MoneyCapitalizationPolicy nextPolicy = capitalizationPolicy ??
+        (interestKind == null
+            ? existing.capitalizationPolicy
+            : MoneyCapitalizationPolicy.fromLegacyInterestKind(interestKind));
+    final MoneyRatePeriod nextRatePeriod = ratePeriod ?? existing.ratePeriod;
+    final MoneyCapitalizationCycle nextCycle = capitalizationCycle ??
+        existing.capitalizationCycle;
+    final MoneyInterestKind legacyKind = nextPolicy.legacyInterestKind;
     final DateTime start = interestStartedAt == null
         ? existing.interestStartedAt
         : DateTime(
@@ -1910,9 +1932,11 @@ class LocalRepository {
               ? currencyCode!.trim().toUpperCase()
               : existing.currencyCode,
         ),
-        interestKind: Value<String>((interestKind ?? existing.interestKind).name),
+        interestKind: Value<String>(legacyKind.name),
         rateBps: Value<int>(nextRate),
-        ratePeriod: Value<String>((ratePeriod ?? existing.ratePeriod).name),
+        ratePeriod: Value<String>(nextRatePeriod.name),
+        capitalizationPolicy: Value<String>(nextPolicy.name),
+        capitalizationCycle: Value<String>(nextCycle.name),
         interestStartedAt: Value<DateTime>(start),
         interestEndedAt: Value<DateTime?>(ended),
         note: Value<String?>(nextNote),
@@ -1941,6 +1965,9 @@ class LocalRepository {
     }
     if (kind == MoneyLoanEntryKind.adjustment && amountPaise == 0) {
       throw ArgumentError('Adjustment amount cannot be zero');
+    }
+    if (kind == MoneyLoanEntryKind.capitalization && amountPaise < 0) {
+      throw ArgumentError('Capitalization amount cannot be negative');
     }
     final DateTime at = DateTime(entryAt.year, entryAt.month, entryAt.day);
     final DateTime today = DateTime.now();
@@ -1981,6 +2008,34 @@ class LocalRepository {
       entryAt: entryAt,
       amountPaise: amountPaise,
       kind: MoneyLoanEntryKind.disbursement,
+      note: note,
+    );
+  }
+
+  /// Inserts a manual capitalization marker for [MoneyCapitalizationPolicy.manual].
+  Future<String> capitalizeMoneyLoanInterest(
+    String loanId, {
+    DateTime? at,
+    String? note,
+  }) async {
+    final MoneyLoan? loan = await getMoneyLoan(loanId);
+    if (loan == null) {
+      throw StateError('Loan not found: $loanId');
+    }
+    if (loan.capitalizationPolicy != MoneyCapitalizationPolicy.manual) {
+      throw StateError('Manual capitalize is only for manual policy loans');
+    }
+    final DateTime when = at ?? DateTime.now();
+    final LoanScenario scenario = computeLoanScenario(loan: loan, now: when);
+    final int unpaid = scenario.unpaidInterestPaise;
+    if (unpaid == 0) {
+      throw StateError('No unpaid interest to capitalize');
+    }
+    return addMoneyLoanEntry(
+      loanId: loanId,
+      entryAt: when,
+      amountPaise: unpaid.abs(),
+      kind: MoneyLoanEntryKind.capitalization,
       note: note,
     );
   }
@@ -2106,15 +2161,28 @@ class LocalRepository {
     )..where((t) => t.loanId.equals(row.id))
       ..orderBy([(t) => OrderingTerm.asc(t.entryAt)]))
         .get();
+    final MoneyInterestKind legacyKind =
+        MoneyInterestKind.parse(row.interestKind);
+    // Prefer stored policy; fall back to legacy simple/compound mapping.
+    final MoneyCapitalizationPolicy policy = row.capitalizationPolicy.isEmpty
+        ? MoneyCapitalizationPolicy.fromLegacyInterestKind(legacyKind)
+        : MoneyCapitalizationPolicy.parse(row.capitalizationPolicy);
+    final MoneyCapitalizationCycle cycle = row.capitalizationCycle.isEmpty
+        ? MoneyCapitalizationCycle.fromRatePeriod(
+            MoneyRatePeriod.parse(row.ratePeriod),
+          )
+        : MoneyCapitalizationCycle.parse(row.capitalizationCycle);
     return MoneyLoan(
       id: row.id,
       customerId: row.customerId,
       direction: MoneyLoanDirection.parse(row.direction),
       principalPaise: row.principalPaise,
       currencyCode: row.currencyCode,
-      interestKind: MoneyInterestKind.parse(row.interestKind),
+      interestKind: legacyKind,
       rateBps: row.rateBps,
       ratePeriod: MoneyRatePeriod.parse(row.ratePeriod),
+      capitalizationPolicy: policy,
+      capitalizationCycle: cycle,
       interestStartedAt: row.interestStartedAt,
       interestEndedAt: row.interestEndedAt,
       prepaymentAllocation:

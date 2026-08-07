@@ -2053,6 +2053,58 @@ class AppLocalizationsHi extends AppLocalizations {
   String get loanInterestCompound => 'चक्रवृद्धि';
 
   @override
+  String get loanCalculationFrequencyLabel => 'ब्याज गणना';
+
+  @override
+  String get loanRateDaily => 'दैनिक';
+
+  @override
+  String get loanCapitalizationPolicyLabel => 'पूंजीकरण';
+
+  @override
+  String get loanCapPolicyNever => 'कभी नहीं';
+
+  @override
+  String get loanCapPolicyOnPayment => 'भुगतान पर';
+
+  @override
+  String get loanCapPolicyOnScheduledCycle => 'निर्धारित चक्र पर';
+
+  @override
+  String get loanCapPolicyOnBalanceDirectionChange => 'दिशा बदलने पर';
+
+  @override
+  String get loanCapPolicyOnLoanClosure => 'बंद होने पर';
+
+  @override
+  String get loanCapPolicyManual => 'मैन्युअल';
+
+  @override
+  String get loanCapitalizationCycleLabel => 'पूंजीकरण चक्र';
+
+  @override
+  String get loanCapCycleMonthly => 'मासिक';
+
+  @override
+  String get loanCapCycleQuarterly => 'तिमाही';
+
+  @override
+  String get loanCapCycleYearly => 'वार्षिक';
+
+  @override
+  String get loanCapitalizeInterestAction => 'ब्याज पूंजीकृत करें';
+
+  @override
+  String get loanCapitalizeInterestSnack => 'ब्याज मूलधन में जोड़ा गया';
+
+  @override
+  String get loanCapitalizeNothingSnack =>
+      'पूंजीकृत करने के लिए अवैतनिक ब्याज नहीं';
+
+  @override
+  String get loanUnpaidInterestLabel => 'अवैतनिक ब्याज';
+
+  @override
   String get loanPrepaymentAllocationLabel => 'चुकौती लागू होती है';
 
   @override
@@ -2079,11 +2131,35 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get loanPeriodEndInterestHintSimple =>
-      'नकदी हलचलों के बीच हस्ताक्षरित बकाया शेष पर ब्याज लगता है। सरल ब्याज अलग देय रहता है और मूलधन में नहीं जुड़ता। अधिक भुगतान पर उल्टा ब्याज मिलता है।';
+      'ब्याज हमेशा हस्ताक्षरित मूलधन शेष से अवैतनिक ब्याज में जमा होता है। पूंजीकरण चयनित नीति का पालन करता है। अधिक भुगतान पर उल्टा ब्याज मिलता है।';
 
   @override
   String get loanPeriodEndInterestHintCompound =>
-      'नकदी हलचलों के बीच हस्ताक्षरित बकाया शेष पर ब्याज लगता है और अगली हलचल से पहले मूलधन में जुड़ जाता है। अधिक भुगतान पर क्रेडिट शेष पर उल्टा ब्याज मिलता है।';
+      'ब्याज हमेशा हस्ताक्षरित मूलधन शेष से अवैतनिक ब्याज में जमा होता है। पूंजीकरण चयनित नीति का पालन करता है। अधिक भुगतान पर उल्टा ब्याज मिलता है।';
+
+  @override
+  String get loanCapPolicyHintNever =>
+      'मूलधन स्थिर रहता है; अवैतनिक ब्याज अलग बढ़ता है। बकाया = मूलधन + अवैतनिक।';
+
+  @override
+  String get loanCapPolicyHintOnPayment =>
+      'प्रत्येक चुकौती से ठीक पहले अवैतनिक ब्याज मूलधन में जुड़ता है।';
+
+  @override
+  String get loanCapPolicyHintOnScheduledCycle =>
+      'प्रत्येक पूंजीकरण चक्र की वर्षगाँठ पर अवैतनिक ब्याज मूलधन में जुड़ता है।';
+
+  @override
+  String get loanCapPolicyHintOnBalanceDirectionChange =>
+      'बकाया देय से क्रेडिट (या उल्टा) हो जाने से पहले अवैतनिक ब्याज मूलधन में जुड़ता है।';
+
+  @override
+  String get loanCapPolicyHintOnLoanClosure =>
+      'कर्ज बंद होने पर अवैतनिक ब्याज मूलधन में जुड़ता है।';
+
+  @override
+  String get loanCapPolicyHintManual =>
+      'अवैतनिक ब्याज केवल तब मूलधन में जुड़ता है जब आप ब्याज पूंजीकृत करें दबाएँ।';
 
   @override
   String get loanRateInvalid => 'मान्य दर दर्ज करें';
@@ -2197,14 +2273,19 @@ class AppLocalizationsHi extends AppLocalizations {
     String due,
     String rate,
     String period,
-    String kind,
+    String policy,
   ) {
-    return 'शुरू $start · देय $due · $rate $period · $kind';
+    return 'शुरू $start · देय $due · $rate $period · $policy';
   }
 
   @override
   String loanPrepaymentSetupLabel(String mode) {
     return 'चुकौती: $mode';
+  }
+
+  @override
+  String loanTimelineInterestCapitalized(String date, String amount) {
+    return '$date — ब्याज पूंजीकृत $amount → मूलधन';
   }
 
   @override

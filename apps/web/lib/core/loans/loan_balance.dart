@@ -1,10 +1,13 @@
 import '../pricing/rental_pricing.dart';
+import 'capitalization_policy.dart';
 import 'loan_models.dart';
 
 /// Readable timeline row kinds for the loan calculator surface.
 enum LoanTimelineKind {
   /// Signed interest accrued between two consecutive timeline points.
   interestSegment,
+  /// Unpaid interest merged into principal / balance.
+  interestCapitalized,
   payment,
   disbursement,
   adjustment,
@@ -40,18 +43,26 @@ class LoanTimelineEvent {
   final int? principalBasisPaise;
 }
 
-class _LedgerEvent {
-  const _LedgerEvent({
+enum _WalkKind {
+  cash,
+  scheduledBoundary,
+  closure,
+}
+
+class _WalkPoint {
+  const _WalkPoint({
     required this.at,
-    required this.kind,
-    required this.amountPaise,
-    required this.isSyntheticPrincipal,
+    required this.walkKind,
+    this.entryKind,
+    this.amountPaise = 0,
+    this.isSyntheticPrincipal = false,
     this.entryId,
     this.note,
   });
 
   final DateTime at;
-  final MoneyLoanEntryKind kind;
+  final _WalkKind walkKind;
+  final MoneyLoanEntryKind? entryKind;
   final int amountPaise;
   final bool isSyntheticPrincipal;
   final String? entryId;
@@ -94,8 +105,22 @@ DateTime _dateOnly(DateTime value) =>
 DateTime nextInterestPeriodEnd(DateTime from, MoneyRatePeriod ratePeriod) {
   final DateTime start = _dateOnly(from);
   return switch (ratePeriod) {
+    MoneyRatePeriod.daily => start.add(const Duration(days: 1)),
     MoneyRatePeriod.monthly => addCalendarMonths(start, 1),
     MoneyRatePeriod.yearly => addCalendarMonths(start, 12),
+  };
+}
+
+/// Next capitalization cycle anniversary after [from].
+DateTime nextCapitalizationCycleEnd(
+  DateTime from,
+  MoneyCapitalizationCycle cycle,
+) {
+  final DateTime start = _dateOnly(from);
+  return switch (cycle) {
+    MoneyCapitalizationCycle.monthly => addCalendarMonths(start, 1),
+    MoneyCapitalizationCycle.quarterly => addCalendarMonths(start, 3),
+    MoneyCapitalizationCycle.yearly => addCalendarMonths(start, 12),
   };
 }
 
@@ -103,6 +128,7 @@ DateTime nextInterestPeriodEnd(DateTime from, MoneyRatePeriod ratePeriod) {
 ///
 /// Yearly: calendar months / 12 (6 months → 0.5). Partial first month falls
 /// back to days / year length. Monthly: days / days-in-period.
+/// Daily: days / 1 within the day period.
 double periodElapsedFraction({
   required DateTime periodStart,
   required DateTime at,
@@ -116,6 +142,13 @@ double periodElapsedFraction({
     return 0.0;
   }
   switch (ratePeriod) {
+    case MoneyRatePeriod.daily:
+      final int periodDays = calendarDaysBetween(start, boundary);
+      final int elapsed = calendarDaysBetween(start, end);
+      if (periodDays <= 0) {
+        return 0.0;
+      }
+      return (elapsed / periodDays).clamp(0.0, 1.0);
     case MoneyRatePeriod.yearly:
       int months =
           (end.year - start.year) * 12 + (end.month - start.month);
@@ -143,9 +176,8 @@ double periodElapsedFraction({
 
 /// Accrual fraction of rate periods between arbitrary [from] and [to].
 ///
-/// Yearly uses whole calendar months / 12 (partial month before the first
-/// whole month uses days / year length). Monthly walks month boundaries from
-/// [from], summing days / days-in-period for each segment.
+/// Daily uses calendar days / 365. Yearly uses whole calendar months / 12.
+/// Monthly walks month boundaries from [from].
 double accrualFraction({
   required DateTime from,
   required DateTime to,
@@ -157,6 +189,8 @@ double accrualFraction({
     return 0.0;
   }
   switch (ratePeriod) {
+    case MoneyRatePeriod.daily:
+      return calendarDaysBetween(start, end) / 365.0;
     case MoneyRatePeriod.yearly:
       int months =
           (end.year - start.year) * 12 + (end.month - start.month);
@@ -291,12 +325,52 @@ DateTime resolveLoanAsOf({
   return asOf;
 }
 
+int _sign(int value) {
+  if (value > 0) {
+    return 1;
+  }
+  if (value < 0) {
+    return -1;
+  }
+  return 0;
+}
+
+/// Tentative outstanding after applying [point] without capitalization.
+int _outstandingAfterCash({
+  required LedgerState state,
+  required _WalkPoint point,
+  required MoneyPrepaymentAllocation allocation,
+}) {
+  int balance = state.balance;
+  int unpaid = state.unpaidInterest;
+  final MoneyLoanEntryKind? kind = point.entryKind;
+  if (kind == MoneyLoanEntryKind.repayment) {
+    final int pay = point.amountPaise < 0 ? 0 : point.amountPaise;
+    int remainingPay = pay;
+    if (allocation == MoneyPrepaymentAllocation.interestThenPrincipal &&
+        remainingPay > 0 &&
+        unpaid > 0) {
+      final int toInterest =
+          remainingPay > unpaid ? unpaid : remainingPay;
+      remainingPay -= toInterest;
+      unpaid -= toInterest;
+    }
+    if (remainingPay > 0) {
+      balance -= remainingPay;
+    }
+  } else if (kind == MoneyLoanEntryKind.disbursement) {
+    final int add = point.amountPaise < 0 ? 0 : point.amountPaise;
+    balance += add;
+  } else if (kind == MoneyLoanEntryKind.adjustment) {
+    balance -= point.amountPaise;
+  }
+  return balance + unpaid;
+}
+
 /// Event-driven signed ledger: synthetic principal disbursement at
 /// [MoneyLoan.interestStartedAt], plus all dated entries (including before
-/// start). Interest accrues only between consecutive timeline points from the
-/// signed outstanding balance. Simple keeps signed unpaid interest; compound
-/// capitalizes into the balance between events. Overpay may go negative and
-/// earn reverse interest.
+/// start). Interest always accrues into unpaid; capitalization follows the
+/// loan's [MoneyCapitalizationPolicy].
 LoanScenario computeLoanScenario({
   required MoneyLoan loan,
   DateTime? now,
@@ -305,44 +379,93 @@ LoanScenario computeLoanScenario({
   final DateTime clock = now ?? DateTime.now();
   final DateTime asOf = resolveLoanAsOf(loan: loan, now: clock);
   final DateTime start = _dateOnly(loan.interestStartedAt);
-  final bool isSimple = loan.interestKind == MoneyInterestKind.simple;
+  final InterestCapitalizationPolicy policy = capitalizationPolicyFor(loan);
 
-  final List<_LedgerEvent> events = <_LedgerEvent>[
-    _LedgerEvent(
+  final List<_WalkPoint> points = <_WalkPoint>[
+    _WalkPoint(
       at: start,
-      kind: MoneyLoanEntryKind.disbursement,
+      walkKind: _WalkKind.cash,
+      entryKind: MoneyLoanEntryKind.disbursement,
       amountPaise: loan.principalPaise < 0 ? 0 : loan.principalPaise,
       isSyntheticPrincipal: true,
-      entryId: null,
     ),
   ];
 
   for (final MoneyLoanEntry entry in entriesOverride ?? loan.entries) {
-    events.add(
-      _LedgerEvent(
+    points.add(
+      _WalkPoint(
         at: _dateOnly(entry.entryAt),
-        kind: entry.kind,
+        walkKind: _WalkKind.cash,
+        entryKind: entry.kind,
         amountPaise: entry.amountPaise,
-        isSyntheticPrincipal: false,
         entryId: entry.id,
         note: entry.note,
       ),
     );
   }
 
-  events.sort((_LedgerEvent a, _LedgerEvent b) {
+  if (loan.capitalizationPolicy ==
+      MoneyCapitalizationPolicy.onScheduledCycle) {
+    DateTime boundary =
+        nextCapitalizationCycleEnd(start, loan.capitalizationCycle);
+    int guard = 0;
+    while (!boundary.isAfter(asOf) && guard < 12000) {
+      guard++;
+      points.add(
+        _WalkPoint(
+          at: boundary,
+          walkKind: _WalkKind.scheduledBoundary,
+        ),
+      );
+      boundary =
+          nextCapitalizationCycleEnd(boundary, loan.capitalizationCycle);
+    }
+  }
+
+  if (loan.capitalizationPolicy == MoneyCapitalizationPolicy.onLoanClosure &&
+      loan.status == MoneyLoanStatus.closed &&
+      loan.closedAt != null) {
+    final DateTime closed = _dateOnly(loan.closedAt!);
+    if (!closed.isAfter(asOf)) {
+      points.add(
+        _WalkPoint(
+          at: closed,
+          walkKind: _WalkKind.closure,
+        ),
+      );
+    }
+  }
+
+  points.sort((_WalkPoint a, _WalkPoint b) {
     final int byDate = a.at.compareTo(b.at);
     if (byDate != 0) {
       return byDate;
     }
-    if (a.isSyntheticPrincipal != b.isSyntheticPrincipal) {
-      return a.isSyntheticPrincipal ? -1 : 1;
+    // Same day: scheduled/closure before cash; synthetic principal first.
+    int rank(_WalkPoint p) {
+      if (p.isSyntheticPrincipal) {
+        return 0;
+      }
+      if (p.walkKind == _WalkKind.scheduledBoundary) {
+        return 1;
+      }
+      if (p.walkKind == _WalkKind.closure) {
+        return 2;
+      }
+      if (p.entryKind == MoneyLoanEntryKind.capitalization) {
+        return 3;
+      }
+      return 4;
+    }
+
+    final int byRank = rank(a).compareTo(rank(b));
+    if (byRank != 0) {
+      return byRank;
     }
     return (a.entryId ?? '').compareTo(b.entryId ?? '');
   });
 
-  int balance = 0;
-  int unpaidInterest = 0;
+  final LedgerState state = LedgerState();
   int interestAccrued = 0;
   int totalPaid = 0;
   int totalAdjustments = 0;
@@ -358,9 +481,9 @@ LoanScenario computeLoanScenario({
       return;
     }
     final DateTime from = cursor!;
-    if (balance != 0 && loan.rateBps > 0) {
+    if (state.balance != 0 && loan.rateBps > 0) {
       final int interest = signedInterestPaise(
-        balancePaise: balance,
+        balancePaise: state.balance,
         rateBps: loan.rateBps,
         from: from,
         to: to,
@@ -368,6 +491,7 @@ LoanScenario computeLoanScenario({
       );
       if (interest != 0) {
         interestAccrued += interest;
+        state.unpaidInterest += interest;
         timeline.add(
           LoanTimelineEvent(
             kind: LoanTimelineKind.interestSegment,
@@ -375,22 +499,60 @@ LoanScenario computeLoanScenario({
             through: to,
             at: to,
             amountPaise: interest,
-            principalBasisPaise: balance,
+            principalBasisPaise: state.balance,
           ),
         );
-        if (isSimple) {
-          unpaidInterest += interest;
-        } else {
-          balance += interest;
-        }
       }
     }
     cursor = to;
   }
 
-  void applyEvent(_LedgerEvent event) {
-    if (event.kind == MoneyLoanEntryKind.repayment) {
-      final int pay = event.amountPaise < 0 ? 0 : event.amountPaise;
+  void maybeCapitalize(LedgerHook hook, DateTime at) {
+    if (state.unpaidInterest == 0) {
+      return;
+    }
+    if (!policy.shouldCapitalize(
+      loan: loan,
+      state: state,
+      hook: hook,
+    )) {
+      return;
+    }
+    final int amount = state.unpaidInterest;
+    state.balance += amount;
+    state.unpaidInterest = 0;
+    timeline.add(
+      LoanTimelineEvent(
+        kind: LoanTimelineKind.interestCapitalized,
+        at: at,
+        amountPaise: amount,
+      ),
+    );
+  }
+
+  void applyCash(_WalkPoint point) {
+    final MoneyLoanEntryKind kind = point.entryKind!;
+    if (kind == MoneyLoanEntryKind.capitalization) {
+      maybeCapitalize(LedgerHook.manualEntry, point.at);
+      return;
+    }
+
+    if (kind == MoneyLoanEntryKind.repayment) {
+      maybeCapitalize(LedgerHook.beforePayment, point.at);
+      if (loan.capitalizationPolicy ==
+          MoneyCapitalizationPolicy.onBalanceDirectionChange) {
+        final int before = state.outstanding;
+        final int after = _outstandingAfterCash(
+          state: state,
+          point: point,
+          allocation: loan.prepaymentAllocation,
+        );
+        if (before != 0 && after != 0 && _sign(before) != _sign(after)) {
+          maybeCapitalize(LedgerHook.beforeSignFlip, point.at);
+        }
+      }
+
+      final int pay = point.amountPaise < 0 ? 0 : point.amountPaise;
       totalPaid += pay;
       int remainingPay = pay;
       int toInterest = 0;
@@ -399,76 +561,111 @@ LoanScenario computeLoanScenario({
       if (loan.prepaymentAllocation ==
               MoneyPrepaymentAllocation.interestThenPrincipal &&
           remainingPay > 0 &&
-          unpaidInterest > 0) {
-        toInterest =
-            remainingPay > unpaidInterest ? unpaidInterest : remainingPay;
+          state.unpaidInterest > 0) {
+        toInterest = remainingPay > state.unpaidInterest
+            ? state.unpaidInterest
+            : remainingPay;
         remainingPay -= toInterest;
-        unpaidInterest -= toInterest;
+        state.unpaidInterest -= toInterest;
       }
 
       if (remainingPay > 0) {
         toPrincipal = remainingPay;
-        balance -= toPrincipal;
-        remainingPay = 0;
+        state.balance -= toPrincipal;
       }
 
       timeline.add(
         LoanTimelineEvent(
           kind: LoanTimelineKind.payment,
-          at: event.at,
+          at: point.at,
           amountPaise: pay,
           toInterestPaise: toInterest,
           toPrincipalPaise: toPrincipal,
-          note: event.note,
-          entryId: event.entryId,
+          note: point.note,
+          entryId: point.entryId,
         ),
       );
       return;
     }
 
-    if (event.kind == MoneyLoanEntryKind.disbursement) {
-      final int add = event.amountPaise < 0 ? 0 : event.amountPaise;
-      balance += add;
+    if (kind == MoneyLoanEntryKind.disbursement) {
+      if (loan.capitalizationPolicy ==
+          MoneyCapitalizationPolicy.onBalanceDirectionChange) {
+        final int before = state.outstanding;
+        final int after = _outstandingAfterCash(
+          state: state,
+          point: point,
+          allocation: loan.prepaymentAllocation,
+        );
+        if (before != 0 && after != 0 && _sign(before) != _sign(after)) {
+          maybeCapitalize(LedgerHook.beforeSignFlip, point.at);
+        }
+      }
+      final int add = point.amountPaise < 0 ? 0 : point.amountPaise;
+      state.balance += add;
       timeline.add(
         LoanTimelineEvent(
           kind: LoanTimelineKind.disbursement,
-          at: event.at,
+          at: point.at,
           amountPaise: add,
           toInterestPaise: 0,
           toPrincipalPaise: add,
-          note: event.note,
-          entryId: event.entryId,
+          note: point.note,
+          entryId: point.entryId,
         ),
       );
       return;
     }
 
     // Adjustment: positive reduces balance; negative increases it.
-    totalAdjustments += event.amountPaise;
-    balance -= event.amountPaise;
+    if (loan.capitalizationPolicy ==
+        MoneyCapitalizationPolicy.onBalanceDirectionChange) {
+      final int before = state.outstanding;
+      final int after = _outstandingAfterCash(
+        state: state,
+        point: point,
+        allocation: loan.prepaymentAllocation,
+      );
+      if (before != 0 && after != 0 && _sign(before) != _sign(after)) {
+        maybeCapitalize(LedgerHook.beforeSignFlip, point.at);
+      }
+    }
+    totalAdjustments += point.amountPaise;
+    state.balance -= point.amountPaise;
     timeline.add(
       LoanTimelineEvent(
         kind: LoanTimelineKind.adjustment,
-        at: event.at,
-        amountPaise: event.amountPaise,
+        at: point.at,
+        amountPaise: point.amountPaise,
         toInterestPaise: 0,
-        toPrincipalPaise: event.amountPaise,
-        note: event.note,
-        entryId: event.entryId,
+        toPrincipalPaise: point.amountPaise,
+        note: point.note,
+        entryId: point.entryId,
       ),
     );
   }
 
-  for (final _LedgerEvent event in events) {
-    if (event.at.isAfter(asOf)) {
+  for (final _WalkPoint point in points) {
+    if (point.at.isAfter(asOf)) {
       break;
     }
-    accrueTo(event.at);
-    applyEvent(event);
+    accrueTo(point.at);
+    switch (point.walkKind) {
+      case _WalkKind.scheduledBoundary:
+        maybeCapitalize(LedgerHook.scheduledBoundary, point.at);
+      case _WalkKind.closure:
+        maybeCapitalize(LedgerHook.atClosure, point.at);
+      case _WalkKind.cash:
+        applyCash(point);
+    }
   }
   accrueTo(asOf);
+  if (loan.capitalizationPolicy == MoneyCapitalizationPolicy.onLoanClosure &&
+      loan.status == MoneyLoanStatus.closed) {
+    maybeCapitalize(LedgerHook.atClosure, asOf);
+  }
 
-  final int pending = balance + unpaidInterest;
+  final int pending = state.outstanding;
   timeline.add(
     LoanTimelineEvent(
       kind: LoanTimelineKind.pendingAsOf,
@@ -483,8 +680,8 @@ LoanScenario computeLoanScenario({
     totalPaidPaise: totalPaid,
     totalAdjustmentsPaise: totalAdjustments,
     pendingPaise: pending,
-    remainingPrincipalPaise: balance,
-    unpaidInterestPaise: unpaidInterest,
+    remainingPrincipalPaise: state.balance,
+    unpaidInterestPaise: state.unpaidInterest,
     asOf: asOf,
     timeline: timeline,
   );

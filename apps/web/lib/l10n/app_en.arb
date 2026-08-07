@@ -1185,6 +1185,23 @@
   "loanInterestKindLabel": "Interest",
   "loanInterestSimple": "Simple",
   "loanInterestCompound": "Compound",
+  "loanCalculationFrequencyLabel": "Interest calculation",
+  "loanRateDaily": "Daily",
+  "loanCapitalizationPolicyLabel": "Capitalization",
+  "loanCapPolicyNever": "Never",
+  "loanCapPolicyOnPayment": "On payment",
+  "loanCapPolicyOnScheduledCycle": "On schedule",
+  "loanCapPolicyOnBalanceDirectionChange": "On direction change",
+  "loanCapPolicyOnLoanClosure": "On closure",
+  "loanCapPolicyManual": "Manual",
+  "loanCapitalizationCycleLabel": "Capitalization cycle",
+  "loanCapCycleMonthly": "Monthly",
+  "loanCapCycleQuarterly": "Quarterly",
+  "loanCapCycleYearly": "Yearly",
+  "loanCapitalizeInterestAction": "Capitalize interest",
+  "loanCapitalizeInterestSnack": "Interest capitalized into principal",
+  "loanCapitalizeNothingSnack": "No unpaid interest to capitalize",
+  "loanUnpaidInterestLabel": "Unpaid interest",
   "loanPrepaymentAllocationLabel": "Repayment applies to",
   "loanPrepaymentInterestFirst": "Interest first",
   "loanPrepaymentPrincipalOnly": "Principal only",
@@ -1193,8 +1210,14 @@
   "loanRatePeriodLabel": "Period",
   "loanRateMonthly": "Monthly",
   "loanRateYearly": "Yearly",
-  "loanPeriodEndInterestHintSimple": "Interest accrues between cash movements from the signed outstanding balance. Simple interest stays due separately and is not added to principal. Overpay earns reverse interest.",
-  "loanPeriodEndInterestHintCompound": "Interest accrues between cash movements from the signed outstanding balance and is added to principal before the next movement. Overpay earns reverse interest on the credit balance.",
+  "loanPeriodEndInterestHintSimple": "Interest always accrues into unpaid interest from the signed principal balance. Capitalization (adding unpaid to principal) follows the selected policy. Overpay earns reverse interest.",
+  "loanPeriodEndInterestHintCompound": "Interest always accrues into unpaid interest from the signed principal balance. Capitalization (adding unpaid to principal) follows the selected policy. Overpay earns reverse interest.",
+  "loanCapPolicyHintNever": "Principal stays fixed; unpaid interest grows separately. Outstanding = principal + unpaid.",
+  "loanCapPolicyHintOnPayment": "Unpaid interest is added to principal immediately before each repayment.",
+  "loanCapPolicyHintOnScheduledCycle": "Unpaid interest is added to principal on each capitalization cycle anniversary.",
+  "loanCapPolicyHintOnBalanceDirectionChange": "Unpaid interest is added to principal before a cash move that would flip outstanding from due to credit (or reverse).",
+  "loanCapPolicyHintOnLoanClosure": "Unpaid interest is added to principal when the loan is closed.",
+  "loanCapPolicyHintManual": "Unpaid interest is added to principal only when you tap Capitalize interest.",
   "loanRateInvalid": "Enter a valid rate",
   "loanNoteOptionalLabel": "Note (optional)",
   "loanSaving": "Saving…",
@@ -1234,20 +1257,27 @@
   },
   "loanEditSetupTooltip": "Edit dates",
   "loanEditSetupTitle": "Edit loan dates",
-  "loanSetupSummary": "Start {start} · Due {due} · {rate} {period} · {kind}",
+  "loanSetupSummary": "Start {start} · Due {due} · {rate} {period} · {policy}",
   "@loanSetupSummary": {
     "placeholders": {
       "start": {"type": "String"},
       "due": {"type": "String"},
       "rate": {"type": "String"},
       "period": {"type": "String"},
-      "kind": {"type": "String"}
+      "policy": {"type": "String"}
     }
   },
   "loanPrepaymentSetupLabel": "Repayments: {mode}",
   "@loanPrepaymentSetupLabel": {
     "placeholders": {
       "mode": {"type": "String"}
+    }
+  },
+  "loanTimelineInterestCapitalized": "{date} — Interest capitalized {amount} → principal",
+  "@loanTimelineInterestCapitalized": {
+    "placeholders": {
+      "date": {"type": "String"},
+      "amount": {"type": "String"}
     }
   },
   "loanTimelineStart": "{date} — Loan started · {amount}",

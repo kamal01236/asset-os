@@ -11,6 +11,10 @@ enum MoneyLoanDirection {
   }
 }
 
+/// Legacy interest mode. Prefer [MoneyCapitalizationPolicy].
+///
+/// Kept for one release: [simple] maps to [MoneyCapitalizationPolicy.never],
+/// [compound] maps to [MoneyCapitalizationPolicy.onScheduledCycle].
 enum MoneyInterestKind {
   simple,
   compound;
@@ -23,7 +27,9 @@ enum MoneyInterestKind {
   }
 }
 
+/// Interest calculation frequency (rate applies per this unit).
 enum MoneyRatePeriod {
+  daily,
   monthly,
   yearly;
 
@@ -31,7 +37,80 @@ enum MoneyRatePeriod {
     if (raw == MoneyRatePeriod.yearly.name) {
       return MoneyRatePeriod.yearly;
     }
+    if (raw == MoneyRatePeriod.daily.name) {
+      return MoneyRatePeriod.daily;
+    }
     return MoneyRatePeriod.monthly;
+  }
+}
+
+/// When unpaid interest is merged into principal / balance.
+enum MoneyCapitalizationPolicy {
+  never,
+  onPayment,
+  onScheduledCycle,
+  onBalanceDirectionChange,
+  onLoanClosure,
+  manual;
+
+  static MoneyCapitalizationPolicy parse(String? raw) {
+    switch (raw) {
+      case 'onPayment':
+        return MoneyCapitalizationPolicy.onPayment;
+      case 'onScheduledCycle':
+        return MoneyCapitalizationPolicy.onScheduledCycle;
+      case 'onBalanceDirectionChange':
+        return MoneyCapitalizationPolicy.onBalanceDirectionChange;
+      case 'onLoanClosure':
+        return MoneyCapitalizationPolicy.onLoanClosure;
+      case 'manual':
+        return MoneyCapitalizationPolicy.manual;
+      case 'never':
+      default:
+        return MoneyCapitalizationPolicy.never;
+    }
+  }
+
+  /// Map legacy simple/compound column when policy was not stored.
+  static MoneyCapitalizationPolicy fromLegacyInterestKind(
+    MoneyInterestKind kind,
+  ) {
+    return kind == MoneyInterestKind.compound
+        ? MoneyCapitalizationPolicy.onScheduledCycle
+        : MoneyCapitalizationPolicy.never;
+  }
+
+  /// Persist legacy column for one release.
+  MoneyInterestKind get legacyInterestKind {
+    return this == MoneyCapitalizationPolicy.onScheduledCycle
+        ? MoneyInterestKind.compound
+        : MoneyInterestKind.simple;
+  }
+}
+
+/// Cycle used when [MoneyCapitalizationPolicy.onScheduledCycle] is selected.
+enum MoneyCapitalizationCycle {
+  monthly,
+  quarterly,
+  yearly;
+
+  static MoneyCapitalizationCycle parse(String? raw) {
+    if (raw == MoneyCapitalizationCycle.quarterly.name) {
+      return MoneyCapitalizationCycle.quarterly;
+    }
+    if (raw == MoneyCapitalizationCycle.yearly.name) {
+      return MoneyCapitalizationCycle.yearly;
+    }
+    return MoneyCapitalizationCycle.monthly;
+  }
+
+  /// Default cycle from calculation frequency.
+  static MoneyCapitalizationCycle fromRatePeriod(MoneyRatePeriod period) {
+    return switch (period) {
+      MoneyRatePeriod.yearly => MoneyCapitalizationCycle.yearly,
+      MoneyRatePeriod.monthly || MoneyRatePeriod.daily =>
+        MoneyCapitalizationCycle.monthly,
+    };
   }
 }
 
@@ -72,7 +151,8 @@ enum MoneyLoanStatus {
 enum MoneyLoanEntryKind {
   repayment,
   disbursement,
-  adjustment;
+  adjustment,
+  capitalization;
 
   static MoneyLoanEntryKind parse(String? raw) {
     if (raw == MoneyLoanEntryKind.adjustment.name) {
@@ -80,6 +160,9 @@ enum MoneyLoanEntryKind {
     }
     if (raw == MoneyLoanEntryKind.disbursement.name) {
       return MoneyLoanEntryKind.disbursement;
+    }
+    if (raw == MoneyLoanEntryKind.capitalization.name) {
+      return MoneyLoanEntryKind.capitalization;
     }
     // Legacy `payment` and current `repayment`.
     return MoneyLoanEntryKind.repayment;
@@ -119,6 +202,8 @@ class MoneyLoan {
     required this.interestStartedAt,
     required this.status,
     required this.createdAt,
+    this.capitalizationPolicy = MoneyCapitalizationPolicy.never,
+    this.capitalizationCycle = MoneyCapitalizationCycle.monthly,
     this.prepaymentAllocation =
         MoneyPrepaymentAllocation.interestThenPrincipal,
     this.interestEndedAt,
@@ -132,9 +217,12 @@ class MoneyLoan {
   final MoneyLoanDirection direction;
   final int principalPaise;
   final String currencyCode;
+  /// Legacy; prefer [capitalizationPolicy].
   final MoneyInterestKind interestKind;
   final int rateBps;
   final MoneyRatePeriod ratePeriod;
+  final MoneyCapitalizationPolicy capitalizationPolicy;
+  final MoneyCapitalizationCycle capitalizationCycle;
   final DateTime interestStartedAt;
   final DateTime? interestEndedAt;
   final MoneyPrepaymentAllocation prepaymentAllocation;
@@ -151,6 +239,8 @@ class MoneyLoan {
     MoneyInterestKind? interestKind,
     int? rateBps,
     MoneyRatePeriod? ratePeriod,
+    MoneyCapitalizationPolicy? capitalizationPolicy,
+    MoneyCapitalizationCycle? capitalizationCycle,
     DateTime? interestStartedAt,
     DateTime? interestEndedAt,
     bool clearInterestEndedAt = false,
@@ -171,6 +261,10 @@ class MoneyLoan {
       interestKind: interestKind ?? this.interestKind,
       rateBps: rateBps ?? this.rateBps,
       ratePeriod: ratePeriod ?? this.ratePeriod,
+      capitalizationPolicy:
+          capitalizationPolicy ?? this.capitalizationPolicy,
+      capitalizationCycle:
+          capitalizationCycle ?? this.capitalizationCycle,
       interestStartedAt: interestStartedAt ?? this.interestStartedAt,
       interestEndedAt:
           clearInterestEndedAt ? null : (interestEndedAt ?? this.interestEndedAt),

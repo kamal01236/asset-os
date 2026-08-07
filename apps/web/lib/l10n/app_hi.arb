@@ -1185,6 +1185,23 @@
   "loanInterestKindLabel": "ब्याज",
   "loanInterestSimple": "सरल",
   "loanInterestCompound": "चक्रवृद्धि",
+  "loanCalculationFrequencyLabel": "ब्याज गणना",
+  "loanRateDaily": "दैनिक",
+  "loanCapitalizationPolicyLabel": "पूंजीकरण",
+  "loanCapPolicyNever": "कभी नहीं",
+  "loanCapPolicyOnPayment": "भुगतान पर",
+  "loanCapPolicyOnScheduledCycle": "निर्धारित चक्र पर",
+  "loanCapPolicyOnBalanceDirectionChange": "दिशा बदलने पर",
+  "loanCapPolicyOnLoanClosure": "बंद होने पर",
+  "loanCapPolicyManual": "मैन्युअल",
+  "loanCapitalizationCycleLabel": "पूंजीकरण चक्र",
+  "loanCapCycleMonthly": "मासिक",
+  "loanCapCycleQuarterly": "तिमाही",
+  "loanCapCycleYearly": "वार्षिक",
+  "loanCapitalizeInterestAction": "ब्याज पूंजीकृत करें",
+  "loanCapitalizeInterestSnack": "ब्याज मूलधन में जोड़ा गया",
+  "loanCapitalizeNothingSnack": "पूंजीकृत करने के लिए अवैतनिक ब्याज नहीं",
+  "loanUnpaidInterestLabel": "अवैतनिक ब्याज",
   "loanPrepaymentAllocationLabel": "चुकौती लागू होती है",
   "loanPrepaymentInterestFirst": "पहले ब्याज",
   "loanPrepaymentPrincipalOnly": "केवल मूलधन",
@@ -1193,8 +1210,14 @@
   "loanRatePeriodLabel": "अवधि",
   "loanRateMonthly": "मासिक",
   "loanRateYearly": "वार्षिक",
-  "loanPeriodEndInterestHintSimple": "नकदी हलचलों के बीच हस्ताक्षरित बकाया शेष पर ब्याज लगता है। सरल ब्याज अलग देय रहता है और मूलधन में नहीं जुड़ता। अधिक भुगतान पर उल्टा ब्याज मिलता है।",
-  "loanPeriodEndInterestHintCompound": "नकदी हलचलों के बीच हस्ताक्षरित बकाया शेष पर ब्याज लगता है और अगली हलचल से पहले मूलधन में जुड़ जाता है। अधिक भुगतान पर क्रेडिट शेष पर उल्टा ब्याज मिलता है।",
+  "loanPeriodEndInterestHintSimple": "ब्याज हमेशा हस्ताक्षरित मूलधन शेष से अवैतनिक ब्याज में जमा होता है। पूंजीकरण चयनित नीति का पालन करता है। अधिक भुगतान पर उल्टा ब्याज मिलता है।",
+  "loanPeriodEndInterestHintCompound": "ब्याज हमेशा हस्ताक्षरित मूलधन शेष से अवैतनिक ब्याज में जमा होता है। पूंजीकरण चयनित नीति का पालन करता है। अधिक भुगतान पर उल्टा ब्याज मिलता है।",
+  "loanCapPolicyHintNever": "मूलधन स्थिर रहता है; अवैतनिक ब्याज अलग बढ़ता है। बकाया = मूलधन + अवैतनिक।",
+  "loanCapPolicyHintOnPayment": "प्रत्येक चुकौती से ठीक पहले अवैतनिक ब्याज मूलधन में जुड़ता है।",
+  "loanCapPolicyHintOnScheduledCycle": "प्रत्येक पूंजीकरण चक्र की वर्षगाँठ पर अवैतनिक ब्याज मूलधन में जुड़ता है।",
+  "loanCapPolicyHintOnBalanceDirectionChange": "बकाया देय से क्रेडिट (या उल्टा) हो जाने से पहले अवैतनिक ब्याज मूलधन में जुड़ता है।",
+  "loanCapPolicyHintOnLoanClosure": "कर्ज बंद होने पर अवैतनिक ब्याज मूलधन में जुड़ता है।",
+  "loanCapPolicyHintManual": "अवैतनिक ब्याज केवल तब मूलधन में जुड़ता है जब आप ब्याज पूंजीकृत करें दबाएँ।",
   "loanRateInvalid": "मान्य दर दर्ज करें",
   "loanNoteOptionalLabel": "नोट (वैकल्पिक)",
   "loanSaving": "सहेजा जा रहा है…",
@@ -1234,20 +1257,27 @@
   },
   "loanEditSetupTooltip": "तिथियाँ संपादित करें",
   "loanEditSetupTitle": "कर्ज तिथियाँ संपादित करें",
-  "loanSetupSummary": "शुरू {start} · देय {due} · {rate} {period} · {kind}",
+  "loanSetupSummary": "शुरू {start} · देय {due} · {rate} {period} · {policy}",
   "@loanSetupSummary": {
     "placeholders": {
       "start": {"type": "String"},
       "due": {"type": "String"},
       "rate": {"type": "String"},
       "period": {"type": "String"},
-      "kind": {"type": "String"}
+      "policy": {"type": "String"}
     }
   },
   "loanPrepaymentSetupLabel": "चुकौती: {mode}",
   "@loanPrepaymentSetupLabel": {
     "placeholders": {
       "mode": {"type": "String"}
+    }
+  },
+  "loanTimelineInterestCapitalized": "{date} — ब्याज पूंजीकृत {amount} → मूलधन",
+  "@loanTimelineInterestCapitalized": {
+    "placeholders": {
+      "date": {"type": "String"},
+      "amount": {"type": "String"}
     }
   },
   "loanTimelineStart": "{date} — कर्ज शुरू · {amount}",

@@ -181,12 +181,19 @@ class MoneyLoans extends Table {
   /// Principal in paise.
   IntColumn get principalPaise => integer()();
   TextColumn get currencyCode => text().withDefault(const Constant('INR'))();
-  /// `simple` | `compound`
+  /// Legacy `simple` | `compound` (prefer [capitalizationPolicy]).
   TextColumn get interestKind => text().withDefault(const Constant('simple'))();
   /// Rate in basis points (100 bps = 1%).
   IntColumn get rateBps => integer().withDefault(const Constant(0))();
-  /// `monthly` | `yearly`
+  /// Calculation frequency: `daily` | `monthly` | `yearly`
   TextColumn get ratePeriod => text().withDefault(const Constant('monthly'))();
+  /// `never` | `onPayment` | `onScheduledCycle` | `onBalanceDirectionChange` |
+  /// `onLoanClosure` | `manual`
+  TextColumn get capitalizationPolicy =>
+      text().withDefault(const Constant('never'))();
+  /// `monthly` | `quarterly` | `yearly` (when policy is onScheduledCycle)
+  TextColumn get capitalizationCycle =>
+      text().withDefault(const Constant('monthly'))();
   /// Date money was first given / interest clock start.
   DateTimeColumn get interestStartedAt => dateTime()();
   /// Optional due / maturity; caps accrual when before as-of.
@@ -213,7 +220,8 @@ class MoneyLoanEntries extends Table {
   DateTimeColumn get entryAt => dateTime()();
   /// Payment: positive amount toward the loan. Adjustment: signed correction.
   IntColumn get amountPaise => integer()();
-  /// `payment` | `adjustment`
+  /// `repayment` | `disbursement` | `adjustment` | `capitalization`
+  /// (legacy `payment` reads as repayment)
   TextColumn get kind => text()();
   TextColumn get note => text().nullable()();
 

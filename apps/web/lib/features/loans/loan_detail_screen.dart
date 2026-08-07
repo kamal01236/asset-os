@@ -131,6 +131,15 @@ class _LoanDetailScreenState extends ConsumerState<LoanDetailScreen> {
                       icon: const Icon(Icons.tune),
                       label: Text(l10n.loanAddAdjustment),
                     ),
+                    if (loan.capitalizationPolicy ==
+                        MoneyCapitalizationPolicy.manual)
+                      FilledButton.icon(
+                        onPressed: scenario.unpaidInterestPaise == 0
+                            ? null
+                            : () => _capitalizeInterest(loan!),
+                        icon: const Icon(Icons.merge_type),
+                        label: Text(l10n.loanCapitalizeInterestAction),
+                      ),
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -167,6 +176,30 @@ class _LoanDetailScreenState extends ConsumerState<LoanDetailScreen> {
         );
       },
     );
+  }
+
+  Future<void> _capitalizeInterest(MoneyLoan loan) async {
+    final AppLocalizations l10n = context.l10n;
+    try {
+      await ref.read(repositoryProvider).capitalizeMoneyLoanInterest(loan.id);
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.loanCapitalizeInterestSnack)),
+      );
+    } catch (e) {
+      if (!mounted) {
+        return;
+      }
+      final String message = e is StateError &&
+              e.message.contains('No unpaid interest')
+          ? l10n.loanCapitalizeNothingSnack
+          : '$e';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    }
   }
 
   Future<void> _addCashEntry({
@@ -206,7 +239,9 @@ class _LoanDetailScreenState extends ConsumerState<LoanDetailScreen> {
                   loan.direction == MoneyLoanDirection.given
                       ? l10n.loanFlowDisbursementGiven
                       : l10n.loanFlowDisbursementTaken,
-                MoneyLoanEntryKind.adjustment => '',
+                MoneyLoanEntryKind.adjustment ||
+                MoneyLoanEntryKind.capitalization =>
+                  '',
               };
               return Column(
                 mainAxisSize: MainAxisSize.min,
@@ -718,6 +753,15 @@ class _CurrentScenarioCard extends StatelessWidget {
                 currencyCode: loan.currencyCode,
               ),
             ),
+            if (scenario.unpaidInterestPaise != 0)
+              _kv(
+                context,
+                l10n.loanUnpaidInterestLabel,
+                formatMoney(
+                  scenario.unpaidInterestPaise,
+                  currencyCode: loan.currencyCode,
+                ),
+              ),
             _kv(context, l10n.loanPaidLabel,
                 formatMoney(scenario.totalPaidPaise, currencyCode: loan.currencyCode)),
             _kv(context, l10n.loanAdjustmentsLabel,
@@ -750,12 +794,21 @@ class _SetupSummary extends StatelessWidget {
   Widget build(BuildContext context) {
     final AppLocalizations l10n = context.l10n;
     final double ratePct = loan.rateBps / 100.0;
-    final String period = loan.ratePeriod == MoneyRatePeriod.monthly
-        ? l10n.loanRateMonthly
-        : l10n.loanRateYearly;
-    final String kind = loan.interestKind == MoneyInterestKind.simple
-        ? l10n.loanInterestSimple
-        : l10n.loanInterestCompound;
+    final String period = switch (loan.ratePeriod) {
+      MoneyRatePeriod.daily => l10n.loanRateDaily,
+      MoneyRatePeriod.monthly => l10n.loanRateMonthly,
+      MoneyRatePeriod.yearly => l10n.loanRateYearly,
+    };
+    final String policy = switch (loan.capitalizationPolicy) {
+      MoneyCapitalizationPolicy.never => l10n.loanCapPolicyNever,
+      MoneyCapitalizationPolicy.onPayment => l10n.loanCapPolicyOnPayment,
+      MoneyCapitalizationPolicy.onScheduledCycle =>
+        l10n.loanCapPolicyOnScheduledCycle,
+      MoneyCapitalizationPolicy.onBalanceDirectionChange =>
+        l10n.loanCapPolicyOnBalanceDirectionChange,
+      MoneyCapitalizationPolicy.onLoanClosure => l10n.loanCapPolicyOnLoanClosure,
+      MoneyCapitalizationPolicy.manual => l10n.loanCapPolicyManual,
+    };
     final String prepaymentMode =
         loan.prepaymentAllocation == MoneyPrepaymentAllocation.principalOnly
             ? l10n.loanPrepaymentPrincipalOnly
@@ -769,7 +822,7 @@ class _SetupSummary extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
         Text(
-          l10n.loanSetupSummary(start, due, '$ratePct%', period, kind),
+          l10n.loanSetupSummary(start, due, '$ratePct%', period, policy),
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
@@ -783,9 +836,18 @@ class _SetupSummary extends StatelessWidget {
         ),
         const SizedBox(height: 6),
         Text(
-          loan.interestKind == MoneyInterestKind.simple
-              ? l10n.loanPeriodEndInterestHintSimple
-              : l10n.loanPeriodEndInterestHintCompound,
+          switch (loan.capitalizationPolicy) {
+            MoneyCapitalizationPolicy.never => l10n.loanCapPolicyHintNever,
+            MoneyCapitalizationPolicy.onPayment =>
+              l10n.loanCapPolicyHintOnPayment,
+            MoneyCapitalizationPolicy.onScheduledCycle =>
+              l10n.loanCapPolicyHintOnScheduledCycle,
+            MoneyCapitalizationPolicy.onBalanceDirectionChange =>
+              l10n.loanCapPolicyHintOnBalanceDirectionChange,
+            MoneyCapitalizationPolicy.onLoanClosure =>
+              l10n.loanCapPolicyHintOnLoanClosure,
+            MoneyCapitalizationPolicy.manual => l10n.loanCapPolicyHintManual,
+          },
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
@@ -828,6 +890,11 @@ class _TimelineRow extends StatelessWidget {
               formatIndiaDate(event.through ?? event.at),
               money,
             ),
+      LoanTimelineKind.interestCapitalized =>
+        l10n.loanTimelineInterestCapitalized(
+          formatIndiaDate(event.at),
+          money,
+        ),
       LoanTimelineKind.payment => event.toInterestPaise > 0
           ? l10n.loanTimelinePaymentSplit(
               formatIndiaDate(event.at),
@@ -866,6 +933,7 @@ class _TimelineRow extends StatelessWidget {
               LoanTimelineKind.interestSegment => event.amountPaise < 0
                   ? Icons.trending_down
                   : Icons.trending_up,
+              LoanTimelineKind.interestCapitalized => Icons.merge_type,
               LoanTimelineKind.payment => Icons.payments_outlined,
               LoanTimelineKind.disbursement => Icons.add_card_outlined,
               LoanTimelineKind.adjustment => Icons.tune,
