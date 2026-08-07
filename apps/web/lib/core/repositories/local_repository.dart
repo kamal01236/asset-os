@@ -169,6 +169,13 @@ class LocalRepository {
     Locale locale = const Locale('en'),
   }) async {
     await importTemplateInventory(template.items, locale: locale);
+    await activateIndustryTemplate(template);
+  }
+
+  /// Switch the active industry pack mid-life: persist id and replace Home /
+  /// types / workflow / fields / report widgets. Does **not** wipe loans,
+  /// orders, or existing inventory (optional starter import is a separate step).
+  Future<void> activateIndustryTemplate(IndustryTemplate template) async {
     await _setHomeModules(template.defaultHomeModules);
     await setEnabledResourceTypes(template.enabledResourceTypes);
     await setActiveWorkflowId(template.workflowId);

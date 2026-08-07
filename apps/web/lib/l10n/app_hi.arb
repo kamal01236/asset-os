@@ -84,7 +84,7 @@
   "voiceSearchStubTitle": "वॉइस खोज (स्टब)",
   "voiceSearchStubSubtitle": "इंटेंट-आधारित खोज कमांड के लिए प्लेसहोल्डर।",
   "businessTemplatesTitle": "व्यवसाय टेम्पलेट",
-  "businessTemplatesSubtitle": "उद्योग के अनुसार स्टार्टर संसाधन आयात करें (प्रकार मर्ज)। होम लेआउट लागू करने पर सक्षम प्रकार बदल जाते हैं।",
+  "businessTemplatesSubtitle": "किसी भी समय सक्रिय व्यवसाय पैक बदलें। मौजूदा कर्ज और ऑर्डर लेनदेन में रहते हैं; नया कर्ज के लिए मनी लेंडिंग सक्रिय होना चाहिए।",
   "onboardingStepProgress": "चरण {current} / {total}",
   "@onboardingStepProgress": {
     "placeholders": {
@@ -300,13 +300,25 @@
   "openLinkedRecord": "लिंक किया गया रिकॉर्ड खोलें",
   "voiceSearchTitle": "वॉइस खोज",
   "voiceSearchBody": "केवल स्टब: वॉइस कमांड चरण 5+ में यूनिवर्सल खोज इंटेंट से जुड़ेंगे।",
-  "templatesIntro": "एक उद्योग चुनें, फिर जोड़ने वाली स्टार्टर वस्तुएँ चुनें। समान नाम वाली मौजूदा वस्तुएँ बनी रहती हैं। आयात सक्षम संसाधन प्रकारों को मर्ज करता है; होम लेआउट लागू करने पर वे टेम्पलेट के सेट से बदल जाते हैं।",
+  "templatesIntro": "सक्रिय उद्योग पैक चुनें। बदलने पर होम लेआउट और सक्षम संसाधन प्रकार अपडेट होते हैं। मौजूदा कर्ज, ऑर्डर और इन्वेंटरी बनी रहती है। नया कर्ज तब उपलब्ध है जब मनी लेंडिंग सक्रिय हो।",
   "starterItemsCount": "{count} स्टार्टर वस्तुएँ",
   "@starterItemsCount": {
     "placeholders": {
       "count": {"type": "int"}
     }
   },
+  "activeTemplateLabel": "सक्रिय पैक",
+  "activeTemplateHint": "व्यवसाय पैक चुनें",
+  "switchTemplateTitle": "व्यवसाय पैक बदलें?",
+  "switchTemplateBody": "{name} सक्रिय करें? होम लेआउट और संसाधन प्रकार इस पैक से मेल खाएँगे। मौजूदा कर्ज, ऑर्डर और इन्वेंटरी बनी रहती है।",
+  "@switchTemplateBody": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "switchTemplateConfirm": "बदलें",
+  "switchTemplateCancel": "रद्द करें",
+  "switchTemplateDone": "व्यवसाय पैक अपडेट हो गया।",
   "templateCardSubtitle": "{description}\n{count} स्टार्टर वस्तुएँ",
   "@templateCardSubtitle": {
     "placeholders": {

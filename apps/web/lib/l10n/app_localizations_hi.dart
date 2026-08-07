@@ -217,7 +217,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get businessTemplatesSubtitle =>
-      'उद्योग के अनुसार स्टार्टर संसाधन आयात करें (प्रकार मर्ज)। होम लेआउट लागू करने पर सक्षम प्रकार बदल जाते हैं।';
+      'किसी भी समय सक्रिय व्यवसाय पैक बदलें। मौजूदा कर्ज और ऑर्डर लेनदेन में रहते हैं; नया कर्ज के लिए मनी लेंडिंग सक्रिय होना चाहिए।';
 
   @override
   String onboardingStepProgress(int current, int total) {
@@ -616,12 +616,35 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get templatesIntro =>
-      'एक उद्योग चुनें, फिर जोड़ने वाली स्टार्टर वस्तुएँ चुनें। समान नाम वाली मौजूदा वस्तुएँ बनी रहती हैं। आयात सक्षम संसाधन प्रकारों को मर्ज करता है; होम लेआउट लागू करने पर वे टेम्पलेट के सेट से बदल जाते हैं।';
+      'सक्रिय उद्योग पैक चुनें। बदलने पर होम लेआउट और सक्षम संसाधन प्रकार अपडेट होते हैं। मौजूदा कर्ज, ऑर्डर और इन्वेंटरी बनी रहती है। नया कर्ज तब उपलब्ध है जब मनी लेंडिंग सक्रिय हो।';
 
   @override
   String starterItemsCount(int count) {
     return '$count स्टार्टर वस्तुएँ';
   }
+
+  @override
+  String get activeTemplateLabel => 'सक्रिय पैक';
+
+  @override
+  String get activeTemplateHint => 'व्यवसाय पैक चुनें';
+
+  @override
+  String get switchTemplateTitle => 'व्यवसाय पैक बदलें?';
+
+  @override
+  String switchTemplateBody(String name) {
+    return '$name सक्रिय करें? होम लेआउट और संसाधन प्रकार इस पैक से मेल खाएँगे। मौजूदा कर्ज, ऑर्डर और इन्वेंटरी बनी रहती है।';
+  }
+
+  @override
+  String get switchTemplateConfirm => 'बदलें';
+
+  @override
+  String get switchTemplateCancel => 'रद्द करें';
+
+  @override
+  String get switchTemplateDone => 'व्यवसाय पैक अपडेट हो गया।';
 
   @override
   String templateCardSubtitle(String description, int count) {

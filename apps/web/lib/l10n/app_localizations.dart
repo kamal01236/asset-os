@@ -491,7 +491,7 @@ abstract class AppLocalizations {
   /// No description provided for @businessTemplatesSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Import starter resources by industry (merge types). Applying Home layout replaces enabled types.'**
+  /// **'Switch your active business pack anytime. Existing loans and orders stay in Transactions; New Loan needs Money Lending active.'**
   String get businessTemplatesSubtitle;
 
   /// No description provided for @onboardingStepProgress.
@@ -1187,7 +1187,7 @@ abstract class AppLocalizations {
   /// No description provided for @templatesIntro.
   ///
   /// In en, this message translates to:
-  /// **'Pick an industry, then choose which starter items to add. Existing items with the same name are kept. Importing merges enabled resource types; applying the Home layout replaces them with the template’s set.'**
+  /// **'Choose the active industry pack. Switching replaces Home layout and enabled resource types. Existing loans, orders, and inventory stay. New Loan is available when Money Lending is active.'**
   String get templatesIntro;
 
   /// No description provided for @starterItemsCount.
@@ -1195,6 +1195,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} starter items'**
   String starterItemsCount(int count);
+
+  /// No description provided for @activeTemplateLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Active pack'**
+  String get activeTemplateLabel;
+
+  /// No description provided for @activeTemplateHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a business pack'**
+  String get activeTemplateHint;
+
+  /// No description provided for @switchTemplateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch business pack?'**
+  String get switchTemplateTitle;
+
+  /// No description provided for @switchTemplateBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Activate {name}? Home layout and resource types will match this pack. Existing loans, orders, and inventory are kept.'**
+  String switchTemplateBody(String name);
+
+  /// No description provided for @switchTemplateConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch'**
+  String get switchTemplateConfirm;
+
+  /// No description provided for @switchTemplateCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get switchTemplateCancel;
+
+  /// No description provided for @switchTemplateDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Business pack updated.'**
+  String get switchTemplateDone;
 
   /// No description provided for @templateCardSubtitle.
   ///

@@ -878,19 +878,6 @@ class MoreScreen extends ConsumerWidget {
         const MyWhatsAppSettingsCard(),
         const SizedBox(height: 10),
         EntityCard(
-          title: l10n.loansTitle,
-          subtitle: l10n.loansMoreSubtitle,
-          leadingIcon: Icons.account_balance_wallet_outlined,
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () {
-            ref.read(transactionsTypeFilterProvider.notifier).state =
-                TransactionsTypeFilter.loans;
-            ref.read(currentTabIndexProvider.notifier).state =
-                kTabIndexTransactions;
-          },
-        ),
-        const SizedBox(height: 10),
-        EntityCard(
           title: l10n.shareReportsTitle,
           subtitle: l10n.shareReportsSubtitle,
           leadingIcon: Icons.share_outlined,

@@ -6,15 +6,132 @@ import '../../core/models/entities.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/repositories/local_repository.dart';
 import '../../core/templates/industry_templates.dart';
-import '../../core/widgets/ui_primitives.dart';
 
-/// Pick an industry pack, multi-select starter items, merge into inventory.
-class BusinessTemplatesScreen extends ConsumerWidget {
+/// Switch the single active industry pack; optionally import starter inventory.
+class BusinessTemplatesScreen extends ConsumerStatefulWidget {
   const BusinessTemplatesScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<BusinessTemplatesScreen> createState() =>
+      _BusinessTemplatesScreenState();
+}
+
+class _BusinessTemplatesScreenState
+    extends ConsumerState<BusinessTemplatesScreen> {
+  String? _activeId;
+  bool _loading = true;
+  bool _switching = false;
+  /// Bumped when a switch is cancelled so the dropdown reverts its selection.
+  int _dropdownEpoch = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadActive();
+  }
+
+  Future<void> _loadActive() async {
+    final String? id =
+        await ref.read(repositoryProvider).selectedIndustryTemplateId();
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _activeId = id;
+      _loading = false;
+    });
+  }
+
+  Future<void> _syncProviders(IndustryTemplate template) async {
+    await ref
+        .read(homeModulesProvider.notifier)
+        .applyTemplateDefaults(template.defaultHomeModules);
+    await ref
+        .read(enabledResourceTypesProvider.notifier)
+        .applyTemplateTypes(template.enabledResourceTypes);
+    await ref
+        .read(activeWorkflowProvider.notifier)
+        .applyTemplateWorkflow(template.workflowId);
+    await ref
+        .read(extraFieldIdsProvider.notifier)
+        .applyTemplateFields(template.extraFieldIds);
+    await ref
+        .read(reportWidgetsProvider.notifier)
+        .applyTemplateWidgets(template.defaultReportWidgets);
+  }
+
+  Future<void> _onTemplateSelected(String? nextId) async {
+    if (nextId == null || nextId == _activeId || _switching) {
+      return;
+    }
+    final IndustryTemplate? template = industryTemplateById(nextId);
+    if (template == null) {
+      return;
+    }
+
     final AppLocalizations l10n = context.l10n;
+    final Locale locale = Localizations.localeOf(context);
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(l10n.switchTemplateTitle),
+          content: Text(
+            l10n.switchTemplateBody(template.localizedName(locale)),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text(l10n.switchTemplateCancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text(l10n.switchTemplateConfirm),
+            ),
+          ],
+        );
+      },
+    );
+    if (confirmed != true || !mounted) {
+      setState(() => _dropdownEpoch++);
+      return;
+    }
+
+    setState(() => _switching = true);
+    await ref.read(repositoryProvider).activateIndustryTemplate(template);
+    await _syncProviders(template);
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _activeId = template.id;
+      _switching = false;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l10n.switchTemplateDone)),
+    );
+
+    if (template.items.isEmpty) {
+      return;
+    }
+    if (!mounted) {
+      return;
+    }
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => TemplateItemPickerScreen(template: template),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final AppLocalizations l10n = context.l10n;
+    final Locale locale = Localizations.localeOf(context);
+    final String? dropdownValue = industryTemplateById(_activeId ?? '') == null
+        ? null
+        : _activeId;
+
     return Scaffold(
       appBar: AppBar(title: Text(l10n.businessTemplatesTitle)),
       body: ListView(
@@ -26,32 +143,39 @@ class BusinessTemplatesScreen extends ConsumerWidget {
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
-          const SizedBox(height: 14),
-          ...kIndustryTemplates.map(
-            (IndustryTemplate template) {
-              final Locale locale = Localizations.localeOf(context);
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: EntityCard(
-                  title: template.localizedName(locale),
-                  subtitle: l10n.templateCardSubtitle(
-                    template.localizedDescription(locale),
-                    template.items.length,
-                  ),
-                  leadingIcon: Icons.dashboard_customize_outlined,
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) =>
-                            TemplateItemPickerScreen(template: template),
-                      ),
-                    );
-                  },
-                ),
-              );
-            },
+          const SizedBox(height: 20),
+          Text(
+            l10n.activeTemplateLabel,
+            style: Theme.of(context).textTheme.titleSmall,
           ),
+          const SizedBox(height: 8),
+          if (_loading)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 12),
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else
+            DropdownButtonFormField<String>(
+              key: ValueKey<String>('$_activeId-$_dropdownEpoch'),
+              initialValue: dropdownValue,
+              isExpanded: true,
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+              ),
+              hint: Text(l10n.activeTemplateHint),
+              items: <DropdownMenuItem<String>>[
+                for (final IndustryTemplate template in kIndustryTemplates)
+                  DropdownMenuItem<String>(
+                    value: template.id,
+                    child: Text(template.localizedName(locale)),
+                  ),
+              ],
+              onChanged: _switching ? null : _onTemplateSelected,
+            ),
+          if (_switching) ...<Widget>[
+            const SizedBox(height: 16),
+            const Center(child: CircularProgressIndicator()),
+          ],
         ],
       ),
     );
@@ -71,7 +195,8 @@ class TemplateItemPickerScreen extends ConsumerStatefulWidget {
       _TemplateItemPickerScreenState();
 }
 
-class _TemplateItemPickerScreenState extends ConsumerState<TemplateItemPickerScreen> {
+class _TemplateItemPickerScreenState
+    extends ConsumerState<TemplateItemPickerScreen> {
   late final Set<int> _selected;
   bool _submitting = false;
 
@@ -87,7 +212,9 @@ class _TemplateItemPickerScreenState extends ConsumerState<TemplateItemPickerScr
     setState(() {
       _selected
         ..clear()
-        ..addAll(List<int>.generate(widget.template.items.length, (int i) => i));
+        ..addAll(
+          List<int>.generate(widget.template.items.length, (int i) => i),
+        );
     });
   }
 
@@ -127,65 +254,9 @@ class _TemplateItemPickerScreenState extends ConsumerState<TemplateItemPickerScr
         ),
       ),
     );
-    if (result.added > 0 || result.skipped > 0) {
-      await _offerHomeLayout(l10n);
-    }
-    if (!mounted) {
-      return;
-    }
     if (result.added > 0) {
-      ref.read(currentTabIndexProvider.notifier).state = kTabIndexInventory; // Inventory
+      ref.read(currentTabIndexProvider.notifier).state = kTabIndexInventory;
       Navigator.of(context).popUntil((Route<void> route) => route.isFirst);
-    }
-  }
-
-  Future<void> _offerHomeLayout(AppLocalizations l10n) async {
-    final HomeModulesNotifier modules =
-        ref.read(homeModulesProvider.notifier);
-    final bool customized = modules.isCustomized;
-    final bool? apply = await showDialog<bool>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(l10n.applyHomeLayoutTitle),
-          content: Text(
-            customized
-                ? l10n.applyHomeLayoutCustomizedBody
-                : l10n.applyHomeLayoutBody,
-          ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: Text(l10n.applyHomeLayoutSkip),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: Text(l10n.applyHomeLayoutConfirm),
-            ),
-          ],
-        );
-      },
-    );
-    if (apply == true) {
-      await modules.applyTemplateDefaults(widget.template.defaultHomeModules);
-      await ref
-          .read(enabledResourceTypesProvider.notifier)
-          .applyTemplateTypes(widget.template.enabledResourceTypes);
-      await ref
-          .read(activeWorkflowProvider.notifier)
-          .applyTemplateWorkflow(widget.template.workflowId);
-      await ref
-          .read(extraFieldIdsProvider.notifier)
-          .applyTemplateFields(widget.template.extraFieldIds);
-      await ref
-          .read(reportWidgetsProvider.notifier)
-          .applyTemplateWidgets(widget.template.defaultReportWidgets);
-      if (!mounted) {
-        return;
-      }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.applyHomeLayoutDone)),
-      );
     }
   }
 

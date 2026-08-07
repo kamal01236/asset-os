@@ -84,7 +84,7 @@
   "voiceSearchStubTitle": "Voice Search (stub)",
   "voiceSearchStubSubtitle": "Placeholder for intent-based search commands.",
   "businessTemplatesTitle": "Business Templates",
-  "businessTemplatesSubtitle": "Import starter resources by industry (merge types). Applying Home layout replaces enabled types.",
+  "businessTemplatesSubtitle": "Switch your active business pack anytime. Existing loans and orders stay in Transactions; New Loan needs Money Lending active.",
   "onboardingStepProgress": "Step {current} of {total}",
   "@onboardingStepProgress": {
     "placeholders": {
@@ -300,13 +300,25 @@
   "openLinkedRecord": "Open linked record",
   "voiceSearchTitle": "Voice Search",
   "voiceSearchBody": "Stub only: voice commands map to universal search intents in phase 5+.",
-  "templatesIntro": "Pick an industry, then choose which starter items to add. Existing items with the same name are kept. Importing merges enabled resource types; applying the Home layout replaces them with the template’s set.",
+  "templatesIntro": "Choose the active industry pack. Switching replaces Home layout and enabled resource types. Existing loans, orders, and inventory stay. New Loan is available when Money Lending is active.",
   "starterItemsCount": "{count} starter items",
   "@starterItemsCount": {
     "placeholders": {
       "count": {"type": "int"}
     }
   },
+  "activeTemplateLabel": "Active pack",
+  "activeTemplateHint": "Select a business pack",
+  "switchTemplateTitle": "Switch business pack?",
+  "switchTemplateBody": "Activate {name}? Home layout and resource types will match this pack. Existing loans, orders, and inventory are kept.",
+  "@switchTemplateBody": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "switchTemplateConfirm": "Switch",
+  "switchTemplateCancel": "Cancel",
+  "switchTemplateDone": "Business pack updated.",
   "templateCardSubtitle": "{description}\n{count} starter items",
   "@templateCardSubtitle": {
     "placeholders": {

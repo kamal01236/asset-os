@@ -216,7 +216,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get businessTemplatesSubtitle =>
-      'Import starter resources by industry (merge types). Applying Home layout replaces enabled types.';
+      'Switch your active business pack anytime. Existing loans and orders stay in Transactions; New Loan needs Money Lending active.';
 
   @override
   String onboardingStepProgress(int current, int total) {
@@ -615,12 +615,35 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get templatesIntro =>
-      'Pick an industry, then choose which starter items to add. Existing items with the same name are kept. Importing merges enabled resource types; applying the Home layout replaces them with the template’s set.';
+      'Choose the active industry pack. Switching replaces Home layout and enabled resource types. Existing loans, orders, and inventory stay. New Loan is available when Money Lending is active.';
 
   @override
   String starterItemsCount(int count) {
     return '$count starter items';
   }
+
+  @override
+  String get activeTemplateLabel => 'Active pack';
+
+  @override
+  String get activeTemplateHint => 'Select a business pack';
+
+  @override
+  String get switchTemplateTitle => 'Switch business pack?';
+
+  @override
+  String switchTemplateBody(String name) {
+    return 'Activate $name? Home layout and resource types will match this pack. Existing loans, orders, and inventory are kept.';
+  }
+
+  @override
+  String get switchTemplateConfirm => 'Switch';
+
+  @override
+  String get switchTemplateCancel => 'Cancel';
+
+  @override
+  String get switchTemplateDone => 'Business pack updated.';
 
   @override
   String templateCardSubtitle(String description, int count) {

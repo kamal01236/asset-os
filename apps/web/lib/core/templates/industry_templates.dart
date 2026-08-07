@@ -8,7 +8,7 @@ import 'workflows.dart';
 
 bool _isHindi(Locale locale) => locale.languageCode == 'hi';
 
-/// Static industry inventory packs for Business Templates (merge-into inventory).
+/// Static industry packs for onboarding and Business Templates (single active pack).
 class TemplateInventoryItem {
   const TemplateInventoryItem({
     required this.name,
