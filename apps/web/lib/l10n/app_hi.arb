@@ -1172,6 +1172,14 @@
   "loanOriginalPrincipalLabel": "प्रारंभिक मूलधन",
   "loanPrincipalRequired": "मूलधन राशि दर्ज करें",
   "loanMoneyGivenOnLabel": "पैसे दिए गए दिन",
+  "loanAdvancePaymentFlag": "अग्रिम / पूर्व भुगतान",
+  "loanAdvancePaymentHint": "कर्ज के दिन, अर्जित ब्याज और यह भुगतान लागू होते हैं (पहले ब्याज), फिर शेष मूलधन जारी रहता है।",
+  "loanAdvancePaymentAmountLabel": "अग्रिम राशि",
+  "loanAdvancePaymentDateLabel": "अग्रिम भुगतान तिथि",
+  "loanAdvancePaymentRequired": "अग्रिम राशि दर्ज करें",
+  "loanAdvancePaymentExceedsPrincipal": "अग्रिम मूलधन से अधिक नहीं हो सकता",
+  "loanAdvancePaymentDateInvalid": "अग्रिम तिथि पैसे दिए गए दिन या उसके बाद और आज या उससे पहले होनी चाहिए",
+  "loanAdvancePaymentEntryNote": "अग्रिम भुगतान",
   "loanDueOptionalLabel": "देय / समाप्ति (वैकल्पिक)",
   "loanDueNone": "कोई देय तिथि नहीं",
   "loanInterestKindLabel": "ब्याज",
@@ -1185,13 +1193,15 @@
   "loanRatePeriodLabel": "अवधि",
   "loanRateMonthly": "मासिक",
   "loanRateYearly": "वार्षिक",
-  "loanPeriodEndInterestHintSimple": "अवधि के बीच चुकौती और टॉप-अप बकाया समय का आनुपातिक ब्याज जोड़ते हैं। हर महीने या साल की सालगिरह पर वह ब्याज देय होता है, पर मूलधन में नहीं जुड़ता।",
-  "loanPeriodEndInterestHintCompound": "अवधि के बीच चुकौती मूलधन घटाती है और बकाया समय का आनुपातिक ब्याज जोड़ती है। जोड़ा मूलधन अवधि अंत तक आनुपातिक ब्याज कमाता है। वह ब्याज, और पूरी अवधि बकाया मूलधन पर ब्याज, हर महीने या साल की सालगिरह पर मूलधन में जुड़ जाता है।",
+  "loanPeriodEndInterestHintSimple": "नकदी हलचलों के बीच हस्ताक्षरित बकाया शेष पर ब्याज लगता है। सरल ब्याज अलग देय रहता है और मूलधन में नहीं जुड़ता। अधिक भुगतान पर उल्टा ब्याज मिलता है।",
+  "loanPeriodEndInterestHintCompound": "नकदी हलचलों के बीच हस्ताक्षरित बकाया शेष पर ब्याज लगता है और अगली हलचल से पहले मूलधन में जुड़ जाता है। अधिक भुगतान पर क्रेडिट शेष पर उल्टा ब्याज मिलता है।",
   "loanRateInvalid": "मान्य दर दर्ज करें",
   "loanNoteOptionalLabel": "नोट (वैकल्पिक)",
   "loanSaving": "सहेजा जा रहा है…",
   "loanPendingNowLabel": "अभी लंबित",
+  "loanOverpaidNowLabel": "अभी अधिक भुगतान",
   "loanInterestToDateLabel": "अब तक का ब्याज",
+  "loanReverseInterestToDateLabel": "अब तक का उल्टा ब्याज",
   "loanPaidLabel": "भुगतान",
   "loanAdjustmentsLabel": "समायोजन",
   "loanTimelineHeading": "समयरेखा",
@@ -1252,6 +1262,31 @@
     "placeholders": {
       "date": {"type": "String"},
       "principal": {"type": "String"},
+      "amount": {"type": "String"}
+    }
+  },
+  "loanTimelineInterestSegment": "{principal} पर ब्याज ({from}–{to}) → {amount}",
+  "@loanTimelineInterestSegment": {
+    "placeholders": {
+      "principal": {"type": "String"},
+      "from": {"type": "String"},
+      "to": {"type": "String"},
+      "amount": {"type": "String"}
+    }
+  },
+  "loanTimelineReverseInterestSegment": "क्रेडिट {principal} पर उल्टा ब्याज ({from}–{to}) → {amount}",
+  "@loanTimelineReverseInterestSegment": {
+    "placeholders": {
+      "principal": {"type": "String"},
+      "from": {"type": "String"},
+      "to": {"type": "String"},
+      "amount": {"type": "String"}
+    }
+  },
+  "loanTimelinePendingOverpaid": "{date} — अधिक भुगतान {amount}",
+  "@loanTimelinePendingOverpaid": {
+    "placeholders": {
+      "date": {"type": "String"},
       "amount": {"type": "String"}
     }
   },

@@ -3,25 +3,8 @@ import 'loan_models.dart';
 
 /// Readable timeline row kinds for the loan calculator surface.
 enum LoanTimelineKind {
-  start,
-  /// Full-period interest when no mid-period slices (legacy / simple periods).
+  /// Signed interest accrued between two consecutive timeline points.
   interestSegment,
-  /// Mid-period preview: pro-rata interest on a repaid slice (adds at period end).
-  deferredSliceInterest,
-  /// Mid-period preview: pro-rata interest on added principal → period end.
-  deferredAddSliceInterest,
-  /// Period-end restatement of interest on one mid-period repayment.
-  periodEndSliceInterest,
-  /// Period-end restatement of interest on one mid-period disbursement.
-  periodEndAddSliceInterest,
-  /// Full-period interest on principal outstanding for the whole period.
-  remainingPeriodInterest,
-  /// Mid-period: pro-rata interest on still-outstanding core through asOf.
-  accruedThroughAsOf,
-  /// Principal after capitalizing period-end interest (compound).
-  principalAfterCapitalize,
-  /// Principal unchanged after posting period-end interest due (simple).
-  principalRemains,
   payment,
   disbursement,
   adjustment,
@@ -46,38 +29,39 @@ class LoanTimelineEvent {
   final LoanTimelineKind kind;
   final DateTime at;
   final DateTime? from;
-  /// End of accrual window when [at] is the posting date (period end).
+  /// End of the accrual window for [interestSegment] rows.
   final DateTime? through;
   final int amountPaise;
   final int toInterestPaise;
   final int toPrincipalPaise;
   final String? note;
   final String? entryId;
-  /// Principal used when posting interest for a completed period / repaid slice.
+  /// Signed balance used as the interest basis for a segment.
   final int? principalBasisPaise;
 }
 
-enum _DeferredSliceKind { repayment, disbursement, openPeriod }
-
-class _DeferredSlice {
-  const _DeferredSlice({
+class _LedgerEvent {
+  const _LedgerEvent({
+    required this.at,
     required this.kind,
-    required this.entryId,
-    required this.basisPaise,
-    required this.from,
-    required this.to,
-    required this.interestPaise,
+    required this.amountPaise,
+    required this.isSyntheticPrincipal,
+    this.entryId,
+    this.note,
   });
 
-  final _DeferredSliceKind kind;
+  final DateTime at;
+  final MoneyLoanEntryKind kind;
+  final int amountPaise;
+  final bool isSyntheticPrincipal;
   final String? entryId;
-  final int basisPaise;
-  final DateTime from;
-  final DateTime to;
-  final int interestPaise;
+  final String? note;
 }
 
 /// Current scenario snapshot produced by [computeLoanScenario].
+///
+/// [pendingPaise], [remainingPrincipalPaise], and [unpaidInterestPaise] are
+/// signed. Negative balance / unpaid means reverse interest (overpay credit).
 class LoanScenario {
   const LoanScenario({
     required this.principalPaise,
@@ -157,6 +141,60 @@ double periodElapsedFraction({
   }
 }
 
+/// Accrual fraction of rate periods between arbitrary [from] and [to].
+///
+/// Yearly uses whole calendar months / 12 (partial month before the first
+/// whole month uses days / year length). Monthly walks month boundaries from
+/// [from], summing days / days-in-period for each segment.
+double accrualFraction({
+  required DateTime from,
+  required DateTime to,
+  required MoneyRatePeriod ratePeriod,
+}) {
+  final DateTime start = _dateOnly(from);
+  final DateTime end = _dateOnly(to);
+  if (!end.isAfter(start)) {
+    return 0.0;
+  }
+  switch (ratePeriod) {
+    case MoneyRatePeriod.yearly:
+      int months =
+          (end.year - start.year) * 12 + (end.month - start.month);
+      if (end.day < start.day) {
+        months -= 1;
+      }
+      if (months <= 0) {
+        final DateTime yearEnd =
+            nextInterestPeriodEnd(start, MoneyRatePeriod.yearly);
+        final int yearDays = calendarDaysBetween(start, yearEnd);
+        final int elapsed = calendarDaysBetween(start, end);
+        if (yearDays <= 0) {
+          return 0.0;
+        }
+        return elapsed / yearDays;
+      }
+      return months / 12.0;
+    case MoneyRatePeriod.monthly:
+      double fraction = 0.0;
+      DateTime cursor = start;
+      int guard = 0;
+      while (cursor.isBefore(end) && guard < 12000) {
+        guard++;
+        final DateTime periodEnd =
+            nextInterestPeriodEnd(cursor, MoneyRatePeriod.monthly);
+        final DateTime segmentEnd =
+            end.isBefore(periodEnd) ? end : periodEnd;
+        final int periodDays = calendarDaysBetween(cursor, periodEnd);
+        final int elapsed = calendarDaysBetween(cursor, segmentEnd);
+        if (periodDays > 0 && elapsed > 0) {
+          fraction += elapsed / periodDays;
+        }
+        cursor = periodEnd;
+      }
+      return fraction;
+  }
+}
+
 /// Pro-rata interest for [principalPaise] from [from] to [to] within one
 /// rate period that begins at [from].
 int proRataPeriodInterestPaise({
@@ -188,84 +226,32 @@ int proRataPeriodInterestPaise({
   return (principalPaise * rate * fraction).round();
 }
 
-/// Pro-rata interest for [principalPaise] from [addedAt] through the rest of
-/// the interest period ending at [periodEnd].
-int proRataRemainderPeriodInterestPaise({
-  required int principalPaise,
+/// Signed interest on [balancePaise] from [from] to [to].
+///
+/// Zero balance accrues nothing. Negative balance yields reverse interest.
+int signedInterestPaise({
+  required int balancePaise,
   required int rateBps,
-  required DateTime periodStart,
-  required DateTime addedAt,
-  required DateTime periodEnd,
-  required MoneyRatePeriod ratePeriod,
-}) {
-  if (principalPaise <= 0 || rateBps <= 0) {
-    return 0;
-  }
-  final DateTime start = _dateOnly(periodStart);
-  final DateTime added = _dateOnly(addedAt);
-  final DateTime end = _dateOnly(periodEnd);
-  if (!end.isAfter(added)) {
-    return 0;
-  }
-  final double elapsed = periodElapsedFraction(
-    periodStart: start,
-    at: added,
-    periodEnd: end,
-    ratePeriod: ratePeriod,
-  );
-  final double remainder = (1.0 - elapsed).clamp(0.0, 1.0);
-  if (remainder <= 0) {
-    return 0;
-  }
-  final double rate = rateBps / 10000.0;
-  return (principalPaise * rate * remainder).round();
-}
-
-/// Pro-rata interest within one rate period from [from] to [to].
-int proRataWithinPeriodInterestPaise({
-  required int principalPaise,
-  required int rateBps,
-  required DateTime periodStart,
   required DateTime from,
   required DateTime to,
-  required DateTime periodEnd,
   required MoneyRatePeriod ratePeriod,
 }) {
-  if (principalPaise <= 0 || rateBps <= 0) {
+  if (balancePaise == 0 || rateBps <= 0) {
     return 0;
   }
-  final DateTime start = _dateOnly(periodStart);
-  final DateTime begin = _dateOnly(from);
-  final DateTime end = _dateOnly(to);
-  final DateTime boundary = _dateOnly(periodEnd);
-  if (!end.isAfter(begin)) {
-    return 0;
-  }
-  final double elapsedBegin = periodElapsedFraction(
-    periodStart: start,
-    at: begin,
-    periodEnd: boundary,
+  final double fraction = accrualFraction(
+    from: from,
+    to: to,
     ratePeriod: ratePeriod,
   );
-  final double elapsedEnd = periodElapsedFraction(
-    periodStart: start,
-    at: end,
-    periodEnd: boundary,
-    ratePeriod: ratePeriod,
-  );
-  final double fraction = (elapsedEnd - elapsedBegin).clamp(0.0, 1.0);
-  if (fraction <= 0) {
+  if (fraction == 0) {
     return 0;
   }
   final double rate = rateBps / 10000.0;
-  return (principalPaise * rate * fraction).round();
+  return (balancePaise * rate * fraction).round();
 }
 
 /// Interest for one completed period on [principalPaise] at [rateBps].
-///
-/// Simple and compound are identical for a single period (`P * r`). Multi-period
-/// compound growth comes from capitalizing each completed period in
-/// [computeLoanScenario].
 int periodInterestPaise({
   required int principalPaise,
   required MoneyInterestKind kind,
@@ -276,7 +262,6 @@ int periodInterestPaise({
   }
   final double rate = rateBps / 10000.0;
   // One period: simple P*r and compound P*((1+r)-1) are the same.
-  // Multi-period compound growth comes from capitalizing each period.
   switch (kind) {
     case MoneyInterestKind.simple:
     case MoneyInterestKind.compound:
@@ -306,14 +291,12 @@ DateTime resolveLoanAsOf({
   return asOf;
 }
 
-/// Walk chronologically: mid-period repayments reduce principal and defer
-/// pro-rata interest on the repaid slice; disbursements increase principal and
-/// defer remainder-of-period interest; at each period anniversary, deferred
-/// interest plus full-period interest on the core outstanding either capitalizes
-/// (compound) or posts as unpaid interest without changing principal (simple).
-/// Repayments allocate by [MoneyLoan.prepaymentAllocation]: interest-first
-/// clears unpaid/deferred interest then principal; principal-only leaves
-/// unpaid interest unchanged.
+/// Event-driven signed ledger: synthetic principal disbursement at
+/// [MoneyLoan.interestStartedAt], plus all dated entries (including before
+/// start). Interest accrues only between consecutive timeline points from the
+/// signed outstanding balance. Simple keeps signed unpaid interest; compound
+/// capitalizes into the balance between events. Overpay may go negative and
+/// earn reverse interest.
 LoanScenario computeLoanScenario({
   required MoneyLoan loan,
   DateTime? now,
@@ -322,166 +305,92 @@ LoanScenario computeLoanScenario({
   final DateTime clock = now ?? DateTime.now();
   final DateTime asOf = resolveLoanAsOf(loan: loan, now: clock);
   final DateTime start = _dateOnly(loan.interestStartedAt);
-  final List<MoneyLoanEntry> entries = List<MoneyLoanEntry>.from(
-    entriesOverride ?? loan.entries,
-  )..sort((MoneyLoanEntry a, MoneyLoanEntry b) {
-      final int byDate = _dateOnly(a.entryAt).compareTo(_dateOnly(b.entryAt));
-      if (byDate != 0) {
-        return byDate;
-      }
-      return a.id.compareTo(b.id);
-    });
-
   final bool isSimple = loan.interestKind == MoneyInterestKind.simple;
-  int remainingPrincipal = loan.principalPaise < 0 ? 0 : loan.principalPaise;
-  /// Interest from completed periods still owed (simple only; compound clears
-  /// via capitalization).
-  int postedUnpaidInterest = 0;
-  /// Mid-period slice interest awaiting the next anniversary.
-  int deferredInterest = 0;
-  final List<_DeferredSlice> deferredSlices = <_DeferredSlice>[];
-  /// Principal added via disbursement in the current incomplete/open period.
-  /// Full-period interest excludes this; it is covered by remainder slices.
-  int periodDisbursementsPaise = 0;
-  int interestAccrued = 0;
-  int totalPaid = 0;
-  int totalAdjustments = 0;
 
-  int unpaidInterestTotal() => postedUnpaidInterest + deferredInterest;
-
-  void reduceDeferredSlices(int amount) {
-    int left = amount;
-    while (left > 0 && deferredSlices.isNotEmpty) {
-      final _DeferredSlice first = deferredSlices.first;
-      if (first.interestPaise <= left) {
-        left -= first.interestPaise;
-        deferredSlices.removeAt(0);
-      } else {
-        deferredSlices[0] = _DeferredSlice(
-          kind: first.kind,
-          entryId: first.entryId,
-          basisPaise: first.basisPaise,
-          from: first.from,
-          to: first.to,
-          interestPaise: first.interestPaise - left,
-        );
-        left = 0;
-      }
-    }
-    deferredInterest = deferredSlices.fold<int>(
-      0,
-      (int sum, _DeferredSlice s) => sum + s.interestPaise,
-    );
-  }
-
-  final List<LoanTimelineEvent> timeline = <LoanTimelineEvent>[
-    LoanTimelineEvent(
-      kind: LoanTimelineKind.start,
+  final List<_LedgerEvent> events = <_LedgerEvent>[
+    _LedgerEvent(
       at: start,
-      amountPaise: loan.principalPaise,
+      kind: MoneyLoanEntryKind.disbursement,
+      amountPaise: loan.principalPaise < 0 ? 0 : loan.principalPaise,
+      isSyntheticPrincipal: true,
+      entryId: null,
     ),
   ];
 
-  void accrueRepaidSliceInterest({
-    required int principalReduced,
-    required DateTime periodStart,
-    required DateTime at,
-    String? entryId,
-  }) {
-    if (principalReduced <= 0 || loan.rateBps <= 0) {
-      return;
-    }
-    final int slice = proRataPeriodInterestPaise(
-      principalPaise: principalReduced,
-      rateBps: loan.rateBps,
-      from: periodStart,
-      to: at,
-      ratePeriod: loan.ratePeriod,
-    );
-    if (slice <= 0) {
-      return;
-    }
-    deferredInterest += slice;
-    deferredSlices.add(
-      _DeferredSlice(
-        kind: _DeferredSliceKind.repayment,
-        entryId: entryId,
-        basisPaise: principalReduced,
-        from: periodStart,
-        to: at,
-        interestPaise: slice,
-      ),
-    );
-    interestAccrued += slice;
-    timeline.add(
-      LoanTimelineEvent(
-        kind: LoanTimelineKind.deferredSliceInterest,
-        from: periodStart,
-        at: at,
-        amountPaise: slice,
-        principalBasisPaise: principalReduced,
-        entryId: entryId,
+  for (final MoneyLoanEntry entry in entriesOverride ?? loan.entries) {
+    events.add(
+      _LedgerEvent(
+        at: _dateOnly(entry.entryAt),
+        kind: entry.kind,
+        amountPaise: entry.amountPaise,
+        isSyntheticPrincipal: false,
+        entryId: entry.id,
+        note: entry.note,
       ),
     );
   }
 
-  void accrueAddedSliceInterest({
-    required int principalAdded,
-    required DateTime periodStart,
-    required DateTime addedAt,
-    required DateTime periodEnd,
-    String? entryId,
-  }) {
-    if (principalAdded <= 0 || loan.rateBps <= 0) {
+  events.sort((_LedgerEvent a, _LedgerEvent b) {
+    final int byDate = a.at.compareTo(b.at);
+    if (byDate != 0) {
+      return byDate;
+    }
+    if (a.isSyntheticPrincipal != b.isSyntheticPrincipal) {
+      return a.isSyntheticPrincipal ? -1 : 1;
+    }
+    return (a.entryId ?? '').compareTo(b.entryId ?? '');
+  });
+
+  int balance = 0;
+  int unpaidInterest = 0;
+  int interestAccrued = 0;
+  int totalPaid = 0;
+  int totalAdjustments = 0;
+  DateTime? cursor;
+  final List<LoanTimelineEvent> timeline = <LoanTimelineEvent>[];
+
+  void accrueTo(DateTime to) {
+    if (cursor == null) {
+      cursor = to;
       return;
     }
-    final int slice = proRataRemainderPeriodInterestPaise(
-      principalPaise: principalAdded,
-      rateBps: loan.rateBps,
-      periodStart: periodStart,
-      addedAt: addedAt,
-      periodEnd: periodEnd,
-      ratePeriod: loan.ratePeriod,
-    );
-    if (slice <= 0) {
+    if (!to.isAfter(cursor!)) {
       return;
     }
-    deferredInterest += slice;
-    deferredSlices.add(
-      _DeferredSlice(
-        kind: _DeferredSliceKind.disbursement,
-        entryId: entryId,
-        basisPaise: principalAdded,
-        from: addedAt,
-        to: periodEnd,
-        interestPaise: slice,
-      ),
-    );
-    interestAccrued += slice;
-    timeline.add(
-      LoanTimelineEvent(
-        kind: LoanTimelineKind.deferredAddSliceInterest,
-        from: addedAt,
-        through: periodEnd,
-        at: addedAt,
-        amountPaise: slice,
-        principalBasisPaise: principalAdded,
-        entryId: entryId,
-      ),
-    );
+    final DateTime from = cursor!;
+    if (balance != 0 && loan.rateBps > 0) {
+      final int interest = signedInterestPaise(
+        balancePaise: balance,
+        rateBps: loan.rateBps,
+        from: from,
+        to: to,
+        ratePeriod: loan.ratePeriod,
+      );
+      if (interest != 0) {
+        interestAccrued += interest;
+        timeline.add(
+          LoanTimelineEvent(
+            kind: LoanTimelineKind.interestSegment,
+            from: from,
+            through: to,
+            at: to,
+            amountPaise: interest,
+            principalBasisPaise: balance,
+          ),
+        );
+        if (isSimple) {
+          unpaidInterest += interest;
+        } else {
+          balance += interest;
+        }
+      }
+    }
+    cursor = to;
   }
 
-  void applySignedAmount({
-    required int amount,
-    required MoneyLoanEntryKind kind,
-    required DateTime at,
-    required String entryId,
-    String? note,
-    DateTime? periodStart,
-    DateTime? periodEnd,
-  }) {
-    if (kind == MoneyLoanEntryKind.repayment) {
-      final int pay = amount < 0 ? 0 : amount;
+  void applyEvent(_LedgerEvent event) {
+    if (event.kind == MoneyLoanEntryKind.repayment) {
+      final int pay = event.amountPaise < 0 ? 0 : event.amountPaise;
       totalPaid += pay;
       int remainingPay = pay;
       int toInterest = 0;
@@ -490,442 +399,76 @@ LoanScenario computeLoanScenario({
       if (loan.prepaymentAllocation ==
               MoneyPrepaymentAllocation.interestThenPrincipal &&
           remainingPay > 0 &&
-          unpaidInterestTotal() > 0) {
-        final int owed = unpaidInterestTotal();
-        toInterest = remainingPay > owed ? owed : remainingPay;
+          unpaidInterest > 0) {
+        toInterest =
+            remainingPay > unpaidInterest ? unpaidInterest : remainingPay;
         remainingPay -= toInterest;
-        // Posted unpaid first, then mid-period deferred slices.
-        final int fromPosted =
-            toInterest > postedUnpaidInterest ? postedUnpaidInterest : toInterest;
-        postedUnpaidInterest -= fromPosted;
-        final int fromDeferred = toInterest - fromPosted;
-        if (fromDeferred > 0) {
-          reduceDeferredSlices(fromDeferred);
-        }
+        unpaidInterest -= toInterest;
       }
 
-      if (remainingPay > 0 && remainingPrincipal > 0) {
-        toPrincipal =
-            remainingPay > remainingPrincipal ? remainingPrincipal : remainingPay;
-        remainingPrincipal -= toPrincipal;
+      if (remainingPay > 0) {
+        toPrincipal = remainingPay;
+        balance -= toPrincipal;
+        remainingPay = 0;
       }
+
       timeline.add(
         LoanTimelineEvent(
           kind: LoanTimelineKind.payment,
-          at: at,
+          at: event.at,
           amountPaise: pay,
           toInterestPaise: toInterest,
           toPrincipalPaise: toPrincipal,
-          note: note,
-          entryId: entryId,
+          note: event.note,
+          entryId: event.entryId,
         ),
       );
-      if (periodStart != null && toPrincipal > 0) {
-        accrueRepaidSliceInterest(
-          principalReduced: toPrincipal,
-          periodStart: periodStart,
-          at: at,
-          entryId: entryId,
-        );
-      }
       return;
     }
 
-    if (kind == MoneyLoanEntryKind.disbursement) {
-      final int add = amount < 0 ? 0 : amount;
-      if (add > 0) {
-        remainingPrincipal += add;
-        if (periodStart != null) {
-          periodDisbursementsPaise += add;
-        }
-      }
+    if (event.kind == MoneyLoanEntryKind.disbursement) {
+      final int add = event.amountPaise < 0 ? 0 : event.amountPaise;
+      balance += add;
       timeline.add(
         LoanTimelineEvent(
           kind: LoanTimelineKind.disbursement,
-          at: at,
+          at: event.at,
           amountPaise: add,
           toInterestPaise: 0,
           toPrincipalPaise: add,
-          note: note,
-          entryId: entryId,
+          note: event.note,
+          entryId: event.entryId,
         ),
       );
-      if (periodStart != null &&
-          periodEnd != null &&
-          add > 0) {
-        accrueAddedSliceInterest(
-          principalAdded: add,
-          periodStart: periodStart,
-          addedAt: at,
-          periodEnd: periodEnd,
-          entryId: entryId,
-        );
-      }
       return;
     }
 
-    // Adjustment: positive reduces principal; negative increases it.
-    totalAdjustments += amount;
-    if (amount > 0) {
-      int toPrincipal = 0;
-      if (remainingPrincipal > 0) {
-        toPrincipal =
-            amount > remainingPrincipal ? remainingPrincipal : amount;
-        remainingPrincipal -= toPrincipal;
-      }
-      timeline.add(
-        LoanTimelineEvent(
-          kind: LoanTimelineKind.adjustment,
-          at: at,
-          amountPaise: amount,
-          toInterestPaise: 0,
-          toPrincipalPaise: toPrincipal,
-          note: note,
-          entryId: entryId,
-        ),
-      );
-      if (periodStart != null && toPrincipal > 0) {
-        accrueRepaidSliceInterest(
-          principalReduced: toPrincipal,
-          periodStart: periodStart,
-          at: at,
-          entryId: entryId,
-        );
-      }
-    } else if (amount < 0) {
-      remainingPrincipal += -amount;
-      timeline.add(
-        LoanTimelineEvent(
-          kind: LoanTimelineKind.adjustment,
-          at: at,
-          amountPaise: amount,
-          toPrincipalPaise: amount,
-          note: note,
-          entryId: entryId,
-        ),
-      );
-    } else {
-      timeline.add(
-        LoanTimelineEvent(
-          kind: LoanTimelineKind.adjustment,
-          at: at,
-          amountPaise: 0,
-          note: note,
-          entryId: entryId,
-        ),
-      );
-    }
-  }
-
-  /// Cap mid-period add-slices at [asOf] and accrue core outstanding through
-  /// today. Does not capitalize — anniversary [postPeriodInterest] still owns
-  /// period-end posting.
-  void finalizeIncompletePeriodThroughAsOf({
-    required DateTime periodStart,
-    required DateTime periodEnd,
-  }) {
-    if (!asOf.isAfter(periodStart) || loan.rateBps <= 0) {
-      return;
-    }
-
-    // Cap disbursement deferred slices that were accrued to periodEnd.
-    for (int i = deferredSlices.length - 1; i >= 0; i--) {
-      final _DeferredSlice slice = deferredSlices[i];
-      if (slice.kind != _DeferredSliceKind.disbursement) {
-        continue;
-      }
-      final int capped = proRataWithinPeriodInterestPaise(
-        principalPaise: slice.basisPaise,
-        rateBps: loan.rateBps,
-        periodStart: periodStart,
-        from: slice.from,
-        to: asOf,
-        periodEnd: periodEnd,
-        ratePeriod: loan.ratePeriod,
-      );
-      final int delta = slice.interestPaise - capped;
-      if (delta == 0 && !slice.to.isAfter(asOf)) {
-        continue;
-      }
-      deferredInterest -= delta;
-      interestAccrued -= delta;
-      if (capped <= 0) {
-        deferredSlices.removeAt(i);
-      } else {
-        deferredSlices[i] = _DeferredSlice(
-          kind: slice.kind,
-          entryId: slice.entryId,
-          basisPaise: slice.basisPaise,
-          from: slice.from,
-          to: asOf,
-          interestPaise: capped,
-        );
-      }
-      // Update or drop matching timeline preview rows.
-      for (int t = timeline.length - 1; t >= 0; t--) {
-        final LoanTimelineEvent ev = timeline[t];
-        if (ev.kind != LoanTimelineKind.deferredAddSliceInterest) {
-          continue;
-        }
-        if (slice.entryId != null && ev.entryId != slice.entryId) {
-          continue;
-        }
-        if (capped <= 0) {
-          timeline.removeAt(t);
-        } else {
-          timeline[t] = LoanTimelineEvent(
-            kind: ev.kind,
-            from: ev.from,
-            through: asOf,
-            at: ev.at,
-            amountPaise: capped,
-            principalBasisPaise: ev.principalBasisPaise,
-            entryId: ev.entryId,
-          );
-        }
-        break;
-      }
-    }
-
-    final int corePrincipal =
-        (remainingPrincipal - periodDisbursementsPaise).clamp(0, remainingPrincipal);
-    final int coreInterest = proRataPeriodInterestPaise(
-      principalPaise: corePrincipal,
-      rateBps: loan.rateBps,
-      from: periodStart,
-      to: asOf,
-      ratePeriod: loan.ratePeriod,
-    );
-    if (coreInterest <= 0) {
-      return;
-    }
-    deferredInterest += coreInterest;
-    deferredSlices.add(
-      _DeferredSlice(
-        kind: _DeferredSliceKind.openPeriod,
-        entryId: null,
-        basisPaise: corePrincipal,
-        from: periodStart,
-        to: asOf,
-        interestPaise: coreInterest,
-      ),
-    );
-    interestAccrued += coreInterest;
+    // Adjustment: positive reduces balance; negative increases it.
+    totalAdjustments += event.amountPaise;
+    balance -= event.amountPaise;
     timeline.add(
       LoanTimelineEvent(
-        kind: LoanTimelineKind.accruedThroughAsOf,
-        from: periodStart,
-        through: asOf,
-        at: asOf,
-        amountPaise: coreInterest,
-        principalBasisPaise: corePrincipal,
+        kind: LoanTimelineKind.adjustment,
+        at: event.at,
+        amountPaise: event.amountPaise,
+        toInterestPaise: 0,
+        toPrincipalPaise: event.amountPaise,
+        note: event.note,
+        entryId: event.entryId,
       ),
     );
   }
 
-  void postPeriodInterest({
-    required DateTime periodStart,
-    required DateTime periodEnd,
-  }) {
-    // Full-period leg = principal at period start minus repayments (and
-    // positive adjustments), floored at 0. Equivalently: remaining principal
-    // minus mid-period disbursements (those earn only via remainder slices).
-    final int fullPeriodBasis =
-        (remainingPrincipal - periodDisbursementsPaise).clamp(0, remainingPrincipal);
-    final int remainingInterest =
-        fullPeriodBasis > 0 && loan.rateBps > 0
-            ? periodInterestPaise(
-                principalPaise: fullPeriodBasis,
-                kind: loan.interestKind,
-                rateBps: loan.rateBps,
-              )
-            : 0;
-    final int periodInterestTotal = deferredInterest + remainingInterest;
-    if (periodInterestTotal <= 0) {
-      deferredInterest = 0;
-      deferredSlices.clear();
-      periodDisbursementsPaise = 0;
-      return;
-    }
-    // Deferred was already counted in interestAccrued at entry time.
-    interestAccrued += remainingInterest;
-
-    // Period-end order: repayment slices, then disbursement slices, then
-    // full-period core, then principal after capitalize / remains.
-    final List<_DeferredSlice> repaySlices = deferredSlices
-        .where((s) => s.kind == _DeferredSliceKind.repayment)
-        .toList();
-    final List<_DeferredSlice> addSlices = deferredSlices
-        .where((s) => s.kind == _DeferredSliceKind.disbursement)
-        .toList();
-
-    for (final _DeferredSlice slice in repaySlices) {
-      timeline.add(
-        LoanTimelineEvent(
-          kind: LoanTimelineKind.periodEndSliceInterest,
-          from: slice.from,
-          through: slice.to,
-          at: periodEnd,
-          amountPaise: slice.interestPaise,
-          principalBasisPaise: slice.basisPaise,
-          entryId: slice.entryId,
-        ),
-      );
-    }
-    for (final _DeferredSlice slice in addSlices) {
-      timeline.add(
-        LoanTimelineEvent(
-          kind: LoanTimelineKind.periodEndAddSliceInterest,
-          from: slice.from,
-          through: slice.to,
-          at: periodEnd,
-          amountPaise: slice.interestPaise,
-          principalBasisPaise: slice.basisPaise,
-          entryId: slice.entryId,
-        ),
-      );
-    }
-
-    if (remainingInterest > 0) {
-      timeline.add(
-        LoanTimelineEvent(
-          kind: LoanTimelineKind.remainingPeriodInterest,
-          from: periodStart,
-          at: periodEnd,
-          amountPaise: remainingInterest,
-          principalBasisPaise: fullPeriodBasis,
-        ),
-      );
-    }
-
-    if (isSimple) {
-      postedUnpaidInterest += periodInterestTotal;
-      timeline.add(
-        LoanTimelineEvent(
-          kind: LoanTimelineKind.principalRemains,
-          at: periodEnd,
-          amountPaise: remainingPrincipal,
-        ),
-      );
-    } else {
-      remainingPrincipal += periodInterestTotal;
-      timeline.add(
-        LoanTimelineEvent(
-          kind: LoanTimelineKind.principalAfterCapitalize,
-          at: periodEnd,
-          amountPaise: remainingPrincipal,
-        ),
-      );
-    }
-    deferredInterest = 0;
-    deferredSlices.clear();
-    periodDisbursementsPaise = 0;
-  }
-
-  int entryIndex = 0;
-
-  // Entries dated before interest start: apply to principal, no interest yet.
-  while (entryIndex < entries.length) {
-    final MoneyLoanEntry entry = entries[entryIndex];
-    final DateTime at = _dateOnly(entry.entryAt);
-    if (!at.isBefore(start)) {
+  for (final _LedgerEvent event in events) {
+    if (event.at.isAfter(asOf)) {
       break;
     }
-    applySignedAmount(
-      amount: entry.amountPaise,
-      kind: entry.kind,
-      at: at,
-      entryId: entry.id,
-      note: entry.note,
-    );
-    entryIndex++;
+    accrueTo(event.at);
+    applyEvent(event);
   }
+  accrueTo(asOf);
 
-  if (!asOf.isBefore(start)) {
-    DateTime periodStart = start;
-    DateTime periodEnd = nextInterestPeriodEnd(periodStart, loan.ratePeriod);
-
-    while (true) {
-      // Mid-period entries: repay / add principal + defer pro-rata slices.
-      while (entryIndex < entries.length) {
-        final MoneyLoanEntry entry = entries[entryIndex];
-        final DateTime at = _dateOnly(entry.entryAt);
-        if (at.isAfter(asOf) || !at.isBefore(periodEnd)) {
-          break;
-        }
-        applySignedAmount(
-          amount: entry.amountPaise,
-          kind: entry.kind,
-          at: at,
-          entryId: entry.id,
-          note: entry.note,
-          periodStart: periodStart,
-          periodEnd: periodEnd,
-        );
-        entryIndex++;
-      }
-
-      if (periodEnd.isAfter(asOf)) {
-        // Incomplete period: include pro-rata interest through asOf on
-        // outstanding core (and cap add-slices at asOf). Do not capitalize.
-        finalizeIncompletePeriodThroughAsOf(
-          periodStart: periodStart,
-          periodEnd: periodEnd,
-        );
-        break;
-      }
-
-      postPeriodInterest(periodStart: periodStart, periodEnd: periodEnd);
-
-      // Same-day boundary entries apply after interest posts / capitalizes.
-      while (entryIndex < entries.length) {
-        final MoneyLoanEntry entry = entries[entryIndex];
-        final DateTime at = _dateOnly(entry.entryAt);
-        if (at.isAfter(asOf) || at.isAfter(periodEnd)) {
-          break;
-        }
-        if (at.isBefore(periodEnd)) {
-          break;
-        }
-        final DateTime nextEnd =
-            nextInterestPeriodEnd(periodEnd, loan.ratePeriod);
-        applySignedAmount(
-          amount: entry.amountPaise,
-          kind: entry.kind,
-          at: at,
-          entryId: entry.id,
-          note: entry.note,
-          periodStart: periodEnd,
-          periodEnd: nextEnd,
-        );
-        entryIndex++;
-      }
-
-      periodStart = periodEnd;
-      periodEnd = nextInterestPeriodEnd(periodStart, loan.ratePeriod);
-    }
-
-    while (entryIndex < entries.length) {
-      final MoneyLoanEntry entry = entries[entryIndex];
-      final DateTime at = _dateOnly(entry.entryAt);
-      if (at.isAfter(asOf)) {
-        break;
-      }
-      applySignedAmount(
-        amount: entry.amountPaise,
-        kind: entry.kind,
-        at: at,
-        entryId: entry.id,
-        note: entry.note,
-        periodStart: periodStart,
-        periodEnd: periodEnd,
-      );
-      entryIndex++;
-    }
-  }
-
-  final int unpaidInterest = unpaidInterestTotal();
-  final int pending = remainingPrincipal + unpaidInterest;
+  final int pending = balance + unpaidInterest;
   timeline.add(
     LoanTimelineEvent(
       kind: LoanTimelineKind.pendingAsOf,
@@ -940,7 +483,7 @@ LoanScenario computeLoanScenario({
     totalPaidPaise: totalPaid,
     totalAdjustmentsPaise: totalAdjustments,
     pendingPaise: pending,
-    remainingPrincipalPaise: remainingPrincipal,
+    remainingPrincipalPaise: balance,
     unpaidInterestPaise: unpaidInterest,
     asOf: asOf,
     timeline: timeline,

@@ -32,6 +32,7 @@ class _LoanCreateScreenState extends ConsumerState<LoanCreateScreen> {
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _principalCtrl = TextEditingController();
+  final TextEditingController _advanceAmountCtrl = TextEditingController();
   final TextEditingController _rateCtrl = TextEditingController(text: '2');
   final TextEditingController _noteCtrl = TextEditingController();
   MoneyLoanDirection _direction = MoneyLoanDirection.given;
@@ -41,6 +42,8 @@ class _LoanCreateScreenState extends ConsumerState<LoanCreateScreen> {
   MoneyRatePeriod _ratePeriod = MoneyRatePeriod.monthly;
   DateTime _startedAt = DateTime.now();
   DateTime? _endedAt;
+  bool _hasAdvancePayment = false;
+  DateTime _advancePaidAt = DateTime.now();
   Customer? _resolvedCustomer;
   List<Customer> _suggestions = const <Customer>[];
   bool _prefillApplied = false;
@@ -52,6 +55,7 @@ class _LoanCreateScreenState extends ConsumerState<LoanCreateScreen> {
     super.initState();
     final DateTime now = DateTime.now();
     _startedAt = DateTime(now.year, now.month, now.day);
+    _advancePaidAt = _startedAt;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _applyPrefill();
     });
@@ -62,9 +66,25 @@ class _LoanCreateScreenState extends ConsumerState<LoanCreateScreen> {
     _phoneController.dispose();
     _nameController.dispose();
     _principalCtrl.dispose();
+    _advanceAmountCtrl.dispose();
     _rateCtrl.dispose();
     _noteCtrl.dispose();
     super.dispose();
+  }
+
+  DateTime get _todayOnly {
+    final DateTime now = DateTime.now();
+    return DateTime(now.year, now.month, now.day);
+  }
+
+  void _clampAdvancePaidAt() {
+    if (_advancePaidAt.isBefore(_startedAt)) {
+      _advancePaidAt = _startedAt;
+    }
+    final DateTime today = _todayOnly;
+    if (_advancePaidAt.isAfter(today)) {
+      _advancePaidAt = today;
+    }
   }
 
   Future<void> _applyPrefill() async {
@@ -314,7 +334,10 @@ class _LoanCreateScreenState extends ConsumerState<LoanCreateScreen> {
                 lastDate: DateTime.now(),
               );
               if (picked != null) {
-                setState(() => _startedAt = picked);
+                setState(() {
+                  _startedAt = picked;
+                  _clampAdvancePaidAt();
+                });
               }
             },
           ),
@@ -348,6 +371,51 @@ class _LoanCreateScreenState extends ConsumerState<LoanCreateScreen> {
               }
             },
           ),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            title: Text(l10n.loanAdvancePaymentFlag),
+            subtitle: Text(l10n.loanAdvancePaymentHint),
+            value: _hasAdvancePayment,
+            onChanged: (bool value) {
+              setState(() {
+                _hasAdvancePayment = value;
+                if (value) {
+                  _advancePaidAt = _startedAt;
+                  _clampAdvancePaidAt();
+                }
+              });
+            },
+          ),
+          if (_hasAdvancePayment) ...<Widget>[
+            TextField(
+              controller: _advanceAmountCtrl,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+              decoration: InputDecoration(
+                labelText: l10n.loanAdvancePaymentAmountLabel,
+                border: const OutlineInputBorder(),
+                prefixText: '₹ ',
+              ),
+            ),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(l10n.loanAdvancePaymentDateLabel),
+              subtitle: Text(formatIndiaDate(_advancePaidAt)),
+              trailing: const Icon(Icons.calendar_today_outlined),
+              onTap: () async {
+                final DateTime? picked = await showDatePicker(
+                  context: context,
+                  locale: indiaDatePickerLocale(context),
+                  initialDate: _advancePaidAt,
+                  firstDate: _startedAt,
+                  lastDate: _todayOnly,
+                );
+                if (picked != null) {
+                  setState(() => _advancePaidAt = picked);
+                }
+              },
+            ),
+          ],
           const SizedBox(height: 8),
           Text(l10n.loanInterestKindLabel, style: Theme.of(context).textTheme.titleSmall),
           const SizedBox(height: 8),
@@ -479,6 +547,40 @@ class _LoanCreateScreenState extends ConsumerState<LoanCreateScreen> {
       );
       return;
     }
+    int? advancePaise;
+    DateTime? advanceAt;
+    if (_hasAdvancePayment) {
+      advancePaise = parseRupeesToPaise(_advanceAmountCtrl.text);
+      if (advancePaise <= 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.loanAdvancePaymentRequired)),
+        );
+        return;
+      }
+      if (advancePaise > principal) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.loanAdvancePaymentExceedsPrincipal)),
+        );
+        return;
+      }
+      advanceAt = DateTime(
+        _advancePaidAt.year,
+        _advancePaidAt.month,
+        _advancePaidAt.day,
+      );
+      final DateTime start = DateTime(
+        _startedAt.year,
+        _startedAt.month,
+        _startedAt.day,
+      );
+      final DateTime today = _todayOnly;
+      if (advanceAt.isBefore(start) || advanceAt.isAfter(today)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.loanAdvancePaymentDateInvalid)),
+        );
+        return;
+      }
+    }
     final double? ratePct = double.tryParse(_rateCtrl.text.trim());
     if (ratePct == null || ratePct < 0) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -523,6 +625,11 @@ class _LoanCreateScreenState extends ConsumerState<LoanCreateScreen> {
             ratePeriod: _ratePeriod,
             prepaymentAllocation: _prepaymentAllocation,
             note: note,
+            advancePaymentPaise: advancePaise,
+            advancePaymentAt: advanceAt,
+            advancePaymentNote: advancePaise == null
+                ? null
+                : l10n.loanAdvancePaymentEntryNote,
           );
       if (!mounted) {
         return;

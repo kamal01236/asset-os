@@ -143,4 +143,86 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(milliseconds: 1));
   });
+
+  testWidgets('advance payment creates repayment and keeps original principal', (
+    WidgetTester tester,
+  ) async {
+    final ProviderContainer container = await bootContainer();
+    final LocalRepository repo = container.read(repositoryProvider);
+
+    tester.view.physicalSize = const Size(900, 2200);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await _pumpCreate(tester, container: container);
+
+    await tester.enterText(_fields.at(0), '9111111111');
+    await tester.enterText(_fields.at(1), 'Advance User');
+    await tester.enterText(_fields.at(2), '10000');
+    await tester.pump();
+    await _settle(tester, ticks: 8);
+
+    await tester.tap(find.text('Advance / prior payment'));
+    await tester.pump();
+    await _settle(tester, ticks: 8);
+
+    expect(find.text('Advance amount'), findsOneWidget);
+    // phone, name, principal, advance, rate, note
+    await tester.enterText(_fields.at(3), '4000');
+    await tester.pump();
+
+    await tester.tap(find.widgetWithText(FilledButton, 'New loan'));
+    await _settle(tester, ticks: 25);
+
+    final List<MoneyLoan> loans = await repo.listMoneyLoans();
+    expect(loans, hasLength(1));
+    expect(loans.first.principalPaise, 1000000);
+    expect(loans.first.entries, hasLength(1));
+    expect(loans.first.entries.single.kind, MoneyLoanEntryKind.repayment);
+    expect(loans.first.entries.single.amountPaise, 400000);
+    expect(loans.first.entries.single.note, 'Advance payment');
+
+    expect(find.byType(LoanDetailScreen), findsOneWidget);
+    expect(find.text('Original principal'), findsOneWidget);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(milliseconds: 1));
+  });
+
+  testWidgets('advance over principal shows validation snackbar', (
+    WidgetTester tester,
+  ) async {
+    final ProviderContainer container = await bootContainer();
+
+    tester.view.physicalSize = const Size(900, 2200);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await _pumpCreate(tester, container: container);
+
+    await tester.enterText(_fields.at(0), '9222222222');
+    await tester.enterText(_fields.at(1), 'Overpay User');
+    await tester.enterText(_fields.at(2), '1000');
+    await tester.pump();
+    await _settle(tester, ticks: 8);
+
+    await tester.tap(find.text('Advance / prior payment'));
+    await tester.pump();
+    await _settle(tester, ticks: 8);
+
+    await tester.enterText(_fields.at(3), '1500');
+    await tester.pump();
+
+    await tester.tap(find.widgetWithText(FilledButton, 'New loan'));
+    await _settle(tester, ticks: 15);
+
+    expect(find.text('Advance cannot exceed principal'), findsOneWidget);
+    expect(find.byType(LoanDetailScreen), findsNothing);
+    expect(await container.read(repositoryProvider).listMoneyLoans(), isEmpty);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(milliseconds: 1));
+  });
 }

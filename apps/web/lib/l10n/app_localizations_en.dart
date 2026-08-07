@@ -2012,6 +2012,33 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loanMoneyGivenOnLabel => 'Money given on';
 
   @override
+  String get loanAdvancePaymentFlag => 'Advance / prior payment';
+
+  @override
+  String get loanAdvancePaymentHint =>
+      'On loan day, accrued interest plus this payment are applied (interest first), then the remaining principal continues.';
+
+  @override
+  String get loanAdvancePaymentAmountLabel => 'Advance amount';
+
+  @override
+  String get loanAdvancePaymentDateLabel => 'Advance paid on';
+
+  @override
+  String get loanAdvancePaymentRequired => 'Enter an advance amount';
+
+  @override
+  String get loanAdvancePaymentExceedsPrincipal =>
+      'Advance cannot exceed principal';
+
+  @override
+  String get loanAdvancePaymentDateInvalid =>
+      'Advance date must be on or after money given date and on or before today';
+
+  @override
+  String get loanAdvancePaymentEntryNote => 'Advance payment';
+
+  @override
   String get loanDueOptionalLabel => 'Due / end (optional)';
 
   @override
@@ -2053,11 +2080,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get loanPeriodEndInterestHintSimple =>
-      'Mid-period repayments and top-ups accrue pro-rata interest for time outstanding. At each month or year anniversary that interest is due but not added to principal.';
+      'Interest accrues between cash movements from the signed outstanding balance. Simple interest stays due separately and is not added to principal. Overpay earns reverse interest.';
 
   @override
   String get loanPeriodEndInterestHintCompound =>
-      'Mid-period repayments reduce principal and accrue pro-rata interest for time outstanding. Added principal accrues pro-rata until period end. That interest, plus full-period interest on what was outstanding the whole period, is added to principal at each month or year anniversary.';
+      'Interest accrues between cash movements from the signed outstanding balance and is added to principal before the next movement. Overpay earns reverse interest on the credit balance.';
 
   @override
   String get loanRateInvalid => 'Enter a valid rate';
@@ -2072,7 +2099,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loanPendingNowLabel => 'Pending now';
 
   @override
+  String get loanOverpaidNowLabel => 'Overpaid now';
+
+  @override
   String get loanInterestToDateLabel => 'Interest to date';
+
+  @override
+  String get loanReverseInterestToDateLabel => 'Reverse interest to date';
 
   @override
   String get loanPaidLabel => 'Paid';
@@ -2182,6 +2215,31 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String loanTimelineInterest(String date, String principal, String amount) {
     return 'Interest posted $date on $principal → $amount (added to principal)';
+  }
+
+  @override
+  String loanTimelineInterestSegment(
+    String principal,
+    String from,
+    String to,
+    String amount,
+  ) {
+    return 'Interest on $principal ($from–$to) → $amount';
+  }
+
+  @override
+  String loanTimelineReverseInterestSegment(
+    String principal,
+    String from,
+    String to,
+    String amount,
+  ) {
+    return 'Reverse interest on credit $principal ($from–$to) → $amount';
+  }
+
+  @override
+  String loanTimelinePendingOverpaid(String date, String amount) {
+    return '$date — Overpaid $amount';
   }
 
   @override

@@ -1305,8 +1305,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get orderLineRateLabel => 'इस ऑर्डर की दर (₹)';
 
   @override
-  String get orderLineRateHint =>
-      'इस किराए के लिए कैटलॉग दर बदली जा सकती है';
+  String get orderLineRateHint => 'इस किराए के लिए कैटलॉग दर बदली जा सकती है';
 
   @override
   String get continueWithoutDueDate => 'देय तिथि के बिना जारी रखें';
@@ -2012,6 +2011,33 @@ class AppLocalizationsHi extends AppLocalizations {
   String get loanMoneyGivenOnLabel => 'पैसे दिए गए दिन';
 
   @override
+  String get loanAdvancePaymentFlag => 'अग्रिम / पूर्व भुगतान';
+
+  @override
+  String get loanAdvancePaymentHint =>
+      'कर्ज के दिन, अर्जित ब्याज और यह भुगतान लागू होते हैं (पहले ब्याज), फिर शेष मूलधन जारी रहता है।';
+
+  @override
+  String get loanAdvancePaymentAmountLabel => 'अग्रिम राशि';
+
+  @override
+  String get loanAdvancePaymentDateLabel => 'अग्रिम भुगतान तिथि';
+
+  @override
+  String get loanAdvancePaymentRequired => 'अग्रिम राशि दर्ज करें';
+
+  @override
+  String get loanAdvancePaymentExceedsPrincipal =>
+      'अग्रिम मूलधन से अधिक नहीं हो सकता';
+
+  @override
+  String get loanAdvancePaymentDateInvalid =>
+      'अग्रिम तिथि पैसे दिए गए दिन या उसके बाद और आज या उससे पहले होनी चाहिए';
+
+  @override
+  String get loanAdvancePaymentEntryNote => 'अग्रिम भुगतान';
+
+  @override
   String get loanDueOptionalLabel => 'देय / समाप्ति (वैकल्पिक)';
 
   @override
@@ -2053,11 +2079,11 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get loanPeriodEndInterestHintSimple =>
-      'अवधि के बीच चुकौती और टॉप-अप बकाया समय का आनुपातिक ब्याज जोड़ते हैं। हर महीने या साल की सालगिरह पर वह ब्याज देय होता है, पर मूलधन में नहीं जुड़ता।';
+      'नकदी हलचलों के बीच हस्ताक्षरित बकाया शेष पर ब्याज लगता है। सरल ब्याज अलग देय रहता है और मूलधन में नहीं जुड़ता। अधिक भुगतान पर उल्टा ब्याज मिलता है।';
 
   @override
   String get loanPeriodEndInterestHintCompound =>
-      'अवधि के बीच चुकौती मूलधन घटाती है और बकाया समय का आनुपातिक ब्याज जोड़ती है। जोड़ा मूलधन अवधि अंत तक आनुपातिक ब्याज कमाता है। वह ब्याज, और पूरी अवधि बकाया मूलधन पर ब्याज, हर महीने या साल की सालगिरह पर मूलधन में जुड़ जाता है।';
+      'नकदी हलचलों के बीच हस्ताक्षरित बकाया शेष पर ब्याज लगता है और अगली हलचल से पहले मूलधन में जुड़ जाता है। अधिक भुगतान पर क्रेडिट शेष पर उल्टा ब्याज मिलता है।';
 
   @override
   String get loanRateInvalid => 'मान्य दर दर्ज करें';
@@ -2072,7 +2098,13 @@ class AppLocalizationsHi extends AppLocalizations {
   String get loanPendingNowLabel => 'अभी लंबित';
 
   @override
+  String get loanOverpaidNowLabel => 'अभी अधिक भुगतान';
+
+  @override
   String get loanInterestToDateLabel => 'अब तक का ब्याज';
+
+  @override
+  String get loanReverseInterestToDateLabel => 'अब तक का उल्टा ब्याज';
 
   @override
   String get loanPaidLabel => 'भुगतान';
@@ -2183,6 +2215,31 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String loanTimelineInterest(String date, String principal, String amount) {
     return 'ब्याज दर्ज $date · $principal पर → $amount (मूलधन में जोड़ा)';
+  }
+
+  @override
+  String loanTimelineInterestSegment(
+    String principal,
+    String from,
+    String to,
+    String amount,
+  ) {
+    return '$principal पर ब्याज ($from–$to) → $amount';
+  }
+
+  @override
+  String loanTimelineReverseInterestSegment(
+    String principal,
+    String from,
+    String to,
+    String amount,
+  ) {
+    return 'क्रेडिट $principal पर उल्टा ब्याज ($from–$to) → $amount';
+  }
+
+  @override
+  String loanTimelinePendingOverpaid(String date, String amount) {
+    return '$date — अधिक भुगतान $amount';
   }
 
   @override

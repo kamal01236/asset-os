@@ -676,7 +676,9 @@ class _CurrentScenarioCard extends StatelessWidget {
             ),
             const SizedBox(height: 14),
             Text(
-              l10n.loanPendingNowLabel,
+              scenario.pendingPaise < 0
+                  ? l10n.loanOverpaidNowLabel
+                  : l10n.loanPendingNowLabel,
               style: Theme.of(context).textTheme.labelLarge,
             ),
             Text(
@@ -706,8 +708,16 @@ class _CurrentScenarioCard extends StatelessWidget {
                   currencyCode: loan.currencyCode,
                 ),
               ),
-            _kv(context, l10n.loanInterestToDateLabel,
-                formatMoney(scenario.interestAccruedPaise, currencyCode: loan.currencyCode)),
+            _kv(
+              context,
+              scenario.interestAccruedPaise < 0
+                  ? l10n.loanReverseInterestToDateLabel
+                  : l10n.loanInterestToDateLabel,
+              formatMoney(
+                scenario.interestAccruedPaise,
+                currencyCode: loan.currencyCode,
+              ),
+            ),
             _kv(context, l10n.loanPaidLabel,
                 formatMoney(scenario.totalPaidPaise, currencyCode: loan.currencyCode)),
             _kv(context, l10n.loanAdjustmentsLabel,
@@ -798,48 +808,9 @@ class _TimelineRow extends StatelessWidget {
       event.amountPaise,
       currencyCode: loan.currencyCode,
     );
-    final bool simple = loan.interestKind == MoneyInterestKind.simple;
     final String text = switch (event.kind) {
-      LoanTimelineKind.start =>
-        l10n.loanTimelineStart(formatIndiaDate(event.at), money),
-      LoanTimelineKind.interestSegment => l10n.loanTimelineInterest(
-          formatIndiaDate(event.at),
-          formatMoney(
-            event.principalBasisPaise ?? 0,
-            currencyCode: loan.currencyCode,
-          ),
-          money,
-        ),
-      LoanTimelineKind.deferredSliceInterest =>
-        l10n.loanTimelineDeferredSlice(
-          formatMoney(
-            event.principalBasisPaise ?? 0,
-            currencyCode: loan.currencyCode,
-          ),
-          formatIndiaDate(event.at),
-          money,
-        ),
-      LoanTimelineKind.deferredAddSliceInterest =>
-        l10n.loanTimelineDeferredAddSlice(
-          formatMoney(
-            event.principalBasisPaise ?? 0,
-            currencyCode: loan.currencyCode,
-          ),
-          formatIndiaDate(event.from ?? event.at),
-          formatIndiaDate(event.through ?? event.at),
-          money,
-        ),
-      LoanTimelineKind.accruedThroughAsOf =>
-        l10n.loanTimelineAccruedThroughAsOf(
-          formatMoney(
-            event.principalBasisPaise ?? 0,
-            currencyCode: loan.currencyCode,
-          ),
-          formatIndiaDate(event.through ?? event.at),
-          money,
-        ),
-      LoanTimelineKind.periodEndSliceInterest => simple
-          ? l10n.loanTimelinePeriodEndSliceDue(
+      LoanTimelineKind.interestSegment => event.amountPaise < 0
+          ? l10n.loanTimelineReverseInterestSegment(
               formatMoney(
                 event.principalBasisPaise ?? 0,
                 currencyCode: loan.currencyCode,
@@ -848,7 +819,7 @@ class _TimelineRow extends StatelessWidget {
               formatIndiaDate(event.through ?? event.at),
               money,
             )
-          : l10n.loanTimelinePeriodEndSlice(
+          : l10n.loanTimelineInterestSegment(
               formatMoney(
                 event.principalBasisPaise ?? 0,
                 currencyCode: loan.currencyCode,
@@ -857,44 +828,6 @@ class _TimelineRow extends StatelessWidget {
               formatIndiaDate(event.through ?? event.at),
               money,
             ),
-      LoanTimelineKind.periodEndAddSliceInterest => simple
-          ? l10n.loanTimelinePeriodEndAddSliceDue(
-              formatMoney(
-                event.principalBasisPaise ?? 0,
-                currencyCode: loan.currencyCode,
-              ),
-              formatIndiaDate(event.from ?? event.at),
-              formatIndiaDate(event.through ?? event.at),
-              money,
-            )
-          : l10n.loanTimelinePeriodEndAddSlice(
-              formatMoney(
-                event.principalBasisPaise ?? 0,
-                currencyCode: loan.currencyCode,
-              ),
-              formatIndiaDate(event.from ?? event.at),
-              formatIndiaDate(event.through ?? event.at),
-              money,
-            ),
-      LoanTimelineKind.remainingPeriodInterest => simple
-          ? l10n.loanTimelineRemainingPeriodInterestDue(
-              formatMoney(
-                event.principalBasisPaise ?? 0,
-                currencyCode: loan.currencyCode,
-              ),
-              money,
-            )
-          : l10n.loanTimelineRemainingPeriodInterest(
-              formatMoney(
-                event.principalBasisPaise ?? 0,
-                currencyCode: loan.currencyCode,
-              ),
-              money,
-            ),
-      LoanTimelineKind.principalAfterCapitalize =>
-        l10n.loanTimelinePrincipalNow(formatIndiaDate(event.at), money),
-      LoanTimelineKind.principalRemains =>
-        l10n.loanTimelinePrincipalRemains(formatIndiaDate(event.at), money),
       LoanTimelineKind.payment => event.toInterestPaise > 0
           ? l10n.loanTimelinePaymentSplit(
               formatIndiaDate(event.at),
@@ -915,8 +848,12 @@ class _TimelineRow extends StatelessWidget {
           formatIndiaDate(event.at),
           money,
         ),
-      LoanTimelineKind.pendingAsOf =>
-        l10n.loanTimelinePending(formatIndiaDate(event.at), money),
+      LoanTimelineKind.pendingAsOf => event.amountPaise < 0
+          ? l10n.loanTimelinePendingOverpaid(
+              formatIndiaDate(event.at),
+              money,
+            )
+          : l10n.loanTimelinePending(formatIndiaDate(event.at), money),
     };
 
     return Padding(
@@ -926,18 +863,9 @@ class _TimelineRow extends StatelessWidget {
         children: <Widget>[
           Icon(
             switch (event.kind) {
-              LoanTimelineKind.start => Icons.flag_outlined,
-              LoanTimelineKind.interestSegment => Icons.trending_up,
-              LoanTimelineKind.deferredSliceInterest => Icons.timelapse,
-              LoanTimelineKind.deferredAddSliceInterest => Icons.timelapse,
-              LoanTimelineKind.accruedThroughAsOf => Icons.timelapse,
-              LoanTimelineKind.periodEndSliceInterest => Icons.trending_up,
-              LoanTimelineKind.periodEndAddSliceInterest => Icons.trending_up,
-              LoanTimelineKind.remainingPeriodInterest => Icons.trending_up,
-              LoanTimelineKind.principalAfterCapitalize =>
-                Icons.account_balance_wallet_outlined,
-              LoanTimelineKind.principalRemains =>
-                Icons.account_balance_wallet_outlined,
+              LoanTimelineKind.interestSegment => event.amountPaise < 0
+                  ? Icons.trending_down
+                  : Icons.trending_up,
               LoanTimelineKind.payment => Icons.payments_outlined,
               LoanTimelineKind.disbursement => Icons.add_card_outlined,
               LoanTimelineKind.adjustment => Icons.tune,
@@ -950,9 +878,7 @@ class _TimelineRow extends StatelessWidget {
           Expanded(
             child: Text(
               text,
-              style: event.kind == LoanTimelineKind.pendingAsOf ||
-                      event.kind == LoanTimelineKind.principalAfterCapitalize ||
-                      event.kind == LoanTimelineKind.principalRemains
+              style: event.kind == LoanTimelineKind.pendingAsOf
                   ? Theme.of(context).textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.w700,
                       )

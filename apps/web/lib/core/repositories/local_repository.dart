@@ -21,7 +21,8 @@ export '../loans/loan_balance.dart'
         computeLoanScenario,
         periodInterestPaise,
         proRataPeriodInterestPaise,
-        proRataRemainderPeriodInterestPaise,
+        accrualFraction,
+        signedInterestPaise,
         nextInterestPeriodEnd,
         LoanScenario,
         LoanTimelineEvent,
@@ -1733,6 +1734,9 @@ class LocalRepository {
     DateTime? interestEndedAt,
     String? note,
     String currencyCode = 'INR',
+    int? advancePaymentPaise,
+    DateTime? advancePaymentAt,
+    String? advancePaymentNote,
   }) async {
     if (principalPaise <= 0) {
       throw ArgumentError('Principal must be positive');
@@ -1755,31 +1759,88 @@ class LocalRepository {
     if (ended != null && ended.isBefore(start)) {
       throw ArgumentError('Due date must be on or after interest start');
     }
+    final int? advancePaiseArg = advancePaymentPaise;
+    final DateTime? advanceAtArg = advancePaymentAt;
+    if ((advancePaiseArg == null) != (advanceAtArg == null)) {
+      throw ArgumentError('Advance payment amount and date are both required');
+    }
+    DateTime? advanceAt;
+    int? validatedAdvancePaise;
+    if (advancePaiseArg != null && advanceAtArg != null) {
+      if (advancePaiseArg <= 0) {
+        throw ArgumentError('Advance payment must be positive');
+      }
+      if (advancePaiseArg > principalPaise) {
+        throw ArgumentError('Advance payment cannot exceed principal');
+      }
+      advanceAt = DateTime(
+        advanceAtArg.year,
+        advanceAtArg.month,
+        advanceAtArg.day,
+      );
+      if (advanceAt.isBefore(start)) {
+        throw ArgumentError(
+          'Advance payment date must be on or after interest start',
+        );
+      }
+      final DateTime today = DateTime.now();
+      final DateTime todayOnly = DateTime(today.year, today.month, today.day);
+      if (advanceAt.isAfter(todayOnly)) {
+        throw ArgumentError('Advance payment date cannot be after today');
+      }
+      validatedAdvancePaise = advancePaiseArg;
+    }
     final String? trimmedNote = note?.trim();
+    final String? trimmedAdvanceNote = advancePaymentNote?.trim();
     final String id = nextId('MLN');
     final DateTime now = DateTime.now();
-    await _db.into(_db.moneyLoans).insert(
-      MoneyLoansCompanion.insert(
-        id: id,
-        customerId: customerId,
-        direction: direction.name,
-        principalPaise: principalPaise,
-        currencyCode: Value<String>(
-          currencyCode.trim().isEmpty ? 'INR' : currencyCode.trim().toUpperCase(),
+    await _db.transaction(() async {
+      await _db.into(_db.moneyLoans).insert(
+        MoneyLoansCompanion.insert(
+          id: id,
+          customerId: customerId,
+          direction: direction.name,
+          principalPaise: principalPaise,
+          currencyCode: Value<String>(
+            currencyCode.trim().isEmpty
+                ? 'INR'
+                : currencyCode.trim().toUpperCase(),
+          ),
+          interestKind: Value<String>(interestKind.name),
+          rateBps: Value<int>(rateBps),
+          ratePeriod: Value<String>(ratePeriod.name),
+          interestStartedAt: start,
+          interestEndedAt: Value<DateTime?>(ended),
+          prepaymentAllocation: Value<String>(prepaymentAllocation.name),
+          status: Value<String>(MoneyLoanStatus.pending.name),
+          note: Value<String?>(
+            (trimmedNote == null || trimmedNote.isEmpty) ? null : trimmedNote,
+          ),
+          createdAt: now,
         ),
-        interestKind: Value<String>(interestKind.name),
-        rateBps: Value<int>(rateBps),
-        ratePeriod: Value<String>(ratePeriod.name),
-        interestStartedAt: start,
-        interestEndedAt: Value<DateTime?>(ended),
-        prepaymentAllocation: Value<String>(prepaymentAllocation.name),
-        status: Value<String>(MoneyLoanStatus.pending.name),
-        note: Value<String?>(
-          (trimmedNote == null || trimmedNote.isEmpty) ? null : trimmedNote,
-        ),
-        createdAt: now,
-      ),
-    );
+      );
+      if (advanceAt != null && validatedAdvancePaise != null) {
+        final String entryNote =
+            (trimmedAdvanceNote == null || trimmedAdvanceNote.isEmpty)
+                ? 'Advance payment'
+                : trimmedAdvanceNote;
+        await _db.into(_db.moneyLoanEntries).insert(
+          MoneyLoanEntriesCompanion.insert(
+            id: nextId('MLE'),
+            loanId: id,
+            entryAt: advanceAt,
+            amountPaise: validatedAdvancePaise,
+            kind: MoneyLoanEntryKind.repayment.name,
+            note: Value<String>(entryNote),
+          ),
+        );
+      }
+    });
+    if (advanceAt != null) {
+      _db.notifyUpdates(<TableUpdate>{
+        TableUpdate.onTable(_db.moneyLoans, kind: UpdateKind.update),
+      });
+    }
     return id;
   }
 

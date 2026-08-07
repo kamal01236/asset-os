@@ -1172,6 +1172,14 @@
   "loanOriginalPrincipalLabel": "Original principal",
   "loanPrincipalRequired": "Enter a principal amount",
   "loanMoneyGivenOnLabel": "Money given on",
+  "loanAdvancePaymentFlag": "Advance / prior payment",
+  "loanAdvancePaymentHint": "On loan day, accrued interest plus this payment are applied (interest first), then the remaining principal continues.",
+  "loanAdvancePaymentAmountLabel": "Advance amount",
+  "loanAdvancePaymentDateLabel": "Advance paid on",
+  "loanAdvancePaymentRequired": "Enter an advance amount",
+  "loanAdvancePaymentExceedsPrincipal": "Advance cannot exceed principal",
+  "loanAdvancePaymentDateInvalid": "Advance date must be on or after money given date and on or before today",
+  "loanAdvancePaymentEntryNote": "Advance payment",
   "loanDueOptionalLabel": "Due / end (optional)",
   "loanDueNone": "No due date",
   "loanInterestKindLabel": "Interest",
@@ -1185,13 +1193,15 @@
   "loanRatePeriodLabel": "Period",
   "loanRateMonthly": "Monthly",
   "loanRateYearly": "Yearly",
-  "loanPeriodEndInterestHintSimple": "Mid-period repayments and top-ups accrue pro-rata interest for time outstanding. At each month or year anniversary that interest is due but not added to principal.",
-  "loanPeriodEndInterestHintCompound": "Mid-period repayments reduce principal and accrue pro-rata interest for time outstanding. Added principal accrues pro-rata until period end. That interest, plus full-period interest on what was outstanding the whole period, is added to principal at each month or year anniversary.",
+  "loanPeriodEndInterestHintSimple": "Interest accrues between cash movements from the signed outstanding balance. Simple interest stays due separately and is not added to principal. Overpay earns reverse interest.",
+  "loanPeriodEndInterestHintCompound": "Interest accrues between cash movements from the signed outstanding balance and is added to principal before the next movement. Overpay earns reverse interest on the credit balance.",
   "loanRateInvalid": "Enter a valid rate",
   "loanNoteOptionalLabel": "Note (optional)",
   "loanSaving": "Saving…",
   "loanPendingNowLabel": "Pending now",
+  "loanOverpaidNowLabel": "Overpaid now",
   "loanInterestToDateLabel": "Interest to date",
+  "loanReverseInterestToDateLabel": "Reverse interest to date",
   "loanPaidLabel": "Paid",
   "loanAdjustmentsLabel": "Adjustments",
   "loanTimelineHeading": "Timeline",
@@ -1252,6 +1262,31 @@
     "placeholders": {
       "date": {"type": "String"},
       "principal": {"type": "String"},
+      "amount": {"type": "String"}
+    }
+  },
+  "loanTimelineInterestSegment": "Interest on {principal} ({from}–{to}) → {amount}",
+  "@loanTimelineInterestSegment": {
+    "placeholders": {
+      "principal": {"type": "String"},
+      "from": {"type": "String"},
+      "to": {"type": "String"},
+      "amount": {"type": "String"}
+    }
+  },
+  "loanTimelineReverseInterestSegment": "Reverse interest on credit {principal} ({from}–{to}) → {amount}",
+  "@loanTimelineReverseInterestSegment": {
+    "placeholders": {
+      "principal": {"type": "String"},
+      "from": {"type": "String"},
+      "to": {"type": "String"},
+      "amount": {"type": "String"}
+    }
+  },
+  "loanTimelinePendingOverpaid": "{date} — Overpaid {amount}",
+  "@loanTimelinePendingOverpaid": {
+    "placeholders": {
+      "date": {"type": "String"},
       "amount": {"type": "String"}
     }
   },

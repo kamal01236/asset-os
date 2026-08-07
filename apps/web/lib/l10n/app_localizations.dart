@@ -3541,6 +3541,54 @@ abstract class AppLocalizations {
   /// **'Money given on'**
   String get loanMoneyGivenOnLabel;
 
+  /// No description provided for @loanAdvancePaymentFlag.
+  ///
+  /// In en, this message translates to:
+  /// **'Advance / prior payment'**
+  String get loanAdvancePaymentFlag;
+
+  /// No description provided for @loanAdvancePaymentHint.
+  ///
+  /// In en, this message translates to:
+  /// **'On loan day, accrued interest plus this payment are applied (interest first), then the remaining principal continues.'**
+  String get loanAdvancePaymentHint;
+
+  /// No description provided for @loanAdvancePaymentAmountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Advance amount'**
+  String get loanAdvancePaymentAmountLabel;
+
+  /// No description provided for @loanAdvancePaymentDateLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Advance paid on'**
+  String get loanAdvancePaymentDateLabel;
+
+  /// No description provided for @loanAdvancePaymentRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter an advance amount'**
+  String get loanAdvancePaymentRequired;
+
+  /// No description provided for @loanAdvancePaymentExceedsPrincipal.
+  ///
+  /// In en, this message translates to:
+  /// **'Advance cannot exceed principal'**
+  String get loanAdvancePaymentExceedsPrincipal;
+
+  /// No description provided for @loanAdvancePaymentDateInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Advance date must be on or after money given date and on or before today'**
+  String get loanAdvancePaymentDateInvalid;
+
+  /// No description provided for @loanAdvancePaymentEntryNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Advance payment'**
+  String get loanAdvancePaymentEntryNote;
+
   /// No description provided for @loanDueOptionalLabel.
   ///
   /// In en, this message translates to:
@@ -3655,11 +3703,23 @@ abstract class AppLocalizations {
   /// **'Pending now'**
   String get loanPendingNowLabel;
 
+  /// No description provided for @loanOverpaidNowLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Overpaid now'**
+  String get loanOverpaidNowLabel;
+
   /// No description provided for @loanInterestToDateLabel.
   ///
   /// In en, this message translates to:
   /// **'Interest to date'**
   String get loanInterestToDateLabel;
+
+  /// No description provided for @loanReverseInterestToDateLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Reverse interest to date'**
+  String get loanReverseInterestToDateLabel;
 
   /// No description provided for @loanPaidLabel.
   ///
@@ -3852,6 +3912,34 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Interest posted {date} on {principal} → {amount} (added to principal)'**
   String loanTimelineInterest(String date, String principal, String amount);
+
+  /// No description provided for @loanTimelineInterestSegment.
+  ///
+  /// In en, this message translates to:
+  /// **'Interest on {principal} ({from}–{to}) → {amount}'**
+  String loanTimelineInterestSegment(
+    String principal,
+    String from,
+    String to,
+    String amount,
+  );
+
+  /// No description provided for @loanTimelineReverseInterestSegment.
+  ///
+  /// In en, this message translates to:
+  /// **'Reverse interest on credit {principal} ({from}–{to}) → {amount}'**
+  String loanTimelineReverseInterestSegment(
+    String principal,
+    String from,
+    String to,
+    String amount,
+  );
+
+  /// No description provided for @loanTimelinePendingOverpaid.
+  ///
+  /// In en, this message translates to:
+  /// **'{date} — Overpaid {amount}'**
+  String loanTimelinePendingOverpaid(String date, String amount);
 
   /// No description provided for @loanTimelineDeferredSlice.
   ///
