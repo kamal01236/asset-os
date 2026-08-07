@@ -3457,6 +3457,12 @@ abstract class AppLocalizations {
   /// **'Principal'**
   String get loanPrincipalLabel;
 
+  /// No description provided for @loanOriginalPrincipalLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Original principal'**
+  String get loanOriginalPrincipalLabel;
+
   /// No description provided for @loanPrincipalRequired.
   ///
   /// In en, this message translates to:

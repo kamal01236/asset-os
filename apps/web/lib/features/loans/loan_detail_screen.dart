@@ -689,8 +689,23 @@ class _CurrentScenarioCard extends StatelessWidget {
                   ),
             ),
             const SizedBox(height: 12),
-            _kv(context, l10n.loanPrincipalLabel,
-                formatMoney(scenario.principalPaise, currencyCode: loan.currencyCode)),
+            _kv(
+              context,
+              l10n.loanPrincipalLabel,
+              formatMoney(
+                scenario.remainingPrincipalPaise,
+                currencyCode: loan.currencyCode,
+              ),
+            ),
+            if (scenario.remainingPrincipalPaise != scenario.principalPaise)
+              _kv(
+                context,
+                l10n.loanOriginalPrincipalLabel,
+                formatMoney(
+                  scenario.principalPaise,
+                  currencyCode: loan.currencyCode,
+                ),
+              ),
             _kv(context, l10n.loanInterestToDateLabel,
                 formatMoney(scenario.interestAccruedPaise, currencyCode: loan.currencyCode)),
             _kv(context, l10n.loanPaidLabel,

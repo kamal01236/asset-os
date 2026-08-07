@@ -1153,6 +1153,7 @@
   "loanCustomerHint": "ग्राहक चुनें",
   "loanCustomerRequired": "ग्राहक चुनें",
   "loanPrincipalLabel": "मूलधन",
+  "loanOriginalPrincipalLabel": "प्रारंभिक मूलधन",
   "loanPrincipalRequired": "मूलधन राशि दर्ज करें",
   "loanMoneyGivenOnLabel": "पैसे दिए गए दिन",
   "loanDueOptionalLabel": "देय / समाप्ति (वैकल्पिक)",

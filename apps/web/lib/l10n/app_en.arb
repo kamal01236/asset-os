@@ -1153,6 +1153,7 @@
   "loanCustomerHint": "Select customer",
   "loanCustomerRequired": "Select a customer",
   "loanPrincipalLabel": "Principal",
+  "loanOriginalPrincipalLabel": "Original principal",
   "loanPrincipalRequired": "Enter a principal amount",
   "loanMoneyGivenOnLabel": "Money given on",
   "loanDueOptionalLabel": "Due / end (optional)",

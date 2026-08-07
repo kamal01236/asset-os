@@ -1966,6 +1966,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loanPrincipalLabel => 'Principal';
 
   @override
+  String get loanOriginalPrincipalLabel => 'Original principal';
+
+  @override
   String get loanPrincipalRequired => 'Enter a principal amount';
 
   @override

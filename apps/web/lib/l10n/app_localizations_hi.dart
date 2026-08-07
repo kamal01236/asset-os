@@ -1966,6 +1966,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get loanPrincipalLabel => 'मूलधन';
 
   @override
+  String get loanOriginalPrincipalLabel => 'प्रारंभिक मूलधन';
+
+  @override
   String get loanPrincipalRequired => 'मूलधन राशि दर्ज करें';
 
   @override
