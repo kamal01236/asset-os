@@ -1187,6 +1187,8 @@
   "loanInterestCompound": "Compound",
   "loanCalculationFrequencyLabel": "Interest calculation",
   "loanRateDaily": "Daily",
+  "loanInterestAccrualLabel": "Interest accrual",
+  "loanInterestAccrualCalendar": "Calendar period",
   "loanCapitalizationPolicyLabel": "Capitalization",
   "loanCapPolicyNever": "Never",
   "loanCapPolicyOnPayment": "On payment",

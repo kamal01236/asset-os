@@ -1732,6 +1732,7 @@ class LocalRepository {
     MoneyCapitalizationCycle? capitalizationCycle,
     int rateBps = 0,
     MoneyRatePeriod ratePeriod = MoneyRatePeriod.monthly,
+    MoneyInterestAccrual interestAccrual = MoneyInterestAccrual.calendar,
     MoneyPrepaymentAllocation prepaymentAllocation =
         MoneyPrepaymentAllocation.interestThenPrincipal,
     DateTime? interestEndedAt,
@@ -1819,6 +1820,7 @@ class LocalRepository {
           interestKind: Value<String>(legacyKind.name),
           rateBps: Value<int>(rateBps),
           ratePeriod: Value<String>(ratePeriod.name),
+          interestAccrual: Value<String>(interestAccrual.name),
           capitalizationPolicy: Value<String>(effectivePolicy.name),
           capitalizationCycle: Value<String>(effectiveCycle.name),
           interestStartedAt: start,
@@ -1865,6 +1867,7 @@ class LocalRepository {
     MoneyCapitalizationCycle? capitalizationCycle,
     int? rateBps,
     MoneyRatePeriod? ratePeriod,
+    MoneyInterestAccrual? interestAccrual,
     MoneyPrepaymentAllocation? prepaymentAllocation,
     DateTime? interestStartedAt,
     DateTime? interestEndedAt,
@@ -1893,6 +1896,8 @@ class LocalRepository {
             ? existing.capitalizationPolicy
             : MoneyCapitalizationPolicy.fromLegacyInterestKind(interestKind));
     final MoneyRatePeriod nextRatePeriod = ratePeriod ?? existing.ratePeriod;
+    final MoneyInterestAccrual nextAccrual =
+        interestAccrual ?? existing.interestAccrual;
     final MoneyCapitalizationCycle nextCycle = capitalizationCycle ??
         existing.capitalizationCycle;
     final MoneyPrepaymentAllocation nextPrepayment =
@@ -1938,6 +1943,7 @@ class LocalRepository {
         interestKind: Value<String>(legacyKind.name),
         rateBps: Value<int>(nextRate),
         ratePeriod: Value<String>(nextRatePeriod.name),
+        interestAccrual: Value<String>(nextAccrual.name),
         capitalizationPolicy: Value<String>(nextPolicy.name),
         capitalizationCycle: Value<String>(nextCycle.name),
         prepaymentAllocation: Value<String>(nextPrepayment.name),
@@ -2176,6 +2182,12 @@ class LocalRepository {
             MoneyRatePeriod.parse(row.ratePeriod),
           )
         : MoneyCapitalizationCycle.parse(row.capitalizationCycle);
+    // Legacy rate_period=daily → yearly + daily365 (also handled by v18 migrate).
+    final bool legacyDaily = row.ratePeriod == 'daily';
+    final MoneyRatePeriod ratePeriod = MoneyRatePeriod.parse(row.ratePeriod);
+    final MoneyInterestAccrual interestAccrual = legacyDaily
+        ? MoneyInterestAccrual.daily365
+        : MoneyInterestAccrual.parse(row.interestAccrual);
     return MoneyLoan(
       id: row.id,
       customerId: row.customerId,
@@ -2184,7 +2196,8 @@ class LocalRepository {
       currencyCode: row.currencyCode,
       interestKind: legacyKind,
       rateBps: row.rateBps,
-      ratePeriod: MoneyRatePeriod.parse(row.ratePeriod),
+      ratePeriod: ratePeriod,
+      interestAccrual: interestAccrual,
       capitalizationPolicy: policy,
       capitalizationCycle: cycle,
       interestStartedAt: row.interestStartedAt,

@@ -105,7 +105,6 @@ DateTime _dateOnly(DateTime value) =>
 DateTime nextInterestPeriodEnd(DateTime from, MoneyRatePeriod ratePeriod) {
   final DateTime start = _dateOnly(from);
   return switch (ratePeriod) {
-    MoneyRatePeriod.daily => start.add(const Duration(days: 1)),
     MoneyRatePeriod.monthly => addCalendarMonths(start, 1),
     MoneyRatePeriod.yearly => addCalendarMonths(start, 12),
   };
@@ -128,7 +127,6 @@ DateTime nextCapitalizationCycleEnd(
 ///
 /// Yearly: calendar months / 12 (6 months → 0.5). Partial first month falls
 /// back to days / year length. Monthly: days / days-in-period.
-/// Daily: days / 1 within the day period.
 double periodElapsedFraction({
   required DateTime periodStart,
   required DateTime at,
@@ -142,13 +140,6 @@ double periodElapsedFraction({
     return 0.0;
   }
   switch (ratePeriod) {
-    case MoneyRatePeriod.daily:
-      final int periodDays = calendarDaysBetween(start, boundary);
-      final int elapsed = calendarDaysBetween(start, end);
-      if (periodDays <= 0) {
-        return 0.0;
-      }
-      return (elapsed / periodDays).clamp(0.0, 1.0);
     case MoneyRatePeriod.yearly:
       int months =
           (end.year - start.year) * 12 + (end.month - start.month);
@@ -176,21 +167,24 @@ double periodElapsedFraction({
 
 /// Accrual fraction of rate periods between arbitrary [from] and [to].
 ///
-/// Daily uses calendar days / 365. Yearly uses whole calendar months / 12.
-/// Monthly walks month boundaries from [from].
+/// [MoneyInterestAccrual.daily365] uses calendar days / 365 against the stored
+/// rate. Calendar accrual: yearly uses whole calendar months / 12; monthly
+/// walks month boundaries from [from].
 double accrualFraction({
   required DateTime from,
   required DateTime to,
   required MoneyRatePeriod ratePeriod,
+  MoneyInterestAccrual interestAccrual = MoneyInterestAccrual.calendar,
 }) {
   final DateTime start = _dateOnly(from);
   final DateTime end = _dateOnly(to);
   if (!end.isAfter(start)) {
     return 0.0;
   }
+  if (interestAccrual == MoneyInterestAccrual.daily365) {
+    return calendarDaysBetween(start, end) / 365.0;
+  }
   switch (ratePeriod) {
-    case MoneyRatePeriod.daily:
-      return calendarDaysBetween(start, end) / 365.0;
     case MoneyRatePeriod.yearly:
       int months =
           (end.year - start.year) * 12 + (end.month - start.month);
@@ -269,6 +263,7 @@ int signedInterestPaise({
   required DateTime from,
   required DateTime to,
   required MoneyRatePeriod ratePeriod,
+  MoneyInterestAccrual interestAccrual = MoneyInterestAccrual.calendar,
 }) {
   if (balancePaise == 0 || rateBps <= 0) {
     return 0;
@@ -277,6 +272,7 @@ int signedInterestPaise({
     from: from,
     to: to,
     ratePeriod: ratePeriod,
+    interestAccrual: interestAccrual,
   );
   if (fraction == 0) {
     return 0;
@@ -488,6 +484,7 @@ LoanScenario computeLoanScenario({
         from: from,
         to: to,
         ratePeriod: loan.ratePeriod,
+        interestAccrual: loan.interestAccrual,
       );
       if (interest != 0) {
         interestAccrued += interest;

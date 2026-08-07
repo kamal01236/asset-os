@@ -24,7 +24,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 17;
+  int get schemaVersion => 18;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -350,6 +350,17 @@ class AppDatabase extends _$AppDatabase {
               WHEN rate_period = 'yearly' THEN 'yearly'
               ELSE 'monthly'
             END
+        ''');
+      }
+      if (from < 18) {
+        await m.addColumn(moneyLoans, moneyLoans.interestAccrual);
+        // Legacy rate_period=daily → yearly + ACT/365 accrual (same full-year math).
+        await customStatement('''
+          UPDATE money_loans
+          SET
+            interest_accrual = 'daily365',
+            rate_period = 'yearly'
+          WHERE rate_period = 'daily'
         ''');
       }
     },

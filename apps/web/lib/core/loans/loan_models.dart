@@ -27,20 +27,34 @@ enum MoneyInterestKind {
   }
 }
 
-/// Interest calculation frequency (rate applies per this unit).
+/// Interest rate period (rate applies per this unit).
+///
+/// Legacy stored `daily` migrates to [yearly] with [MoneyInterestAccrual.daily365].
 enum MoneyRatePeriod {
-  daily,
   monthly,
   yearly;
 
   static MoneyRatePeriod parse(String? raw) {
-    if (raw == MoneyRatePeriod.yearly.name) {
+    if (raw == MoneyRatePeriod.yearly.name || raw == 'daily') {
       return MoneyRatePeriod.yearly;
     }
-    if (raw == MoneyRatePeriod.daily.name) {
-      return MoneyRatePeriod.daily;
-    }
     return MoneyRatePeriod.monthly;
+  }
+}
+
+/// How elapsed time is converted into a rate-period fraction.
+///
+/// [calendar] uses monthly/yearly calendar logic from [MoneyRatePeriod].
+/// [daily365] uses ACT/365 (`days / 365`) against the stored rate.
+enum MoneyInterestAccrual {
+  calendar,
+  daily365;
+
+  static MoneyInterestAccrual parse(String? raw) {
+    if (raw == MoneyInterestAccrual.daily365.name) {
+      return MoneyInterestAccrual.daily365;
+    }
+    return MoneyInterestAccrual.calendar;
   }
 }
 
@@ -108,8 +122,7 @@ enum MoneyCapitalizationCycle {
   static MoneyCapitalizationCycle fromRatePeriod(MoneyRatePeriod period) {
     return switch (period) {
       MoneyRatePeriod.yearly => MoneyCapitalizationCycle.yearly,
-      MoneyRatePeriod.monthly || MoneyRatePeriod.daily =>
-        MoneyCapitalizationCycle.monthly,
+      MoneyRatePeriod.monthly => MoneyCapitalizationCycle.monthly,
     };
   }
 }
@@ -202,6 +215,7 @@ class MoneyLoan {
     required this.interestStartedAt,
     required this.status,
     required this.createdAt,
+    this.interestAccrual = MoneyInterestAccrual.calendar,
     this.capitalizationPolicy = MoneyCapitalizationPolicy.never,
     this.capitalizationCycle = MoneyCapitalizationCycle.monthly,
     this.prepaymentAllocation =
@@ -221,6 +235,7 @@ class MoneyLoan {
   final MoneyInterestKind interestKind;
   final int rateBps;
   final MoneyRatePeriod ratePeriod;
+  final MoneyInterestAccrual interestAccrual;
   final MoneyCapitalizationPolicy capitalizationPolicy;
   final MoneyCapitalizationCycle capitalizationCycle;
   final DateTime interestStartedAt;
@@ -239,6 +254,7 @@ class MoneyLoan {
     MoneyInterestKind? interestKind,
     int? rateBps,
     MoneyRatePeriod? ratePeriod,
+    MoneyInterestAccrual? interestAccrual,
     MoneyCapitalizationPolicy? capitalizationPolicy,
     MoneyCapitalizationCycle? capitalizationCycle,
     DateTime? interestStartedAt,
@@ -261,6 +277,7 @@ class MoneyLoan {
       interestKind: interestKind ?? this.interestKind,
       rateBps: rateBps ?? this.rateBps,
       ratePeriod: ratePeriod ?? this.ratePeriod,
+      interestAccrual: interestAccrual ?? this.interestAccrual,
       capitalizationPolicy:
           capitalizationPolicy ?? this.capitalizationPolicy,
       capitalizationCycle:

@@ -124,12 +124,13 @@ void main() {
       );
     });
 
-    test('daily uses days / 365', () {
+    test('daily365 uses days / 365', () {
       expect(
         accrualFraction(
           from: DateTime(2026, 1, 1),
           to: DateTime(2026, 1, 16),
-          ratePeriod: MoneyRatePeriod.daily,
+          ratePeriod: MoneyRatePeriod.yearly,
+          interestAccrual: MoneyInterestAccrual.daily365,
         ),
         closeTo(15 / 365, 1e-9),
       );
@@ -951,9 +952,9 @@ void main() {
   });
 
   group('schema', () {
-    test('schemaVersion is 17 with capitalization columns', () async {
+    test('schemaVersion is 18 with interestAccrual column', () async {
       final LocalRepository repo = await bootRepo();
-      expect(repo.database.schemaVersion, 17);
+      expect(repo.database.schemaVersion, 18);
     });
 
     test('createMoneyLoan defaults prepaymentAllocation to interestThenPrincipal',
@@ -1010,6 +1011,7 @@ void main() {
         principalPaise: 250000,
         rateBps: 1500,
         ratePeriod: MoneyRatePeriod.yearly,
+        interestAccrual: MoneyInterestAccrual.daily365,
         capitalizationPolicy: MoneyCapitalizationPolicy.onScheduledCycle,
         capitalizationCycle: MoneyCapitalizationCycle.quarterly,
         prepaymentAllocation: MoneyPrepaymentAllocation.principalOnly,
@@ -1024,6 +1026,7 @@ void main() {
       expect(loan.principalPaise, 250000);
       expect(loan.rateBps, 1500);
       expect(loan.ratePeriod, MoneyRatePeriod.yearly);
+      expect(loan.interestAccrual, MoneyInterestAccrual.daily365);
       expect(
         loan.capitalizationPolicy,
         MoneyCapitalizationPolicy.onScheduledCycle,
@@ -1053,6 +1056,41 @@ void main() {
         repo.updateMoneyLoan(loanId: loanId, principalPaise: 200000),
         throwsA(isA<StateError>()),
       );
+    });
+
+    test('createMoneyLoan persists interestAccrual daily365', () async {
+      final LocalRepository repo = await bootRepo();
+      final customer = await ensureCustomer(repo);
+      final String loanId = await repo.createMoneyLoan(
+        customerId: customer.id,
+        direction: MoneyLoanDirection.given,
+        principalPaise: 100000,
+        interestStartedAt: DateTime(2026, 1, 1),
+        ratePeriod: MoneyRatePeriod.monthly,
+        interestAccrual: MoneyInterestAccrual.daily365,
+      );
+      final MoneyLoan loan = (await repo.getMoneyLoan(loanId))!;
+      expect(loan.ratePeriod, MoneyRatePeriod.monthly);
+      expect(loan.interestAccrual, MoneyInterestAccrual.daily365);
+    });
+
+    test('legacy rate_period daily reads as yearly + daily365', () async {
+      final LocalRepository repo = await bootRepo();
+      final customer = await ensureCustomer(repo);
+      final String loanId = await repo.createMoneyLoan(
+        customerId: customer.id,
+        direction: MoneyLoanDirection.given,
+        principalPaise: 100000,
+        interestStartedAt: DateTime(2026, 1, 1),
+        ratePeriod: MoneyRatePeriod.monthly,
+      );
+      await repo.database.customStatement(
+        "UPDATE money_loans SET rate_period = 'daily', "
+        "interest_accrual = 'calendar' WHERE id = '$loanId'",
+      );
+      final MoneyLoan loan = (await repo.getMoneyLoan(loanId))!;
+      expect(loan.ratePeriod, MoneyRatePeriod.yearly);
+      expect(loan.interestAccrual, MoneyInterestAccrual.daily365);
     });
 
     test('MoneyPrepaymentAllocation.parse defaults unknown to interestThenPrincipal',

@@ -2059,6 +2059,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get loanRateDaily => 'दैनिक';
 
   @override
+  String get loanInterestAccrualLabel => 'ब्याज संचय';
+
+  @override
+  String get loanInterestAccrualCalendar => 'कैलेंडर अवधि';
+
+  @override
   String get loanCapitalizationPolicyLabel => 'पूंजीकरण';
 
   @override

@@ -3631,6 +3631,18 @@ abstract class AppLocalizations {
   /// **'Daily'**
   String get loanRateDaily;
 
+  /// No description provided for @loanInterestAccrualLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Interest accrual'**
+  String get loanInterestAccrualLabel;
+
+  /// No description provided for @loanInterestAccrualCalendar.
+  ///
+  /// In en, this message translates to:
+  /// **'Calendar period'**
+  String get loanInterestAccrualCalendar;
+
   /// No description provided for @loanCapitalizationPolicyLabel.
   ///
   /// In en, this message translates to:
@@ -4012,13 +4024,13 @@ abstract class AppLocalizations {
   /// No description provided for @loanEditSetupTooltip.
   ///
   /// In en, this message translates to:
-  /// **'Edit dates'**
+  /// **'Edit loan'**
   String get loanEditSetupTooltip;
 
   /// No description provided for @loanEditSetupTitle.
   ///
   /// In en, this message translates to:
-  /// **'Edit loan dates'**
+  /// **'Edit loan'**
   String get loanEditSetupTitle;
 
   /// No description provided for @loanSetupSummary.

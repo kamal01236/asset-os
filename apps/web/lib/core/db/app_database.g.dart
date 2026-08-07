@@ -4873,6 +4873,18 @@ class $MoneyLoansTable extends MoneyLoans
     requiredDuringInsert: false,
     defaultValue: const Constant('monthly'),
   );
+  static const VerificationMeta _interestAccrualMeta = const VerificationMeta(
+    'interestAccrual',
+  );
+  @override
+  late final GeneratedColumn<String> interestAccrual = GeneratedColumn<String>(
+    'interest_accrual',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('calendar'),
+  );
   static const VerificationMeta _capitalizationPolicyMeta =
       const VerificationMeta('capitalizationPolicy');
   @override
@@ -4984,6 +4996,7 @@ class $MoneyLoansTable extends MoneyLoans
     interestKind,
     rateBps,
     ratePeriod,
+    interestAccrual,
     capitalizationPolicy,
     capitalizationCycle,
     interestStartedAt,
@@ -5066,6 +5079,15 @@ class $MoneyLoansTable extends MoneyLoans
       context.handle(
         _ratePeriodMeta,
         ratePeriod.isAcceptableOrUnknown(data['rate_period']!, _ratePeriodMeta),
+      );
+    }
+    if (data.containsKey('interest_accrual')) {
+      context.handle(
+        _interestAccrualMeta,
+        interestAccrual.isAcceptableOrUnknown(
+          data['interest_accrual']!,
+          _interestAccrualMeta,
+        ),
       );
     }
     if (data.containsKey('capitalization_policy')) {
@@ -5182,6 +5204,10 @@ class $MoneyLoansTable extends MoneyLoans
         DriftSqlType.string,
         data['${effectivePrefix}rate_period'],
       )!,
+      interestAccrual: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}interest_accrual'],
+      )!,
       capitalizationPolicy: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}capitalization_policy'],
@@ -5244,8 +5270,11 @@ class MoneyLoanRow extends DataClass implements Insertable<MoneyLoanRow> {
   /// Rate in basis points (100 bps = 1%).
   final int rateBps;
 
-  /// Calculation frequency: `daily` | `monthly` | `yearly`
+  /// Rate period: `monthly` | `yearly` (legacy `daily` migrated to yearly).
   final String ratePeriod;
+
+  /// Accrual basis: `calendar` | `daily365` (ACT/365).
+  final String interestAccrual;
 
   /// `never` | `onPayment` | `onScheduledCycle` | `onBalanceDirectionChange` |
   /// `onLoanClosure` | `manual`
@@ -5277,6 +5306,7 @@ class MoneyLoanRow extends DataClass implements Insertable<MoneyLoanRow> {
     required this.interestKind,
     required this.rateBps,
     required this.ratePeriod,
+    required this.interestAccrual,
     required this.capitalizationPolicy,
     required this.capitalizationCycle,
     required this.interestStartedAt,
@@ -5298,6 +5328,7 @@ class MoneyLoanRow extends DataClass implements Insertable<MoneyLoanRow> {
     map['interest_kind'] = Variable<String>(interestKind);
     map['rate_bps'] = Variable<int>(rateBps);
     map['rate_period'] = Variable<String>(ratePeriod);
+    map['interest_accrual'] = Variable<String>(interestAccrual);
     map['capitalization_policy'] = Variable<String>(capitalizationPolicy);
     map['capitalization_cycle'] = Variable<String>(capitalizationCycle);
     map['interest_started_at'] = Variable<DateTime>(interestStartedAt);
@@ -5326,6 +5357,7 @@ class MoneyLoanRow extends DataClass implements Insertable<MoneyLoanRow> {
       interestKind: Value(interestKind),
       rateBps: Value(rateBps),
       ratePeriod: Value(ratePeriod),
+      interestAccrual: Value(interestAccrual),
       capitalizationPolicy: Value(capitalizationPolicy),
       capitalizationCycle: Value(capitalizationCycle),
       interestStartedAt: Value(interestStartedAt),
@@ -5356,6 +5388,7 @@ class MoneyLoanRow extends DataClass implements Insertable<MoneyLoanRow> {
       interestKind: serializer.fromJson<String>(json['interestKind']),
       rateBps: serializer.fromJson<int>(json['rateBps']),
       ratePeriod: serializer.fromJson<String>(json['ratePeriod']),
+      interestAccrual: serializer.fromJson<String>(json['interestAccrual']),
       capitalizationPolicy: serializer.fromJson<String>(
         json['capitalizationPolicy'],
       ),
@@ -5387,6 +5420,7 @@ class MoneyLoanRow extends DataClass implements Insertable<MoneyLoanRow> {
       'interestKind': serializer.toJson<String>(interestKind),
       'rateBps': serializer.toJson<int>(rateBps),
       'ratePeriod': serializer.toJson<String>(ratePeriod),
+      'interestAccrual': serializer.toJson<String>(interestAccrual),
       'capitalizationPolicy': serializer.toJson<String>(capitalizationPolicy),
       'capitalizationCycle': serializer.toJson<String>(capitalizationCycle),
       'interestStartedAt': serializer.toJson<DateTime>(interestStartedAt),
@@ -5408,6 +5442,7 @@ class MoneyLoanRow extends DataClass implements Insertable<MoneyLoanRow> {
     String? interestKind,
     int? rateBps,
     String? ratePeriod,
+    String? interestAccrual,
     String? capitalizationPolicy,
     String? capitalizationCycle,
     DateTime? interestStartedAt,
@@ -5426,6 +5461,7 @@ class MoneyLoanRow extends DataClass implements Insertable<MoneyLoanRow> {
     interestKind: interestKind ?? this.interestKind,
     rateBps: rateBps ?? this.rateBps,
     ratePeriod: ratePeriod ?? this.ratePeriod,
+    interestAccrual: interestAccrual ?? this.interestAccrual,
     capitalizationPolicy: capitalizationPolicy ?? this.capitalizationPolicy,
     capitalizationCycle: capitalizationCycle ?? this.capitalizationCycle,
     interestStartedAt: interestStartedAt ?? this.interestStartedAt,
@@ -5458,6 +5494,9 @@ class MoneyLoanRow extends DataClass implements Insertable<MoneyLoanRow> {
       ratePeriod: data.ratePeriod.present
           ? data.ratePeriod.value
           : this.ratePeriod,
+      interestAccrual: data.interestAccrual.present
+          ? data.interestAccrual.value
+          : this.interestAccrual,
       capitalizationPolicy: data.capitalizationPolicy.present
           ? data.capitalizationPolicy.value
           : this.capitalizationPolicy,
@@ -5491,6 +5530,7 @@ class MoneyLoanRow extends DataClass implements Insertable<MoneyLoanRow> {
           ..write('interestKind: $interestKind, ')
           ..write('rateBps: $rateBps, ')
           ..write('ratePeriod: $ratePeriod, ')
+          ..write('interestAccrual: $interestAccrual, ')
           ..write('capitalizationPolicy: $capitalizationPolicy, ')
           ..write('capitalizationCycle: $capitalizationCycle, ')
           ..write('interestStartedAt: $interestStartedAt, ')
@@ -5514,6 +5554,7 @@ class MoneyLoanRow extends DataClass implements Insertable<MoneyLoanRow> {
     interestKind,
     rateBps,
     ratePeriod,
+    interestAccrual,
     capitalizationPolicy,
     capitalizationCycle,
     interestStartedAt,
@@ -5536,6 +5577,7 @@ class MoneyLoanRow extends DataClass implements Insertable<MoneyLoanRow> {
           other.interestKind == this.interestKind &&
           other.rateBps == this.rateBps &&
           other.ratePeriod == this.ratePeriod &&
+          other.interestAccrual == this.interestAccrual &&
           other.capitalizationPolicy == this.capitalizationPolicy &&
           other.capitalizationCycle == this.capitalizationCycle &&
           other.interestStartedAt == this.interestStartedAt &&
@@ -5556,6 +5598,7 @@ class MoneyLoansCompanion extends UpdateCompanion<MoneyLoanRow> {
   final Value<String> interestKind;
   final Value<int> rateBps;
   final Value<String> ratePeriod;
+  final Value<String> interestAccrual;
   final Value<String> capitalizationPolicy;
   final Value<String> capitalizationCycle;
   final Value<DateTime> interestStartedAt;
@@ -5575,6 +5618,7 @@ class MoneyLoansCompanion extends UpdateCompanion<MoneyLoanRow> {
     this.interestKind = const Value.absent(),
     this.rateBps = const Value.absent(),
     this.ratePeriod = const Value.absent(),
+    this.interestAccrual = const Value.absent(),
     this.capitalizationPolicy = const Value.absent(),
     this.capitalizationCycle = const Value.absent(),
     this.interestStartedAt = const Value.absent(),
@@ -5595,6 +5639,7 @@ class MoneyLoansCompanion extends UpdateCompanion<MoneyLoanRow> {
     this.interestKind = const Value.absent(),
     this.rateBps = const Value.absent(),
     this.ratePeriod = const Value.absent(),
+    this.interestAccrual = const Value.absent(),
     this.capitalizationPolicy = const Value.absent(),
     this.capitalizationCycle = const Value.absent(),
     required DateTime interestStartedAt,
@@ -5620,6 +5665,7 @@ class MoneyLoansCompanion extends UpdateCompanion<MoneyLoanRow> {
     Expression<String>? interestKind,
     Expression<int>? rateBps,
     Expression<String>? ratePeriod,
+    Expression<String>? interestAccrual,
     Expression<String>? capitalizationPolicy,
     Expression<String>? capitalizationCycle,
     Expression<DateTime>? interestStartedAt,
@@ -5640,6 +5686,7 @@ class MoneyLoansCompanion extends UpdateCompanion<MoneyLoanRow> {
       if (interestKind != null) 'interest_kind': interestKind,
       if (rateBps != null) 'rate_bps': rateBps,
       if (ratePeriod != null) 'rate_period': ratePeriod,
+      if (interestAccrual != null) 'interest_accrual': interestAccrual,
       if (capitalizationPolicy != null)
         'capitalization_policy': capitalizationPolicy,
       if (capitalizationCycle != null)
@@ -5665,6 +5712,7 @@ class MoneyLoansCompanion extends UpdateCompanion<MoneyLoanRow> {
     Value<String>? interestKind,
     Value<int>? rateBps,
     Value<String>? ratePeriod,
+    Value<String>? interestAccrual,
     Value<String>? capitalizationPolicy,
     Value<String>? capitalizationCycle,
     Value<DateTime>? interestStartedAt,
@@ -5685,6 +5733,7 @@ class MoneyLoansCompanion extends UpdateCompanion<MoneyLoanRow> {
       interestKind: interestKind ?? this.interestKind,
       rateBps: rateBps ?? this.rateBps,
       ratePeriod: ratePeriod ?? this.ratePeriod,
+      interestAccrual: interestAccrual ?? this.interestAccrual,
       capitalizationPolicy: capitalizationPolicy ?? this.capitalizationPolicy,
       capitalizationCycle: capitalizationCycle ?? this.capitalizationCycle,
       interestStartedAt: interestStartedAt ?? this.interestStartedAt,
@@ -5724,6 +5773,9 @@ class MoneyLoansCompanion extends UpdateCompanion<MoneyLoanRow> {
     }
     if (ratePeriod.present) {
       map['rate_period'] = Variable<String>(ratePeriod.value);
+    }
+    if (interestAccrual.present) {
+      map['interest_accrual'] = Variable<String>(interestAccrual.value);
     }
     if (capitalizationPolicy.present) {
       map['capitalization_policy'] = Variable<String>(
@@ -5773,6 +5825,7 @@ class MoneyLoansCompanion extends UpdateCompanion<MoneyLoanRow> {
           ..write('interestKind: $interestKind, ')
           ..write('rateBps: $rateBps, ')
           ..write('ratePeriod: $ratePeriod, ')
+          ..write('interestAccrual: $interestAccrual, ')
           ..write('capitalizationPolicy: $capitalizationPolicy, ')
           ..write('capitalizationCycle: $capitalizationCycle, ')
           ..write('interestStartedAt: $interestStartedAt, ')
@@ -8590,6 +8643,7 @@ typedef $$MoneyLoansTableCreateCompanionBuilder =
       Value<String> interestKind,
       Value<int> rateBps,
       Value<String> ratePeriod,
+      Value<String> interestAccrual,
       Value<String> capitalizationPolicy,
       Value<String> capitalizationCycle,
       required DateTime interestStartedAt,
@@ -8611,6 +8665,7 @@ typedef $$MoneyLoansTableUpdateCompanionBuilder =
       Value<String> interestKind,
       Value<int> rateBps,
       Value<String> ratePeriod,
+      Value<String> interestAccrual,
       Value<String> capitalizationPolicy,
       Value<String> capitalizationCycle,
       Value<DateTime> interestStartedAt,
@@ -8669,6 +8724,11 @@ class $$MoneyLoansTableFilterComposer
 
   ColumnFilters<String> get ratePeriod => $composableBuilder(
     column: $table.ratePeriod,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get interestAccrual => $composableBuilder(
+    column: $table.interestAccrual,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -8767,6 +8827,11 @@ class $$MoneyLoansTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get interestAccrual => $composableBuilder(
+    column: $table.interestAccrual,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get capitalizationPolicy => $composableBuilder(
     column: $table.capitalizationPolicy,
     builder: (column) => ColumnOrderings(column),
@@ -8856,6 +8921,11 @@ class $$MoneyLoansTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get interestAccrual => $composableBuilder(
+    column: $table.interestAccrual,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get capitalizationPolicy => $composableBuilder(
     column: $table.capitalizationPolicy,
     builder: (column) => column,
@@ -8933,6 +9003,7 @@ class $$MoneyLoansTableTableManager
                 Value<String> interestKind = const Value.absent(),
                 Value<int> rateBps = const Value.absent(),
                 Value<String> ratePeriod = const Value.absent(),
+                Value<String> interestAccrual = const Value.absent(),
                 Value<String> capitalizationPolicy = const Value.absent(),
                 Value<String> capitalizationCycle = const Value.absent(),
                 Value<DateTime> interestStartedAt = const Value.absent(),
@@ -8952,6 +9023,7 @@ class $$MoneyLoansTableTableManager
                 interestKind: interestKind,
                 rateBps: rateBps,
                 ratePeriod: ratePeriod,
+                interestAccrual: interestAccrual,
                 capitalizationPolicy: capitalizationPolicy,
                 capitalizationCycle: capitalizationCycle,
                 interestStartedAt: interestStartedAt,
@@ -8973,6 +9045,7 @@ class $$MoneyLoansTableTableManager
                 Value<String> interestKind = const Value.absent(),
                 Value<int> rateBps = const Value.absent(),
                 Value<String> ratePeriod = const Value.absent(),
+                Value<String> interestAccrual = const Value.absent(),
                 Value<String> capitalizationPolicy = const Value.absent(),
                 Value<String> capitalizationCycle = const Value.absent(),
                 required DateTime interestStartedAt,
@@ -8992,6 +9065,7 @@ class $$MoneyLoansTableTableManager
                 interestKind: interestKind,
                 rateBps: rateBps,
                 ratePeriod: ratePeriod,
+                interestAccrual: interestAccrual,
                 capitalizationPolicy: capitalizationPolicy,
                 capitalizationCycle: capitalizationCycle,
                 interestStartedAt: interestStartedAt,

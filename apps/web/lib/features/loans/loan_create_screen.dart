@@ -12,17 +12,20 @@ import '../../core/validation/text_rules.dart';
 import '../../core/widgets/ui_primitives.dart';
 import 'loan_detail_screen.dart';
 
-/// Create a cash loan now; start date can be backfilled.
+/// Create or edit a cash loan; start date can be backfilled.
 ///
 /// Customer is name + phone with typeahead (New Order pattern). Cash loans
 /// require a real phone — no Unknown / no-phone path on this screen.
+/// Pass [loanId] to edit an existing pending loan (customer is read-only).
 class LoanCreateScreen extends ConsumerStatefulWidget {
   const LoanCreateScreen({
     this.initialCustomerId,
+    this.loanId,
     super.key,
   });
 
   final String? initialCustomerId;
+  final String? loanId;
 
   @override
   ConsumerState<LoanCreateScreen> createState() => _LoanCreateScreenState();
@@ -41,6 +44,7 @@ class _LoanCreateScreenState extends ConsumerState<LoanCreateScreen> {
   MoneyPrepaymentAllocation _prepaymentAllocation =
       MoneyPrepaymentAllocation.interestThenPrincipal;
   MoneyRatePeriod _ratePeriod = MoneyRatePeriod.monthly;
+  MoneyInterestAccrual _interestAccrual = MoneyInterestAccrual.calendar;
   DateTime _startedAt = DateTime.now();
   DateTime? _endedAt;
   bool _hasAdvancePayment = false;
@@ -48,8 +52,12 @@ class _LoanCreateScreenState extends ConsumerState<LoanCreateScreen> {
   Customer? _resolvedCustomer;
   List<Customer> _suggestions = const <Customer>[];
   bool _prefillApplied = false;
+  bool _editLoaded = false;
+  bool _loadingEdit = false;
   bool _saving = false;
   int _lookupGen = 0;
+
+  bool get _isEdit => widget.loanId != null;
 
   @override
   void initState() {
@@ -58,7 +66,11 @@ class _LoanCreateScreenState extends ConsumerState<LoanCreateScreen> {
     _startedAt = DateTime(now.year, now.month, now.day);
     _advancePaidAt = _startedAt;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _applyPrefill();
+      if (_isEdit) {
+        _loadLoanForEdit();
+      } else {
+        _applyPrefill();
+      }
     });
   }
 
@@ -88,8 +100,73 @@ class _LoanCreateScreenState extends ConsumerState<LoanCreateScreen> {
     }
   }
 
+  Future<void> _loadLoanForEdit() async {
+    if (_editLoaded || !mounted) {
+      return;
+    }
+    final String? loanId = widget.loanId;
+    if (loanId == null) {
+      return;
+    }
+    setState(() => _loadingEdit = true);
+    final LocalRepository repository = ref.read(repositoryProvider);
+    final MoneyLoan? loan = await repository.getMoneyLoan(loanId);
+    if (!mounted) {
+      return;
+    }
+    if (loan == null || loan.status != MoneyLoanStatus.pending) {
+      setState(() => _loadingEdit = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.loanNotFound)),
+      );
+      Navigator.of(context).pop();
+      return;
+    }
+    Customer? customer = await repository.customerById(loan.customerId);
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _editLoaded = true;
+      _loadingEdit = false;
+      _direction = loan.direction;
+      _principalCtrl.text = paiseToRupeesField(loan.principalPaise);
+      _rateCtrl.text = loan.rateBps % 100 == 0
+          ? '${loan.rateBps ~/ 100}'
+          : (loan.rateBps / 100).toStringAsFixed(2);
+      _ratePeriod = loan.ratePeriod;
+      _interestAccrual = loan.interestAccrual;
+      _capPolicy = loan.capitalizationPolicy;
+      _capCycle = loan.capitalizationCycle;
+      _prepaymentAllocation = loan.prepaymentAllocation;
+      _startedAt = DateTime(
+        loan.interestStartedAt.year,
+        loan.interestStartedAt.month,
+        loan.interestStartedAt.day,
+      );
+      _endedAt = loan.interestEndedAt == null
+          ? null
+          : DateTime(
+              loan.interestEndedAt!.year,
+              loan.interestEndedAt!.month,
+              loan.interestEndedAt!.day,
+            );
+      _noteCtrl.text = loan.note ?? '';
+      _hasAdvancePayment = false;
+      if (customer != null && !isUnknownCustomer(customer)) {
+        _resolvedCustomer = customer;
+        _phoneController.text = customer.phone;
+        _nameController.text = customer.name;
+      } else {
+        _phoneController.text = '';
+        _nameController.text = loan.customerId;
+      }
+      _suggestions = const <Customer>[];
+    });
+  }
+
   Future<void> _applyPrefill() async {
-    if (_prefillApplied || !mounted) {
+    if (_isEdit || _prefillApplied || !mounted) {
       return;
     }
     _prefillApplied = true;
@@ -216,9 +293,19 @@ class _LoanCreateScreenState extends ConsumerState<LoanCreateScreen> {
   @override
   Widget build(BuildContext context) {
     final AppLocalizations l10n = context.l10n;
+    final bool customerReadOnly = _isEdit;
+
+    if (_isEdit && _loadingEdit && !_editLoaded) {
+      return Scaffold(
+        appBar: AppBar(title: Text(l10n.loanEditSetupTitle)),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.loanCreateTitle)),
+      appBar: AppBar(
+        title: Text(_isEdit ? l10n.loanEditSetupTitle : l10n.loanCreateTitle),
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: <Widget>[
@@ -226,26 +313,30 @@ class _LoanCreateScreenState extends ConsumerState<LoanCreateScreen> {
           const SizedBox(height: 8),
           TextField(
             controller: _phoneController,
+            enabled: !customerReadOnly,
+            readOnly: customerReadOnly,
             keyboardType: TextInputType.phone,
             decoration: InputDecoration(
               labelText: l10n.phoneNumberLabel,
               hintText: l10n.phoneNumberHint,
               border: const OutlineInputBorder(),
             ),
-            onChanged: (_) => _onCustomerFieldsChanged(),
+            onChanged: customerReadOnly ? null : (_) => _onCustomerFieldsChanged(),
           ),
           const SizedBox(height: 8),
           TextField(
             controller: _nameController,
+            enabled: !customerReadOnly,
+            readOnly: customerReadOnly,
             textCapitalization: TextCapitalization.words,
             decoration: InputDecoration(
               labelText: l10n.customerNameNewLabel,
               hintText: l10n.customerNameNewHint,
               border: const OutlineInputBorder(),
             ),
-            onChanged: (_) => _onCustomerFieldsChanged(),
+            onChanged: customerReadOnly ? null : (_) => _onCustomerFieldsChanged(),
           ),
-          if (_suggestions.isNotEmpty) ...<Widget>[
+          if (!customerReadOnly && _suggestions.isNotEmpty) ...<Widget>[
             const SizedBox(height: 4),
             DecoratedBox(
               decoration: BoxDecoration(
@@ -270,7 +361,8 @@ class _LoanCreateScreenState extends ConsumerState<LoanCreateScreen> {
               ),
             ),
           ],
-          if (_suggestions.isEmpty &&
+          if (!customerReadOnly &&
+              _suggestions.isEmpty &&
               (_nameController.text.trim().length >= kMinMeaningfulTextLength ||
                   _phoneController.text.trim().length >=
                       kMinMeaningfulTextLength) &&
@@ -372,50 +464,52 @@ class _LoanCreateScreenState extends ConsumerState<LoanCreateScreen> {
               }
             },
           ),
-          SwitchListTile(
-            contentPadding: EdgeInsets.zero,
-            title: Text(l10n.loanAdvancePaymentFlag),
-            subtitle: Text(l10n.loanAdvancePaymentHint),
-            value: _hasAdvancePayment,
-            onChanged: (bool value) {
-              setState(() {
-                _hasAdvancePayment = value;
-                if (value) {
-                  _advancePaidAt = _startedAt;
-                  _clampAdvancePaidAt();
-                }
-              });
-            },
-          ),
-          if (_hasAdvancePayment) ...<Widget>[
-            TextField(
-              controller: _advanceAmountCtrl,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              decoration: InputDecoration(
-                labelText: l10n.loanAdvancePaymentAmountLabel,
-                border: const OutlineInputBorder(),
-                prefixText: '₹ ',
-              ),
-            ),
-            ListTile(
+          if (!_isEdit) ...<Widget>[
+            SwitchListTile(
               contentPadding: EdgeInsets.zero,
-              title: Text(l10n.loanAdvancePaymentDateLabel),
-              subtitle: Text(formatIndiaDate(_advancePaidAt)),
-              trailing: const Icon(Icons.calendar_today_outlined),
-              onTap: () async {
-                final DateTime? picked = await showDatePicker(
-                  context: context,
-                  locale: indiaDatePickerLocale(context),
-                  initialDate: _advancePaidAt,
-                  firstDate: _startedAt,
-                  lastDate: _todayOnly,
-                );
-                if (picked != null) {
-                  setState(() => _advancePaidAt = picked);
-                }
+              title: Text(l10n.loanAdvancePaymentFlag),
+              subtitle: Text(l10n.loanAdvancePaymentHint),
+              value: _hasAdvancePayment,
+              onChanged: (bool value) {
+                setState(() {
+                  _hasAdvancePayment = value;
+                  if (value) {
+                    _advancePaidAt = _startedAt;
+                    _clampAdvancePaidAt();
+                  }
+                });
               },
             ),
+            if (_hasAdvancePayment) ...<Widget>[
+              TextField(
+                controller: _advanceAmountCtrl,
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                decoration: InputDecoration(
+                  labelText: l10n.loanAdvancePaymentAmountLabel,
+                  border: const OutlineInputBorder(),
+                  prefixText: '₹ ',
+                ),
+              ),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(l10n.loanAdvancePaymentDateLabel),
+                subtitle: Text(formatIndiaDate(_advancePaidAt)),
+                trailing: const Icon(Icons.calendar_today_outlined),
+                onTap: () async {
+                  final DateTime? picked = await showDatePicker(
+                    context: context,
+                    locale: indiaDatePickerLocale(context),
+                    initialDate: _advancePaidAt,
+                    firstDate: _startedAt,
+                    lastDate: _todayOnly,
+                  );
+                  if (picked != null) {
+                    setState(() => _advancePaidAt = picked);
+                  }
+                },
+              ),
+            ],
           ],
           const SizedBox(height: 8),
           Text(
@@ -444,10 +538,6 @@ class _LoanCreateScreenState extends ConsumerState<LoanCreateScreen> {
                   value: _ratePeriod,
                   items: <DropdownMenuItem<MoneyRatePeriod>>[
                     DropdownMenuItem<MoneyRatePeriod>(
-                      value: MoneyRatePeriod.daily,
-                      child: Text(l10n.loanRateDaily),
-                    ),
-                    DropdownMenuItem<MoneyRatePeriod>(
                       value: MoneyRatePeriod.monthly,
                       child: Text(l10n.loanRateMonthly),
                     ),
@@ -475,6 +565,30 @@ class _LoanCreateScreenState extends ConsumerState<LoanCreateScreen> {
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 12),
+          DropdownButtonFormField<MoneyInterestAccrual>(
+            // ignore: deprecated_member_use
+            value: _interestAccrual,
+            items: <DropdownMenuItem<MoneyInterestAccrual>>[
+              DropdownMenuItem<MoneyInterestAccrual>(
+                value: MoneyInterestAccrual.calendar,
+                child: Text(l10n.loanInterestAccrualCalendar),
+              ),
+              DropdownMenuItem<MoneyInterestAccrual>(
+                value: MoneyInterestAccrual.daily365,
+                child: Text(l10n.loanRateDaily),
+              ),
+            ],
+            onChanged: (MoneyInterestAccrual? v) {
+              if (v != null) {
+                setState(() => _interestAccrual = v);
+              }
+            },
+            decoration: InputDecoration(
+              labelText: l10n.loanInterestAccrualLabel,
+              border: const OutlineInputBorder(),
+            ),
           ),
           const SizedBox(height: 16),
           Text(
@@ -615,7 +729,11 @@ class _LoanCreateScreenState extends ConsumerState<LoanCreateScreen> {
           const SizedBox(height: 24),
           FilledButton(
             onPressed: _saving ? null : _save,
-            child: Text(_saving ? l10n.loanSaving : l10n.loanCreateAction),
+            child: Text(
+              _saving
+                  ? l10n.loanSaving
+                  : (_isEdit ? l10n.loanSaveEntry : l10n.loanCreateAction),
+            ),
           ),
         ],
       ),
@@ -624,7 +742,13 @@ class _LoanCreateScreenState extends ConsumerState<LoanCreateScreen> {
 
   Future<void> _save() async {
     final AppLocalizations l10n = context.l10n;
-    if (!_validateCustomerOrSnack()) {
+    if (!_isEdit && !_validateCustomerOrSnack()) {
+      return;
+    }
+    if (_isEdit && _resolvedCustomer == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.loanNotFound)),
+      );
       return;
     }
     final int principal = parseRupeesToPaise(_principalCtrl.text);
@@ -636,7 +760,7 @@ class _LoanCreateScreenState extends ConsumerState<LoanCreateScreen> {
     }
     int? advancePaise;
     DateTime? advanceAt;
-    if (_hasAdvancePayment) {
+    if (!_isEdit && _hasAdvancePayment) {
       advancePaise = parseRupeesToPaise(_advanceAmountCtrl.text);
       if (advancePaise <= 0) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -689,6 +813,32 @@ class _LoanCreateScreenState extends ConsumerState<LoanCreateScreen> {
     setState(() => _saving = true);
     try {
       final LocalRepository repository = ref.read(repositoryProvider);
+      if (_isEdit) {
+        final String loanId = widget.loanId!;
+        await repository.updateMoneyLoan(
+          loanId: loanId,
+          direction: _direction,
+          principalPaise: principal,
+          capitalizationPolicy: _capPolicy,
+          capitalizationCycle: _capCycle,
+          rateBps: rateBps,
+          ratePeriod: _ratePeriod,
+          interestAccrual: _interestAccrual,
+          prepaymentAllocation: _prepaymentAllocation,
+          interestStartedAt: _startedAt,
+          interestEndedAt: _endedAt,
+          clearInterestEndedAt: _endedAt == null,
+          note: note ?? '',
+          clearNote: note == null,
+        );
+        if (!mounted) {
+          return;
+        }
+        ref.invalidate(moneyLoansProvider);
+        Navigator.of(context).pop();
+        return;
+      }
+
       Customer? resolved = _resolvedCustomer;
       if (resolved == null &&
           widget.initialCustomerId != null &&
@@ -711,6 +861,7 @@ class _LoanCreateScreenState extends ConsumerState<LoanCreateScreen> {
             capitalizationCycle: _capCycle,
             rateBps: rateBps,
             ratePeriod: _ratePeriod,
+            interestAccrual: _interestAccrual,
             prepaymentAllocation: _prepaymentAllocation,
             note: note,
             advancePaymentPaise: advancePaise,

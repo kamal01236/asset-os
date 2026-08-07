@@ -1187,6 +1187,8 @@
   "loanInterestCompound": "चक्रवृद्धि",
   "loanCalculationFrequencyLabel": "ब्याज गणना",
   "loanRateDaily": "दैनिक",
+  "loanInterestAccrualLabel": "ब्याज संचय",
+  "loanInterestAccrualCalendar": "कैलेंडर अवधि",
   "loanCapitalizationPolicyLabel": "पूंजीकरण",
   "loanCapPolicyNever": "कभी नहीं",
   "loanCapPolicyOnPayment": "भुगतान पर",

@@ -185,8 +185,11 @@ class MoneyLoans extends Table {
   TextColumn get interestKind => text().withDefault(const Constant('simple'))();
   /// Rate in basis points (100 bps = 1%).
   IntColumn get rateBps => integer().withDefault(const Constant(0))();
-  /// Calculation frequency: `daily` | `monthly` | `yearly`
+  /// Rate period: `monthly` | `yearly` (legacy `daily` migrated to yearly).
   TextColumn get ratePeriod => text().withDefault(const Constant('monthly'))();
+  /// Accrual basis: `calendar` | `daily365` (ACT/365).
+  TextColumn get interestAccrual =>
+      text().withDefault(const Constant('calendar'))();
   /// `never` | `onPayment` | `onScheduledCycle` | `onBalanceDirectionChange` |
   /// `onLoanClosure` | `manual`
   TextColumn get capitalizationPolicy =>
