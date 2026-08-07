@@ -2000,7 +2000,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get loanPeriodEndInterestHint =>
-      'अवधि के बीच भुगतान मूलधन घटाते हैं और चुकाई राशि पर बीते समय का आनुपातिक ब्याज जोड़ते हैं। वह ब्याज, और शेष मूलधन पर पूरी अवधि का ब्याज, हर महीने या साल की सालगिरह पर मूलधन में जुड़ जाता है।';
+      'अवधि के बीच चुकौती मूलधन घटाती है और बकाया समय का आनुपातिक ब्याज जोड़ती है। जोड़ा मूलधन अवधि अंत तक आनुपातिक ब्याज कमाता है। वह ब्याज, और पूरी अवधि बकाया मूलधन पर ब्याज, हर महीने या साल की सालगिरह पर मूलधन में जुड़ जाता है।';
 
   @override
   String get loanRateInvalid => 'मान्य दर दर्ज करें';
@@ -2030,13 +2030,34 @@ class AppLocalizationsHi extends AppLocalizations {
   String get loanAddPayment => 'भुगतान जोड़ें';
 
   @override
+  String get loanAddPrincipal => 'मूलधन बढ़ाएँ';
+
+  @override
   String get loanAddAdjustment => 'समायोजन जोड़ें';
 
   @override
   String get loanEntryDateLabel => 'तारीख';
 
   @override
-  String get loanPaymentAmountLabel => 'भुगतान राशि';
+  String get loanFlowRepayment => 'चुकौती';
+
+  @override
+  String get loanFlowAddPrincipal => 'मूलधन बढ़ाएँ';
+
+  @override
+  String get loanFlowRepaymentGiven => 'पार्टी से प्राप्त';
+
+  @override
+  String get loanFlowRepaymentTaken => 'वापस चुकाया';
+
+  @override
+  String get loanFlowDisbursementGiven => 'और दिया';
+
+  @override
+  String get loanFlowDisbursementTaken => 'और लिया';
+
+  @override
+  String get loanPaymentAmountLabel => 'राशि';
 
   @override
   String get loanAdjustmentAmountLabel => 'समायोजन राशि';
@@ -2112,6 +2133,15 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
+  String loanTimelineDeferredAddSlice(
+    String principal,
+    String date,
+    String amount,
+  ) {
+    return 'जोड़े $principal पर ब्याज $date से अवधि अंत तक → $amount (अवधि अंत में जुड़ेगा)';
+  }
+
+  @override
   String loanTimelinePeriodEndSlice(
     String repaid,
     String from,
@@ -2119,6 +2149,16 @@ class AppLocalizationsHi extends AppLocalizations {
     String interest,
   ) {
     return 'भुगतान $repaid पर ब्याज ($from–$to) → $interest (मूलधन में जोड़ा)';
+  }
+
+  @override
+  String loanTimelinePeriodEndAddSlice(
+    String added,
+    String from,
+    String to,
+    String interest,
+  ) {
+    return 'जोड़े मूलधन $added पर ब्याज ($from–$to) → $interest (मूलधन में जोड़ा)';
   }
 
   @override
@@ -2133,7 +2173,12 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String loanTimelinePayment(String date, String amount, String principal) {
-    return '$date — भुगतान $amount → मूलधन $principal';
+    return '$date — चुकौती $amount → मूलधन $principal';
+  }
+
+  @override
+  String loanTimelineDisbursement(String date, String amount) {
+    return '$date — मूलधन जोड़ा $amount';
   }
 
   @override

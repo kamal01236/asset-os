@@ -88,7 +88,7 @@ void main() {
             loanId: 'MLN-1L',
             entryAt: DateTime(2026, 7, 1),
             amountPaise: 5000000, // ₹50,000
-            kind: MoneyLoanEntryKind.payment,
+            kind: MoneyLoanEntryKind.repayment,
           ),
         ],
       );
@@ -141,7 +141,7 @@ void main() {
             loanId: 'MLN-1L-ann',
             entryAt: DateTime(2026, 7, 1),
             amountPaise: 5000000,
-            kind: MoneyLoanEntryKind.payment,
+            kind: MoneyLoanEntryKind.repayment,
           ),
         ],
       );
@@ -204,14 +204,14 @@ void main() {
             loanId: 'MLN-1L-two',
             entryAt: DateTime(2026, 4, 1),
             amountPaise: 3000000, // ₹30,000 at 3 months
-            kind: MoneyLoanEntryKind.payment,
+            kind: MoneyLoanEntryKind.repayment,
           ),
           MoneyLoanEntry(
             id: 'E2',
             loanId: 'MLN-1L-two',
             entryAt: DateTime(2026, 7, 1),
             amountPaise: 2000000, // ₹20,000 at 6 months
-            kind: MoneyLoanEntryKind.payment,
+            kind: MoneyLoanEntryKind.repayment,
           ),
         ],
       );
@@ -261,6 +261,153 @@ void main() {
       );
     });
 
+    test('₹1L yearly: mid-period add principal defers remainder interest', () {
+      final MoneyLoan loan = MoneyLoan(
+        id: 'MLN-1L-add',
+        customerId: 'C1',
+        direction: MoneyLoanDirection.given,
+        principalPaise: 10000000, // ₹1,00,000
+        currencyCode: 'INR',
+        interestKind: MoneyInterestKind.simple,
+        rateBps: 1200, // 12%/year
+        ratePeriod: MoneyRatePeriod.yearly,
+        interestStartedAt: DateTime(2026, 1, 1),
+        status: MoneyLoanStatus.pending,
+        createdAt: DateTime(2026, 7, 1),
+        entries: <MoneyLoanEntry>[
+          MoneyLoanEntry(
+            id: 'E-add',
+            loanId: 'MLN-1L-add',
+            entryAt: DateTime(2026, 7, 1),
+            amountPaise: 5000000, // ₹50,000 top-up
+            kind: MoneyLoanEntryKind.disbursement,
+          ),
+        ],
+      );
+
+      final LoanScenario midYear = computeLoanScenario(
+        loan: loan,
+        now: DateTime(2026, 7, 1),
+      );
+      // Remainder on add: 50000 × 12% × 6/12 = ₹3,000
+      expect(midYear.interestAccruedPaise, 300000);
+      expect(midYear.remainingPrincipalPaise, 15000000);
+      expect(midYear.unpaidInterestPaise, 300000);
+      expect(midYear.pendingPaise, 15300000);
+      final LoanTimelineEvent deferredAdd = midYear.timeline.firstWhere(
+        (LoanTimelineEvent e) =>
+            e.kind == LoanTimelineKind.deferredAddSliceInterest,
+      );
+      expect(deferredAdd.amountPaise, 300000);
+      expect(deferredAdd.principalBasisPaise, 5000000);
+      expect(deferredAdd.from, DateTime(2026, 7, 1));
+      expect(deferredAdd.through, DateTime(2027, 1, 1));
+
+      final LoanScenario after = computeLoanScenario(
+        loan: loan,
+        now: DateTime(2027, 1, 1),
+      );
+      // Add slice 3000 + full-period on 100k = 12000 → interest ₹15,000
+      // Principal now: 150000 + 15000 = ₹1,65,000
+      expect(after.interestAccruedPaise, 1500000);
+      expect(after.remainingPrincipalPaise, 16500000);
+      expect(after.pendingPaise, 16500000);
+      expect(after.unpaidInterestPaise, 0);
+
+      final List<LoanTimelineEvent> endRows = after.timeline
+          .where(
+            (LoanTimelineEvent e) =>
+                e.at == DateTime(2027, 1, 1) &&
+                e.kind != LoanTimelineKind.pendingAsOf,
+          )
+          .toList();
+      expect(endRows, hasLength(3));
+      expect(endRows[0].kind, LoanTimelineKind.periodEndAddSliceInterest);
+      expect(endRows[0].amountPaise, 300000);
+      expect(endRows[0].principalBasisPaise, 5000000);
+      expect(endRows[1].kind, LoanTimelineKind.remainingPeriodInterest);
+      expect(endRows[1].amountPaise, 1200000);
+      expect(endRows[1].principalBasisPaise, 10000000);
+      expect(endRows[2].kind, LoanTimelineKind.principalAfterCapitalize);
+      expect(endRows[2].amountPaise, 16500000);
+    });
+
+    test('₹1L yearly: repay + mid-period top-up → both slices + full-period core',
+        () {
+      final MoneyLoan loan = MoneyLoan(
+        id: 'MLN-1L-both',
+        customerId: 'C1',
+        direction: MoneyLoanDirection.given,
+        principalPaise: 10000000,
+        currencyCode: 'INR',
+        interestKind: MoneyInterestKind.simple,
+        rateBps: 1200,
+        ratePeriod: MoneyRatePeriod.yearly,
+        interestStartedAt: DateTime(2026, 1, 1),
+        status: MoneyLoanStatus.pending,
+        createdAt: DateTime(2027, 1, 1),
+        entries: <MoneyLoanEntry>[
+          MoneyLoanEntry(
+            id: 'E-repay',
+            loanId: 'MLN-1L-both',
+            entryAt: DateTime(2026, 7, 1),
+            amountPaise: 5000000,
+            kind: MoneyLoanEntryKind.repayment,
+          ),
+          MoneyLoanEntry(
+            id: 'E-add',
+            loanId: 'MLN-1L-both',
+            entryAt: DateTime(2026, 10, 1),
+            amountPaise: 3000000,
+            kind: MoneyLoanEntryKind.disbursement,
+          ),
+        ],
+      );
+
+      final LoanScenario after = computeLoanScenario(
+        loan: loan,
+        now: DateTime(2027, 1, 1),
+      );
+      // Repay slice: 50000×12%×6/12 = ₹3,000
+      // Add slice: 30000×12%×3/12 = ₹900
+      // Full-period core: (100000-50000)×12% = ₹6,000
+      // Principal before cap: 80000; after: 80000+3000+900+6000 = ₹89,900
+      expect(after.interestAccruedPaise, 990000);
+      expect(after.remainingPrincipalPaise, 8990000);
+      expect(after.pendingPaise, 8990000);
+
+      final List<LoanTimelineEvent> endRows = after.timeline
+          .where(
+            (LoanTimelineEvent e) =>
+                e.at == DateTime(2027, 1, 1) &&
+                e.kind != LoanTimelineKind.pendingAsOf,
+          )
+          .toList();
+      expect(endRows, hasLength(4));
+      expect(endRows[0].kind, LoanTimelineKind.periodEndSliceInterest);
+      expect(endRows[0].amountPaise, 300000);
+      expect(endRows[1].kind, LoanTimelineKind.periodEndAddSliceInterest);
+      expect(endRows[1].amountPaise, 90000);
+      expect(endRows[1].principalBasisPaise, 3000000);
+      expect(endRows[2].kind, LoanTimelineKind.remainingPeriodInterest);
+      expect(endRows[2].amountPaise, 600000);
+      expect(endRows[2].principalBasisPaise, 5000000);
+      expect(endRows[3].kind, LoanTimelineKind.principalAfterCapitalize);
+      expect(endRows[3].amountPaise, 8990000);
+    });
+
+    test('legacy kind payment parses as repayment', () {
+      expect(MoneyLoanEntryKind.parse('payment'), MoneyLoanEntryKind.repayment);
+      expect(
+        MoneyLoanEntryKind.parse('repayment'),
+        MoneyLoanEntryKind.repayment,
+      );
+      expect(
+        MoneyLoanEntryKind.parse('disbursement'),
+        MoneyLoanEntryKind.disbursement,
+      );
+    });
+
     test('monthly: mid-period repay defers day-pro-rata slice; month-end caps',
         () {
       final MoneyLoan loan = MoneyLoan(
@@ -281,7 +428,7 @@ void main() {
             loanId: 'MLN-mo-slice',
             entryAt: DateTime(2026, 1, 16),
             amountPaise: 5000000, // ₹50,000
-            kind: MoneyLoanEntryKind.payment,
+            kind: MoneyLoanEntryKind.repayment,
           ),
         ],
       );
@@ -426,14 +573,14 @@ void main() {
             loanId: 'MLN-1',
             entryAt: DateTime(2026, 4, 1),
             amountPaise: 300000,
-            kind: MoneyLoanEntryKind.payment,
+            kind: MoneyLoanEntryKind.repayment,
           ),
           MoneyLoanEntry(
             id: 'E2',
             loanId: 'MLN-1',
             entryAt: DateTime(2026, 6, 1),
             amountPaise: 200000,
-            kind: MoneyLoanEntryKind.payment,
+            kind: MoneyLoanEntryKind.repayment,
           ),
         ],
       );
@@ -515,7 +662,7 @@ void main() {
         loanId: loanId,
         entryAt: DateTime(2026, 2, 1),
         amountPaise: 60000,
-        kind: MoneyLoanEntryKind.payment,
+        kind: MoneyLoanEntryKind.repayment,
       );
       MoneyLoan? loan = await repo.getMoneyLoan(loanId);
       LoanScenario scenario = computeLoanScenario(
@@ -554,7 +701,7 @@ void main() {
         loanId: loanId,
         entryAt: DateTime.now(),
         amountPaise: 100000,
-        kind: MoneyLoanEntryKind.payment,
+        kind: MoneyLoanEntryKind.repayment,
       );
       final MoneyLoan loan = (await repo.getMoneyLoan(loanId))!;
       final LoanScenario scenario = computeLoanScenario(loan: loan);
@@ -603,7 +750,7 @@ void main() {
         loanId: loanId,
         entryAt: DateTime.now(),
         amountPaise: 100000,
-        kind: MoneyLoanEntryKind.payment,
+        kind: MoneyLoanEntryKind.repayment,
       );
       MoneyLoan loan = (await repo.getMoneyLoan(loanId))!;
       expect(computeLoanScenario(loan: loan).pendingPaise, 0);
@@ -612,6 +759,45 @@ void main() {
       await repo.closeMoneyLoan(loanId);
       loan = (await repo.getMoneyLoan(loanId))!;
       expect(loan.status, MoneyLoanStatus.closed);
+    });
+
+    test('addMoneyLoanPrincipal increases principal; repayment decreases',
+        () async {
+      final LocalRepository repo = await bootRepo();
+      final customer = await ensureCustomer(repo);
+      final String loanId = await repo.createMoneyLoan(
+        customerId: customer.id,
+        direction: MoneyLoanDirection.given,
+        principalPaise: 100000,
+        interestStartedAt: DateTime(2026, 1, 1),
+        rateBps: 0,
+      );
+
+      await repo.addMoneyLoanPrincipal(
+        loanId: loanId,
+        entryAt: DateTime(2026, 1, 10),
+        amountPaise: 40000,
+      );
+      MoneyLoan loan = (await repo.getMoneyLoan(loanId))!;
+      expect(loan.entries.single.kind, MoneyLoanEntryKind.disbursement);
+      expect(
+        computeLoanScenario(loan: loan, now: DateTime(2026, 1, 10))
+            .remainingPrincipalPaise,
+        140000,
+      );
+
+      await repo.addMoneyLoanEntry(
+        loanId: loanId,
+        entryAt: DateTime(2026, 1, 15),
+        amountPaise: 25000,
+        kind: MoneyLoanEntryKind.repayment,
+      );
+      loan = (await repo.getMoneyLoan(loanId))!;
+      expect(
+        computeLoanScenario(loan: loan, now: DateTime(2026, 1, 15))
+            .remainingPrincipalPaise,
+        115000,
+      );
     });
 
     test('addMoneyLoanEntry nudges watchMoneyLoans with new entry', () async {
@@ -642,7 +828,7 @@ void main() {
         loanId: loanId,
         entryAt: DateTime(2026, 1, 15),
         amountPaise: 25000,
-        kind: MoneyLoanEntryKind.payment,
+        kind: MoneyLoanEntryKind.repayment,
       );
       await pumpEventQueue();
 

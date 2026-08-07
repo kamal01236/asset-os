@@ -21,6 +21,7 @@ export '../loans/loan_balance.dart'
         computeLoanScenario,
         periodInterestPaise,
         proRataPeriodInterestPaise,
+        proRataRemainderPeriodInterestPaise,
         nextInterestPeriodEnd,
         LoanScenario,
         LoanTimelineEvent,
@@ -1845,8 +1846,10 @@ class LocalRepository {
     if (loan.status != MoneyLoanStatus.pending) {
       throw StateError('Entries can only be added to pending loans');
     }
-    if (kind == MoneyLoanEntryKind.payment && amountPaise <= 0) {
-      throw ArgumentError('Payment amount must be positive');
+    if ((kind == MoneyLoanEntryKind.repayment ||
+            kind == MoneyLoanEntryKind.disbursement) &&
+        amountPaise <= 0) {
+      throw ArgumentError('Amount must be positive');
     }
     if (kind == MoneyLoanEntryKind.adjustment && amountPaise == 0) {
       throw ArgumentError('Adjustment amount cannot be zero');
@@ -1878,6 +1881,22 @@ class LocalRepository {
     return id;
   }
 
+  /// Adds principal via a [MoneyLoanEntryKind.disbursement] entry.
+  Future<String> addMoneyLoanPrincipal({
+    required String loanId,
+    required int amountPaise,
+    required DateTime entryAt,
+    String? note,
+  }) {
+    return addMoneyLoanEntry(
+      loanId: loanId,
+      entryAt: entryAt,
+      amountPaise: amountPaise,
+      kind: MoneyLoanEntryKind.disbursement,
+      note: note,
+    );
+  }
+
   Future<void> updateMoneyLoanEntry({
     required String entryId,
     DateTime? entryAt,
@@ -1899,8 +1918,10 @@ class LocalRepository {
     final MoneyLoanEntryKind nextKind =
         kind ?? MoneyLoanEntryKind.parse(row.kind);
     final int nextAmount = amountPaise ?? row.amountPaise;
-    if (nextKind == MoneyLoanEntryKind.payment && nextAmount <= 0) {
-      throw ArgumentError('Payment amount must be positive');
+    if ((nextKind == MoneyLoanEntryKind.repayment ||
+            nextKind == MoneyLoanEntryKind.disbursement) &&
+        nextAmount <= 0) {
+      throw ArgumentError('Amount must be positive');
     }
     if (nextKind == MoneyLoanEntryKind.adjustment && nextAmount == 0) {
       throw ArgumentError('Adjustment amount cannot be zero');

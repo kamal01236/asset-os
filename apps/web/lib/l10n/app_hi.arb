@@ -1164,7 +1164,7 @@
   "loanRatePeriodLabel": "अवधि",
   "loanRateMonthly": "मासिक",
   "loanRateYearly": "वार्षिक",
-  "loanPeriodEndInterestHint": "अवधि के बीच भुगतान मूलधन घटाते हैं और चुकाई राशि पर बीते समय का आनुपातिक ब्याज जोड़ते हैं। वह ब्याज, और शेष मूलधन पर पूरी अवधि का ब्याज, हर महीने या साल की सालगिरह पर मूलधन में जुड़ जाता है।",
+  "loanPeriodEndInterestHint": "अवधि के बीच चुकौती मूलधन घटाती है और बकाया समय का आनुपातिक ब्याज जोड़ती है। जोड़ा मूलधन अवधि अंत तक आनुपातिक ब्याज कमाता है। वह ब्याज, और पूरी अवधि बकाया मूलधन पर ब्याज, हर महीने या साल की सालगिरह पर मूलधन में जुड़ जाता है।",
   "loanRateInvalid": "मान्य दर दर्ज करें",
   "loanNoteOptionalLabel": "नोट (वैकल्पिक)",
   "loanSaving": "सहेजा जा रहा है…",
@@ -1174,9 +1174,16 @@
   "loanAdjustmentsLabel": "समायोजन",
   "loanTimelineHeading": "समयरेखा",
   "loanAddPayment": "भुगतान जोड़ें",
+  "loanAddPrincipal": "मूलधन बढ़ाएँ",
   "loanAddAdjustment": "समायोजन जोड़ें",
   "loanEntryDateLabel": "तारीख",
-  "loanPaymentAmountLabel": "भुगतान राशि",
+  "loanFlowRepayment": "चुकौती",
+  "loanFlowAddPrincipal": "मूलधन बढ़ाएँ",
+  "loanFlowRepaymentGiven": "पार्टी से प्राप्त",
+  "loanFlowRepaymentTaken": "वापस चुकाया",
+  "loanFlowDisbursementGiven": "और दिया",
+  "loanFlowDisbursementTaken": "और लिया",
+  "loanPaymentAmountLabel": "राशि",
   "loanAdjustmentAmountLabel": "समायोजन राशि",
   "loanAdjustmentHint": "धनात्मक शेष माफ करता है; ऋणात्मक मूलधन बढ़ाता है",
   "loanSaveEntry": "सहेजें",
@@ -1228,10 +1235,27 @@
       "amount": {"type": "String"}
     }
   },
+  "loanTimelineDeferredAddSlice": "जोड़े {principal} पर ब्याज {date} से अवधि अंत तक → {amount} (अवधि अंत में जुड़ेगा)",
+  "@loanTimelineDeferredAddSlice": {
+    "placeholders": {
+      "principal": {"type": "String"},
+      "date": {"type": "String"},
+      "amount": {"type": "String"}
+    }
+  },
   "loanTimelinePeriodEndSlice": "भुगतान {repaid} पर ब्याज ({from}–{to}) → {interest} (मूलधन में जोड़ा)",
   "@loanTimelinePeriodEndSlice": {
     "placeholders": {
       "repaid": {"type": "String"},
+      "from": {"type": "String"},
+      "to": {"type": "String"},
+      "interest": {"type": "String"}
+    }
+  },
+  "loanTimelinePeriodEndAddSlice": "जोड़े मूलधन {added} पर ब्याज ({from}–{to}) → {interest} (मूलधन में जोड़ा)",
+  "@loanTimelinePeriodEndAddSlice": {
+    "placeholders": {
+      "added": {"type": "String"},
       "from": {"type": "String"},
       "to": {"type": "String"},
       "interest": {"type": "String"}
@@ -1251,12 +1275,19 @@
       "amount": {"type": "String"}
     }
   },
-  "loanTimelinePayment": "{date} — भुगतान {amount} → मूलधन {principal}",
+  "loanTimelinePayment": "{date} — चुकौती {amount} → मूलधन {principal}",
   "@loanTimelinePayment": {
     "placeholders": {
       "date": {"type": "String"},
       "amount": {"type": "String"},
       "principal": {"type": "String"}
+    }
+  },
+  "loanTimelineDisbursement": "{date} — मूलधन जोड़ा {amount}",
+  "@loanTimelineDisbursement": {
+    "placeholders": {
+      "date": {"type": "String"},
+      "amount": {"type": "String"}
     }
   },
   "loanTimelineAdjustment": "{date} — समायोजन {amount}",

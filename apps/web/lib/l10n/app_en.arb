@@ -1164,7 +1164,7 @@
   "loanRatePeriodLabel": "Period",
   "loanRateMonthly": "Monthly",
   "loanRateYearly": "Yearly",
-  "loanPeriodEndInterestHint": "Mid-period repayments reduce principal and accrue pro-rata interest on the amount repaid for time outstanding. That interest, plus full-period interest on what remains, is added to principal at each month or year anniversary.",
+  "loanPeriodEndInterestHint": "Mid-period repayments reduce principal and accrue pro-rata interest for time outstanding. Added principal accrues pro-rata until period end. That interest, plus full-period interest on what was outstanding the whole period, is added to principal at each month or year anniversary.",
   "loanRateInvalid": "Enter a valid rate",
   "loanNoteOptionalLabel": "Note (optional)",
   "loanSaving": "Saving…",
@@ -1174,9 +1174,16 @@
   "loanAdjustmentsLabel": "Adjustments",
   "loanTimelineHeading": "Timeline",
   "loanAddPayment": "Add payment",
+  "loanAddPrincipal": "Add to principal",
   "loanAddAdjustment": "Add adjustment",
   "loanEntryDateLabel": "Date",
-  "loanPaymentAmountLabel": "Payment amount",
+  "loanFlowRepayment": "Repayment",
+  "loanFlowAddPrincipal": "Add to principal",
+  "loanFlowRepaymentGiven": "Received from party",
+  "loanFlowRepaymentTaken": "Paid back",
+  "loanFlowDisbursementGiven": "Gave more",
+  "loanFlowDisbursementTaken": "Borrowed more",
+  "loanPaymentAmountLabel": "Amount",
   "loanAdjustmentAmountLabel": "Adjustment amount",
   "loanAdjustmentHint": "Positive forgives remaining; negative increases principal",
   "loanSaveEntry": "Save",
@@ -1228,10 +1235,27 @@
       "amount": {"type": "String"}
     }
   },
+  "loanTimelineDeferredAddSlice": "Interest on added {principal} from {date} → period end → {amount} (adds at period end)",
+  "@loanTimelineDeferredAddSlice": {
+    "placeholders": {
+      "principal": {"type": "String"},
+      "date": {"type": "String"},
+      "amount": {"type": "String"}
+    }
+  },
   "loanTimelinePeriodEndSlice": "Interest on payment {repaid} ({from}–{to}) → {interest} (added to principal)",
   "@loanTimelinePeriodEndSlice": {
     "placeholders": {
       "repaid": {"type": "String"},
+      "from": {"type": "String"},
+      "to": {"type": "String"},
+      "interest": {"type": "String"}
+    }
+  },
+  "loanTimelinePeriodEndAddSlice": "Interest on added principal {added} ({from}–{to}) → {interest} (added to principal)",
+  "@loanTimelinePeriodEndAddSlice": {
+    "placeholders": {
+      "added": {"type": "String"},
       "from": {"type": "String"},
       "to": {"type": "String"},
       "interest": {"type": "String"}
@@ -1251,12 +1275,19 @@
       "amount": {"type": "String"}
     }
   },
-  "loanTimelinePayment": "{date} — Payment {amount} → principal {principal}",
+  "loanTimelinePayment": "{date} — Repayment {amount} → principal {principal}",
   "@loanTimelinePayment": {
     "placeholders": {
       "date": {"type": "String"},
       "amount": {"type": "String"},
       "principal": {"type": "String"}
+    }
+  },
+  "loanTimelineDisbursement": "{date} — Added principal {amount}",
+  "@loanTimelineDisbursement": {
+    "placeholders": {
+      "date": {"type": "String"},
+      "amount": {"type": "String"}
     }
   },
   "loanTimelineAdjustment": "{date} — Adjustment {amount}",

@@ -53,15 +53,23 @@ enum MoneyLoanStatus {
   bool get isOpen => this == MoneyLoanStatus.pending;
 }
 
+/// Cash entry on a money loan.
+///
+/// Legacy stored kind `payment` parses as [repayment].
 enum MoneyLoanEntryKind {
-  payment,
+  repayment,
+  disbursement,
   adjustment;
 
   static MoneyLoanEntryKind parse(String? raw) {
     if (raw == MoneyLoanEntryKind.adjustment.name) {
       return MoneyLoanEntryKind.adjustment;
     }
-    return MoneyLoanEntryKind.payment;
+    if (raw == MoneyLoanEntryKind.disbursement.name) {
+      return MoneyLoanEntryKind.disbursement;
+    }
+    // Legacy `payment` and current `repayment`.
+    return MoneyLoanEntryKind.repayment;
   }
 }
 

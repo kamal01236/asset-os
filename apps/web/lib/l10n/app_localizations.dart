@@ -3526,7 +3526,7 @@ abstract class AppLocalizations {
   /// No description provided for @loanPeriodEndInterestHint.
   ///
   /// In en, this message translates to:
-  /// **'Mid-period repayments reduce principal and accrue pro-rata interest on the amount repaid for time outstanding. That interest, plus full-period interest on what remains, is added to principal at each month or year anniversary.'**
+  /// **'Mid-period repayments reduce principal and accrue pro-rata interest for time outstanding. Added principal accrues pro-rata until period end. That interest, plus full-period interest on what was outstanding the whole period, is added to principal at each month or year anniversary.'**
   String get loanPeriodEndInterestHint;
 
   /// No description provided for @loanRateInvalid.
@@ -3583,6 +3583,12 @@ abstract class AppLocalizations {
   /// **'Add payment'**
   String get loanAddPayment;
 
+  /// No description provided for @loanAddPrincipal.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to principal'**
+  String get loanAddPrincipal;
+
   /// No description provided for @loanAddAdjustment.
   ///
   /// In en, this message translates to:
@@ -3595,10 +3601,46 @@ abstract class AppLocalizations {
   /// **'Date'**
   String get loanEntryDateLabel;
 
+  /// No description provided for @loanFlowRepayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Repayment'**
+  String get loanFlowRepayment;
+
+  /// No description provided for @loanFlowAddPrincipal.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to principal'**
+  String get loanFlowAddPrincipal;
+
+  /// No description provided for @loanFlowRepaymentGiven.
+  ///
+  /// In en, this message translates to:
+  /// **'Received from party'**
+  String get loanFlowRepaymentGiven;
+
+  /// No description provided for @loanFlowRepaymentTaken.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid back'**
+  String get loanFlowRepaymentTaken;
+
+  /// No description provided for @loanFlowDisbursementGiven.
+  ///
+  /// In en, this message translates to:
+  /// **'Gave more'**
+  String get loanFlowDisbursementGiven;
+
+  /// No description provided for @loanFlowDisbursementTaken.
+  ///
+  /// In en, this message translates to:
+  /// **'Borrowed more'**
+  String get loanFlowDisbursementTaken;
+
   /// No description provided for @loanPaymentAmountLabel.
   ///
   /// In en, this message translates to:
-  /// **'Payment amount'**
+  /// **'Amount'**
   String get loanPaymentAmountLabel;
 
   /// No description provided for @loanAdjustmentAmountLabel.
@@ -3713,12 +3755,33 @@ abstract class AppLocalizations {
     String amount,
   );
 
+  /// No description provided for @loanTimelineDeferredAddSlice.
+  ///
+  /// In en, this message translates to:
+  /// **'Interest on added {principal} from {date} → period end → {amount} (adds at period end)'**
+  String loanTimelineDeferredAddSlice(
+    String principal,
+    String date,
+    String amount,
+  );
+
   /// No description provided for @loanTimelinePeriodEndSlice.
   ///
   /// In en, this message translates to:
   /// **'Interest on payment {repaid} ({from}–{to}) → {interest} (added to principal)'**
   String loanTimelinePeriodEndSlice(
     String repaid,
+    String from,
+    String to,
+    String interest,
+  );
+
+  /// No description provided for @loanTimelinePeriodEndAddSlice.
+  ///
+  /// In en, this message translates to:
+  /// **'Interest on added principal {added} ({from}–{to}) → {interest} (added to principal)'**
+  String loanTimelinePeriodEndAddSlice(
+    String added,
     String from,
     String to,
     String interest,
@@ -3739,8 +3802,14 @@ abstract class AppLocalizations {
   /// No description provided for @loanTimelinePayment.
   ///
   /// In en, this message translates to:
-  /// **'{date} — Payment {amount} → principal {principal}'**
+  /// **'{date} — Repayment {amount} → principal {principal}'**
   String loanTimelinePayment(String date, String amount, String principal);
+
+  /// No description provided for @loanTimelineDisbursement.
+  ///
+  /// In en, this message translates to:
+  /// **'{date} — Added principal {amount}'**
+  String loanTimelineDisbursement(String date, String amount);
 
   /// No description provided for @loanTimelineAdjustment.
   ///

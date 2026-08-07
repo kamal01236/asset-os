@@ -111,13 +111,23 @@ class _LoanDetailScreenState extends ConsumerState<LoanDetailScreen> {
                   runSpacing: 8,
                   children: <Widget>[
                     FilledButton.tonalIcon(
-                      onPressed: () => _addEntry(MoneyLoanEntryKind.payment),
+                      onPressed: () => _addCashEntry(
+                        loan: loan!,
+                        initialKind: MoneyLoanEntryKind.repayment,
+                      ),
                       icon: const Icon(Icons.payments_outlined),
                       label: Text(l10n.loanAddPayment),
                     ),
+                    FilledButton.tonalIcon(
+                      onPressed: () => _addCashEntry(
+                        loan: loan!,
+                        initialKind: MoneyLoanEntryKind.disbursement,
+                      ),
+                      icon: const Icon(Icons.add_card_outlined),
+                      label: Text(l10n.loanAddPrincipal),
+                    ),
                     OutlinedButton.icon(
-                      onPressed: () =>
-                          _addEntry(MoneyLoanEntryKind.adjustment),
+                      onPressed: _addAdjustment,
                       icon: const Icon(Icons.tune),
                       label: Text(l10n.loanAddAdjustment),
                     ),
@@ -159,7 +169,169 @@ class _LoanDetailScreenState extends ConsumerState<LoanDetailScreen> {
     );
   }
 
-  Future<void> _addEntry(MoneyLoanEntryKind kind) async {
+  Future<void> _addCashEntry({
+    required MoneyLoan loan,
+    required MoneyLoanEntryKind initialKind,
+  }) async {
+    assert(
+      initialKind == MoneyLoanEntryKind.repayment ||
+          initialKind == MoneyLoanEntryKind.disbursement,
+    );
+    final AppLocalizations l10n = context.l10n;
+    final TextEditingController amountCtrl = TextEditingController();
+    final TextEditingController noteCtrl = TextEditingController();
+    DateTime entryAt = DateTime.now();
+    entryAt = DateTime(entryAt.year, entryAt.month, entryAt.day);
+    MoneyLoanEntryKind flow = initialKind;
+    final bool? saved = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (BuildContext sheetContext) {
+        return Padding(
+          padding: EdgeInsets.only(
+            left: 16,
+            right: 16,
+            bottom: MediaQuery.viewInsetsOf(sheetContext).bottom + 16,
+            top: 8,
+          ),
+          child: StatefulBuilder(
+            builder: (BuildContext context, StateSetter setModal) {
+              final String flowHint = switch (flow) {
+                MoneyLoanEntryKind.repayment =>
+                  loan.direction == MoneyLoanDirection.given
+                      ? l10n.loanFlowRepaymentGiven
+                      : l10n.loanFlowRepaymentTaken,
+                MoneyLoanEntryKind.disbursement =>
+                  loan.direction == MoneyLoanDirection.given
+                      ? l10n.loanFlowDisbursementGiven
+                      : l10n.loanFlowDisbursementTaken,
+                MoneyLoanEntryKind.adjustment => '',
+              };
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  Text(
+                    flow == MoneyLoanEntryKind.disbursement
+                        ? l10n.loanAddPrincipal
+                        : l10n.loanAddPayment,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 12),
+                  SegmentedButton<MoneyLoanEntryKind>(
+                    segments: <ButtonSegment<MoneyLoanEntryKind>>[
+                      ButtonSegment<MoneyLoanEntryKind>(
+                        value: MoneyLoanEntryKind.repayment,
+                        label: Text(l10n.loanFlowRepayment),
+                        icon: const Icon(Icons.south_west),
+                      ),
+                      ButtonSegment<MoneyLoanEntryKind>(
+                        value: MoneyLoanEntryKind.disbursement,
+                        label: Text(l10n.loanFlowAddPrincipal),
+                        icon: const Icon(Icons.north_east),
+                      ),
+                    ],
+                    selected: <MoneyLoanEntryKind>{flow},
+                    onSelectionChanged: (Set<MoneyLoanEntryKind> next) {
+                      setModal(() => flow = next.first);
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    flowHint,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                  ),
+                  const SizedBox(height: 12),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(l10n.loanEntryDateLabel),
+                    subtitle: Text(formatIndiaDate(entryAt)),
+                    trailing: const Icon(Icons.calendar_today_outlined),
+                    onTap: () async {
+                      final DateTime? picked = await showDatePicker(
+                        context: context,
+                        locale: indiaDatePickerLocale(context),
+                        initialDate: entryAt,
+                        firstDate: DateTime(2000),
+                        lastDate: DateTime.now(),
+                      );
+                      if (picked != null) {
+                        setModal(() => entryAt = picked);
+                      }
+                    },
+                  ),
+                  TextField(
+                    controller: amountCtrl,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    decoration: InputDecoration(
+                      labelText: l10n.loanPaymentAmountLabel,
+                      border: const OutlineInputBorder(),
+                      prefixText: '₹ ',
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: noteCtrl,
+                    decoration: InputDecoration(
+                      labelText: l10n.loanNoteOptionalLabel,
+                      border: const OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  FilledButton(
+                    onPressed: () => Navigator.pop(sheetContext, true),
+                    child: Text(l10n.loanSaveEntry),
+                  ),
+                ],
+              );
+            },
+          ),
+        );
+      },
+    );
+    if (saved != true || !mounted) {
+      amountCtrl.dispose();
+      noteCtrl.dispose();
+      return;
+    }
+    final int amount = parseRupeesToPaise(amountCtrl.text);
+    amountCtrl.dispose();
+    final String? note =
+        noteCtrl.text.trim().isEmpty ? null : noteCtrl.text.trim();
+    noteCtrl.dispose();
+    try {
+      if (flow == MoneyLoanEntryKind.disbursement) {
+        await ref.read(repositoryProvider).addMoneyLoanPrincipal(
+              loanId: widget.loanId,
+              entryAt: entryAt,
+              amountPaise: amount,
+              note: note,
+            );
+      } else {
+        await ref.read(repositoryProvider).addMoneyLoanEntry(
+              loanId: widget.loanId,
+              entryAt: entryAt,
+              amountPaise: amount,
+              kind: MoneyLoanEntryKind.repayment,
+              note: note,
+            );
+      }
+    } catch (e) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$e')),
+      );
+    }
+  }
+
+  Future<void> _addAdjustment() async {
     final AppLocalizations l10n = context.l10n;
     final TextEditingController amountCtrl = TextEditingController();
     final TextEditingController noteCtrl = TextEditingController();
@@ -184,9 +356,7 @@ class _LoanDetailScreenState extends ConsumerState<LoanDetailScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
                   Text(
-                    kind == MoneyLoanEntryKind.payment
-                        ? l10n.loanAddPayment
-                        : l10n.loanAddAdjustment,
+                    l10n.loanAddAdjustment,
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const SizedBox(height: 12),
@@ -210,17 +380,15 @@ class _LoanDetailScreenState extends ConsumerState<LoanDetailScreen> {
                   ),
                   TextField(
                     controller: amountCtrl,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true, signed: true),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                      signed: true,
+                    ),
                     decoration: InputDecoration(
-                      labelText: kind == MoneyLoanEntryKind.payment
-                          ? l10n.loanPaymentAmountLabel
-                          : l10n.loanAdjustmentAmountLabel,
+                      labelText: l10n.loanAdjustmentAmountLabel,
                       border: const OutlineInputBorder(),
                       prefixText: '₹ ',
-                      helperText: kind == MoneyLoanEntryKind.adjustment
-                          ? l10n.loanAdjustmentHint
-                          : null,
+                      helperText: l10n.loanAdjustmentHint,
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -258,7 +426,7 @@ class _LoanDetailScreenState extends ConsumerState<LoanDetailScreen> {
             loanId: widget.loanId,
             entryAt: entryAt,
             amountPaise: amount,
-            kind: kind,
+            kind: MoneyLoanEntryKind.adjustment,
             note: note,
           );
     } catch (e) {
@@ -622,8 +790,27 @@ class _TimelineRow extends StatelessWidget {
           formatIndiaDate(event.at),
           money,
         ),
+      LoanTimelineKind.deferredAddSliceInterest =>
+        l10n.loanTimelineDeferredAddSlice(
+          formatMoney(
+            event.principalBasisPaise ?? 0,
+            currencyCode: loan.currencyCode,
+          ),
+          formatIndiaDate(event.from ?? event.at),
+          money,
+        ),
       LoanTimelineKind.periodEndSliceInterest =>
         l10n.loanTimelinePeriodEndSlice(
+          formatMoney(
+            event.principalBasisPaise ?? 0,
+            currencyCode: loan.currencyCode,
+          ),
+          formatIndiaDate(event.from ?? event.at),
+          formatIndiaDate(event.through ?? event.at),
+          money,
+        ),
+      LoanTimelineKind.periodEndAddSliceInterest =>
+        l10n.loanTimelinePeriodEndAddSlice(
           formatMoney(
             event.principalBasisPaise ?? 0,
             currencyCode: loan.currencyCode,
@@ -647,6 +834,10 @@ class _TimelineRow extends StatelessWidget {
           money,
           formatMoney(event.toPrincipalPaise, currencyCode: loan.currencyCode),
         ),
+      LoanTimelineKind.disbursement => l10n.loanTimelineDisbursement(
+          formatIndiaDate(event.at),
+          money,
+        ),
       LoanTimelineKind.adjustment => l10n.loanTimelineAdjustment(
           formatIndiaDate(event.at),
           money,
@@ -665,10 +856,14 @@ class _TimelineRow extends StatelessWidget {
               LoanTimelineKind.start => Icons.flag_outlined,
               LoanTimelineKind.interestSegment => Icons.trending_up,
               LoanTimelineKind.deferredSliceInterest => Icons.timelapse,
+              LoanTimelineKind.deferredAddSliceInterest => Icons.timelapse,
               LoanTimelineKind.periodEndSliceInterest => Icons.trending_up,
+              LoanTimelineKind.periodEndAddSliceInterest => Icons.trending_up,
               LoanTimelineKind.remainingPeriodInterest => Icons.trending_up,
-              LoanTimelineKind.principalAfterCapitalize => Icons.account_balance_wallet_outlined,
+              LoanTimelineKind.principalAfterCapitalize =>
+                Icons.account_balance_wallet_outlined,
               LoanTimelineKind.payment => Icons.payments_outlined,
+              LoanTimelineKind.disbursement => Icons.add_card_outlined,
               LoanTimelineKind.adjustment => Icons.tune,
               LoanTimelineKind.pendingAsOf => Icons.pending_actions_outlined,
             },
