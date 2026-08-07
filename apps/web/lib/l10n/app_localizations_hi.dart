@@ -1279,7 +1279,7 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String get searchTypeMinChars => 'कम से कम 3 अक्षर लिखें';
+  String get searchTypeMinChars => 'कम से कम 1 अक्षर लिखें';
 
   @override
   String get searchCustomersHint => 'नाम या फ़ोन से खोजें';

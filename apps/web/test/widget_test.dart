@@ -256,13 +256,15 @@ void main() {
     await _pumpAppShell(tester);
 
     expect(find.text('Search Anything'), findsOneWidget);
+    expect(find.text('Type at least 1 character'), findsNothing);
     expect(find.text('Type at least 3 characters'), findsNothing);
     expect(find.widgetWithText(AppBar, 'Search'), findsNothing);
     expect(find.widgetWithText(AppBar, kAppDisplayName), findsOneWidget);
 
     await tester.tap(find.byType(TextField).first);
     await tester.pump();
-    expect(find.text('Type at least 3 characters'), findsOneWidget);
+    expect(find.text('Type at least 1 character'), findsNothing);
+    expect(find.text('Type at least 3 characters'), findsNothing);
   });
 
   testWidgets('FAB Search opens typeahead bottom sheet', (
@@ -280,7 +282,7 @@ void main() {
     expect(find.widgetWithText(AppBar, 'Search'), findsNothing);
   });
 
-  testWidgets('ScopedSearchField shows suggestions once query meets min length', (
+  testWidgets('ScopedSearchField shows suggestions and clear once query meets min', (
     WidgetTester tester,
   ) async {
     String query = '';
@@ -290,7 +292,7 @@ void main() {
           body: StatefulBuilder(
             builder: (BuildContext context, StateSetter setState) {
               final List<SearchSuggestion> suggestions =
-                  query.trim().length >= 3
+                  query.trim().isNotEmpty
                       ? const <SearchSuggestion>[
                           SearchSuggestion(
                             id: 'INV-1',
@@ -302,7 +304,7 @@ void main() {
                       : const <SearchSuggestion>[];
               return ScopedSearchField(
                 hintText: 'Search inventory',
-                minLengthHint: 'Type at least 3 characters',
+                minLengthHint: 'Type at least 1 character',
                 noResultsText: 'No matches',
                 suggestions: suggestions,
                 onQueryChanged: (String value) {
@@ -316,24 +318,26 @@ void main() {
       ),
     );
 
-    expect(find.text('Type at least 3 characters'), findsNothing);
+    expect(find.text('Type at least 1 character'), findsNothing);
+    expect(find.byIcon(Icons.clear), findsNothing);
 
     await tester.tap(find.byType(TextField));
     await tester.pump();
-    expect(find.text('Type at least 3 characters'), findsOneWidget);
+    expect(find.text('Type at least 1 character'), findsNothing);
 
     final TextField field = tester.widget(find.byType(TextField));
-    field.controller!.value = const TextEditingValue(text: 'ds');
-    field.onChanged!('ds');
+    field.controller!.value = const TextEditingValue(text: 'd');
+    field.onChanged!('d');
     await tester.pump();
-    expect(find.text('Type at least 3 characters'), findsOneWidget);
-    expect(find.text('DSLR'), findsNothing);
-
-    field.controller!.value = const TextEditingValue(text: 'dsl');
-    field.onChanged!('dsl');
-    await tester.pump();
-    expect(find.text('Type at least 3 characters'), findsNothing);
+    expect(find.text('Type at least 1 character'), findsNothing);
     expect(find.text('DSLR'), findsOneWidget);
+    expect(find.byIcon(Icons.clear), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.clear));
+    await tester.pump();
+    expect(query, '');
+    expect(find.text('DSLR'), findsNothing);
+    expect(find.byIcon(Icons.clear), findsNothing);
   });
 
   testWidgets('starts New Order flow from Actions sheet', (WidgetTester tester) async {

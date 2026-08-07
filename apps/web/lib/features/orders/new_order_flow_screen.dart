@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/inventory/inventory_categories.dart';
@@ -9,6 +10,7 @@ import '../../core/models/unknown_customer.dart';
 import '../../core/pricing/rental_pricing.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/repositories/local_repository.dart';
+import '../../core/validation/input_formatters.dart';
 import '../../core/validation/text_rules.dart';
 import '../../core/widgets/ui_primitives.dart';
 import 'rental_detail_nav.dart';
@@ -201,6 +203,19 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
   }
 
   int _lookupGen = 0;
+
+  Widget? _clearSuffix(TextEditingController controller, VoidCallback onClear) {
+    if (controller.text.isEmpty) {
+      return null;
+    }
+    return IconButton(
+      icon: const Icon(Icons.clear),
+      onPressed: () {
+        controller.clear();
+        onClear();
+      },
+    );
+  }
 
   Future<void> _onCustomerFieldsChanged() async {
     final int gen = ++_lookupGen;
@@ -1038,9 +1053,16 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
         TextField(
           controller: _phoneController,
           keyboardType: TextInputType.phone,
+          inputFormatters: <TextInputFormatter>[kDigitsOnlyInputFormatter],
           decoration: InputDecoration(
             labelText: l10n.phoneNumberLabel,
             hintText: l10n.phoneNumberHint,
+            suffixIcon: _clearSuffix(
+              _phoneController,
+              () {
+                _onCustomerFieldsChanged();
+              },
+            ),
           ),
           onChanged: (_) => _onCustomerFieldsChanged(),
         ),
@@ -1054,6 +1076,12 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
           hintText: _noPhone
               ? l10n.noPhoneOptionalNameHint
               : l10n.customerNameNewHint,
+          suffixIcon: _clearSuffix(
+            _nameController,
+            () {
+              _onCustomerFieldsChanged();
+            },
+          ),
         ),
         onChanged: (_) => _onCustomerFieldsChanged(),
       ),
@@ -1133,7 +1161,8 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
       children: <Widget>[
         TextField(
           controller: _depositTopUpController,
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          keyboardType: TextInputType.number,
+          inputFormatters: <TextInputFormatter>[kDigitsOnlyInputFormatter],
           decoration: InputDecoration(
             labelText: l10n.orderDepositLabel,
             hintText: l10n.depositTopUpOptionalHint,
@@ -1269,8 +1298,10 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
                 if (draft.usesManualAmount) ...<Widget>[
                   TextField(
                     controller: draft.saleAmountController,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
+                    keyboardType: TextInputType.number,
+                    inputFormatters: <TextInputFormatter>[
+                      kDigitsOnlyInputFormatter,
+                    ],
                     decoration: InputDecoration(
                       labelText: draft.isJob
                           ? l10n.jobAmountLabel
@@ -1297,8 +1328,10 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
                   if (selected.allowsDynamicPricing) ...<Widget>[
                     TextField(
                       controller: draft.rateController,
-                      keyboardType:
-                          const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType: TextInputType.number,
+                      inputFormatters: <TextInputFormatter>[
+                        kDigitsOnlyInputFormatter,
+                      ],
                       decoration: InputDecoration(
                         labelText: l10n.orderLineRateLabel,
                         hintText: l10n.orderLineRateHint,

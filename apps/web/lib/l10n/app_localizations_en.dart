@@ -1278,7 +1278,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get searchTypeMinChars => 'Type at least 3 characters';
+  String get searchTypeMinChars => 'Type at least 1 character';
 
   @override
   String get searchCustomersHint => 'Search by name or phone';

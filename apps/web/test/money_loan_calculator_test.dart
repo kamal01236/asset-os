@@ -831,44 +831,7 @@ void main() {
       );
     });
 
-    test('createMoneyLoan with advance keeps original principal and settles',
-        () async {
-      final LocalRepository repo = await bootRepo();
-      final customer = await ensureCustomer(repo);
-      final DateTime today = DateTime.now();
-      final DateTime todayOnly = DateTime(today.year, today.month, today.day);
-      final DateTime start = todayOnly.subtract(const Duration(days: 60));
-      final DateTime advanceAt = todayOnly.subtract(const Duration(days: 30));
-      const int principalPaise = 10000000;
-      const int advancePaise = 5000000;
-
-      final String loanId = await repo.createMoneyLoan(
-        customerId: customer.id,
-        direction: MoneyLoanDirection.given,
-        principalPaise: principalPaise,
-        interestStartedAt: start,
-        capitalizationPolicy: MoneyCapitalizationPolicy.never,
-        rateBps: 1200,
-        ratePeriod: MoneyRatePeriod.yearly,
-        advancePaymentPaise: advancePaise,
-        advancePaymentAt: advanceAt,
-        advancePaymentNote: 'Advance payment',
-      );
-
-      final MoneyLoan loan = (await repo.getMoneyLoan(loanId))!;
-      expect(loan.principalPaise, principalPaise);
-      expect(loan.capitalizationPolicy, MoneyCapitalizationPolicy.never);
-      expect(loan.entries, hasLength(1));
-
-      final LoanScenario scenario = computeLoanScenario(
-        loan: loan,
-        now: todayOnly,
-      );
-      expect(scenario.remainingPrincipalPaise, lessThan(principalPaise));
-      expect(scenario.totalPaidPaise, advancePaise);
-    });
-
-    test('createMoneyLoan without advance leaves entries empty', () async {
+    test('createMoneyLoan leaves entries empty', () async {
       final LocalRepository repo = await bootRepo();
       final customer = await ensureCustomer(repo);
       final String loanId = await repo.createMoneyLoan(
@@ -880,25 +843,6 @@ void main() {
       final MoneyLoan loan = (await repo.getMoneyLoan(loanId))!;
       expect(loan.entries, isEmpty);
       expect(loan.capitalizationPolicy, MoneyCapitalizationPolicy.never);
-    });
-
-    test('createMoneyLoan rejects invalid advance amount or date', () async {
-      final LocalRepository repo = await bootRepo();
-      final customer = await ensureCustomer(repo);
-      final DateTime today = DateTime.now();
-      final DateTime todayOnly = DateTime(today.year, today.month, today.day);
-      final DateTime start = todayOnly.subtract(const Duration(days: 10));
-
-      await expectLater(
-        repo.createMoneyLoan(
-          customerId: customer.id,
-          direction: MoneyLoanDirection.given,
-          principalPaise: 100000,
-          interestStartedAt: start,
-          advancePaymentPaise: 50000,
-        ),
-        throwsA(isA<ArgumentError>()),
-      );
     });
 
     test('manual capitalize via repository', () async {

@@ -2303,7 +2303,7 @@ abstract class AppLocalizations {
   /// No description provided for @searchTypeMinChars.
   ///
   /// In en, this message translates to:
-  /// **'Type at least 3 characters'**
+  /// **'Type at least 1 character'**
   String get searchTypeMinChars;
 
   /// No description provided for @searchCustomersHint.

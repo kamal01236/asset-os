@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/india_date_format.dart';
@@ -8,6 +9,7 @@ import '../../core/models/unknown_customer.dart';
 import '../../core/pricing/rental_pricing.dart';
 import '../../core/providers/app_providers.dart';
 import '../../core/repositories/local_repository.dart';
+import '../../core/validation/input_formatters.dart';
 import '../../core/validation/text_rules.dart';
 import '../../core/widgets/ui_primitives.dart';
 import 'loan_detail_screen.dart';
@@ -35,7 +37,6 @@ class _LoanCreateScreenState extends ConsumerState<LoanCreateScreen> {
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _principalCtrl = TextEditingController();
-  final TextEditingController _advanceAmountCtrl = TextEditingController();
   final TextEditingController _rateCtrl = TextEditingController(text: '2');
   final TextEditingController _noteCtrl = TextEditingController();
   MoneyLoanDirection _direction = MoneyLoanDirection.given;
@@ -47,8 +48,6 @@ class _LoanCreateScreenState extends ConsumerState<LoanCreateScreen> {
   MoneyInterestAccrual _interestAccrual = MoneyInterestAccrual.calendar;
   DateTime _startedAt = DateTime.now();
   DateTime? _endedAt;
-  bool _hasAdvancePayment = false;
-  DateTime _advancePaidAt = DateTime.now();
   Customer? _resolvedCustomer;
   List<Customer> _suggestions = const <Customer>[];
   bool _prefillApplied = false;
@@ -64,7 +63,6 @@ class _LoanCreateScreenState extends ConsumerState<LoanCreateScreen> {
     super.initState();
     final DateTime now = DateTime.now();
     _startedAt = DateTime(now.year, now.month, now.day);
-    _advancePaidAt = _startedAt;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_isEdit) {
         _loadLoanForEdit();
@@ -79,25 +77,22 @@ class _LoanCreateScreenState extends ConsumerState<LoanCreateScreen> {
     _phoneController.dispose();
     _nameController.dispose();
     _principalCtrl.dispose();
-    _advanceAmountCtrl.dispose();
     _rateCtrl.dispose();
     _noteCtrl.dispose();
     super.dispose();
   }
 
-  DateTime get _todayOnly {
-    final DateTime now = DateTime.now();
-    return DateTime(now.year, now.month, now.day);
-  }
-
-  void _clampAdvancePaidAt() {
-    if (_advancePaidAt.isBefore(_startedAt)) {
-      _advancePaidAt = _startedAt;
+  Widget? _clearSuffix(TextEditingController controller, VoidCallback onClear) {
+    if (controller.text.isEmpty) {
+      return null;
     }
-    final DateTime today = _todayOnly;
-    if (_advancePaidAt.isAfter(today)) {
-      _advancePaidAt = today;
-    }
+    return IconButton(
+      icon: const Icon(Icons.clear),
+      onPressed: () {
+        controller.clear();
+        onClear();
+      },
+    );
   }
 
   Future<void> _loadLoanForEdit() async {
@@ -152,7 +147,6 @@ class _LoanCreateScreenState extends ConsumerState<LoanCreateScreen> {
               loan.interestEndedAt!.day,
             );
       _noteCtrl.text = loan.note ?? '';
-      _hasAdvancePayment = false;
       if (customer != null && !isUnknownCustomer(customer)) {
         _resolvedCustomer = customer;
         _phoneController.text = customer.phone;
@@ -316,10 +310,17 @@ class _LoanCreateScreenState extends ConsumerState<LoanCreateScreen> {
             enabled: !customerReadOnly,
             readOnly: customerReadOnly,
             keyboardType: TextInputType.phone,
+            inputFormatters: <TextInputFormatter>[kDigitsOnlyInputFormatter],
             decoration: InputDecoration(
               labelText: l10n.phoneNumberLabel,
               hintText: l10n.phoneNumberHint,
               border: const OutlineInputBorder(),
+              suffixIcon: customerReadOnly
+                  ? null
+                  : _clearSuffix(
+                      _phoneController,
+                      _onCustomerFieldsChanged,
+                    ),
             ),
             onChanged: customerReadOnly ? null : (_) => _onCustomerFieldsChanged(),
           ),
@@ -333,6 +334,12 @@ class _LoanCreateScreenState extends ConsumerState<LoanCreateScreen> {
               labelText: l10n.customerNameNewLabel,
               hintText: l10n.customerNameNewHint,
               border: const OutlineInputBorder(),
+              suffixIcon: customerReadOnly
+                  ? null
+                  : _clearSuffix(
+                      _nameController,
+                      _onCustomerFieldsChanged,
+                    ),
             ),
             onChanged: customerReadOnly ? null : (_) => _onCustomerFieldsChanged(),
           ),
@@ -405,7 +412,8 @@ class _LoanCreateScreenState extends ConsumerState<LoanCreateScreen> {
           const SizedBox(height: 16),
           TextField(
             controller: _principalCtrl,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            keyboardType: TextInputType.number,
+            inputFormatters: <TextInputFormatter>[kDigitsOnlyInputFormatter],
             decoration: InputDecoration(
               labelText: l10n.loanPrincipalLabel,
               border: const OutlineInputBorder(),
@@ -427,10 +435,7 @@ class _LoanCreateScreenState extends ConsumerState<LoanCreateScreen> {
                 lastDate: DateTime.now(),
               );
               if (picked != null) {
-                setState(() {
-                  _startedAt = picked;
-                  _clampAdvancePaidAt();
-                });
+                setState(() => _startedAt = picked);
               }
             },
           ),
@@ -464,53 +469,6 @@ class _LoanCreateScreenState extends ConsumerState<LoanCreateScreen> {
               }
             },
           ),
-          if (!_isEdit) ...<Widget>[
-            SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              title: Text(l10n.loanAdvancePaymentFlag),
-              subtitle: Text(l10n.loanAdvancePaymentHint),
-              value: _hasAdvancePayment,
-              onChanged: (bool value) {
-                setState(() {
-                  _hasAdvancePayment = value;
-                  if (value) {
-                    _advancePaidAt = _startedAt;
-                    _clampAdvancePaidAt();
-                  }
-                });
-              },
-            ),
-            if (_hasAdvancePayment) ...<Widget>[
-              TextField(
-                controller: _advanceAmountCtrl,
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
-                decoration: InputDecoration(
-                  labelText: l10n.loanAdvancePaymentAmountLabel,
-                  border: const OutlineInputBorder(),
-                  prefixText: '₹ ',
-                ),
-              ),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(l10n.loanAdvancePaymentDateLabel),
-                subtitle: Text(formatIndiaDate(_advancePaidAt)),
-                trailing: const Icon(Icons.calendar_today_outlined),
-                onTap: () async {
-                  final DateTime? picked = await showDatePicker(
-                    context: context,
-                    locale: indiaDatePickerLocale(context),
-                    initialDate: _advancePaidAt,
-                    firstDate: _startedAt,
-                    lastDate: _todayOnly,
-                  );
-                  if (picked != null) {
-                    setState(() => _advancePaidAt = picked);
-                  }
-                },
-              ),
-            ],
-          ],
           const SizedBox(height: 8),
           Text(
             l10n.loanCalculationFrequencyLabel,
@@ -758,40 +716,6 @@ class _LoanCreateScreenState extends ConsumerState<LoanCreateScreen> {
       );
       return;
     }
-    int? advancePaise;
-    DateTime? advanceAt;
-    if (!_isEdit && _hasAdvancePayment) {
-      advancePaise = parseRupeesToPaise(_advanceAmountCtrl.text);
-      if (advancePaise <= 0) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.loanAdvancePaymentRequired)),
-        );
-        return;
-      }
-      if (advancePaise > principal) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.loanAdvancePaymentExceedsPrincipal)),
-        );
-        return;
-      }
-      advanceAt = DateTime(
-        _advancePaidAt.year,
-        _advancePaidAt.month,
-        _advancePaidAt.day,
-      );
-      final DateTime start = DateTime(
-        _startedAt.year,
-        _startedAt.month,
-        _startedAt.day,
-      );
-      final DateTime today = _todayOnly;
-      if (advanceAt.isBefore(start) || advanceAt.isAfter(today)) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.loanAdvancePaymentDateInvalid)),
-        );
-        return;
-      }
-    }
     final double? ratePct = double.tryParse(_rateCtrl.text.trim());
     if (ratePct == null || ratePct < 0) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -864,11 +788,6 @@ class _LoanCreateScreenState extends ConsumerState<LoanCreateScreen> {
             interestAccrual: _interestAccrual,
             prepaymentAllocation: _prepaymentAllocation,
             note: note,
-            advancePaymentPaise: advancePaise,
-            advancePaymentAt: advanceAt,
-            advancePaymentNote: advancePaise == null
-                ? null
-                : l10n.loanAdvancePaymentEntryNote,
           );
       if (!mounted) {
         return;

@@ -1,5 +1,5 @@
 /// Minimum length for free-text identity/note fields (names, nicknames, notes).
-const int kMinMeaningfulTextLength = 3;
+const int kMinMeaningfulTextLength = 1;
 
 /// Returns true when [value] meets the meaningful-text rule.
 ///

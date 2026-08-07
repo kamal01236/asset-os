@@ -720,7 +720,7 @@
       "min": {"type": "int"}
     }
   },
-  "searchTypeMinChars": "Type at least 3 characters",
+  "searchTypeMinChars": "Type at least 1 character",
   "searchCustomersHint": "Search by name or phone",
   "searchNoResults": "No matches",
   "dueDateOptionalLabel": "Due date optional",

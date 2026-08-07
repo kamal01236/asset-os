@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/india_date_format.dart';
@@ -6,6 +7,7 @@ import '../../core/l10n/l10n_ext.dart';
 import '../../core/models/entities.dart';
 import '../../core/pricing/rental_pricing.dart';
 import '../../core/providers/app_providers.dart';
+import '../../core/validation/input_formatters.dart';
 import 'loan_create_screen.dart';
 
 /// Calculator surface: current scenario, timeline, payments, close/pending.
@@ -307,9 +309,10 @@ class _LoanDetailScreenState extends ConsumerState<LoanDetailScreen> {
                   ),
                   TextField(
                     controller: amountCtrl,
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
+                    keyboardType: TextInputType.number,
+                    inputFormatters: <TextInputFormatter>[
+                      kDigitsOnlyInputFormatter,
+                    ],
                     decoration: InputDecoration(
                       labelText: l10n.loanPaymentAmountLabel,
                       border: const OutlineInputBorder(),
@@ -423,9 +426,11 @@ class _LoanDetailScreenState extends ConsumerState<LoanDetailScreen> {
                   TextField(
                     controller: amountCtrl,
                     keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
                       signed: true,
                     ),
+                    inputFormatters: <TextInputFormatter>[
+                      kSignedDigitsInputFormatter,
+                    ],
                     decoration: InputDecoration(
                       labelText: l10n.loanAdjustmentAmountLabel,
                       border: const OutlineInputBorder(),

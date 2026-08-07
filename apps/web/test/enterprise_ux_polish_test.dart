@@ -160,7 +160,7 @@ void main() {
     expect(find.byType(FilledButton), findsNothing);
   });
 
-  testWidgets('search min-length hint shows only on focus or short query', (
+  testWidgets('search field never shows min-length helper', (
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(
@@ -168,7 +168,7 @@ void main() {
         Scaffold(
           body: ScopedSearchField(
             hintText: 'Search',
-            minLengthHint: 'Type at least 3 characters',
+            minLengthHint: 'Type at least 1 character',
             noResultsText: 'No matches',
             suggestions: const <SearchSuggestion>[],
             onQueryChanged: (_) {},
@@ -178,19 +178,20 @@ void main() {
       ),
     );
 
-    expect(find.text('Type at least 3 characters'), findsNothing);
+    expect(find.text('Type at least 1 character'), findsNothing);
 
     await tester.tap(find.byType(TextField));
     await tester.pump();
-    expect(find.text('Type at least 3 characters'), findsOneWidget);
+    expect(find.text('Type at least 1 character'), findsNothing);
 
-    await tester.enterText(find.byType(TextField), 'ab');
+    await tester.enterText(find.byType(TextField), 'a');
     await tester.pump();
-    expect(find.text('Type at least 3 characters'), findsOneWidget);
+    expect(find.text('Type at least 1 character'), findsNothing);
+    expect(find.byIcon(Icons.clear), findsOneWidget);
 
-    await tester.enterText(find.byType(TextField), 'abc');
+    await tester.tap(find.byIcon(Icons.clear));
     await tester.pump();
-    expect(find.text('Type at least 3 characters'), findsNothing);
+    expect(find.byIcon(Icons.clear), findsNothing);
   });
 
   test('shortOrderId uses last segment', () {

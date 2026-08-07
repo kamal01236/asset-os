@@ -720,7 +720,7 @@
       "min": {"type": "int"}
     }
   },
-  "searchTypeMinChars": "कम से कम 3 अक्षर लिखें",
+  "searchTypeMinChars": "कम से कम 1 अक्षर लिखें",
   "searchCustomersHint": "नाम या फ़ोन से खोजें",
   "searchNoResults": "कोई मिलान नहीं",
   "dueDateOptionalLabel": "देय तिथि वैकल्पिक",

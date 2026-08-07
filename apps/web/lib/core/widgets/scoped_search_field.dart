@@ -27,8 +27,8 @@ class SearchSuggestion {
 
 /// Accessible typeahead search field gated at [kMinMeaningfulTextLength].
 ///
-/// Shows a helper while the query is shorter than the minimum. Once the query
-/// meets the threshold, renders a keyboard-navigable suggestion list.
+/// Once the query meets the threshold, renders a keyboard-navigable suggestion
+/// list. Shows a clear control when the field is non-empty.
 class ScopedSearchField extends StatefulWidget {
   const ScopedSearchField({
     required this.hintText,
@@ -46,6 +46,8 @@ class ScopedSearchField extends StatefulWidget {
   });
 
   final String hintText;
+
+  /// Kept for call-site compatibility; unused now that min length is 1.
   final String minLengthHint;
   final String noResultsText;
   final List<SearchSuggestion> suggestions;
@@ -56,7 +58,7 @@ class ScopedSearchField extends StatefulWidget {
   final bool autofocus;
   final String? semanticLabel;
 
-  /// When false, only the field + min-length helper are shown (inline list filter).
+  /// When false, only the field is shown (inline list filter).
   final bool showSuggestionList;
 
   @override
@@ -77,17 +79,13 @@ class _ScopedSearchFieldState extends State<ScopedSearchField> {
 
   bool get _showSuggestions => _meetsMin && widget.showSuggestionList;
 
-  /// Hint only when focused, or when a short non-empty query is present.
-  bool get _showMinLengthHint =>
-      !_meetsMin && (_fieldFocus.hasFocus || _query.isNotEmpty);
-
   @override
   void initState() {
     super.initState();
-    _fieldFocus.addListener(_onFocusChanged);
+    _controller.addListener(_onControllerChanged);
   }
 
-  void _onFocusChanged() {
+  void _onControllerChanged() {
     if (mounted) {
       setState(() {});
     }
@@ -95,7 +93,7 @@ class _ScopedSearchFieldState extends State<ScopedSearchField> {
 
   @override
   void dispose() {
-    _fieldFocus.removeListener(_onFocusChanged);
+    _controller.removeListener(_onControllerChanged);
     if (_ownsController) {
       _controller.dispose();
     }
@@ -103,6 +101,12 @@ class _ScopedSearchFieldState extends State<ScopedSearchField> {
       _fieldFocus.dispose();
     }
     super.dispose();
+  }
+
+  void _clearQuery() {
+    _controller.clear();
+    setState(() => _highlightedIndex = -1);
+    widget.onQueryChanged('');
   }
 
   void _selectIndex(int index) {
@@ -173,7 +177,12 @@ class _ScopedSearchFieldState extends State<ScopedSearchField> {
               decoration: InputDecoration(
                 prefixIcon: const Icon(Icons.search),
                 hintText: widget.hintText,
-                helperText: _showMinLengthHint ? widget.minLengthHint : null,
+                suffixIcon: _controller.text.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: _clearQuery,
+                      )
+                    : null,
               ),
               onChanged: (String value) {
                 setState(() => _highlightedIndex = -1);

@@ -93,12 +93,20 @@ void main() {
       expect(refreshed.notes.single.rentalItemId, lineId);
     });
 
-    test('addRentalNote rejects short body', () async {
+    test('addRentalNote rejects empty body', () async {
       final (:repository, :rental) = await seedOrder();
       expect(
-        () => repository.addRentalNote(rentalId: rental.id, body: 'ab'),
+        () => repository.addRentalNote(rentalId: rental.id, body: '  '),
         throwsA(isA<ArgumentError>()),
       );
+    });
+
+    test('addRentalNote accepts single-character body', () async {
+      final (:repository, :rental) = await seedOrder();
+      await repository.addRentalNote(rentalId: rental.id, body: 'ab');
+      final Rental refreshed =
+          (await repository.listRentals()).firstWhere((Rental r) => r.id == rental.id);
+      expect(refreshed.notes.single.body, 'ab');
     });
 
     test('addRentalNote rejects foreign line id', () async {

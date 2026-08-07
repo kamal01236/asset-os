@@ -13,21 +13,22 @@ import 'package:asset_os/core/validation/text_rules.dart';
 
 void main() {
   group('min-length text rules', () {
-    test('meetsMinMeaningfulText gates empty and short values', () {
+    test('meetsMinMeaningfulText gates empty and accepts single char', () {
       expect(meetsMinMeaningfulText(null), isFalse);
       expect(meetsMinMeaningfulText(''), isFalse);
-      expect(meetsMinMeaningfulText('ab'), isFalse);
-      expect(meetsMinMeaningfulText('abc'), isTrue);
+      expect(meetsMinMeaningfulText('  '), isFalse);
+      expect(meetsMinMeaningfulText('a'), isTrue);
+      expect(meetsMinMeaningfulText('ab'), isTrue);
       expect(meetsMinMeaningfulText(null, allowEmpty: true), isTrue);
       expect(meetsMinMeaningfulText('  ', allowEmpty: true), isTrue);
-      expect(meetsMinMeaningfulText('ab', allowEmpty: true), isFalse);
+      expect(meetsMinMeaningfulText('a', allowEmpty: true), isTrue);
     });
   });
 
   group('scoped search + validation', () {
     test('search below min length returns empty', () async {
       final LocalRepository repository = await bootRepo();
-      final SearchResults results = await repository.search('ab');
+      final SearchResults results = await repository.search('');
       expect(results.customers, isEmpty);
       expect(results.currentRentals, isEmpty);
       expect(results.previousRentals, isEmpty);
@@ -101,23 +102,39 @@ void main() {
       expect(byItem.customers, isEmpty);
     });
 
-    test('addInventory rejects short name', () async {
+    test('addInventory rejects empty name', () async {
       final LocalRepository repository = await bootRepo();
       expect(
-        () => repository.addInventory(name: 'ab', category: 'Tools', units: 1),
+        () => repository.addInventory(name: '  ', category: 'Tools', units: 1),
         throwsA(isA<ArgumentError>()),
       );
     });
 
-    test('upsertCustomerByPhone rejects short new name', () async {
+    test('addInventory accepts single-character name', () async {
+      final LocalRepository repository = await bootRepo();
+      await repository.addInventory(name: 'ab', category: 'Tools', units: 1);
+      final List<InventoryItem> items = await repository.listInventory();
+      expect(items.any((InventoryItem i) => i.name == 'ab'), isTrue);
+    });
+
+    test('upsertCustomerByPhone rejects empty new name', () async {
       final LocalRepository repository = await bootRepo();
       expect(
         () => repository.upsertCustomerByPhone(
           phone: '9999988888',
-          fallbackName: 'ab',
+          fallbackName: '  ',
         ),
         throwsA(isA<ArgumentError>()),
       );
+    });
+
+    test('upsertCustomerByPhone accepts short new name', () async {
+      final LocalRepository repository = await bootRepo();
+      final Customer customer = await repository.upsertCustomerByPhone(
+        phone: '9999988888',
+        fallbackName: 'ab',
+      );
+      expect(customer.name, 'ab');
     });
   });
 }
