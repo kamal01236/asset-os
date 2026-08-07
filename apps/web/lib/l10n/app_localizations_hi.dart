@@ -1999,7 +1999,11 @@ class AppLocalizationsHi extends AppLocalizations {
   String get loanRateYearly => 'वार्षिक';
 
   @override
-  String get loanPeriodEndInterestHint =>
+  String get loanPeriodEndInterestHintSimple =>
+      'अवधि के बीच चुकौती और टॉप-अप बकाया समय का आनुपातिक ब्याज जोड़ते हैं। हर महीने या साल की सालगिरह पर वह ब्याज देय होता है, पर मूलधन में नहीं जुड़ता। चुकौती पहले अवैतनिक ब्याज चुकाती है, फिर मूलधन।';
+
+  @override
+  String get loanPeriodEndInterestHintCompound =>
       'अवधि के बीच चुकौती मूलधन घटाती है और बकाया समय का आनुपातिक ब्याज जोड़ती है। जोड़ा मूलधन अवधि अंत तक आनुपातिक ब्याज कमाता है। वह ब्याज, और पूरी अवधि बकाया मूलधन पर ब्याज, हर महीने या साल की सालगिरह पर मूलधन में जुड़ जाता है।';
 
   @override
@@ -2152,6 +2156,16 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
+  String loanTimelinePeriodEndSliceDue(
+    String repaid,
+    String from,
+    String to,
+    String interest,
+  ) {
+    return 'भुगतान $repaid पर देय ब्याज ($from–$to) → $interest (मूलधन में नहीं जोड़ा)';
+  }
+
+  @override
   String loanTimelinePeriodEndAddSlice(
     String added,
     String from,
@@ -2162,8 +2176,26 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
+  String loanTimelinePeriodEndAddSliceDue(
+    String added,
+    String from,
+    String to,
+    String interest,
+  ) {
+    return 'जोड़े मूलधन $added पर देय ब्याज ($from–$to) → $interest (मूलधन में नहीं जोड़ा)';
+  }
+
+  @override
   String loanTimelineRemainingPeriodInterest(String principal, String amount) {
     return 'शेष $principal पर पूरी अवधि का ब्याज → $amount (मूलधन में जोड़ा)';
+  }
+
+  @override
+  String loanTimelineRemainingPeriodInterestDue(
+    String principal,
+    String amount,
+  ) {
+    return 'शेष $principal पर पूरी अवधि का देय ब्याज → $amount (मूलधन में नहीं जोड़ा)';
   }
 
   @override
@@ -2172,8 +2204,23 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
+  String loanTimelinePrincipalRemains(String date, String amount) {
+    return '$date — मूलधन $amount ही रहता है';
+  }
+
+  @override
   String loanTimelinePayment(String date, String amount, String principal) {
     return '$date — चुकौती $amount → मूलधन $principal';
+  }
+
+  @override
+  String loanTimelinePaymentSplit(
+    String date,
+    String amount,
+    String interest,
+    String principal,
+  ) {
+    return '$date — चुकौती $amount → ब्याज $interest, मूलधन $principal';
   }
 
   @override

@@ -3523,11 +3523,17 @@ abstract class AppLocalizations {
   /// **'Yearly'**
   String get loanRateYearly;
 
-  /// No description provided for @loanPeriodEndInterestHint.
+  /// No description provided for @loanPeriodEndInterestHintSimple.
+  ///
+  /// In en, this message translates to:
+  /// **'Mid-period repayments and top-ups accrue pro-rata interest for time outstanding. At each month or year anniversary that interest is due but not added to principal. Repayments clear unpaid interest first, then principal.'**
+  String get loanPeriodEndInterestHintSimple;
+
+  /// No description provided for @loanPeriodEndInterestHintCompound.
   ///
   /// In en, this message translates to:
   /// **'Mid-period repayments reduce principal and accrue pro-rata interest for time outstanding. Added principal accrues pro-rata until period end. That interest, plus full-period interest on what was outstanding the whole period, is added to principal at each month or year anniversary.'**
-  String get loanPeriodEndInterestHint;
+  String get loanPeriodEndInterestHintCompound;
 
   /// No description provided for @loanRateInvalid.
   ///
@@ -3776,11 +3782,33 @@ abstract class AppLocalizations {
     String interest,
   );
 
+  /// No description provided for @loanTimelinePeriodEndSliceDue.
+  ///
+  /// In en, this message translates to:
+  /// **'Interest due on payment {repaid} ({from}–{to}) → {interest} (not added to principal)'**
+  String loanTimelinePeriodEndSliceDue(
+    String repaid,
+    String from,
+    String to,
+    String interest,
+  );
+
   /// No description provided for @loanTimelinePeriodEndAddSlice.
   ///
   /// In en, this message translates to:
   /// **'Interest on added principal {added} ({from}–{to}) → {interest} (added to principal)'**
   String loanTimelinePeriodEndAddSlice(
+    String added,
+    String from,
+    String to,
+    String interest,
+  );
+
+  /// No description provided for @loanTimelinePeriodEndAddSliceDue.
+  ///
+  /// In en, this message translates to:
+  /// **'Interest due on added principal {added} ({from}–{to}) → {interest} (not added to principal)'**
+  String loanTimelinePeriodEndAddSliceDue(
     String added,
     String from,
     String to,
@@ -3793,17 +3821,43 @@ abstract class AppLocalizations {
   /// **'Interest on remaining {principal} for full period → {amount} (added to principal)'**
   String loanTimelineRemainingPeriodInterest(String principal, String amount);
 
+  /// No description provided for @loanTimelineRemainingPeriodInterestDue.
+  ///
+  /// In en, this message translates to:
+  /// **'Interest due on remaining {principal} for full period → {amount} (not added to principal)'**
+  String loanTimelineRemainingPeriodInterestDue(
+    String principal,
+    String amount,
+  );
+
   /// No description provided for @loanTimelinePrincipalNow.
   ///
   /// In en, this message translates to:
   /// **'{date} — Principal now {amount}'**
   String loanTimelinePrincipalNow(String date, String amount);
 
+  /// No description provided for @loanTimelinePrincipalRemains.
+  ///
+  /// In en, this message translates to:
+  /// **'{date} — Principal remains {amount}'**
+  String loanTimelinePrincipalRemains(String date, String amount);
+
   /// No description provided for @loanTimelinePayment.
   ///
   /// In en, this message translates to:
   /// **'{date} — Repayment {amount} → principal {principal}'**
   String loanTimelinePayment(String date, String amount, String principal);
+
+  /// No description provided for @loanTimelinePaymentSplit.
+  ///
+  /// In en, this message translates to:
+  /// **'{date} — Repayment {amount} → interest {interest}, principal {principal}'**
+  String loanTimelinePaymentSplit(
+    String date,
+    String amount,
+    String interest,
+    String principal,
+  );
 
   /// No description provided for @loanTimelineDisbursement.
   ///

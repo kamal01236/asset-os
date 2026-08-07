@@ -410,7 +410,9 @@ class _LoanCreateScreenState extends ConsumerState<LoanCreateScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            l10n.loanPeriodEndInterestHint,
+            _interestKind == MoneyInterestKind.simple
+                ? l10n.loanPeriodEndInterestHintSimple
+                : l10n.loanPeriodEndInterestHintCompound,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),

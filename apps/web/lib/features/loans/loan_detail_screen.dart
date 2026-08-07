@@ -747,7 +747,9 @@ class _SetupSummary extends StatelessWidget {
         ),
         const SizedBox(height: 6),
         Text(
-          l10n.loanPeriodEndInterestHint,
+          loan.interestKind == MoneyInterestKind.simple
+              ? l10n.loanPeriodEndInterestHintSimple
+              : l10n.loanPeriodEndInterestHintCompound,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
@@ -770,6 +772,7 @@ class _TimelineRow extends StatelessWidget {
       event.amountPaise,
       currencyCode: loan.currencyCode,
     );
+    final bool simple = loan.interestKind == MoneyInterestKind.simple;
     final String text = switch (event.kind) {
       LoanTimelineKind.start =>
         l10n.loanTimelineStart(formatIndiaDate(event.at), money),
@@ -799,41 +802,75 @@ class _TimelineRow extends StatelessWidget {
           formatIndiaDate(event.from ?? event.at),
           money,
         ),
-      LoanTimelineKind.periodEndSliceInterest =>
-        l10n.loanTimelinePeriodEndSlice(
-          formatMoney(
-            event.principalBasisPaise ?? 0,
-            currencyCode: loan.currencyCode,
-          ),
-          formatIndiaDate(event.from ?? event.at),
-          formatIndiaDate(event.through ?? event.at),
-          money,
-        ),
-      LoanTimelineKind.periodEndAddSliceInterest =>
-        l10n.loanTimelinePeriodEndAddSlice(
-          formatMoney(
-            event.principalBasisPaise ?? 0,
-            currencyCode: loan.currencyCode,
-          ),
-          formatIndiaDate(event.from ?? event.at),
-          formatIndiaDate(event.through ?? event.at),
-          money,
-        ),
-      LoanTimelineKind.remainingPeriodInterest =>
-        l10n.loanTimelineRemainingPeriodInterest(
-          formatMoney(
-            event.principalBasisPaise ?? 0,
-            currencyCode: loan.currencyCode,
-          ),
-          money,
-        ),
+      LoanTimelineKind.periodEndSliceInterest => simple
+          ? l10n.loanTimelinePeriodEndSliceDue(
+              formatMoney(
+                event.principalBasisPaise ?? 0,
+                currencyCode: loan.currencyCode,
+              ),
+              formatIndiaDate(event.from ?? event.at),
+              formatIndiaDate(event.through ?? event.at),
+              money,
+            )
+          : l10n.loanTimelinePeriodEndSlice(
+              formatMoney(
+                event.principalBasisPaise ?? 0,
+                currencyCode: loan.currencyCode,
+              ),
+              formatIndiaDate(event.from ?? event.at),
+              formatIndiaDate(event.through ?? event.at),
+              money,
+            ),
+      LoanTimelineKind.periodEndAddSliceInterest => simple
+          ? l10n.loanTimelinePeriodEndAddSliceDue(
+              formatMoney(
+                event.principalBasisPaise ?? 0,
+                currencyCode: loan.currencyCode,
+              ),
+              formatIndiaDate(event.from ?? event.at),
+              formatIndiaDate(event.through ?? event.at),
+              money,
+            )
+          : l10n.loanTimelinePeriodEndAddSlice(
+              formatMoney(
+                event.principalBasisPaise ?? 0,
+                currencyCode: loan.currencyCode,
+              ),
+              formatIndiaDate(event.from ?? event.at),
+              formatIndiaDate(event.through ?? event.at),
+              money,
+            ),
+      LoanTimelineKind.remainingPeriodInterest => simple
+          ? l10n.loanTimelineRemainingPeriodInterestDue(
+              formatMoney(
+                event.principalBasisPaise ?? 0,
+                currencyCode: loan.currencyCode,
+              ),
+              money,
+            )
+          : l10n.loanTimelineRemainingPeriodInterest(
+              formatMoney(
+                event.principalBasisPaise ?? 0,
+                currencyCode: loan.currencyCode,
+              ),
+              money,
+            ),
       LoanTimelineKind.principalAfterCapitalize =>
         l10n.loanTimelinePrincipalNow(formatIndiaDate(event.at), money),
-      LoanTimelineKind.payment => l10n.loanTimelinePayment(
-          formatIndiaDate(event.at),
-          money,
-          formatMoney(event.toPrincipalPaise, currencyCode: loan.currencyCode),
-        ),
+      LoanTimelineKind.principalRemains =>
+        l10n.loanTimelinePrincipalRemains(formatIndiaDate(event.at), money),
+      LoanTimelineKind.payment => event.toInterestPaise > 0
+          ? l10n.loanTimelinePaymentSplit(
+              formatIndiaDate(event.at),
+              money,
+              formatMoney(event.toInterestPaise, currencyCode: loan.currencyCode),
+              formatMoney(event.toPrincipalPaise, currencyCode: loan.currencyCode),
+            )
+          : l10n.loanTimelinePayment(
+              formatIndiaDate(event.at),
+              money,
+              formatMoney(event.toPrincipalPaise, currencyCode: loan.currencyCode),
+            ),
       LoanTimelineKind.disbursement => l10n.loanTimelineDisbursement(
           formatIndiaDate(event.at),
           money,
@@ -862,6 +899,8 @@ class _TimelineRow extends StatelessWidget {
               LoanTimelineKind.remainingPeriodInterest => Icons.trending_up,
               LoanTimelineKind.principalAfterCapitalize =>
                 Icons.account_balance_wallet_outlined,
+              LoanTimelineKind.principalRemains =>
+                Icons.account_balance_wallet_outlined,
               LoanTimelineKind.payment => Icons.payments_outlined,
               LoanTimelineKind.disbursement => Icons.add_card_outlined,
               LoanTimelineKind.adjustment => Icons.tune,
@@ -875,7 +914,8 @@ class _TimelineRow extends StatelessWidget {
             child: Text(
               text,
               style: event.kind == LoanTimelineKind.pendingAsOf ||
-                      event.kind == LoanTimelineKind.principalAfterCapitalize
+                      event.kind == LoanTimelineKind.principalAfterCapitalize ||
+                      event.kind == LoanTimelineKind.principalRemains
                   ? Theme.of(context).textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.w700,
                       )

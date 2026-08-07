@@ -16,8 +16,10 @@ enum LoanTimelineKind {
   periodEndAddSliceInterest,
   /// Full-period interest on principal outstanding for the whole period.
   remainingPeriodInterest,
-  /// Principal after capitalizing period-end interest.
+  /// Principal after capitalizing period-end interest (compound).
   principalAfterCapitalize,
+  /// Principal unchanged after posting period-end interest due (simple).
+  principalRemains,
   payment,
   disbursement,
   adjustment,
@@ -265,7 +267,9 @@ DateTime resolveLoanAsOf({
 /// Walk chronologically: mid-period repayments reduce principal and defer
 /// pro-rata interest on the repaid slice; disbursements increase principal and
 /// defer remainder-of-period interest; at each period anniversary, deferred
-/// interest plus full-period interest on the core outstanding capitalizes.
+/// interest plus full-period interest on the core outstanding either capitalizes
+/// (compound) or posts as unpaid interest without changing principal (simple).
+/// Simple repayments apply interest-first to unpaid interest, then principal.
 LoanScenario computeLoanScenario({
   required MoneyLoan loan,
   DateTime? now,
@@ -284,7 +288,12 @@ LoanScenario computeLoanScenario({
       return a.id.compareTo(b.id);
     });
 
+  final bool isSimple = loan.interestKind == MoneyInterestKind.simple;
   int remainingPrincipal = loan.principalPaise < 0 ? 0 : loan.principalPaise;
+  /// Interest from completed periods still owed (simple only; compound clears
+  /// via capitalization).
+  int postedUnpaidInterest = 0;
+  /// Mid-period slice interest awaiting the next anniversary.
   int deferredInterest = 0;
   final List<_DeferredSlice> deferredSlices = <_DeferredSlice>[];
   /// Principal added via disbursement in the current incomplete/open period.
@@ -293,6 +302,33 @@ LoanScenario computeLoanScenario({
   int interestAccrued = 0;
   int totalPaid = 0;
   int totalAdjustments = 0;
+
+  int unpaidInterestTotal() => postedUnpaidInterest + deferredInterest;
+
+  void reduceDeferredSlices(int amount) {
+    int left = amount;
+    while (left > 0 && deferredSlices.isNotEmpty) {
+      final _DeferredSlice first = deferredSlices.first;
+      if (first.interestPaise <= left) {
+        left -= first.interestPaise;
+        deferredSlices.removeAt(0);
+      } else {
+        deferredSlices[0] = _DeferredSlice(
+          kind: first.kind,
+          entryId: first.entryId,
+          basisPaise: first.basisPaise,
+          from: first.from,
+          to: first.to,
+          interestPaise: first.interestPaise - left,
+        );
+        left = 0;
+      }
+    }
+    deferredInterest = deferredSlices.fold<int>(
+      0,
+      (int sum, _DeferredSlice s) => sum + s.interestPaise,
+    );
+  }
 
   final List<LoanTimelineEvent> timeline = <LoanTimelineEvent>[
     LoanTimelineEvent(
@@ -403,9 +439,27 @@ LoanScenario computeLoanScenario({
     if (kind == MoneyLoanEntryKind.repayment) {
       final int pay = amount < 0 ? 0 : amount;
       totalPaid += pay;
+      int remainingPay = pay;
+      int toInterest = 0;
       int toPrincipal = 0;
-      if (pay > 0 && remainingPrincipal > 0) {
-        toPrincipal = pay > remainingPrincipal ? remainingPrincipal : pay;
+
+      if (isSimple && remainingPay > 0 && unpaidInterestTotal() > 0) {
+        final int owed = unpaidInterestTotal();
+        toInterest = remainingPay > owed ? owed : remainingPay;
+        remainingPay -= toInterest;
+        // Posted unpaid first, then mid-period deferred slices.
+        final int fromPosted =
+            toInterest > postedUnpaidInterest ? postedUnpaidInterest : toInterest;
+        postedUnpaidInterest -= fromPosted;
+        final int fromDeferred = toInterest - fromPosted;
+        if (fromDeferred > 0) {
+          reduceDeferredSlices(fromDeferred);
+        }
+      }
+
+      if (remainingPay > 0 && remainingPrincipal > 0) {
+        toPrincipal =
+            remainingPay > remainingPrincipal ? remainingPrincipal : remainingPay;
         remainingPrincipal -= toPrincipal;
       }
       timeline.add(
@@ -413,7 +467,7 @@ LoanScenario computeLoanScenario({
           kind: LoanTimelineKind.payment,
           at: at,
           amountPaise: pay,
-          toInterestPaise: 0,
+          toInterestPaise: toInterest,
           toPrincipalPaise: toPrincipal,
           note: note,
           entryId: entryId,
@@ -533,8 +587,8 @@ LoanScenario computeLoanScenario({
                 rateBps: loan.rateBps,
               )
             : 0;
-    final int total = deferredInterest + remainingInterest;
-    if (total <= 0) {
+    final int periodInterestTotal = deferredInterest + remainingInterest;
+    if (periodInterestTotal <= 0) {
       deferredInterest = 0;
       deferredSlices.clear();
       periodDisbursementsPaise = 0;
@@ -544,7 +598,7 @@ LoanScenario computeLoanScenario({
     interestAccrued += remainingInterest;
 
     // Period-end order: repayment slices, then disbursement slices, then
-    // full-period core, then principal after capitalize.
+    // full-period core, then principal after capitalize / remains.
     final List<_DeferredSlice> repaySlices = deferredSlices
         .where((s) => s.kind == _DeferredSliceKind.repayment)
         .toList();
@@ -591,14 +645,25 @@ LoanScenario computeLoanScenario({
       );
     }
 
-    remainingPrincipal += total;
-    timeline.add(
-      LoanTimelineEvent(
-        kind: LoanTimelineKind.principalAfterCapitalize,
-        at: periodEnd,
-        amountPaise: remainingPrincipal,
-      ),
-    );
+    if (isSimple) {
+      postedUnpaidInterest += periodInterestTotal;
+      timeline.add(
+        LoanTimelineEvent(
+          kind: LoanTimelineKind.principalRemains,
+          at: periodEnd,
+          amountPaise: remainingPrincipal,
+        ),
+      );
+    } else {
+      remainingPrincipal += periodInterestTotal;
+      timeline.add(
+        LoanTimelineEvent(
+          kind: LoanTimelineKind.principalAfterCapitalize,
+          at: periodEnd,
+          amountPaise: remainingPrincipal,
+        ),
+      );
+    }
     deferredInterest = 0;
     deferredSlices.clear();
     periodDisbursementsPaise = 0;
@@ -655,7 +720,7 @@ LoanScenario computeLoanScenario({
 
       postPeriodInterest(periodStart: periodStart, periodEnd: periodEnd);
 
-      // Same-day boundary entries apply after interest capitalizes.
+      // Same-day boundary entries apply after interest posts / capitalizes.
       while (entryIndex < entries.length) {
         final MoneyLoanEntry entry = entries[entryIndex];
         final DateTime at = _dateOnly(entry.entryAt);
@@ -702,8 +767,8 @@ LoanScenario computeLoanScenario({
     }
   }
 
-  final int unpaidInterest = deferredInterest;
-  final int pending = remainingPrincipal + deferredInterest;
+  final int unpaidInterest = unpaidInterestTotal();
+  final int pending = remainingPrincipal + unpaidInterest;
   timeline.add(
     LoanTimelineEvent(
       kind: LoanTimelineKind.pendingAsOf,

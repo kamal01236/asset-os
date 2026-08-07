@@ -1164,7 +1164,8 @@
   "loanRatePeriodLabel": "Period",
   "loanRateMonthly": "Monthly",
   "loanRateYearly": "Yearly",
-  "loanPeriodEndInterestHint": "Mid-period repayments reduce principal and accrue pro-rata interest for time outstanding. Added principal accrues pro-rata until period end. That interest, plus full-period interest on what was outstanding the whole period, is added to principal at each month or year anniversary.",
+  "loanPeriodEndInterestHintSimple": "Mid-period repayments and top-ups accrue pro-rata interest for time outstanding. At each month or year anniversary that interest is due but not added to principal. Repayments clear unpaid interest first, then principal.",
+  "loanPeriodEndInterestHintCompound": "Mid-period repayments reduce principal and accrue pro-rata interest for time outstanding. Added principal accrues pro-rata until period end. That interest, plus full-period interest on what was outstanding the whole period, is added to principal at each month or year anniversary.",
   "loanRateInvalid": "Enter a valid rate",
   "loanNoteOptionalLabel": "Note (optional)",
   "loanSaving": "Saving…",
@@ -1252,8 +1253,26 @@
       "interest": {"type": "String"}
     }
   },
+  "loanTimelinePeriodEndSliceDue": "Interest due on payment {repaid} ({from}–{to}) → {interest} (not added to principal)",
+  "@loanTimelinePeriodEndSliceDue": {
+    "placeholders": {
+      "repaid": {"type": "String"},
+      "from": {"type": "String"},
+      "to": {"type": "String"},
+      "interest": {"type": "String"}
+    }
+  },
   "loanTimelinePeriodEndAddSlice": "Interest on added principal {added} ({from}–{to}) → {interest} (added to principal)",
   "@loanTimelinePeriodEndAddSlice": {
+    "placeholders": {
+      "added": {"type": "String"},
+      "from": {"type": "String"},
+      "to": {"type": "String"},
+      "interest": {"type": "String"}
+    }
+  },
+  "loanTimelinePeriodEndAddSliceDue": "Interest due on added principal {added} ({from}–{to}) → {interest} (not added to principal)",
+  "@loanTimelinePeriodEndAddSliceDue": {
     "placeholders": {
       "added": {"type": "String"},
       "from": {"type": "String"},
@@ -1268,8 +1287,22 @@
       "amount": {"type": "String"}
     }
   },
+  "loanTimelineRemainingPeriodInterestDue": "Interest due on remaining {principal} for full period → {amount} (not added to principal)",
+  "@loanTimelineRemainingPeriodInterestDue": {
+    "placeholders": {
+      "principal": {"type": "String"},
+      "amount": {"type": "String"}
+    }
+  },
   "loanTimelinePrincipalNow": "{date} — Principal now {amount}",
   "@loanTimelinePrincipalNow": {
+    "placeholders": {
+      "date": {"type": "String"},
+      "amount": {"type": "String"}
+    }
+  },
+  "loanTimelinePrincipalRemains": "{date} — Principal remains {amount}",
+  "@loanTimelinePrincipalRemains": {
     "placeholders": {
       "date": {"type": "String"},
       "amount": {"type": "String"}
@@ -1280,6 +1313,15 @@
     "placeholders": {
       "date": {"type": "String"},
       "amount": {"type": "String"},
+      "principal": {"type": "String"}
+    }
+  },
+  "loanTimelinePaymentSplit": "{date} — Repayment {amount} → interest {interest}, principal {principal}",
+  "@loanTimelinePaymentSplit": {
+    "placeholders": {
+      "date": {"type": "String"},
+      "amount": {"type": "String"},
+      "interest": {"type": "String"},
       "principal": {"type": "String"}
     }
   },

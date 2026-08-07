@@ -1164,7 +1164,8 @@
   "loanRatePeriodLabel": "अवधि",
   "loanRateMonthly": "मासिक",
   "loanRateYearly": "वार्षिक",
-  "loanPeriodEndInterestHint": "अवधि के बीच चुकौती मूलधन घटाती है और बकाया समय का आनुपातिक ब्याज जोड़ती है। जोड़ा मूलधन अवधि अंत तक आनुपातिक ब्याज कमाता है। वह ब्याज, और पूरी अवधि बकाया मूलधन पर ब्याज, हर महीने या साल की सालगिरह पर मूलधन में जुड़ जाता है।",
+  "loanPeriodEndInterestHintSimple": "अवधि के बीच चुकौती और टॉप-अप बकाया समय का आनुपातिक ब्याज जोड़ते हैं। हर महीने या साल की सालगिरह पर वह ब्याज देय होता है, पर मूलधन में नहीं जुड़ता। चुकौती पहले अवैतनिक ब्याज चुकाती है, फिर मूलधन।",
+  "loanPeriodEndInterestHintCompound": "अवधि के बीच चुकौती मूलधन घटाती है और बकाया समय का आनुपातिक ब्याज जोड़ती है। जोड़ा मूलधन अवधि अंत तक आनुपातिक ब्याज कमाता है। वह ब्याज, और पूरी अवधि बकाया मूलधन पर ब्याज, हर महीने या साल की सालगिरह पर मूलधन में जुड़ जाता है।",
   "loanRateInvalid": "मान्य दर दर्ज करें",
   "loanNoteOptionalLabel": "नोट (वैकल्पिक)",
   "loanSaving": "सहेजा जा रहा है…",
@@ -1252,8 +1253,26 @@
       "interest": {"type": "String"}
     }
   },
+  "loanTimelinePeriodEndSliceDue": "भुगतान {repaid} पर देय ब्याज ({from}–{to}) → {interest} (मूलधन में नहीं जोड़ा)",
+  "@loanTimelinePeriodEndSliceDue": {
+    "placeholders": {
+      "repaid": {"type": "String"},
+      "from": {"type": "String"},
+      "to": {"type": "String"},
+      "interest": {"type": "String"}
+    }
+  },
   "loanTimelinePeriodEndAddSlice": "जोड़े मूलधन {added} पर ब्याज ({from}–{to}) → {interest} (मूलधन में जोड़ा)",
   "@loanTimelinePeriodEndAddSlice": {
+    "placeholders": {
+      "added": {"type": "String"},
+      "from": {"type": "String"},
+      "to": {"type": "String"},
+      "interest": {"type": "String"}
+    }
+  },
+  "loanTimelinePeriodEndAddSliceDue": "जोड़े मूलधन {added} पर देय ब्याज ({from}–{to}) → {interest} (मूलधन में नहीं जोड़ा)",
+  "@loanTimelinePeriodEndAddSliceDue": {
     "placeholders": {
       "added": {"type": "String"},
       "from": {"type": "String"},
@@ -1268,8 +1287,22 @@
       "amount": {"type": "String"}
     }
   },
+  "loanTimelineRemainingPeriodInterestDue": "शेष {principal} पर पूरी अवधि का देय ब्याज → {amount} (मूलधन में नहीं जोड़ा)",
+  "@loanTimelineRemainingPeriodInterestDue": {
+    "placeholders": {
+      "principal": {"type": "String"},
+      "amount": {"type": "String"}
+    }
+  },
   "loanTimelinePrincipalNow": "{date} — अब मूलधन {amount}",
   "@loanTimelinePrincipalNow": {
+    "placeholders": {
+      "date": {"type": "String"},
+      "amount": {"type": "String"}
+    }
+  },
+  "loanTimelinePrincipalRemains": "{date} — मूलधन {amount} ही रहता है",
+  "@loanTimelinePrincipalRemains": {
     "placeholders": {
       "date": {"type": "String"},
       "amount": {"type": "String"}
@@ -1280,6 +1313,15 @@
     "placeholders": {
       "date": {"type": "String"},
       "amount": {"type": "String"},
+      "principal": {"type": "String"}
+    }
+  },
+  "loanTimelinePaymentSplit": "{date} — चुकौती {amount} → ब्याज {interest}, मूलधन {principal}",
+  "@loanTimelinePaymentSplit": {
+    "placeholders": {
+      "date": {"type": "String"},
+      "amount": {"type": "String"},
+      "interest": {"type": "String"},
       "principal": {"type": "String"}
     }
   },

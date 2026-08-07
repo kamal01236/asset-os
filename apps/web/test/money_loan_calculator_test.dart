@@ -121,7 +121,7 @@ void main() {
       expect(payment.toPrincipalPaise, 5000000);
     });
 
-    test('₹1L yearly: anniversary capitalizes deferred + remaining interest',
+    test('₹1L yearly Simple: anniversary posts unpaid interest; principal stays',
         () {
       final MoneyLoan loan = MoneyLoan(
         id: 'MLN-1L-ann',
@@ -150,12 +150,12 @@ void main() {
         loan: loan,
         now: DateTime(2027, 1, 1),
       );
-      // Deferred 3000 + remaining 50000×12% = 6000 → total interest ₹9,000
-      // Capitalized → pending ₹50,000 + ₹9,000 = ₹59,000
+      // Deferred 3000 + remaining 50000×12% = 6000 → unpaid ₹9,000
+      // Principal stays ₹50,000 (not capitalized to ₹59,000)
       expect(after.interestAccruedPaise, 900000);
-      expect(after.remainingPrincipalPaise, 5900000);
+      expect(after.remainingPrincipalPaise, 5000000);
+      expect(after.unpaidInterestPaise, 900000);
       expect(after.pendingPaise, 5900000);
-      expect(after.unpaidInterestPaise, 0);
 
       final List<LoanTimelineEvent> endRows = after.timeline
           .where(
@@ -163,7 +163,7 @@ void main() {
                 e.at == DateTime(2027, 1, 1) &&
                 (e.kind == LoanTimelineKind.periodEndSliceInterest ||
                     e.kind == LoanTimelineKind.remainingPeriodInterest ||
-                    e.kind == LoanTimelineKind.principalAfterCapitalize),
+                    e.kind == LoanTimelineKind.principalRemains),
           )
           .toList();
       expect(endRows, hasLength(3));
@@ -175,8 +175,15 @@ void main() {
       expect(endRows[1].kind, LoanTimelineKind.remainingPeriodInterest);
       expect(endRows[1].amountPaise, 600000);
       expect(endRows[1].principalBasisPaise, 5000000);
-      expect(endRows[2].kind, LoanTimelineKind.principalAfterCapitalize);
-      expect(endRows[2].amountPaise, 5900000);
+      expect(endRows[2].kind, LoanTimelineKind.principalRemains);
+      expect(endRows[2].amountPaise, 5000000);
+      expect(
+        after.timeline.where(
+          (LoanTimelineEvent e) =>
+              e.kind == LoanTimelineKind.principalAfterCapitalize,
+        ),
+        isEmpty,
+      );
       expect(
         after.timeline.where(
           (LoanTimelineEvent e) => e.kind == LoanTimelineKind.interestSegment,
@@ -185,7 +192,48 @@ void main() {
       );
     });
 
-    test('₹1L yearly: two mid-period payments → per-slice period-end rows', () {
+    test('₹1L yearly Compound: anniversary capitalizes into principal', () {
+      final MoneyLoan loan = MoneyLoan(
+        id: 'MLN-1L-ann-cmp',
+        customerId: 'C1',
+        direction: MoneyLoanDirection.given,
+        principalPaise: 10000000,
+        currencyCode: 'INR',
+        interestKind: MoneyInterestKind.compound,
+        rateBps: 1200,
+        ratePeriod: MoneyRatePeriod.yearly,
+        interestStartedAt: DateTime(2026, 1, 1),
+        status: MoneyLoanStatus.pending,
+        createdAt: DateTime(2027, 1, 1),
+        entries: <MoneyLoanEntry>[
+          MoneyLoanEntry(
+            id: 'E1',
+            loanId: 'MLN-1L-ann-cmp',
+            entryAt: DateTime(2026, 7, 1),
+            amountPaise: 5000000,
+            kind: MoneyLoanEntryKind.repayment,
+          ),
+        ],
+      );
+
+      final LoanScenario after = computeLoanScenario(
+        loan: loan,
+        now: DateTime(2027, 1, 1),
+      );
+      expect(after.interestAccruedPaise, 900000);
+      expect(after.remainingPrincipalPaise, 5900000);
+      expect(after.pendingPaise, 5900000);
+      expect(after.unpaidInterestPaise, 0);
+      expect(
+        after.timeline.where(
+          (LoanTimelineEvent e) =>
+              e.kind == LoanTimelineKind.principalAfterCapitalize,
+        ),
+        hasLength(1),
+      );
+    });
+
+    test('₹1L yearly: two mid-period payments → interest-first then slices', () {
       final MoneyLoan loan = MoneyLoan(
         id: 'MLN-1L-two',
         customerId: 'C1',
@@ -220,13 +268,22 @@ void main() {
         loan: loan,
         now: DateTime(2027, 1, 1),
       );
-      // Slice1: 30000×12%×3/12 = ₹900
-      // Slice2: 20000×12%×6/12 = ₹1,200
-      // Remaining 50000×12% = ₹6,000
-      // Principal now: 50000 + 900 + 1200 + 6000 = ₹58,100
-      expect(after.interestAccruedPaise, 810000);
-      expect(after.remainingPrincipalPaise, 5810000);
-      expect(after.pendingPaise, 5810000);
+      // E1: ₹30k → principal; deferred slice ₹900
+      // E2: interest-first clears ₹900 deferred, then ₹19,100 principal
+      //     new slice: 19100×12%×6/12 = ₹1,146
+      // Remaining core 50900×12% = ₹6,108
+      // Simple: principal ₹50,900; unpaid ₹7,254
+      expect(after.interestAccruedPaise, 815400);
+      expect(after.remainingPrincipalPaise, 5090000);
+      expect(after.unpaidInterestPaise, 725400);
+      expect(after.pendingPaise, 5815400);
+
+      final LoanTimelineEvent e2Pay = after.timeline.firstWhere(
+        (LoanTimelineEvent e) =>
+            e.kind == LoanTimelineKind.payment && e.entryId == 'E2',
+      );
+      expect(e2Pay.toInterestPaise, 90000);
+      expect(e2Pay.toPrincipalPaise, 1910000);
 
       final List<LoanTimelineEvent> endRows = after.timeline
           .where(
@@ -235,20 +292,16 @@ void main() {
                 e.kind != LoanTimelineKind.pendingAsOf,
           )
           .toList();
-      expect(endRows, hasLength(4));
+      expect(endRows, hasLength(3));
       expect(endRows[0].kind, LoanTimelineKind.periodEndSliceInterest);
-      expect(endRows[0].amountPaise, 90000);
-      expect(endRows[0].principalBasisPaise, 3000000);
-      expect(endRows[0].entryId, 'E1');
-      expect(endRows[1].kind, LoanTimelineKind.periodEndSliceInterest);
-      expect(endRows[1].amountPaise, 120000);
-      expect(endRows[1].principalBasisPaise, 2000000);
-      expect(endRows[1].entryId, 'E2');
-      expect(endRows[2].kind, LoanTimelineKind.remainingPeriodInterest);
-      expect(endRows[2].amountPaise, 600000);
-      expect(endRows[2].principalBasisPaise, 5000000);
-      expect(endRows[3].kind, LoanTimelineKind.principalAfterCapitalize);
-      expect(endRows[3].amountPaise, 5810000);
+      expect(endRows[0].amountPaise, 114600);
+      expect(endRows[0].principalBasisPaise, 1910000);
+      expect(endRows[0].entryId, 'E2');
+      expect(endRows[1].kind, LoanTimelineKind.remainingPeriodInterest);
+      expect(endRows[1].amountPaise, 610800);
+      expect(endRows[1].principalBasisPaise, 5090000);
+      expect(endRows[2].kind, LoanTimelineKind.principalRemains);
+      expect(endRows[2].amountPaise, 5090000);
 
       expect(
         after.timeline
@@ -307,12 +360,12 @@ void main() {
         loan: loan,
         now: DateTime(2027, 1, 1),
       );
-      // Add slice 3000 + full-period on 100k = 12000 → interest ₹15,000
-      // Principal now: 150000 + 15000 = ₹1,65,000
+      // Add slice 3000 + full-period on 100k = 12000 → unpaid ₹15,000
+      // Simple: principal stays ₹1,50,000
       expect(after.interestAccruedPaise, 1500000);
-      expect(after.remainingPrincipalPaise, 16500000);
+      expect(after.remainingPrincipalPaise, 15000000);
+      expect(after.unpaidInterestPaise, 1500000);
       expect(after.pendingPaise, 16500000);
-      expect(after.unpaidInterestPaise, 0);
 
       final List<LoanTimelineEvent> endRows = after.timeline
           .where(
@@ -328,8 +381,8 @@ void main() {
       expect(endRows[1].kind, LoanTimelineKind.remainingPeriodInterest);
       expect(endRows[1].amountPaise, 1200000);
       expect(endRows[1].principalBasisPaise, 10000000);
-      expect(endRows[2].kind, LoanTimelineKind.principalAfterCapitalize);
-      expect(endRows[2].amountPaise, 16500000);
+      expect(endRows[2].kind, LoanTimelineKind.principalRemains);
+      expect(endRows[2].amountPaise, 15000000);
     });
 
     test('₹1L yearly: repay + mid-period top-up → both slices + full-period core',
@@ -371,9 +424,10 @@ void main() {
       // Repay slice: 50000×12%×6/12 = ₹3,000
       // Add slice: 30000×12%×3/12 = ₹900
       // Full-period core: (100000-50000)×12% = ₹6,000
-      // Principal before cap: 80000; after: 80000+3000+900+6000 = ₹89,900
+      // Simple: principal ₹80,000; unpaid ₹9,900
       expect(after.interestAccruedPaise, 990000);
-      expect(after.remainingPrincipalPaise, 8990000);
+      expect(after.remainingPrincipalPaise, 8000000);
+      expect(after.unpaidInterestPaise, 990000);
       expect(after.pendingPaise, 8990000);
 
       final List<LoanTimelineEvent> endRows = after.timeline
@@ -392,8 +446,8 @@ void main() {
       expect(endRows[2].kind, LoanTimelineKind.remainingPeriodInterest);
       expect(endRows[2].amountPaise, 600000);
       expect(endRows[2].principalBasisPaise, 5000000);
-      expect(endRows[3].kind, LoanTimelineKind.principalAfterCapitalize);
-      expect(endRows[3].amountPaise, 8990000);
+      expect(endRows[3].kind, LoanTimelineKind.principalRemains);
+      expect(endRows[3].amountPaise, 8000000);
     });
 
     test('legacy kind payment parses as repayment', () {
@@ -408,7 +462,7 @@ void main() {
       );
     });
 
-    test('monthly: mid-period repay defers day-pro-rata slice; month-end caps',
+    test('monthly: mid-period repay defers day-pro-rata slice; month-end due',
         () {
       final MoneyLoan loan = MoneyLoan(
         id: 'MLN-mo-slice',
@@ -448,12 +502,13 @@ void main() {
         loan: loan,
         now: DateTime(2026, 2, 1),
       );
-      // Remaining full month: 50000 × 2% = ₹1,000; capitalize both
+      // Remaining full month: 50000 × 2% = ₹1,000; Simple posts unpaid
       const int remainingInterest = 100000;
       final int totalInterest = sliceInterest + remainingInterest;
       expect(monthEnd.interestAccruedPaise, totalInterest);
+      expect(monthEnd.remainingPrincipalPaise, 5000000);
+      expect(monthEnd.unpaidInterestPaise, totalInterest);
       expect(monthEnd.pendingPaise, 5000000 + totalInterest);
-      expect(monthEnd.unpaidInterestPaise, 0);
       final LoanTimelineEvent sliceRow = monthEnd.timeline.firstWhere(
         (LoanTimelineEvent e) =>
             e.kind == LoanTimelineKind.periodEndSliceInterest,
@@ -467,13 +522,12 @@ void main() {
       expect(remainingRow.amountPaise, remainingInterest);
       expect(remainingRow.principalBasisPaise, 5000000);
       final LoanTimelineEvent principalNow = monthEnd.timeline.firstWhere(
-        (LoanTimelineEvent e) =>
-            e.kind == LoanTimelineKind.principalAfterCapitalize,
+        (LoanTimelineEvent e) => e.kind == LoanTimelineKind.principalRemains,
       );
-      expect(principalNow.amountPaise, 5000000 + totalInterest);
+      expect(principalNow.amountPaise, 5000000);
     });
 
-    test('monthly interest only after each full month', () {
+    test('monthly Simple interest only after each full month; no compound', () {
       final MoneyLoan loan = MoneyLoan(
         id: 'MLN-mo',
         customerId: 'C1',
@@ -500,15 +554,19 @@ void main() {
         now: DateTime(2026, 2, 1),
       );
       expect(oneMonth.interestAccruedPaise, 20000);
+      expect(oneMonth.remainingPrincipalPaise, 1000000);
+      expect(oneMonth.unpaidInterestPaise, 20000);
       expect(oneMonth.pendingPaise, 1020000);
 
       final LoanScenario twoMonths = computeLoanScenario(
         loan: loan,
         now: DateTime(2026, 3, 1),
       );
-      // Jan→Feb: 200 on 10k → 10200; Feb→Mar: 204 on 10200 → 10404
-      expect(twoMonths.interestAccruedPaise, 40400);
-      expect(twoMonths.pendingPaise, 1040400);
+      // Jan→Feb: +200 on 10k unpaid; Feb→Mar: +200 on same 10k principal
+      expect(twoMonths.interestAccruedPaise, 40000);
+      expect(twoMonths.remainingPrincipalPaise, 1000000);
+      expect(twoMonths.unpaidInterestPaise, 40000);
+      expect(twoMonths.pendingPaise, 1040000);
     });
 
     test('compound multi-period grows via capitalization', () {
@@ -590,18 +648,27 @@ void main() {
         now: DateTime(2026, 6, 1),
       );
 
-      // Jan→Feb→Mar→Apr: 3 months on 10k → capitalize to 1061208, then pay 3k
-      // Apr 1 is a boundary: interest posts first, then payment.
+      // Jan→Feb→Mar→Apr: 3 months Simple on 10k → unpaid 60000, then pay 3k
+      // Apr 1 is a boundary: interest posts first, then payment (interest-first).
       // Walk:
-      //  Feb 1: +20000 → 1020000
-      //  Mar 1: +20400 → 1040400
-      //  Apr 1: +20808 → 1061208, then pay 300000 → 761208
-      //  May 1: +15224 → 776432
-      //  Jun 1: +15529 → 791961, then pay 200000 → 591961
+      //  Feb 1: unpaid +20000 → 20000; principal 1000000
+      //  Mar 1: unpaid +20000 → 40000
+      //  Apr 1: unpaid +20000 → 60000, then pay 300000 → interest 60000, principal 240000
+      //         → unpaid 0, principal 760000
+      //  May 1: unpaid +15200 → 15200; principal 760000
+      //  Jun 1: unpaid +15200 → 30400, then pay 200000 → interest 30400, principal 169600
+      //         → unpaid 0, principal 590400
       expect(asOfJun1.totalPaidPaise, 500000);
-      expect(asOfJun1.interestAccruedPaise, 91961);
-      expect(asOfJun1.pendingPaise, 591961);
-      expect(asOfJun1.remainingPrincipalPaise, 591961);
+      expect(asOfJun1.interestAccruedPaise, 90400);
+      expect(asOfJun1.pendingPaise, 590400);
+      expect(asOfJun1.remainingPrincipalPaise, 590400);
+      expect(asOfJun1.unpaidInterestPaise, 0);
+      final LoanTimelineEvent aprPay = asOfJun1.timeline.firstWhere(
+        (LoanTimelineEvent e) =>
+            e.kind == LoanTimelineKind.payment && e.at == DateTime(2026, 4, 1),
+      );
+      expect(aprPay.toInterestPaise, 60000);
+      expect(aprPay.toPrincipalPaise, 240000);
       expect(
         asOfJun1.timeline.any(
           (LoanTimelineEvent e) => e.kind == LoanTimelineKind.payment,
@@ -609,6 +676,87 @@ void main() {
         isTrue,
       );
       expect(loan.status, MoneyLoanStatus.pending);
+    });
+
+    test('Simple repayment clears unpaid interest before principal', () {
+      final MoneyLoan loan = MoneyLoan(
+        id: 'MLN-int-first',
+        customerId: 'C1',
+        direction: MoneyLoanDirection.given,
+        principalPaise: 10000000,
+        currencyCode: 'INR',
+        interestKind: MoneyInterestKind.simple,
+        rateBps: 1200,
+        ratePeriod: MoneyRatePeriod.yearly,
+        interestStartedAt: DateTime(2026, 1, 1),
+        status: MoneyLoanStatus.pending,
+        createdAt: DateTime(2027, 2, 1),
+        entries: <MoneyLoanEntry>[
+          MoneyLoanEntry(
+            id: 'E-repay-mid',
+            loanId: 'MLN-int-first',
+            entryAt: DateTime(2026, 7, 1),
+            amountPaise: 5000000,
+            kind: MoneyLoanEntryKind.repayment,
+          ),
+          MoneyLoanEntry(
+            id: 'E-repay-after',
+            loanId: 'MLN-int-first',
+            entryAt: DateTime(2027, 1, 15),
+            amountPaise: 1000000, // ₹10,000 after anniversary unpaid ₹9,000
+            kind: MoneyLoanEntryKind.repayment,
+          ),
+        ],
+      );
+
+      final LoanScenario after = computeLoanScenario(
+        loan: loan,
+        now: DateTime(2027, 1, 15),
+      );
+      // After year-end: principal 50k, unpaid 9k. Pay 10k → 9k interest, 1k principal.
+      // Mid-period slice on the ₹1k principal portion accrues a small deferred amount.
+      final LoanTimelineEvent pay = after.timeline.firstWhere(
+        (LoanTimelineEvent e) =>
+            e.kind == LoanTimelineKind.payment && e.entryId == 'E-repay-after',
+      );
+      expect(pay.toInterestPaise, 900000);
+      expect(pay.toPrincipalPaise, 100000);
+      expect(after.remainingPrincipalPaise, 4900000);
+      expect(after.unpaidInterestPaise, lessThan(900000));
+      expect(after.unpaidInterestPaise, greaterThan(0));
+      expect(after.pendingPaise, 4900000 + after.unpaidInterestPaise);
+    });
+
+    test('Simple disbursement still increases principal', () {
+      final MoneyLoan loan = MoneyLoan(
+        id: 'MLN-add-simple',
+        customerId: 'C1',
+        direction: MoneyLoanDirection.given,
+        principalPaise: 10000000,
+        currencyCode: 'INR',
+        interestKind: MoneyInterestKind.simple,
+        rateBps: 1200,
+        ratePeriod: MoneyRatePeriod.yearly,
+        interestStartedAt: DateTime(2026, 1, 1),
+        status: MoneyLoanStatus.pending,
+        createdAt: DateTime(2026, 7, 1),
+        entries: <MoneyLoanEntry>[
+          MoneyLoanEntry(
+            id: 'E-add',
+            loanId: 'MLN-add-simple',
+            entryAt: DateTime(2026, 7, 1),
+            amountPaise: 2500000,
+            kind: MoneyLoanEntryKind.disbursement,
+          ),
+        ],
+      );
+
+      final LoanScenario mid = computeLoanScenario(
+        loan: loan,
+        now: DateTime(2026, 7, 1),
+      );
+      expect(mid.remainingPrincipalPaise, 12500000);
+      expect(mid.unpaidInterestPaise, greaterThan(0));
     });
 
     test('edit start date changes totals', () {

@@ -1999,7 +1999,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loanRateYearly => 'Yearly';
 
   @override
-  String get loanPeriodEndInterestHint =>
+  String get loanPeriodEndInterestHintSimple =>
+      'Mid-period repayments and top-ups accrue pro-rata interest for time outstanding. At each month or year anniversary that interest is due but not added to principal. Repayments clear unpaid interest first, then principal.';
+
+  @override
+  String get loanPeriodEndInterestHintCompound =>
       'Mid-period repayments reduce principal and accrue pro-rata interest for time outstanding. Added principal accrues pro-rata until period end. That interest, plus full-period interest on what was outstanding the whole period, is added to principal at each month or year anniversary.';
 
   @override
@@ -2151,6 +2155,16 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String loanTimelinePeriodEndSliceDue(
+    String repaid,
+    String from,
+    String to,
+    String interest,
+  ) {
+    return 'Interest due on payment $repaid ($from–$to) → $interest (not added to principal)';
+  }
+
+  @override
   String loanTimelinePeriodEndAddSlice(
     String added,
     String from,
@@ -2161,8 +2175,26 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String loanTimelinePeriodEndAddSliceDue(
+    String added,
+    String from,
+    String to,
+    String interest,
+  ) {
+    return 'Interest due on added principal $added ($from–$to) → $interest (not added to principal)';
+  }
+
+  @override
   String loanTimelineRemainingPeriodInterest(String principal, String amount) {
     return 'Interest on remaining $principal for full period → $amount (added to principal)';
+  }
+
+  @override
+  String loanTimelineRemainingPeriodInterestDue(
+    String principal,
+    String amount,
+  ) {
+    return 'Interest due on remaining $principal for full period → $amount (not added to principal)';
   }
 
   @override
@@ -2171,8 +2203,23 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String loanTimelinePrincipalRemains(String date, String amount) {
+    return '$date — Principal remains $amount';
+  }
+
+  @override
   String loanTimelinePayment(String date, String amount, String principal) {
     return '$date — Repayment $amount → principal $principal';
+  }
+
+  @override
+  String loanTimelinePaymentSplit(
+    String date,
+    String amount,
+    String interest,
+    String principal,
+  ) {
+    return '$date — Repayment $amount → interest $interest, principal $principal';
   }
 
   @override
