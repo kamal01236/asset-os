@@ -1255,8 +1255,8 @@
       "amount": {"type": "String"}
     }
   },
-  "loanEditSetupTooltip": "तिथियाँ संपादित करें",
-  "loanEditSetupTitle": "कर्ज तिथियाँ संपादित करें",
+  "loanEditSetupTooltip": "कर्ज संपादित करें",
+  "loanEditSetupTitle": "कर्ज संपादित करें",
   "loanSetupSummary": "शुरू {start} · देय {due} · {rate} {period} · {policy}",
   "@loanSetupSummary": {
     "placeholders": {

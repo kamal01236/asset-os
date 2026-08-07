@@ -1255,8 +1255,8 @@
       "amount": {"type": "String"}
     }
   },
-  "loanEditSetupTooltip": "Edit dates",
-  "loanEditSetupTitle": "Edit loan dates",
+  "loanEditSetupTooltip": "Edit loan",
+  "loanEditSetupTitle": "Edit loan",
   "loanSetupSummary": "Start {start} · Due {due} · {rate} {period} · {policy}",
   "@loanSetupSummary": {
     "placeholders": {

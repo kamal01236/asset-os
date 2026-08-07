@@ -990,6 +990,71 @@ void main() {
       );
     });
 
+    test('updateMoneyLoan writes setup fields and keeps customerId', () async {
+      final LocalRepository repo = await bootRepo();
+      final customer = await ensureCustomer(repo);
+      final String loanId = await repo.createMoneyLoan(
+        customerId: customer.id,
+        direction: MoneyLoanDirection.given,
+        principalPaise: 100000,
+        interestStartedAt: DateTime(2026, 1, 1),
+        rateBps: 200,
+        ratePeriod: MoneyRatePeriod.monthly,
+        capitalizationPolicy: MoneyCapitalizationPolicy.never,
+        note: 'initial',
+      );
+
+      await repo.updateMoneyLoan(
+        loanId: loanId,
+        direction: MoneyLoanDirection.taken,
+        principalPaise: 250000,
+        rateBps: 1500,
+        ratePeriod: MoneyRatePeriod.yearly,
+        capitalizationPolicy: MoneyCapitalizationPolicy.onScheduledCycle,
+        capitalizationCycle: MoneyCapitalizationCycle.quarterly,
+        prepaymentAllocation: MoneyPrepaymentAllocation.principalOnly,
+        interestStartedAt: DateTime(2026, 2, 1),
+        interestEndedAt: DateTime(2026, 12, 1),
+        note: 'updated note',
+      );
+
+      final MoneyLoan loan = (await repo.getMoneyLoan(loanId))!;
+      expect(loan.customerId, customer.id);
+      expect(loan.direction, MoneyLoanDirection.taken);
+      expect(loan.principalPaise, 250000);
+      expect(loan.rateBps, 1500);
+      expect(loan.ratePeriod, MoneyRatePeriod.yearly);
+      expect(
+        loan.capitalizationPolicy,
+        MoneyCapitalizationPolicy.onScheduledCycle,
+      );
+      expect(loan.capitalizationCycle, MoneyCapitalizationCycle.quarterly);
+      expect(
+        loan.prepaymentAllocation,
+        MoneyPrepaymentAllocation.principalOnly,
+      );
+      expect(loan.interestStartedAt, DateTime(2026, 2, 1));
+      expect(loan.interestEndedAt, DateTime(2026, 12, 1));
+      expect(loan.note, 'updated note');
+    });
+
+    test('updateMoneyLoan rejects closed loans', () async {
+      final LocalRepository repo = await bootRepo();
+      final customer = await ensureCustomer(repo);
+      final String loanId = await repo.createMoneyLoan(
+        customerId: customer.id,
+        direction: MoneyLoanDirection.given,
+        principalPaise: 100000,
+        interestStartedAt: DateTime(2026, 1, 1),
+        rateBps: 0,
+      );
+      await repo.closeMoneyLoan(loanId, closedAt: DateTime(2026, 1, 2));
+      await expectLater(
+        repo.updateMoneyLoan(loanId: loanId, principalPaise: 200000),
+        throwsA(isA<StateError>()),
+      );
+    });
+
     test('MoneyPrepaymentAllocation.parse defaults unknown to interestThenPrincipal',
         () {
       expect(

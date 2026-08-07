@@ -1865,6 +1865,7 @@ class LocalRepository {
     MoneyCapitalizationCycle? capitalizationCycle,
     int? rateBps,
     MoneyRatePeriod? ratePeriod,
+    MoneyPrepaymentAllocation? prepaymentAllocation,
     DateTime? interestStartedAt,
     DateTime? interestEndedAt,
     bool clearInterestEndedAt = false,
@@ -1894,6 +1895,8 @@ class LocalRepository {
     final MoneyRatePeriod nextRatePeriod = ratePeriod ?? existing.ratePeriod;
     final MoneyCapitalizationCycle nextCycle = capitalizationCycle ??
         existing.capitalizationCycle;
+    final MoneyPrepaymentAllocation nextPrepayment =
+        prepaymentAllocation ?? existing.prepaymentAllocation;
     final MoneyInterestKind legacyKind = nextPolicy.legacyInterestKind;
     final DateTime start = interestStartedAt == null
         ? existing.interestStartedAt
@@ -1937,6 +1940,7 @@ class LocalRepository {
         ratePeriod: Value<String>(nextRatePeriod.name),
         capitalizationPolicy: Value<String>(nextPolicy.name),
         capitalizationCycle: Value<String>(nextCycle.name),
+        prepaymentAllocation: Value<String>(nextPrepayment.name),
         interestStartedAt: Value<DateTime>(start),
         interestEndedAt: Value<DateTime?>(ended),
         note: Value<String?>(nextNote),

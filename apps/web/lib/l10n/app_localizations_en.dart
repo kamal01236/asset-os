@@ -2262,10 +2262,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get loanEditSetupTooltip => 'Edit dates';
+  String get loanEditSetupTooltip => 'Edit loan';
 
   @override
-  String get loanEditSetupTitle => 'Edit loan dates';
+  String get loanEditSetupTitle => 'Edit loan';
 
   @override
   String loanSetupSummary(
