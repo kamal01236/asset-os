@@ -1,14 +1,12 @@
 {
   "@@locale": "hi",
   "navHome": "होम",
-  "navRentals": "लेन-देन",
   "navTransactions": "लेन-देन",
   "navResources": "संसाधन",
   "navCustomers": "ग्राहक",
   "navMore": "और",
   "actionSearch": "खोजें",
   "actionNewRental": "नया ऑर्डर",
-  "transactionsTitle": "लेन-देन",
   "transactionsFilterAll": "सभी",
   "transactionsFilterOrders": "ऑर्डर",
   "transactionsFilterLoans": "कर्ज",
@@ -22,8 +20,6 @@
   "noTransactionsYetSubtitle": "शुरू करने के लिए ऑर्डर या कर्ज बनाएँ।",
   "customerTransactionsHeading": "लेन-देन",
   "customerTransactionsEmpty": "इस ग्राहक के लिए कोई लेन-देन नहीं।",
-  "customerTransactionsViewAll": "सभी देखें",
-  "transactionsMoreSubtitle": "ऑर्डर और नकद कर्ज",
   "issueItemAction": "जारी करें",
   "issueToCustomerAction": "जारी करें",
   "searchInventoryHint": "नाम या श्रेणी से खोजें",
@@ -47,30 +43,22 @@
   "noRentalsYetTitle": "अभी कोई ऑर्डर नहीं",
   "noRentalsYetSubtitle": "अपना पहला लेन-देन बनाने के लिए नया ऑर्डर शुरू करें।",
   "unknownCustomer": "अज्ञात ग्राहक",
-  "rentalDueSubtitle": "{customerName} • देय {date}",
-  "@rentalDueSubtitle": {
-    "placeholders": {
-      "customerName": {"type": "String"},
-      "date": {"type": "String"}
-    }
-  },
   "inventoryAvailableSubtitle": "{category} • {available}/{total} उपलब्ध",
   "@inventoryAvailableSubtitle": {
     "placeholders": {
-      "category": {"type": "String"},
-      "available": {"type": "int"},
-      "total": {"type": "int"}
+      "category": {
+        "type": "String"
+      },
+      "available": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "customerTrusted": "विश्वसनीय",
   "customerStandard": "सामान्य",
-  "customerSubtitle": "{phone} • {tier}",
-  "@customerSubtitle": {
-    "placeholders": {
-      "phone": {"type": "String"},
-      "tier": {"type": "String"}
-    }
-  },
   "offlineSimulationTitle": "ऑफ़लाइन सिमुलेशन",
   "offlineSimulationSubtitle": "केवल डेमो: नॉन-ब्लॉकिंग ऑफ़लाइन UX जाँचें (उत्पाद स्थिति नहीं)।",
   "languageTitle": "भाषा",
@@ -88,8 +76,12 @@
   "onboardingStepProgress": "चरण {current} / {total}",
   "@onboardingStepProgress": {
     "placeholders": {
-      "current": {"type": "int"},
-      "total": {"type": "int"}
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "onboardingLanguageTitle": "अपनी भाषा चुनें",
@@ -112,23 +104,25 @@
   "onboardingTemplateConfirmBody": "{name} के सभी {count} स्टार्टर आइटम जोड़ें और अनुशंसित होम लेआउट सेट करें?",
   "@onboardingTemplateConfirmBody": {
     "placeholders": {
-      "count": {"type": "int"},
-      "name": {"type": "String"}
+      "count": {
+        "type": "int"
+      },
+      "name": {
+        "type": "String"
+      }
     }
   },
-  "onboardingTemplateBusy": "सेटअप हो रहा है…",
   "phoneLabel": "फ़ोन: {phone}",
   "@phoneLabel": {
     "placeholders": {
-      "phone": {"type": "String"}
+      "phone": {
+        "type": "String"
+      }
     }
   },
   "itemsHeading": "वस्तुएँ",
   "timelineHeading": "टाइमलाइन",
   "extendAction": "बढ़ाएँ",
-  "shareAction": "शेयर",
-  "extendPlaceholder": "बढ़ाना एक प्लेसहोल्डर कार्रवाई है।",
-  "sharePlaceholder": "शेयर एक प्लेसहोल्डर कार्रवाई है।",
   "extendDueTitle": "देय तिथि बढ़ाएँ",
   "extendDueSuccess": "देय तिथि बढ़ाई गई।",
   "extendDueInvalid": "वर्तमान देय तिथि के बाद की तारीख चुनें।",
@@ -141,7 +135,9 @@
   "seatPaymentDueLabel": "{code} भुगतान देय",
   "@seatPaymentDueLabel": {
     "placeholders": {
-      "code": {"type": "String"}
+      "code": {
+        "type": "String"
+      }
     }
   },
   "editResourceTitle": "संसाधन संपादित करें",
@@ -161,40 +157,20 @@
   "cancel": "रद्द करें",
   "saving": "सहेजा जा रहा है…",
   "saveChanges": "बदलाव सहेजें",
-  "nameCategoryRequired": "नाम और श्रेणी आवश्यक हैं।",
   "resourceUpdated": "संसाधन अपडेट हो गया।",
-  "hideFromNewOrderAction": "नए ऑर्डर से छिपाएँ",
-  "restoreToCatalogAction": "कैटलॉग में पुनर्स्थापित करें",
-  "deleteResourcePermanentlyAction": "स्थायी रूप से हटाएँ",
-  "confirmHideResourceTitle": "यह संसाधन छिपाएँ?",
-  "confirmHideResourceBody": "यह नए ऑर्डर और डिफ़ॉल्ट संसाधन सूची में नहीं दिखेगा। बाद में पुनर्स्थापित कर सकते हैं।",
-  "confirmRestoreResourceTitle": "यह संसाधन पुनर्स्थापित करें?",
-  "confirmRestoreResourceBody": "यह फिर से नए ऑर्डर और संसाधन सूची में दिखेगा।",
-  "confirmDeleteResourceTitle": "स्थायी रूप से हटाएँ?",
-  "confirmDeleteResourceBody": "यह पूर्ववत नहीं हो सकता। केवल बिना ऑर्डर इतिहास वाले अनुपयोगी संसाधन हटाए जा सकते हैं।",
-  "deleteResourceBlockedMessage": "हटा नहीं सकते — यह संसाधन पिछले या खुले ऑर्डर में है। इसके बजाय छिपाएँ।",
-  "resourceHiddenSnack": "संसाधन नए ऑर्डर से छिपा दिया गया।",
-  "resourceRestoredSnack": "संसाधन कैटलॉग में पुनर्स्थापित हो गया।",
   "resourceDeletedSnack": "संसाधन हटा दिया गया।",
-  "showHiddenResourcesFilter": "छिपे हुए दिखाएँ",
-  "resourceHiddenBadge": "छिपा हुआ",
   "customerProfileTitle": "ग्राहक प्रोफ़ाइल",
   "callAction": "कॉल",
   "whatsAppAction": "WhatsApp",
   "whatsAppSubtitle": "प्लेसहोल्डर इंटीग्रेशन हुक",
   "callPlaceholder": "कॉल प्लेसहोल्डर कार्रवाई।",
   "whatsAppPlaceholder": "WhatsApp प्लेसहोल्डर कार्रवाई।",
-  "recentRentals": "हाल के ऑर्डर",
-  "dueDate": "देय {date}",
-  "@dueDate": {
-    "placeholders": {
-      "date": {"type": "String"}
-    }
-  },
   "returnedDate": "वापस {date}",
   "@returnedDate": {
     "placeholders": {
-      "date": {"type": "String"}
+      "date": {
+        "type": "String"
+      }
     }
   },
   "searchHint": "ग्राहक, ऑर्डर या संसाधन खोजें",
@@ -202,34 +178,39 @@
   "searchSectionCurrentRentals": "वर्तमान ऑर्डर",
   "searchSectionPreviousRentals": "पिछले ऑर्डर",
   "searchSectionResources": "संसाधन",
-  "noMatchingSection": "कोई मिलान नहीं: {section}",
-  "@noMatchingSection": {
-    "placeholders": {
-      "section": {"type": "String"}
-    }
-  },
   "inventoryUnitsSubtitle": "{category} • {available}/{total}",
   "@inventoryUnitsSubtitle": {
     "placeholders": {
-      "category": {"type": "String"},
-      "available": {"type": "int"},
-      "total": {"type": "int"}
+      "category": {
+        "type": "String"
+      },
+      "available": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "stepOf": "चरण {current} / {total}",
   "@stepOf": {
     "placeholders": {
-      "current": {"type": "int"},
-      "total": {"type": "int"}
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "phoneNumberLabel": "फ़ोन नंबर",
   "phoneNumberHint": "10 अंकों का ग्राहक फ़ोन",
-  "existingCustomer": "मौजूदा ग्राहक",
   "existingCustomerSubtitle": "{phone} • मौजूदा ग्राहक",
   "@existingCustomerSubtitle": {
     "placeholders": {
-      "phone": {"type": "String"}
+      "phone": {
+        "type": "String"
+      }
     }
   },
   "customerNameNewLabel": "नाम",
@@ -238,47 +219,28 @@
   "noPhoneOptionalNameHint": "इस ऑर्डर के लिए वैकल्पिक प्रदर्शन नाम",
   "customerTypeaheadEmpty": "कोई मिलता ग्राहक नहीं",
   "phoneRequiredError": "10 अंकों का फ़ोन दर्ज करें, या फ़ोन नंबर नहीं है चुनें।",
-  "phoneAlreadyUsedError": "यह फ़ोन पहले से किसी अन्य ग्राहक के पास है।",
   "customerSuggestionSubtitle": "{name} · {phone}",
   "@customerSuggestionSubtitle": {
     "placeholders": {
-      "name": {"type": "String"},
-      "phone": {"type": "String"}
-    }
-  },
-  "rentalNicknameLabel": "इस ऑर्डर का प्रदर्शन नाम",
-  "rentalNicknameHint": "इस ऑर्डर पर दिखने वाला वैकल्पिक नाम",
-  "reviewNickname": "नाम: {nickname} · {customerName}",
-  "@reviewNickname": {
-    "placeholders": {
-      "nickname": {"type": "String"},
-      "customerName": {"type": "String"}
+      "name": {
+        "type": "String"
+      },
+      "phone": {
+        "type": "String"
+      }
     }
   },
   "rentalNicknameSubtitle": "{customerName} · {phone}",
   "@rentalNicknameSubtitle": {
     "placeholders": {
-      "customerName": {"type": "String"},
-      "phone": {"type": "String"}
+      "customerName": {
+        "type": "String"
+      },
+      "phone": {
+        "type": "String"
+      }
     }
   },
-  "rentalNicknameDueSubtitle": "{nickname} • देय {date}",
-  "@rentalNicknameDueSubtitle": {
-    "placeholders": {
-      "nickname": {"type": "String"},
-      "date": {"type": "String"}
-    }
-  },
-  "selectItems": "वस्तुएँ चुनें",
-  "itemAvailableCount": "{category} • {available} उपलब्ध",
-  "@itemAvailableCount": {
-    "placeholders": {
-      "category": {"type": "String"},
-      "available": {"type": "int"}
-    }
-  },
-  "labelInstancesHeading": "प्रत्येक वस्तु का नाम दें",
-  "labelInstancesHint": "उपन्यास/उपकरणों के लिए: इस प्रति का नाम और छोटा कोड दर्ज करें।",
   "instanceNameLabel": "इकाई का नाम",
   "instanceNameHint": "जैसे हैरी पॉटर",
   "shortCodeLabel": "छोटा कोड",
@@ -287,24 +249,12 @@
   "duplicateShortCode": "छोटा कोड {code} पहले से किसी सक्रिय ऑर्डर पर उपयोग में है।",
   "@duplicateShortCode": {
     "placeholders": {
-      "code": {"type": "String"}
+      "code": {
+        "type": "String"
+      }
     }
   },
   "inventoryInstancesNote": "ऑर्डर बनाते समय व्यक्तिगत प्रतियों का नाम और छोटा कोड दर्ज किया जाता है।",
-  "reviewHeading": "समीक्षा",
-  "reviewPhone": "फ़ोन: {phone}",
-  "@reviewPhone": {
-    "placeholders": {
-      "phone": {"type": "String"}
-    }
-  },
-  "reviewName": "नाम: {name}",
-  "@reviewName": {
-    "placeholders": {
-      "name": {"type": "String"}
-    }
-  },
-  "reviewItemsLabel": "वस्तुएँ:",
   "back": "वापस",
   "continueAction": "आगे बढ़ें",
   "confirmRental": "ऑर्डर बनाएँ",
@@ -314,7 +264,9 @@
   "rentalReturned": "{id} वापस हो गया",
   "@rentalReturned": {
     "placeholders": {
-      "id": {"type": "String"}
+      "id": {
+        "type": "String"
+      }
     }
   },
   "quickAdd": "त्वरित जोड़ें",
@@ -331,19 +283,15 @@
   "voiceSearchTitle": "वॉइस खोज",
   "voiceSearchBody": "केवल स्टब: वॉइस कमांड चरण 5+ में यूनिवर्सल खोज इंटेंट से जुड़ेंगे।",
   "templatesIntro": "सक्रिय उद्योग पैक चुनें। बदलने पर होम लेआउट और सक्षम संसाधन प्रकार अपडेट होते हैं। मौजूदा कर्ज, ऑर्डर और इन्वेंटरी बनी रहती है। नया कर्ज तब उपलब्ध है जब मनी लेंडिंग सक्रिय हो।",
-  "starterItemsCount": "{count} स्टार्टर वस्तुएँ",
-  "@starterItemsCount": {
-    "placeholders": {
-      "count": {"type": "int"}
-    }
-  },
   "activeTemplateLabel": "सक्रिय पैक",
   "activeTemplateHint": "व्यवसाय पैक चुनें",
   "switchTemplateTitle": "व्यवसाय पैक बदलें?",
   "switchTemplateBody": "{name} सक्रिय करें? होम लेआउट और संसाधन प्रकार इस पैक से मेल खाएँगे। मौजूदा कर्ज, ऑर्डर और इन्वेंटरी बनी रहती है।",
   "@switchTemplateBody": {
     "placeholders": {
-      "name": {"type": "String"}
+      "name": {
+        "type": "String"
+      }
     }
   },
   "switchTemplateConfirm": "बदलें",
@@ -352,8 +300,12 @@
   "templateCardSubtitle": "{description}\n{count} स्टार्टर वस्तुएँ",
   "@templateCardSubtitle": {
     "placeholders": {
-      "description": {"type": "String"},
-      "count": {"type": "int"}
+      "description": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
     }
   },
   "selectAll": "सभी चुनें",
@@ -361,46 +313,55 @@
   "selectedCount": "{count} चयनित",
   "@selectedCount": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "unitSingular": "{count} इकाई",
   "@unitSingular": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "unitPlural": "{count} इकाइयाँ",
   "@unitPlural": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "templateItemSubtitle": "{category} • {units}",
   "@templateItemSubtitle": {
     "placeholders": {
-      "category": {"type": "String"},
-      "units": {"type": "String"}
+      "category": {
+        "type": "String"
+      },
+      "units": {
+        "type": "String"
+      }
     }
   },
-  "adding": "जोड़ा जा रहा है…",
-  "addSelectedToResources": "चयनित को संसाधनों में जोड़ें",
   "applyTemplateSelection": "लागू करें",
   "applyingTemplateSelection": "लागू हो रहा है…",
-  "templateImportResult": "{added} वस्तुएँ जोड़ी गईं ({skipped} पहले से मौजूद)",
-  "@templateImportResult": {
-    "placeholders": {
-      "added": {"type": "int"},
-      "skipped": {"type": "int"}
-    }
-  },
   "templateApplyResult": "{added} जोड़ीं, {reactivated} पुनर्स्थापित, {deactivated} हटाईं ({skipped} अपरिवर्तित)",
   "@templateApplyResult": {
     "placeholders": {
-      "added": {"type": "int"},
-      "reactivated": {"type": "int"},
-      "deactivated": {"type": "int"},
-      "skipped": {"type": "int"}
+      "added": {
+        "type": "int"
+      },
+      "reactivated": {
+        "type": "int"
+      },
+      "deactivated": {
+        "type": "int"
+      },
+      "skipped": {
+        "type": "int"
+      }
     }
   },
   "myWhatsAppTitle": "मेरा WhatsApp नंबर",
@@ -419,16 +380,26 @@
   "reportUnitOccupancyItemHeading": "{name} ({total} इकाइयाँ)",
   "@reportUnitOccupancyItemHeading": {
     "placeholders": {
-      "name": {"type": "String"},
-      "total": {"type": "int"}
+      "name": {
+        "type": "String"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "reportUnitOccupancyRow": "{code} · {status} · {customer}",
   "@reportUnitOccupancyRow": {
     "placeholders": {
-      "code": {"type": "String"},
-      "status": {"type": "String"},
-      "customer": {"type": "String"}
+      "code": {
+        "type": "String"
+      },
+      "status": {
+        "type": "String"
+      },
+      "customer": {
+        "type": "String"
+      }
     }
   },
   "reportUnitStatusOccupied": "अधिग्रहित",
@@ -465,12 +436,12 @@
   "securityDepositShort": "सिक्योरिटी {amount}",
   "@securityDepositShort": {
     "placeholders": {
-      "amount": {"type": "String"}
+      "amount": {
+        "type": "String"
+      }
     }
   },
   "pricingSectionTitle": "किराया मूल्य",
-  "durationHeading": "किराए की अवधि",
-  "durationHint": "पहले चुनी गई वस्तु के बिलिंग मोड पर आधारित।",
   "durationUnitsLabel": "अवधि",
   "durationUnitsDaily": "दिनों की संख्या",
   "durationUnitsWeekly": "सप्ताहों की संख्या",
@@ -480,155 +451,100 @@
   "chargePreviewDue": "देय {date}",
   "@chargePreviewDue": {
     "placeholders": {
-      "date": {"type": "String"}
+      "date": {
+        "type": "String"
+      }
     }
   },
   "chargeLineAmount": "{item} — {amount}",
   "@chargeLineAmount": {
     "placeholders": {
-      "item": {"type": "String"},
-      "amount": {"type": "String"}
-    }
-  },
-  "chargeBaseLabel": "आधार: {amount}",
-  "@chargeBaseLabel": {
-    "placeholders": {
-      "amount": {"type": "String"}
-    }
-  },
-  "chargeLateLabel": "विलंब शुल्क: {amount}",
-  "@chargeLateLabel": {
-    "placeholders": {
-      "amount": {"type": "String"}
+      "item": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
     }
   },
   "chargeTotalLabel": "कुल: {amount}",
   "@chargeTotalLabel": {
     "placeholders": {
-      "amount": {"type": "String"}
+      "amount": {
+        "type": "String"
+      }
     }
   },
-  "reviewChargesLabel": "शुल्क:",
   "reviewDueLabel": "देय: {date}",
   "@reviewDueLabel": {
     "placeholders": {
-      "date": {"type": "String"}
+      "date": {
+        "type": "String"
+      }
     }
   },
   "rentalAmountSubtitle": "देय {date} · {amount}",
   "@rentalAmountSubtitle": {
     "placeholders": {
-      "date": {"type": "String"},
-      "amount": {"type": "String"}
+      "date": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
     }
   },
   "inventoryRateSubtitle": "{mode} · {rate}",
   "@inventoryRateSubtitle": {
     "placeholders": {
-      "mode": {"type": "String"},
-      "rate": {"type": "String"}
+      "mode": {
+        "type": "String"
+      },
+      "rate": {
+        "type": "String"
+      }
     }
   },
   "chargesHeading": "शुल्क",
-  "durationRequired": "मान्य अवधि दर्ज करें (कम से कम 1)।",
-  "customEndRequired": "आज या उसके बाद की वापसी तिथि चुनें।",
-  "depositBalanceLabel": "जमा शेष",
-  "depositBalanceAmount": "जमा: {amount}",
-  "@depositBalanceAmount": {
-    "placeholders": {
-      "amount": {"type": "String"}
-    }
-  },
-  "depositAddAction": "जमा जोड़ें",
-  "depositRefundAction": "वापसी",
-  "depositAmountLabel": "राशि (₹)",
   "depositAmountHint": "जैसे 500",
-  "depositNoteLabel": "नोट (वैकल्पिक)",
-  "depositNoteHint": "कारण या संदर्भ",
-  "depositTopUpTitle": "जमा जोड़ें",
-  "depositRefundTitle": "जमा वापसी",
-  "depositConfirmTopUp": "जोड़ें",
-  "depositConfirmRefund": "वापसी",
-  "depositInvalidAmount": "शून्य से अधिक राशि दर्ज करें।",
-  "depositRefundExceeds": "वापसी वर्तमान जमा शेष से अधिक नहीं हो सकती।",
-  "depositTopUpSuccess": "जमा अपडेट होकर {amount} हो गई।",
-  "@depositTopUpSuccess": {
-    "placeholders": {
-      "amount": {"type": "String"}
-    }
-  },
-  "depositRefundSuccess": "वापसी हो गई। जमा अब {amount} है।",
-  "@depositRefundSuccess": {
-    "placeholders": {
-      "amount": {"type": "String"}
-    }
-  },
-  "depositLedgerHeading": "जमा इतिहास",
-  "depositLedgerEmpty": "अभी कोई जमा गतिविधि नहीं।",
-  "depositLedgerTopUp": "टॉप-अप {amount}",
-  "@depositLedgerTopUp": {
-    "placeholders": {
-      "amount": {"type": "String"}
-    }
-  },
-  "depositLedgerApply": "वापसी पर लागू {amount}",
-  "@depositLedgerApply": {
-    "placeholders": {
-      "amount": {"type": "String"}
-    }
-  },
-  "depositLedgerRefund": "वापसी {amount}",
-  "@depositLedgerRefund": {
-    "placeholders": {
-      "amount": {"type": "String"}
-    }
-  },
-  "depositLedgerAdjust": "समायोजन {amount}",
-  "@depositLedgerAdjust": {
-    "placeholders": {
-      "amount": {"type": "String"}
-    }
-  },
-  "depositLedgerBalanceAfter": "शेष {amount}",
-  "@depositLedgerBalanceAfter": {
-    "placeholders": {
-      "amount": {"type": "String"}
-    }
-  },
   "depositAvailableLabel": "उपलब्ध जमा: {amount}",
   "@depositAvailableLabel": {
     "placeholders": {
-      "amount": {"type": "String"}
+      "amount": {
+        "type": "String"
+      }
     }
   },
   "depositWillApplyLabel": "जमा से लागू होगा: {amount}",
   "@depositWillApplyLabel": {
     "placeholders": {
-      "amount": {"type": "String"}
+      "amount": {
+        "type": "String"
+      }
     }
   },
   "depositRemainingDueLabel": "शेष देय: {amount}",
   "@depositRemainingDueLabel": {
     "placeholders": {
-      "amount": {"type": "String"}
+      "amount": {
+        "type": "String"
+      }
     }
   },
   "depositLeftoverLabel": "बचा हुआ जमा: {amount}",
   "@depositLeftoverLabel": {
     "placeholders": {
-      "amount": {"type": "String"}
+      "amount": {
+        "type": "String"
+      }
     }
   },
   "depositAppliedLabel": "जमा लागू: {amount}",
   "@depositAppliedLabel": {
     "placeholders": {
-      "amount": {"type": "String"}
-    }
-  },
-  "depositNetDueLabel": "नेट देय: {amount}",
-  "@depositNetDueLabel": {
-    "placeholders": {
-      "amount": {"type": "String"}
+      "amount": {
+        "type": "String"
+      }
     }
   },
   "returnSettlementTitle": "वापसी निपटान",
@@ -638,7 +554,9 @@
   "returnDiscountLabel": "छूट {amount}",
   "@returnDiscountLabel": {
     "placeholders": {
-      "amount": {"type": "String"}
+      "amount": {
+        "type": "String"
+      }
     }
   },
   "returnNoteLabel": "नोट (वैकल्पिक)",
@@ -655,55 +573,56 @@
   "deleteOrderSuccessSnack": "ऑर्डर रद्द किया गया। जमा शेष {balance}।",
   "@deleteOrderSuccessSnack": {
     "placeholders": {
-      "balance": {"type": "String"}
+      "balance": {
+        "type": "String"
+      }
     }
   },
   "depositReturnSnackApplied": "जमा से {applied} लागू; शेष अब {balance}।",
   "@depositReturnSnackApplied": {
     "placeholders": {
-      "applied": {"type": "String"},
-      "balance": {"type": "String"}
+      "applied": {
+        "type": "String"
+      },
+      "balance": {
+        "type": "String"
+      }
     }
   },
   "depositReturnSnackDue": "जमा से {applied} लागू; शेष देय {due}।",
   "@depositReturnSnackDue": {
     "placeholders": {
-      "applied": {"type": "String"},
-      "due": {"type": "String"}
+      "applied": {
+        "type": "String"
+      },
+      "due": {
+        "type": "String"
+      }
     }
   },
   "depositReturnSnackNoDeposit": "वापस किया गया। कुल {total} नकद देय।",
   "@depositReturnSnackNoDeposit": {
     "placeholders": {
-      "total": {"type": "String"}
-    }
-  },
-  "customerSubtitleWithDeposit": "{phone} • {tier} • जमा {amount}",
-  "@customerSubtitleWithDeposit": {
-    "placeholders": {
-      "phone": {"type": "String"},
-      "tier": {"type": "String"},
-      "amount": {"type": "String"}
-    }
-  },
-  "existingCustomerWithDeposit": "{phone} • मौजूदा • जमा {amount}",
-  "@existingCustomerWithDeposit": {
-    "placeholders": {
-      "phone": {"type": "String"},
-      "amount": {"type": "String"}
+      "total": {
+        "type": "String"
+      }
     }
   },
   "returnSelectedAction": "चयनित वापस करें",
   "returnAllAction": "सभी वापस करें",
-  "replaceLineAction": "बदलें",
-  "selectLinesToReturn": "वापसी के लिए पंक्तियाँ चुनें",
   "returnByQuantityHint": "प्रत्येक वस्तु के लिए वापसी संख्या चुनें",
   "skuIssuedReturnedRemaining": "जारी {issued} · वापस {returned} · अभी बाहर {remaining}",
   "@skuIssuedReturnedRemaining": {
     "placeholders": {
-      "issued": {"type": "int"},
-      "returned": {"type": "int"},
-      "remaining": {"type": "int"}
+      "issued": {
+        "type": "int"
+      },
+      "returned": {
+        "type": "int"
+      },
+      "remaining": {
+        "type": "int"
+      }
     }
   },
   "returnQtyLabel": "वापसी संख्या",
@@ -713,63 +632,67 @@
   "confirmMarkLostBody": "{count} इकाई(याँ) बिना स्टॉक वापस किए बंद करें। अगर कुछ अभी बाहर है तो ऑर्डर खुला रहेगा।",
   "@confirmMarkLostBody": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "confirmMarkLostAction": "खोया चिह्नित करें",
   "unitsLostSnack": "{count} इकाई(याँ) खोई चिह्नित।",
   "@unitsLostSnack": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "lineLostLabel": "खोया",
   "lostLinesHeading": "खोया",
   "pickUnitsToReturn": "वापसी के लिए इकाइयाँ चुनें",
-  "openLinesHeading": "बाहर",
   "returnedLinesHeading": "वापस हुए",
   "lineReturnedLabel": "वापस",
   "lineOpenLabel": "बाहर",
   "partialReturnSnack": "{count} वस्तु वापस। किराया अभी सक्रिय है।",
   "@partialReturnSnack": {
     "placeholders": {
-      "count": {"type": "int"}
-    }
-  },
-  "replaceFlowTitle": "वस्तु बदलें",
-  "replaceSettlementIntro": "पुरानी वस्तु का निपटान करें, फिर नया जारी करें।",
-  "replaceConfirmAction": "बदलें और जारी करें",
-  "replaceSuccessSnack": "पुरानी पंक्ति निपटाई; नया {newId}। जमा शेष {balance}।",
-  "@replaceSuccessSnack": {
-    "placeholders": {
-      "newId": {"type": "String"},
-      "balance": {"type": "String"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "noLinesSelected": "वापसी के लिए कम से कम एक वस्तु चुनें।",
   "linesOpenCount": "{total} में से {open} अभी बाहर",
   "@linesOpenCount": {
     "placeholders": {
-      "open": {"type": "int"},
-      "total": {"type": "int"}
+      "open": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "lineChargePreview": "{label}: {amount}",
   "@lineChargePreview": {
     "placeholders": {
-      "label": {"type": "String"},
-      "amount": {"type": "String"}
+      "label": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
     }
   },
   "clearFilter": "साफ़ करें",
   "showingFilter": "दिखा रहा है: {label}",
   "@showingFilter": {
     "placeholders": {
-      "label": {"type": "String"}
+      "label": {
+        "type": "String"
+      }
     }
   },
   "needsAttentionTitle": "ध्यान दें",
-  "needsAttentionEmptyTitle": "कुछ ध्यान देने योग्य नहीं",
   "needsAttentionEmptySubtitle": "आज देय और अतिदेय ऑर्डर यहाँ दिखेंगे।",
   "recentActivityTitle": "हाल की गतिविधि",
   "recentActivityEmpty": "अभी कोई हालिया ऑर्डर या वापसी नहीं।",
@@ -777,7 +700,9 @@
   "homeFilterEmptyRentalsSubtitle": "अभी कोई ऑर्डर {label} से मेल नहीं खाता।",
   "@homeFilterEmptyRentalsSubtitle": {
     "placeholders": {
-      "label": {"type": "String"}
+      "label": {
+        "type": "String"
+      }
     }
   },
   "homeFilterEmptyResourcesSubtitle": "अभी कोई संसाधन उपलब्ध इकाइयों के साथ नहीं।",
@@ -806,16 +731,12 @@
   "moduleRecentActivitySubtitle": "नवीनतम ऑर्डर और वापसी",
   "moduleSuggestions": "AI सुझाव",
   "moduleSuggestionsSubtitle": "वैकल्पिक बीटा सुझाव",
-  "applyHomeLayoutTitle": "होम लेआउट लागू करें?",
-  "applyHomeLayoutBody": "होम मॉड्यूल और सक्षम संसाधन प्रकारों को इस टेम्पलेट के अनुशंसित सेट से बदलें। केवल आइटम आयात करने पर प्रकार मर्ज होते हैं।",
-  "applyHomeLayoutCustomizedBody": "आपने होम पहले अनुकूलित किया है। होम मॉड्यूल और सक्षम संसाधन प्रकारों को इस टेम्पलेट के सेट से बदलें?",
-  "applyHomeLayoutSkip": "वर्तमान रखें",
-  "applyHomeLayoutConfirm": "लेआउट लागू करें",
-  "applyHomeLayoutDone": "होम लेआउट और संसाधन प्रकार अपडेट हो गए।",
   "minMeaningfulTextError": "कम से कम {min} अक्षर दर्ज करें।",
   "@minMeaningfulTextError": {
     "placeholders": {
-      "min": {"type": "int"}
+      "min": {
+        "type": "int"
+      }
     }
   },
   "searchCustomersHint": "नाम या फ़ोन से खोजें",
@@ -826,155 +747,91 @@
   "allowsDynamicPricingSubtitle": "नए ऑर्डर पर इस आइटम की दर बदली जा सकती है। कैटलॉग बदलाव केवल नए ऑर्डर पर लागू होते हैं।",
   "orderLineRateLabel": "इस ऑर्डर की दर (₹)",
   "orderLineRateHint": "इस किराए के लिए कैटलॉग दर बदली जा सकती है",
-  "continueWithoutDueDate": "देय तिथि के बिना जारी रखें",
   "openEndedDurationHint": "चयनित सभी वस्तुएँ खुली अवधि की अनुमति देती हैं। अवधि दर्ज करें, या देय तिथि के बिना जारी रखें।",
   "openEndedLabel": "खुली अवधि",
   "reviewOpenEndedLabel": "देय: खुली अवधि (वापसी तक बढ़ता रहेगा)",
   "rentalAmountOpenEnded": "खुली अवधि · {amount}",
   "@rentalAmountOpenEnded": {
     "placeholders": {
-      "amount": {"type": "String"}
+      "amount": {
+        "type": "String"
+      }
     }
   },
   "accruedAmountHint": "अब तक अर्जित",
   "balanceAdvanceLabel": "अग्रिम",
   "balancePendingLabel": "लंबित",
-  "balanceDueLabel": "देय",
   "balanceCreditLabel": "जमा शेष",
   "balanceNetLabel": "नेट",
   "balancesAsOfTodayHeading": "आज तक के शेष",
   "balanceOpenItemsCount": "{count} वस्तु बाहर",
   "@balanceOpenItemsCount": {
     "placeholders": {
-      "count": {"type": "int"}
-    }
-  },
-  "customerSubtitleWithBalances": "{phone} • {tier} • अग्रिम {advance} · लंबित {pending} · नेट {net}",
-  "@customerSubtitleWithBalances": {
-    "placeholders": {
-      "phone": {"type": "String"},
-      "tier": {"type": "String"},
-      "advance": {"type": "String"},
-      "pending": {"type": "String"},
-      "net": {"type": "String"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "orderStatusOpen": "खुला",
   "orderStatusCompleted": "पूर्ण",
   "orderStatusCancelled": "रद्द",
-  "orderBillDepositLabel": "अग्रिम {amount}",
-  "@orderBillDepositLabel": {
-    "placeholders": {
-      "amount": {"type": "String"}
-    }
-  },
-  "orderBillTotalLabel": "बिल {amount}",
-  "@orderBillTotalLabel": {
-    "placeholders": {
-      "amount": {"type": "String"}
-    }
-  },
-  "orderDepositLabel": "ऑर्डर अग्रिम",
-  "customerOrdersHeading": "ऑर्डर",
-  "orderDepositSettlementExceeds": "रखी + लौटाई राशि ऑर्डर अग्रिम से अधिक नहीं हो सकती।",
   "requiresUnitIdentityLabel": "यूनिट नाम/आईडी आवश्यक",
   "requiresUnitIdentitySubtitle": "मूल श्रेणी (जैसे उपन्यास) के लिए चालू। व्यक्तिगत वस्तुओं के लिए बंद जिनका एक कैटलॉग नाम साझा है।",
   "quantityLabel": "मात्रा",
   "labelUnitHeading": "{name} #{index}",
   "@labelUnitHeading": {
     "placeholders": {
-      "name": {"type": "String"},
-      "index": {"type": "int"}
+      "name": {
+        "type": "String"
+      },
+      "index": {
+        "type": "int"
+      }
     }
   },
   "labelsAutoAssignedHint": "व्यक्तिगत वस्तुओं को कैटलॉग नाम और स्वतः छोटा कोड मिलता है।",
-  "orderStatusHeading": "ऑर्डर स्थिति",
   "workflowStatusHeading": "कार्यप्रवाह स्थिति",
   "workflowAdvanceAction": "आगे बढ़ाएँ",
   "workflowPickStatusAction": "स्थिति चुनें",
   "workflowStatusTerminalHint": "इस पाइपलाइन के लिए ऑर्डर पूर्ण।",
-  "orderIssuedSummary": "मूल रूप से जारी: {count}",
-  "@orderIssuedSummary": {
-    "placeholders": {
-      "count": {"type": "int"}
-    }
-  },
-  "orderPendingSummary": "अभी बाहर: {count}",
-  "@orderPendingSummary": {
-    "placeholders": {
-      "count": {"type": "int"}
-    }
-  },
-  "orderReturnedSummary": "पहले से वापस: {count}",
-  "@orderReturnedSummary": {
-    "placeholders": {
-      "count": {"type": "int"}
-    }
-  },
-  "rentalOrderStatusChips": "जारी {issued} · लंबित {pending} · वापस {returned}",
-  "@rentalOrderStatusChips": {
-    "placeholders": {
-      "issued": {"type": "int"},
-      "pending": {"type": "int"},
-      "returned": {"type": "int"}
-    }
-  },
-  "activityTimelineHeading": "गतिविधि",
-  "activityIssued": "जारी: {labels}",
-  "@activityIssued": {
-    "placeholders": {
-      "labels": {"type": "String"}
-    }
-  },
-  "activityReturned": "वापस: {label}",
-  "@activityReturned": {
-    "placeholders": {
-      "label": {"type": "String"}
-    }
-  },
-  "activityEmpty": "अभी कोई गतिविधि नहीं।",
-  "changeCustomerAction": "ग्राहक बदलें",
   "addOrderLineAction": "पंक्ति जोड़ें",
   "removeOrderLineAction": "पंक्ति हटाएँ",
   "selectResourceItemLabel": "संसाधन",
   "orderLineHeading": "पंक्ति {number}",
   "@orderLineHeading": {
     "placeholders": {
-      "number": {"type": "int"}
+      "number": {
+        "type": "int"
+      }
     }
   },
   "orderTotalLabel": "ऑर्डर कुल: {amount}",
   "@orderTotalLabel": {
     "placeholders": {
-      "amount": {"type": "String"}
+      "amount": {
+        "type": "String"
+      }
     }
   },
   "orderSummaryHeading": "ऑर्डर सारांश",
-  "orderSummaryUnavailable": "{name} के लिए पर्याप्त स्टॉक नहीं है (आवश्यक {need}, उपलब्ध {available})। जारी रखने के लिए मात्रा समायोजित करें।",
-  "@orderSummaryUnavailable": {
-    "placeholders": {
-      "name": {"type": "String"},
-      "need": {"type": "int"},
-      "available": {"type": "int"}
-    }
-  },
   "orderSummaryQuantity": "मात्रा {quantity}",
   "@orderSummaryQuantity": {
     "placeholders": {
-      "quantity": {"type": "int"}
+      "quantity": {
+        "type": "int"
+      }
     }
   },
   "orderSummaryUnitCharge": "इकाई {amount}",
   "@orderSummaryUnitCharge": {
     "placeholders": {
-      "amount": {"type": "String"}
+      "amount": {
+        "type": "String"
+      }
     }
   },
-  "depositTopUpOptionalLabel": "अग्रिम (वैकल्पिक)",
-  "depositTopUpOptionalHint": "इस ऑर्डर पर रखा जाएगा, रुपये में",
   "moreOptions": "और विकल्प",
   "addUnitLabelsAction": "यूनिट लेबल जोड़ें",
-  "itemKindDefaultLabel": "डिफ़ॉल्ट ऑर्डर मोड",
   "itemKindRentalLabel": "किराया",
   "itemKindSaleLabel": "बिक्री",
   "itemKindServiceLabel": "सेवा",
@@ -997,10 +854,8 @@
   "lineFulfillmentJob": "जॉब",
   "saleAmountLabel": "बिक्री राशि",
   "saleAmountHint": "राशि रुपये में",
-  "saleAmountRequiredError": "शून्य से अधिक बिक्री राशि दर्ज करें।",
   "jobAmountLabel": "जॉब शुल्क",
   "jobAmountHint": "राशि रुपये में",
-  "jobAmountRequiredError": "शून्य से अधिक जॉब शुल्क दर्ज करें।",
   "soldLineBadge": "बेचा गया",
   "completedJobLineBadge": "पूर्ण",
   "selectLinesToComplete": "पूर्ण करने के लिए जॉब लाइन चुनें",
@@ -1010,7 +865,9 @@
   "confirmCompleteJobsBody": "{count} जॉब लाइन बंद करें। स्टॉक वापस नहीं होगा।",
   "@confirmCompleteJobsBody": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "jobsCompletedSnack": "जॉब पूर्ण चिह्नित",
@@ -1036,9 +893,15 @@
   "inventoryStockMeta": "{category} · {available}/{total}",
   "@inventoryStockMeta": {
     "placeholders": {
-      "category": {"type": "String"},
-      "available": {"type": "int"},
-      "total": {"type": "int"}
+      "category": {
+        "type": "String"
+      },
+      "available": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "moneyLabelBase": "आधार",
@@ -1051,7 +914,6 @@
   "moneyLabelNetDue": "नेट देय",
   "reportWhatsAppGateBanner": "रिपोर्ट शेयर करने के लिए More में अपना WhatsApp नंबर सेट करें।",
   "reportConfigureWhatsAppAction": "WhatsApp सेट करें",
-
   "timelineEmpty": "अभी कोई किराया इवेंट नहीं।",
   "timelineTitleOrderOpened": "ऑर्डर खोला गया",
   "timelineTitleReplacementOpened": "प्रतिस्थापन खोला गया",
@@ -1070,7 +932,6 @@
   "timelineTitleDueExtended": "देय बढ़ाया",
   "timelineTitleAutoVacated": "स्वतः खाली",
   "timelineTitlePaymentReceived": "भुगतान प्राप्त",
-
   "timelineSubtitleCreatedOrderFlow": "फ़ोन-फ़र्स्ट ऑर्डर फ़्लो से बनाया गया।",
   "timelineSubtitleCreatedOrderFlowSale": "फ़ोन-फ़र्स्ट ऑर्डर फ़्लो से बनाया गया (बिक्री)।",
   "timelineSubtitleCreatedOrderFlowJob": "फ़ोन-फ़र्स्ट ऑर्डर फ़्लो से बनाया गया (जॉब)।",
@@ -1078,15 +939,23 @@
   "timelineSubtitleReplacementFor": "{orderId} का प्रतिस्थापन।",
   "@timelineSubtitleReplacementFor": {
     "placeholders": {
-      "orderId": {"type": "String"}
+      "orderId": {
+        "type": "String"
+      }
     }
   },
   "timelineSubtitlePaymentReceived": "प्राप्त {received} · बिक्री {sell} · अग्रिम {advance}",
   "@timelineSubtitlePaymentReceived": {
     "placeholders": {
-      "received": {"type": "String"},
-      "sell": {"type": "String"},
-      "advance": {"type": "String"}
+      "received": {
+        "type": "String"
+      },
+      "sell": {
+        "type": "String"
+      },
+      "advance": {
+        "type": "String"
+      }
     }
   },
   "orderPaymentTitle": "भुगतान",
@@ -1109,8 +978,6 @@
   "paymentPreviewAdvance": "रखी जाने वाली अग्रिम",
   "paymentPreviewRemainingSell": "इस भुगतान के बाद बिक्री शेष",
   "paymentConfirmAction": "भुगतान पुष्टि करें",
-  "paymentSkipAction": "छोड़ें",
-  "paymentPayLaterAction": "बाद में भुगतान",
   "paymentPayAction": "भुगतान करें",
   "paymentAddAdvanceAction": "अग्रिम जोड़ें",
   "unpaidSellBadge": "बकाया",
@@ -1119,44 +986,68 @@
   "timelineSubtitlePartialReturnLines": "{total} में से {returned} पंक्तियाँ वापस।",
   "@timelineSubtitlePartialReturnLines": {
     "placeholders": {
-      "returned": {"type": "int"},
-      "total": {"type": "int"}
+      "returned": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "timelineSubtitlePartialReturnQty": "वापस: {summary} ({total} में से {returned} पंक्तियाँ)।",
   "@timelineSubtitlePartialReturnQty": {
     "placeholders": {
-      "summary": {"type": "String"},
-      "returned": {"type": "int"},
-      "total": {"type": "int"}
+      "summary": {
+        "type": "String"
+      },
+      "returned": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "timelineSubtitleUnitsLostQty": "खोया चिह्नित: {summary} ({count} इकाइयाँ)।",
   "@timelineSubtitleUnitsLostQty": {
     "placeholders": {
-      "summary": {"type": "String"},
-      "count": {"type": "int"}
+      "summary": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
     }
   },
   "timelineSubtitleAllJobsComplete": "सभी जॉब पंक्तियाँ पूर्ण चिह्नित।",
   "timelineSubtitleJobsCompletedCount": "{count} जॉब पंक्ति(याँ) पूर्ण।",
   "@timelineSubtitleJobsCompletedCount": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "timelineSubtitleCancelSettlement": "रखा {kept}; वापस {returned}।",
   "@timelineSubtitleCancelSettlement": {
     "placeholders": {
-      "kept": {"type": "String"},
-      "returned": {"type": "String"}
+      "kept": {
+        "type": "String"
+      },
+      "returned": {
+        "type": "String"
+      }
     }
   },
   "timelineSubtitleNoteBody": "{kind}: {body}",
   "@timelineSubtitleNoteBody": {
     "placeholders": {
-      "kind": {"type": "String"},
-      "body": {"type": "String"}
+      "kind": {
+        "type": "String"
+      },
+      "body": {
+        "type": "String"
+      }
     }
   },
   "timelineSubtitleAutoReminder": "स्वतः रिमाइंडर बनाया गया।",
@@ -1166,97 +1057,132 @@
   "timelineSubtitleStatusChanged": "{from} → {to}",
   "@timelineSubtitleStatusChanged": {
     "placeholders": {
-      "from": {"type": "String"},
-      "to": {"type": "String"}
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
     }
   },
   "timelineSubtitleDueExtended": "देय {from} → {to} किया गया।",
   "@timelineSubtitleDueExtended": {
     "placeholders": {
-      "from": {"type": "String"},
-      "to": {"type": "String"}
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
     }
   },
   "timelineSubtitleDueExtendedSet": "देय {to} पर सेट।",
   "@timelineSubtitleDueExtendedSet": {
     "placeholders": {
-      "to": {"type": "String"}
+      "to": {
+        "type": "String"
+      }
     }
   },
   "timelineSubtitleDueExtendedGeneric": "देय तिथि बढ़ाई गई।",
   "timelineSubtitleAutoVacated": "स्वतः खाली: {summary} ({count} इकाइयाँ)।",
   "@timelineSubtitleAutoVacated": {
     "placeholders": {
-      "summary": {"type": "String"},
-      "count": {"type": "int"}
+      "summary": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
     }
   },
   "timelineSubtitleAutoVacatedGeneric": "अतिदेय खुली इकाइयाँ स्वतः खाली की गईं।",
   "timelineSubtitleDiscountBit": "छूट {amount}।",
   "@timelineSubtitleDiscountBit": {
     "placeholders": {
-      "amount": {"type": "String"}
+      "amount": {
+        "type": "String"
+      }
     }
   },
   "timelineSubtitleNoteBit": "नोट: {note}",
   "@timelineSubtitleNoteBit": {
     "placeholders": {
-      "note": {"type": "String"}
+      "note": {
+        "type": "String"
+      }
     }
   },
-
   "reportHeader": "{appName} रिपोर्ट",
   "@reportHeader": {
     "placeholders": {
-      "appName": {"type": "String"}
+      "appName": {
+        "type": "String"
+      }
     }
   },
   "reportActiveCount": "सक्रिय: {count}",
   "@reportActiveCount": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "reportOpenedCount": "खोले: {count}",
   "@reportOpenedCount": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "reportReturnedCount": "वापस: {count}",
   "@reportReturnedCount": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "reportOverdueCount": "अतिदेय: {count}",
   "@reportOverdueCount": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "reportChargesOpened": "शुल्क (रेंज में खोले): {amount}",
   "@reportChargesOpened": {
     "placeholders": {
-      "amount": {"type": "String"}
+      "amount": {
+        "type": "String"
+      }
     }
   },
   "reportChargesReturned": "शुल्क (रेंज में वापस): {amount}",
   "@reportChargesReturned": {
     "placeholders": {
-      "amount": {"type": "String"}
+      "amount": {
+        "type": "String"
+      }
     }
   },
   "reportDepositAppliedRange": "अग्रिम लागू (रेंज में वापस): {amount}",
   "@reportDepositAppliedRange": {
     "placeholders": {
-      "amount": {"type": "String"}
+      "amount": {
+        "type": "String"
+      }
     }
   },
   "reportBalanceDueReturned": "अग्रिम के बाद शेष देय (वापस): {amount}",
   "@reportBalanceDueReturned": {
     "placeholders": {
-      "amount": {"type": "String"}
+      "amount": {
+        "type": "String"
+      }
     }
   },
   "reportNoRentalsInRange": "(रेंज में कोई किराया नहीं)",
@@ -1264,8 +1190,12 @@
   "reportCustomerWithDeposit": "{header} | अग्रिम {amount}",
   "@reportCustomerWithDeposit": {
     "placeholders": {
-      "header": {"type": "String"},
-      "amount": {"type": "String"}
+      "header": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
     }
   },
   "reportStatusReturnedBit": "[वापस]",
@@ -1274,57 +1204,98 @@
   "reportLinesPartialBit": " | पंक्तियाँ {open} खुली/{returned} वापस",
   "@reportLinesPartialBit": {
     "placeholders": {
-      "open": {"type": "int"},
-      "returned": {"type": "int"}
+      "open": {
+        "type": "int"
+      },
+      "returned": {
+        "type": "int"
+      }
     }
   },
   "reportDepositDueBit": " | अग्रिम {deposit} | देय {due}",
   "@reportDepositDueBit": {
     "placeholders": {
-      "deposit": {"type": "String"},
-      "due": {"type": "String"}
+      "deposit": {
+        "type": "String"
+      },
+      "due": {
+        "type": "String"
+      }
     }
   },
   "reportOpenEnded": "खुला-समाप्त",
   "reportDueDateBit": "देय {date}",
   "@reportDueDateBit": {
     "placeholders": {
-      "date": {"type": "String"}
+      "date": {
+        "type": "String"
+      }
     }
   },
   "reportCustomerRentalLine": "  • {prefix}{rentalId}: {items} | {dueBit} | {status} | {amount}{partialBit}{depositBit}",
   "@reportCustomerRentalLine": {
     "placeholders": {
-      "prefix": {"type": "String"},
-      "rentalId": {"type": "String"},
-      "items": {"type": "String"},
-      "dueBit": {"type": "String"},
-      "status": {"type": "String"},
-      "amount": {"type": "String"},
-      "partialBit": {"type": "String"},
-      "depositBit": {"type": "String"}
+      "prefix": {
+        "type": "String"
+      },
+      "rentalId": {
+        "type": "String"
+      },
+      "items": {
+        "type": "String"
+      },
+      "dueBit": {
+        "type": "String"
+      },
+      "status": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      },
+      "partialBit": {
+        "type": "String"
+      },
+      "depositBit": {
+        "type": "String"
+      }
     }
   },
   "reportInventoryItemLine": "• {name}: किराए {rented}× | बाहर {out} | उपलब्ध {available}/{total} | {billing} {rate}",
   "@reportInventoryItemLine": {
     "placeholders": {
-      "name": {"type": "String"},
-      "rented": {"type": "int"},
-      "out": {"type": "int"},
-      "available": {"type": "int"},
-      "total": {"type": "int"},
-      "billing": {"type": "String"},
-      "rate": {"type": "String"}
+      "name": {
+        "type": "String"
+      },
+      "rented": {
+        "type": "int"
+      },
+      "out": {
+        "type": "int"
+      },
+      "available": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "billing": {
+        "type": "String"
+      },
+      "rate": {
+        "type": "String"
+      }
     }
   },
   "reportTruncatedSuffix": "\n…(काटा गया — पूरी रिपोर्ट के लिए {appName} खोलें)",
   "@reportTruncatedSuffix": {
     "placeholders": {
-      "appName": {"type": "String"}
+      "appName": {
+        "type": "String"
+      }
     }
   },
   "loansTitle": "कर्ज",
-  "loansMoreSubtitle": "दिए और लिए गए नकद कर्ज",
   "loanCreateTitle": "नया कर्ज",
   "loanCreateAction": "नया कर्ज",
   "loanDetailTitle": "कर्ज कैलकुलेटर",
@@ -1338,25 +1309,12 @@
   "loanDirectionGiven": "दिया (उधार दिया)",
   "loanDirectionTaken": "लिया (उधार लिया)",
   "loanCustomerLabel": "ग्राहक",
-  "loanCustomerHint": "ग्राहक चुनें",
-  "loanCustomerRequired": "ग्राहक चुनें",
   "loanPrincipalLabel": "मूलधन",
   "loanOriginalPrincipalLabel": "प्रारंभिक मूलधन",
   "loanPrincipalRequired": "मूलधन राशि दर्ज करें",
   "loanMoneyGivenOnLabel": "पैसे दिए गए दिन",
-  "loanAdvancePaymentFlag": "अग्रिम / पूर्व भुगतान",
-  "loanAdvancePaymentHint": "कर्ज के दिन, अर्जित ब्याज और यह भुगतान लागू होते हैं (पहले ब्याज), फिर शेष मूलधन जारी रहता है।",
-  "loanAdvancePaymentAmountLabel": "अग्रिम राशि",
-  "loanAdvancePaymentDateLabel": "अग्रिम भुगतान तिथि",
-  "loanAdvancePaymentRequired": "अग्रिम राशि दर्ज करें",
-  "loanAdvancePaymentExceedsPrincipal": "अग्रिम मूलधन से अधिक नहीं हो सकता",
-  "loanAdvancePaymentDateInvalid": "अग्रिम तिथि पैसे दिए गए दिन या उसके बाद और आज या उससे पहले होनी चाहिए",
-  "loanAdvancePaymentEntryNote": "अग्रिम भुगतान",
   "loanDueOptionalLabel": "देय / समाप्ति (वैकल्पिक)",
   "loanDueNone": "कोई देय तिथि नहीं",
-  "loanInterestKindLabel": "ब्याज",
-  "loanInterestSimple": "सरल",
-  "loanInterestCompound": "चक्रवृद्धि",
   "loanCalculationFrequencyLabel": "ब्याज गणना",
   "loanRateDaily": "दैनिक",
   "loanInterestAccrualLabel": "ब्याज संचय",
@@ -1384,8 +1342,6 @@
   "loanRatePeriodLabel": "अवधि",
   "loanRateMonthly": "मासिक",
   "loanRateYearly": "वार्षिक",
-  "loanPeriodEndInterestHintSimple": "ब्याज हमेशा हस्ताक्षरित मूलधन शेष से अवैतनिक ब्याज में जमा होता है। पूंजीकरण चयनित नीति का पालन करता है। अधिक भुगतान पर उल्टा ब्याज मिलता है।",
-  "loanPeriodEndInterestHintCompound": "ब्याज हमेशा हस्ताक्षरित मूलधन शेष से अवैतनिक ब्याज में जमा होता है। पूंजीकरण चयनित नीति का पालन करता है। अधिक भुगतान पर उल्टा ब्याज मिलता है।",
   "loanCapPolicyHintNever": "मूलधन स्थिर रहता है; अवैतनिक ब्याज अलग बढ़ता है। बकाया = मूलधन + अवैतनिक।",
   "loanCapPolicyHintOnPayment": "प्रत्येक चुकौती से ठीक पहले अवैतनिक ब्याज मूलधन में जुड़ता है।",
   "loanCapPolicyHintOnScheduledCycle": "प्रत्येक पूंजीकरण चक्र की वर्षगाँठ पर अवैतनिक ब्याज मूलधन में जुड़ता है।",
@@ -1426,7 +1382,9 @@
   "loanCloseWithPendingBody": "अभी भी {amount} लंबित है। फिर भी बंद करें, या पहले समायोजन जोड़ें?",
   "@loanCloseWithPendingBody": {
     "placeholders": {
-      "amount": {"type": "String"}
+      "amount": {
+        "type": "String"
+      }
     }
   },
   "loanEditSetupTooltip": "कर्ज संपादित करें",
@@ -1434,191 +1392,149 @@
   "loanSetupSummary": "शुरू {start} · देय {due} · {rate} {period} · {policy}",
   "@loanSetupSummary": {
     "placeholders": {
-      "start": {"type": "String"},
-      "due": {"type": "String"},
-      "rate": {"type": "String"},
-      "period": {"type": "String"},
-      "policy": {"type": "String"}
+      "start": {
+        "type": "String"
+      },
+      "due": {
+        "type": "String"
+      },
+      "rate": {
+        "type": "String"
+      },
+      "period": {
+        "type": "String"
+      },
+      "policy": {
+        "type": "String"
+      }
     }
   },
   "loanPrepaymentSetupLabel": "चुकौती: {mode}",
   "@loanPrepaymentSetupLabel": {
     "placeholders": {
-      "mode": {"type": "String"}
+      "mode": {
+        "type": "String"
+      }
     }
   },
   "loanTimelineInterestCapitalized": "{date} — ब्याज पूंजीकृत {amount} → मूलधन",
   "@loanTimelineInterestCapitalized": {
     "placeholders": {
-      "date": {"type": "String"},
-      "amount": {"type": "String"}
-    }
-  },
-  "loanTimelineStart": "{date} — कर्ज शुरू · {amount}",
-  "@loanTimelineStart": {
-    "placeholders": {
-      "date": {"type": "String"},
-      "amount": {"type": "String"}
-    }
-  },
-  "loanTimelineInterest": "ब्याज दर्ज {date} · {principal} पर → {amount} (मूलधन में जोड़ा)",
-  "@loanTimelineInterest": {
-    "placeholders": {
-      "date": {"type": "String"},
-      "principal": {"type": "String"},
-      "amount": {"type": "String"}
+      "date": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
     }
   },
   "loanTimelineInterestSegment": "{principal} पर ब्याज ({from}–{to}) → {amount}",
   "@loanTimelineInterestSegment": {
     "placeholders": {
-      "principal": {"type": "String"},
-      "from": {"type": "String"},
-      "to": {"type": "String"},
-      "amount": {"type": "String"}
+      "principal": {
+        "type": "String"
+      },
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
     }
   },
   "loanTimelineReverseInterestSegment": "क्रेडिट {principal} पर उल्टा ब्याज ({from}–{to}) → {amount}",
   "@loanTimelineReverseInterestSegment": {
     "placeholders": {
-      "principal": {"type": "String"},
-      "from": {"type": "String"},
-      "to": {"type": "String"},
-      "amount": {"type": "String"}
+      "principal": {
+        "type": "String"
+      },
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
     }
   },
   "loanTimelinePendingOverpaid": "{date} — अधिक भुगतान {amount}",
   "@loanTimelinePendingOverpaid": {
     "placeholders": {
-      "date": {"type": "String"},
-      "amount": {"type": "String"}
-    }
-  },
-  "loanTimelineDeferredSlice": "चुकाए {principal} पर ब्याज {date} तक → {amount} (अवधि अंत में जुड़ेगा)",
-  "@loanTimelineDeferredSlice": {
-    "placeholders": {
-      "principal": {"type": "String"},
-      "date": {"type": "String"},
-      "amount": {"type": "String"}
-    }
-  },
-  "loanTimelineDeferredAddSlice": "जोड़े {principal} पर ब्याज {fromDate} से {toDate} तक → {amount}",
-  "@loanTimelineDeferredAddSlice": {
-    "placeholders": {
-      "principal": {"type": "String"},
-      "fromDate": {"type": "String"},
-      "toDate": {"type": "String"},
-      "amount": {"type": "String"}
-    }
-  },
-  "loanTimelineAccruedThroughAsOf": "{principal} पर {date} तक अर्जित ब्याज → {amount} (लंबित)",
-  "@loanTimelineAccruedThroughAsOf": {
-    "placeholders": {
-      "principal": {"type": "String"},
-      "date": {"type": "String"},
-      "amount": {"type": "String"}
-    }
-  },
-  "loanTimelinePeriodEndSlice": "भुगतान {repaid} पर ब्याज ({from}–{to}) → {interest} (मूलधन में जोड़ा)",
-  "@loanTimelinePeriodEndSlice": {
-    "placeholders": {
-      "repaid": {"type": "String"},
-      "from": {"type": "String"},
-      "to": {"type": "String"},
-      "interest": {"type": "String"}
-    }
-  },
-  "loanTimelinePeriodEndSliceDue": "भुगतान {repaid} पर देय ब्याज ({from}–{to}) → {interest} (मूलधन में नहीं जोड़ा)",
-  "@loanTimelinePeriodEndSliceDue": {
-    "placeholders": {
-      "repaid": {"type": "String"},
-      "from": {"type": "String"},
-      "to": {"type": "String"},
-      "interest": {"type": "String"}
-    }
-  },
-  "loanTimelinePeriodEndAddSlice": "जोड़े मूलधन {added} पर ब्याज ({from}–{to}) → {interest} (मूलधन में जोड़ा)",
-  "@loanTimelinePeriodEndAddSlice": {
-    "placeholders": {
-      "added": {"type": "String"},
-      "from": {"type": "String"},
-      "to": {"type": "String"},
-      "interest": {"type": "String"}
-    }
-  },
-  "loanTimelinePeriodEndAddSliceDue": "जोड़े मूलधन {added} पर देय ब्याज ({from}–{to}) → {interest} (मूलधन में नहीं जोड़ा)",
-  "@loanTimelinePeriodEndAddSliceDue": {
-    "placeholders": {
-      "added": {"type": "String"},
-      "from": {"type": "String"},
-      "to": {"type": "String"},
-      "interest": {"type": "String"}
-    }
-  },
-  "loanTimelineRemainingPeriodInterest": "शेष {principal} पर पूरी अवधि का ब्याज → {amount} (मूलधन में जोड़ा)",
-  "@loanTimelineRemainingPeriodInterest": {
-    "placeholders": {
-      "principal": {"type": "String"},
-      "amount": {"type": "String"}
-    }
-  },
-  "loanTimelineRemainingPeriodInterestDue": "शेष {principal} पर पूरी अवधि का देय ब्याज → {amount} (मूलधन में नहीं जोड़ा)",
-  "@loanTimelineRemainingPeriodInterestDue": {
-    "placeholders": {
-      "principal": {"type": "String"},
-      "amount": {"type": "String"}
-    }
-  },
-  "loanTimelinePrincipalNow": "{date} — अब मूलधन {amount}",
-  "@loanTimelinePrincipalNow": {
-    "placeholders": {
-      "date": {"type": "String"},
-      "amount": {"type": "String"}
-    }
-  },
-  "loanTimelinePrincipalRemains": "{date} — मूलधन {amount} ही रहता है",
-  "@loanTimelinePrincipalRemains": {
-    "placeholders": {
-      "date": {"type": "String"},
-      "amount": {"type": "String"}
+      "date": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
     }
   },
   "loanTimelinePayment": "{date} — चुकौती {amount} → मूलधन {principal}",
   "@loanTimelinePayment": {
     "placeholders": {
-      "date": {"type": "String"},
-      "amount": {"type": "String"},
-      "principal": {"type": "String"}
+      "date": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      },
+      "principal": {
+        "type": "String"
+      }
     }
   },
   "loanTimelinePaymentSplit": "{date} — चुकौती {amount} → ब्याज {interest}, मूलधन {principal}",
   "@loanTimelinePaymentSplit": {
     "placeholders": {
-      "date": {"type": "String"},
-      "amount": {"type": "String"},
-      "interest": {"type": "String"},
-      "principal": {"type": "String"}
+      "date": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      },
+      "interest": {
+        "type": "String"
+      },
+      "principal": {
+        "type": "String"
+      }
     }
   },
   "loanTimelineDisbursement": "{date} — मूलधन जोड़ा {amount}",
   "@loanTimelineDisbursement": {
     "placeholders": {
-      "date": {"type": "String"},
-      "amount": {"type": "String"}
+      "date": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
     }
   },
   "loanTimelineAdjustment": "{date} — समायोजन {amount}",
   "@loanTimelineAdjustment": {
     "placeholders": {
-      "date": {"type": "String"},
-      "amount": {"type": "String"}
+      "date": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
     }
   },
   "loanTimelinePending": "{date} — लंबित {amount}",
   "@loanTimelinePending": {
     "placeholders": {
-      "date": {"type": "String"},
-      "amount": {"type": "String"}
+      "date": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
     }
   },
   "modulePendingLoans": "लंबित कर्ज",
@@ -1629,21 +1545,25 @@
   "moduleDueLoansSubtitle": "देय तिथि पर या उसके बाद के लंबित कर्ज",
   "dueLoansTitle": "देय कर्ज",
   "dueLoansEmptySubtitle": "अभी कोई देय कर्ज नहीं।",
-  "customerLoansHeading": "कर्ज",
-  "customerLoansEmpty": "इस ग्राहक के कोई कर्ज नहीं।",
   "customerLoansViewAll": "सभी कर्ज देखें",
   "reportPendingLoansCount": "लंबित कर्ज: {count}",
   "@reportPendingLoansCount": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "reportNoOutstandingLoans": "कोई बकाया कर्ज नहीं।",
   "reportOutstandingLoansTotal": "कुल {amount} — {count} कर्ज",
   "@reportOutstandingLoansTotal": {
     "placeholders": {
-      "amount": {"type": "String"},
-      "count": {"type": "int"}
+      "amount": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
     }
   }
 }

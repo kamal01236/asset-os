@@ -1,14 +1,12 @@
 {
   "@@locale": "en",
   "navHome": "Home",
-  "navRentals": "Transactions",
   "navTransactions": "Transactions",
   "navResources": "Resources",
   "navCustomers": "Customers",
   "navMore": "More",
   "actionSearch": "Search",
   "actionNewRental": "New Order",
-  "transactionsTitle": "Transactions",
   "transactionsFilterAll": "All",
   "transactionsFilterOrders": "Orders",
   "transactionsFilterLoans": "Loans",
@@ -22,8 +20,6 @@
   "noTransactionsYetSubtitle": "Create an order or loan to get started.",
   "customerTransactionsHeading": "Transactions",
   "customerTransactionsEmpty": "No transactions for this customer.",
-  "customerTransactionsViewAll": "View all",
-  "transactionsMoreSubtitle": "Orders and cash loans",
   "issueItemAction": "Issue",
   "issueToCustomerAction": "Issue",
   "searchInventoryHint": "Search by name or category",
@@ -47,30 +43,22 @@
   "noRentalsYetTitle": "No orders yet",
   "noRentalsYetSubtitle": "Start a new order to create your first transaction.",
   "unknownCustomer": "Unknown customer",
-  "rentalDueSubtitle": "{customerName} • Due {date}",
-  "@rentalDueSubtitle": {
-    "placeholders": {
-      "customerName": {"type": "String"},
-      "date": {"type": "String"}
-    }
-  },
   "inventoryAvailableSubtitle": "{category} • {available}/{total} available",
   "@inventoryAvailableSubtitle": {
     "placeholders": {
-      "category": {"type": "String"},
-      "available": {"type": "int"},
-      "total": {"type": "int"}
+      "category": {
+        "type": "String"
+      },
+      "available": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "customerTrusted": "Trusted",
   "customerStandard": "Standard",
-  "customerSubtitle": "{phone} • {tier}",
-  "@customerSubtitle": {
-    "placeholders": {
-      "phone": {"type": "String"},
-      "tier": {"type": "String"}
-    }
-  },
   "offlineSimulationTitle": "Offline simulation",
   "offlineSimulationSubtitle": "Demo only: verify non-blocking offline UX (not product positioning).",
   "languageTitle": "Language",
@@ -88,8 +76,12 @@
   "onboardingStepProgress": "Step {current} of {total}",
   "@onboardingStepProgress": {
     "placeholders": {
-      "current": {"type": "int"},
-      "total": {"type": "int"}
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "onboardingLanguageTitle": "Choose your language",
@@ -112,23 +104,25 @@
   "onboardingTemplateConfirmBody": "Add all {count} starter items for {name} and set the recommended Home layout?",
   "@onboardingTemplateConfirmBody": {
     "placeholders": {
-      "count": {"type": "int"},
-      "name": {"type": "String"}
+      "count": {
+        "type": "int"
+      },
+      "name": {
+        "type": "String"
+      }
     }
   },
-  "onboardingTemplateBusy": "Setting up…",
   "phoneLabel": "Phone: {phone}",
   "@phoneLabel": {
     "placeholders": {
-      "phone": {"type": "String"}
+      "phone": {
+        "type": "String"
+      }
     }
   },
   "itemsHeading": "Items",
   "timelineHeading": "Timeline",
   "extendAction": "Extend",
-  "shareAction": "Share",
-  "extendPlaceholder": "Extend is a placeholder action.",
-  "sharePlaceholder": "Share is a placeholder action.",
   "extendDueTitle": "Extend due date",
   "extendDueSuccess": "Due date extended.",
   "extendDueInvalid": "Pick a date after the current due date.",
@@ -141,7 +135,9 @@
   "seatPaymentDueLabel": "{code} payment due",
   "@seatPaymentDueLabel": {
     "placeholders": {
-      "code": {"type": "String"}
+      "code": {
+        "type": "String"
+      }
     }
   },
   "editResourceTitle": "Edit resource",
@@ -161,40 +157,20 @@
   "cancel": "Cancel",
   "saving": "Saving…",
   "saveChanges": "Save changes",
-  "nameCategoryRequired": "Name and category are required.",
   "resourceUpdated": "Resource updated.",
-  "hideFromNewOrderAction": "Hide from New Order",
-  "restoreToCatalogAction": "Restore to catalog",
-  "deleteResourcePermanentlyAction": "Delete permanently",
-  "confirmHideResourceTitle": "Hide this resource?",
-  "confirmHideResourceBody": "It will no longer appear in New Order or the default Resources list. You can restore it later.",
-  "confirmRestoreResourceTitle": "Restore this resource?",
-  "confirmRestoreResourceBody": "It will show again in New Order and the Resources list.",
-  "confirmDeleteResourceTitle": "Delete permanently?",
-  "confirmDeleteResourceBody": "This cannot be undone. Only unused resources with no order history can be deleted.",
-  "deleteResourceBlockedMessage": "Can't delete — this resource appears on past or open orders. Hide it instead.",
-  "resourceHiddenSnack": "Resource hidden from New Order.",
-  "resourceRestoredSnack": "Resource restored to catalog.",
   "resourceDeletedSnack": "Resource deleted.",
-  "showHiddenResourcesFilter": "Show hidden",
-  "resourceHiddenBadge": "Hidden",
   "customerProfileTitle": "Customer profile",
   "callAction": "Call",
   "whatsAppAction": "WhatsApp",
   "whatsAppSubtitle": "Placeholder integration hook",
   "callPlaceholder": "Call placeholder action.",
   "whatsAppPlaceholder": "WhatsApp placeholder action.",
-  "recentRentals": "Recent orders",
-  "dueDate": "Due {date}",
-  "@dueDate": {
-    "placeholders": {
-      "date": {"type": "String"}
-    }
-  },
   "returnedDate": "Returned {date}",
   "@returnedDate": {
     "placeholders": {
-      "date": {"type": "String"}
+      "date": {
+        "type": "String"
+      }
     }
   },
   "searchHint": "Find customer, order, or resource",
@@ -202,34 +178,39 @@
   "searchSectionCurrentRentals": "Current orders",
   "searchSectionPreviousRentals": "Previous orders",
   "searchSectionResources": "Resources",
-  "noMatchingSection": "No matching {section}",
-  "@noMatchingSection": {
-    "placeholders": {
-      "section": {"type": "String"}
-    }
-  },
   "inventoryUnitsSubtitle": "{category} • {available}/{total}",
   "@inventoryUnitsSubtitle": {
     "placeholders": {
-      "category": {"type": "String"},
-      "available": {"type": "int"},
-      "total": {"type": "int"}
+      "category": {
+        "type": "String"
+      },
+      "available": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "stepOf": "Step {current} of {total}",
   "@stepOf": {
     "placeholders": {
-      "current": {"type": "int"},
-      "total": {"type": "int"}
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "phoneNumberLabel": "Phone number",
   "phoneNumberHint": "10-digit customer phone",
-  "existingCustomer": "Existing customer",
   "existingCustomerSubtitle": "{phone} • Existing customer",
   "@existingCustomerSubtitle": {
     "placeholders": {
-      "phone": {"type": "String"}
+      "phone": {
+        "type": "String"
+      }
     }
   },
   "customerNameNewLabel": "Name",
@@ -238,47 +219,28 @@
   "noPhoneOptionalNameHint": "Optional display name for this order",
   "customerTypeaheadEmpty": "No matching customers",
   "phoneRequiredError": "Enter a 10-digit phone number, or choose No phone number.",
-  "phoneAlreadyUsedError": "This phone is already used by another customer.",
   "customerSuggestionSubtitle": "{name} · {phone}",
   "@customerSuggestionSubtitle": {
     "placeholders": {
-      "name": {"type": "String"},
-      "phone": {"type": "String"}
-    }
-  },
-  "rentalNicknameLabel": "Display name for this order",
-  "rentalNicknameHint": "Optional name shown on this order",
-  "reviewNickname": "Name: {nickname} · {customerName}",
-  "@reviewNickname": {
-    "placeholders": {
-      "nickname": {"type": "String"},
-      "customerName": {"type": "String"}
+      "name": {
+        "type": "String"
+      },
+      "phone": {
+        "type": "String"
+      }
     }
   },
   "rentalNicknameSubtitle": "{customerName} · {phone}",
   "@rentalNicknameSubtitle": {
     "placeholders": {
-      "customerName": {"type": "String"},
-      "phone": {"type": "String"}
+      "customerName": {
+        "type": "String"
+      },
+      "phone": {
+        "type": "String"
+      }
     }
   },
-  "rentalNicknameDueSubtitle": "{nickname} • Due {date}",
-  "@rentalNicknameDueSubtitle": {
-    "placeholders": {
-      "nickname": {"type": "String"},
-      "date": {"type": "String"}
-    }
-  },
-  "selectItems": "Select items",
-  "itemAvailableCount": "{category} • {available} available",
-  "@itemAvailableCount": {
-    "placeholders": {
-      "category": {"type": "String"},
-      "available": {"type": "int"}
-    }
-  },
-  "labelInstancesHeading": "Name each item",
-  "labelInstancesHint": "For novels/tools: enter this copy’s name and a short code.",
   "instanceNameLabel": "Unit name",
   "instanceNameHint": "e.g. Harry Potter",
   "shortCodeLabel": "Short code",
@@ -287,24 +249,12 @@
   "duplicateShortCode": "Short code {code} is already in use on an active order.",
   "@duplicateShortCode": {
     "placeholders": {
-      "code": {"type": "String"}
+      "code": {
+        "type": "String"
+      }
     }
   },
   "inventoryInstancesNote": "Individual copies are named with a short code when you generate an order.",
-  "reviewHeading": "Review",
-  "reviewPhone": "Phone: {phone}",
-  "@reviewPhone": {
-    "placeholders": {
-      "phone": {"type": "String"}
-    }
-  },
-  "reviewName": "Name: {name}",
-  "@reviewName": {
-    "placeholders": {
-      "name": {"type": "String"}
-    }
-  },
-  "reviewItemsLabel": "Items:",
   "back": "Back",
   "continueAction": "Continue",
   "confirmRental": "Generate Order",
@@ -314,7 +264,9 @@
   "rentalReturned": "{id} returned",
   "@rentalReturned": {
     "placeholders": {
-      "id": {"type": "String"}
+      "id": {
+        "type": "String"
+      }
     }
   },
   "quickAdd": "Quick add",
@@ -331,19 +283,15 @@
   "voiceSearchTitle": "Voice Search",
   "voiceSearchBody": "Stub only: voice commands map to universal search intents in phase 5+.",
   "templatesIntro": "Choose the active industry pack. Switching replaces Home layout and enabled resource types. Existing loans, orders, and inventory stay. New Loan is available when Money Lending is active.",
-  "starterItemsCount": "{count} starter items",
-  "@starterItemsCount": {
-    "placeholders": {
-      "count": {"type": "int"}
-    }
-  },
   "activeTemplateLabel": "Active pack",
   "activeTemplateHint": "Select a business pack",
   "switchTemplateTitle": "Switch business pack?",
   "switchTemplateBody": "Activate {name}? Home layout and resource types will match this pack. Existing loans, orders, and inventory are kept.",
   "@switchTemplateBody": {
     "placeholders": {
-      "name": {"type": "String"}
+      "name": {
+        "type": "String"
+      }
     }
   },
   "switchTemplateConfirm": "Switch",
@@ -352,8 +300,12 @@
   "templateCardSubtitle": "{description}\n{count} starter items",
   "@templateCardSubtitle": {
     "placeholders": {
-      "description": {"type": "String"},
-      "count": {"type": "int"}
+      "description": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
     }
   },
   "selectAll": "Select all",
@@ -361,46 +313,55 @@
   "selectedCount": "{count} selected",
   "@selectedCount": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "unitSingular": "{count} unit",
   "@unitSingular": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "unitPlural": "{count} units",
   "@unitPlural": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "templateItemSubtitle": "{category} • {units}",
   "@templateItemSubtitle": {
     "placeholders": {
-      "category": {"type": "String"},
-      "units": {"type": "String"}
+      "category": {
+        "type": "String"
+      },
+      "units": {
+        "type": "String"
+      }
     }
   },
-  "adding": "Adding…",
-  "addSelectedToResources": "Add selected to resources",
   "applyTemplateSelection": "Apply",
   "applyingTemplateSelection": "Applying…",
-  "templateImportResult": "Added {added} items ({skipped} already present)",
-  "@templateImportResult": {
-    "placeholders": {
-      "added": {"type": "int"},
-      "skipped": {"type": "int"}
-    }
-  },
   "templateApplyResult": "Added {added}, restored {reactivated}, removed {deactivated} ({skipped} unchanged)",
   "@templateApplyResult": {
     "placeholders": {
-      "added": {"type": "int"},
-      "reactivated": {"type": "int"},
-      "deactivated": {"type": "int"},
-      "skipped": {"type": "int"}
+      "added": {
+        "type": "int"
+      },
+      "reactivated": {
+        "type": "int"
+      },
+      "deactivated": {
+        "type": "int"
+      },
+      "skipped": {
+        "type": "int"
+      }
     }
   },
   "myWhatsAppTitle": "My WhatsApp number",
@@ -419,16 +380,26 @@
   "reportUnitOccupancyItemHeading": "{name} ({total} units)",
   "@reportUnitOccupancyItemHeading": {
     "placeholders": {
-      "name": {"type": "String"},
-      "total": {"type": "int"}
+      "name": {
+        "type": "String"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "reportUnitOccupancyRow": "{code} · {status} · {customer}",
   "@reportUnitOccupancyRow": {
     "placeholders": {
-      "code": {"type": "String"},
-      "status": {"type": "String"},
-      "customer": {"type": "String"}
+      "code": {
+        "type": "String"
+      },
+      "status": {
+        "type": "String"
+      },
+      "customer": {
+        "type": "String"
+      }
     }
   },
   "reportUnitStatusOccupied": "Occupied",
@@ -465,12 +436,12 @@
   "securityDepositShort": "Security {amount}",
   "@securityDepositShort": {
     "placeholders": {
-      "amount": {"type": "String"}
+      "amount": {
+        "type": "String"
+      }
     }
   },
   "pricingSectionTitle": "Rental pricing",
-  "durationHeading": "Rental duration",
-  "durationHint": "Based on the first selected item’s billing mode.",
   "durationUnitsLabel": "Duration",
   "durationUnitsDaily": "Number of days",
   "durationUnitsWeekly": "Number of weeks",
@@ -480,155 +451,100 @@
   "chargePreviewDue": "Due {date}",
   "@chargePreviewDue": {
     "placeholders": {
-      "date": {"type": "String"}
+      "date": {
+        "type": "String"
+      }
     }
   },
   "chargeLineAmount": "{item} — {amount}",
   "@chargeLineAmount": {
     "placeholders": {
-      "item": {"type": "String"},
-      "amount": {"type": "String"}
-    }
-  },
-  "chargeBaseLabel": "Base: {amount}",
-  "@chargeBaseLabel": {
-    "placeholders": {
-      "amount": {"type": "String"}
-    }
-  },
-  "chargeLateLabel": "Late fee: {amount}",
-  "@chargeLateLabel": {
-    "placeholders": {
-      "amount": {"type": "String"}
+      "item": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
     }
   },
   "chargeTotalLabel": "Total: {amount}",
   "@chargeTotalLabel": {
     "placeholders": {
-      "amount": {"type": "String"}
+      "amount": {
+        "type": "String"
+      }
     }
   },
-  "reviewChargesLabel": "Charges:",
   "reviewDueLabel": "Due: {date}",
   "@reviewDueLabel": {
     "placeholders": {
-      "date": {"type": "String"}
+      "date": {
+        "type": "String"
+      }
     }
   },
   "rentalAmountSubtitle": "Due {date} · {amount}",
   "@rentalAmountSubtitle": {
     "placeholders": {
-      "date": {"type": "String"},
-      "amount": {"type": "String"}
+      "date": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
     }
   },
   "inventoryRateSubtitle": "{mode} · {rate}",
   "@inventoryRateSubtitle": {
     "placeholders": {
-      "mode": {"type": "String"},
-      "rate": {"type": "String"}
+      "mode": {
+        "type": "String"
+      },
+      "rate": {
+        "type": "String"
+      }
     }
   },
   "chargesHeading": "Charges",
-  "durationRequired": "Enter a valid duration (at least 1).",
-  "customEndRequired": "Pick a return-by date on or after today.",
-  "depositBalanceLabel": "Deposit balance",
-  "depositBalanceAmount": "Deposit: {amount}",
-  "@depositBalanceAmount": {
-    "placeholders": {
-      "amount": {"type": "String"}
-    }
-  },
-  "depositAddAction": "Add deposit",
-  "depositRefundAction": "Refund",
-  "depositAmountLabel": "Amount (₹)",
   "depositAmountHint": "e.g. 500",
-  "depositNoteLabel": "Note (optional)",
-  "depositNoteHint": "Reason or reference",
-  "depositTopUpTitle": "Add deposit",
-  "depositRefundTitle": "Refund deposit",
-  "depositConfirmTopUp": "Add",
-  "depositConfirmRefund": "Refund",
-  "depositInvalidAmount": "Enter an amount greater than zero.",
-  "depositRefundExceeds": "Refund cannot exceed the current deposit balance.",
-  "depositTopUpSuccess": "Deposit updated to {amount}.",
-  "@depositTopUpSuccess": {
-    "placeholders": {
-      "amount": {"type": "String"}
-    }
-  },
-  "depositRefundSuccess": "Refunded. Deposit now {amount}.",
-  "@depositRefundSuccess": {
-    "placeholders": {
-      "amount": {"type": "String"}
-    }
-  },
-  "depositLedgerHeading": "Deposit history",
-  "depositLedgerEmpty": "No deposit activity yet.",
-  "depositLedgerTopUp": "Top-up {amount}",
-  "@depositLedgerTopUp": {
-    "placeholders": {
-      "amount": {"type": "String"}
-    }
-  },
-  "depositLedgerApply": "Applied on return {amount}",
-  "@depositLedgerApply": {
-    "placeholders": {
-      "amount": {"type": "String"}
-    }
-  },
-  "depositLedgerRefund": "Refund {amount}",
-  "@depositLedgerRefund": {
-    "placeholders": {
-      "amount": {"type": "String"}
-    }
-  },
-  "depositLedgerAdjust": "Adjust {amount}",
-  "@depositLedgerAdjust": {
-    "placeholders": {
-      "amount": {"type": "String"}
-    }
-  },
-  "depositLedgerBalanceAfter": "Balance {amount}",
-  "@depositLedgerBalanceAfter": {
-    "placeholders": {
-      "amount": {"type": "String"}
-    }
-  },
   "depositAvailableLabel": "Deposit available: {amount}",
   "@depositAvailableLabel": {
     "placeholders": {
-      "amount": {"type": "String"}
+      "amount": {
+        "type": "String"
+      }
     }
   },
   "depositWillApplyLabel": "Will apply from deposit: {amount}",
   "@depositWillApplyLabel": {
     "placeholders": {
-      "amount": {"type": "String"}
+      "amount": {
+        "type": "String"
+      }
     }
   },
   "depositRemainingDueLabel": "Remaining due: {amount}",
   "@depositRemainingDueLabel": {
     "placeholders": {
-      "amount": {"type": "String"}
+      "amount": {
+        "type": "String"
+      }
     }
   },
   "depositLeftoverLabel": "Leftover deposit: {amount}",
   "@depositLeftoverLabel": {
     "placeholders": {
-      "amount": {"type": "String"}
+      "amount": {
+        "type": "String"
+      }
     }
   },
   "depositAppliedLabel": "Deposit applied: {amount}",
   "@depositAppliedLabel": {
     "placeholders": {
-      "amount": {"type": "String"}
-    }
-  },
-  "depositNetDueLabel": "Net due: {amount}",
-  "@depositNetDueLabel": {
-    "placeholders": {
-      "amount": {"type": "String"}
+      "amount": {
+        "type": "String"
+      }
     }
   },
   "returnSettlementTitle": "Return settlement",
@@ -638,7 +554,9 @@
   "returnDiscountLabel": "Discount {amount}",
   "@returnDiscountLabel": {
     "placeholders": {
-      "amount": {"type": "String"}
+      "amount": {
+        "type": "String"
+      }
     }
   },
   "returnNoteLabel": "Note (optional)",
@@ -655,55 +573,56 @@
   "deleteOrderSuccessSnack": "Order cancelled. Deposit balance {balance}.",
   "@deleteOrderSuccessSnack": {
     "placeholders": {
-      "balance": {"type": "String"}
+      "balance": {
+        "type": "String"
+      }
     }
   },
   "depositReturnSnackApplied": "Applied {applied} from deposit; balance now {balance}.",
   "@depositReturnSnackApplied": {
     "placeholders": {
-      "applied": {"type": "String"},
-      "balance": {"type": "String"}
+      "applied": {
+        "type": "String"
+      },
+      "balance": {
+        "type": "String"
+      }
     }
   },
   "depositReturnSnackDue": "Applied {applied} from deposit; remaining due {due}.",
   "@depositReturnSnackDue": {
     "placeholders": {
-      "applied": {"type": "String"},
-      "due": {"type": "String"}
+      "applied": {
+        "type": "String"
+      },
+      "due": {
+        "type": "String"
+      }
     }
   },
   "depositReturnSnackNoDeposit": "Returned. Total {total} due in cash.",
   "@depositReturnSnackNoDeposit": {
     "placeholders": {
-      "total": {"type": "String"}
-    }
-  },
-  "customerSubtitleWithDeposit": "{phone} • {tier} • Deposit {amount}",
-  "@customerSubtitleWithDeposit": {
-    "placeholders": {
-      "phone": {"type": "String"},
-      "tier": {"type": "String"},
-      "amount": {"type": "String"}
-    }
-  },
-  "existingCustomerWithDeposit": "{phone} • Existing • Deposit {amount}",
-  "@existingCustomerWithDeposit": {
-    "placeholders": {
-      "phone": {"type": "String"},
-      "amount": {"type": "String"}
+      "total": {
+        "type": "String"
+      }
     }
   },
   "returnSelectedAction": "Return selected",
   "returnAllAction": "Return all",
-  "replaceLineAction": "Replace",
-  "selectLinesToReturn": "Select lines to return",
   "returnByQuantityHint": "Choose how many to return for each item",
   "skuIssuedReturnedRemaining": "Issued {issued} · Returned {returned} · Still out {remaining}",
   "@skuIssuedReturnedRemaining": {
     "placeholders": {
-      "issued": {"type": "int"},
-      "returned": {"type": "int"},
-      "remaining": {"type": "int"}
+      "issued": {
+        "type": "int"
+      },
+      "returned": {
+        "type": "int"
+      },
+      "remaining": {
+        "type": "int"
+      }
     }
   },
   "returnQtyLabel": "Return qty",
@@ -713,63 +632,67 @@
   "confirmMarkLostBody": "Close {count} unit(s) without restoring stock. Order stays open if anything is still out.",
   "@confirmMarkLostBody": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "confirmMarkLostAction": "Mark lost",
   "unitsLostSnack": "Marked {count} unit(s) lost.",
   "@unitsLostSnack": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "lineLostLabel": "Lost",
   "lostLinesHeading": "Lost",
   "pickUnitsToReturn": "Pick units to return",
-  "openLinesHeading": "Out",
   "returnedLinesHeading": "Returned",
   "lineReturnedLabel": "Returned",
   "lineOpenLabel": "Out",
   "partialReturnSnack": "Returned {count} item(s). Rental still active.",
   "@partialReturnSnack": {
     "placeholders": {
-      "count": {"type": "int"}
-    }
-  },
-  "replaceFlowTitle": "Replace item",
-  "replaceSettlementIntro": "Settle the old item, then issue a replacement.",
-  "replaceConfirmAction": "Replace & issue",
-  "replaceSuccessSnack": "Settled old line; opened {newId}. Deposit balance {balance}.",
-  "@replaceSuccessSnack": {
-    "placeholders": {
-      "newId": {"type": "String"},
-      "balance": {"type": "String"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "noLinesSelected": "Select at least one item to return.",
   "linesOpenCount": "{open} of {total} still out",
   "@linesOpenCount": {
     "placeholders": {
-      "open": {"type": "int"},
-      "total": {"type": "int"}
+      "open": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "lineChargePreview": "{label}: {amount}",
   "@lineChargePreview": {
     "placeholders": {
-      "label": {"type": "String"},
-      "amount": {"type": "String"}
+      "label": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
     }
   },
   "clearFilter": "Clear",
   "showingFilter": "Showing: {label}",
   "@showingFilter": {
     "placeholders": {
-      "label": {"type": "String"}
+      "label": {
+        "type": "String"
+      }
     }
   },
   "needsAttentionTitle": "Needs attention",
-  "needsAttentionEmptyTitle": "Nothing needs attention",
   "needsAttentionEmptySubtitle": "Due today and overdue orders will show up here.",
   "recentActivityTitle": "Recent activity",
   "recentActivityEmpty": "No recent orders or returns yet.",
@@ -777,7 +700,9 @@
   "homeFilterEmptyRentalsSubtitle": "No orders match {label} right now.",
   "@homeFilterEmptyRentalsSubtitle": {
     "placeholders": {
-      "label": {"type": "String"}
+      "label": {
+        "type": "String"
+      }
     }
   },
   "homeFilterEmptyResourcesSubtitle": "No resources with remaining units right now.",
@@ -806,16 +731,12 @@
   "moduleRecentActivitySubtitle": "Latest orders and returns",
   "moduleSuggestions": "AI suggestions",
   "moduleSuggestionsSubtitle": "Optional beta tips",
-  "applyHomeLayoutTitle": "Apply Home layout?",
-  "applyHomeLayoutBody": "Replace Home modules and enabled resource types with this template’s recommended set. Importing items alone only merges types.",
-  "applyHomeLayoutCustomizedBody": "You customized Home earlier. Replace Home modules and enabled resource types with this template’s set?",
-  "applyHomeLayoutSkip": "Keep current",
-  "applyHomeLayoutConfirm": "Apply layout",
-  "applyHomeLayoutDone": "Home layout and resource types updated.",
   "minMeaningfulTextError": "Enter at least {min} characters.",
   "@minMeaningfulTextError": {
     "placeholders": {
-      "min": {"type": "int"}
+      "min": {
+        "type": "int"
+      }
     }
   },
   "searchCustomersHint": "Search by name or phone",
@@ -826,155 +747,91 @@
   "allowsDynamicPricingSubtitle": "Staff can change the rate on New Order for this item. Catalog changes only affect new orders.",
   "orderLineRateLabel": "Rate for this order (₹)",
   "orderLineRateHint": "Catalog default can be changed for this rental",
-  "continueWithoutDueDate": "Continue without due date",
   "openEndedDurationHint": "All selected items allow open-ended rentals. Enter a duration, or continue without a due date.",
   "openEndedLabel": "Open-ended",
   "reviewOpenEndedLabel": "Due: Open-ended (accrues until return)",
   "rentalAmountOpenEnded": "Open-ended · {amount}",
   "@rentalAmountOpenEnded": {
     "placeholders": {
-      "amount": {"type": "String"}
+      "amount": {
+        "type": "String"
+      }
     }
   },
   "accruedAmountHint": "Accrued so far",
   "balanceAdvanceLabel": "Advance",
   "balancePendingLabel": "Pending",
-  "balanceDueLabel": "Due",
   "balanceCreditLabel": "Credit",
   "balanceNetLabel": "Net",
   "balancesAsOfTodayHeading": "Balances as of today",
   "balanceOpenItemsCount": "{count} item(s) out",
   "@balanceOpenItemsCount": {
     "placeholders": {
-      "count": {"type": "int"}
-    }
-  },
-  "customerSubtitleWithBalances": "{phone} • {tier} • Advance {advance} · Pending {pending} · Net {net}",
-  "@customerSubtitleWithBalances": {
-    "placeholders": {
-      "phone": {"type": "String"},
-      "tier": {"type": "String"},
-      "advance": {"type": "String"},
-      "pending": {"type": "String"},
-      "net": {"type": "String"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "orderStatusOpen": "Open",
   "orderStatusCompleted": "Completed",
   "orderStatusCancelled": "Cancelled",
-  "orderBillDepositLabel": "Advance {amount}",
-  "@orderBillDepositLabel": {
-    "placeholders": {
-      "amount": {"type": "String"}
-    }
-  },
-  "orderBillTotalLabel": "Bill {amount}",
-  "@orderBillTotalLabel": {
-    "placeholders": {
-      "amount": {"type": "String"}
-    }
-  },
-  "orderDepositLabel": "Order advance",
-  "customerOrdersHeading": "Orders",
-  "orderDepositSettlementExceeds": "Kept + returned cannot exceed order advance.",
   "requiresUnitIdentityLabel": "Requires unit name/id",
   "requiresUnitIdentitySubtitle": "On for parent categories (e.g. Novels). Off for individual items that share one catalog name.",
   "quantityLabel": "Quantity",
   "labelUnitHeading": "{name} #{index}",
   "@labelUnitHeading": {
     "placeholders": {
-      "name": {"type": "String"},
-      "index": {"type": "int"}
+      "name": {
+        "type": "String"
+      },
+      "index": {
+        "type": "int"
+      }
     }
   },
   "labelsAutoAssignedHint": "Individual items get catalog name and an auto short code.",
-  "orderStatusHeading": "Order status",
   "workflowStatusHeading": "Workflow status",
   "workflowAdvanceAction": "Advance",
   "workflowPickStatusAction": "Pick status",
   "workflowStatusTerminalHint": "Order completed for this pipeline.",
-  "orderIssuedSummary": "Originally issued: {count}",
-  "@orderIssuedSummary": {
-    "placeholders": {
-      "count": {"type": "int"}
-    }
-  },
-  "orderPendingSummary": "Still out: {count}",
-  "@orderPendingSummary": {
-    "placeholders": {
-      "count": {"type": "int"}
-    }
-  },
-  "orderReturnedSummary": "Already returned: {count}",
-  "@orderReturnedSummary": {
-    "placeholders": {
-      "count": {"type": "int"}
-    }
-  },
-  "rentalOrderStatusChips": "Issued {issued} · Pending {pending} · Returned {returned}",
-  "@rentalOrderStatusChips": {
-    "placeholders": {
-      "issued": {"type": "int"},
-      "pending": {"type": "int"},
-      "returned": {"type": "int"}
-    }
-  },
-  "activityTimelineHeading": "Activity",
-  "activityIssued": "Issued: {labels}",
-  "@activityIssued": {
-    "placeholders": {
-      "labels": {"type": "String"}
-    }
-  },
-  "activityReturned": "Returned: {label}",
-  "@activityReturned": {
-    "placeholders": {
-      "label": {"type": "String"}
-    }
-  },
-  "activityEmpty": "No activity yet.",
-  "changeCustomerAction": "Change customer",
   "addOrderLineAction": "Add line",
   "removeOrderLineAction": "Remove line",
   "selectResourceItemLabel": "Resource",
   "orderLineHeading": "Line {number}",
   "@orderLineHeading": {
     "placeholders": {
-      "number": {"type": "int"}
+      "number": {
+        "type": "int"
+      }
     }
   },
   "orderTotalLabel": "Order total: {amount}",
   "@orderTotalLabel": {
     "placeholders": {
-      "amount": {"type": "String"}
+      "amount": {
+        "type": "String"
+      }
     }
   },
   "orderSummaryHeading": "Order summary",
-  "orderSummaryUnavailable": "Not enough stock for {name} (need {need}, available {available}). Adjust quantities to continue.",
-  "@orderSummaryUnavailable": {
-    "placeholders": {
-      "name": {"type": "String"},
-      "need": {"type": "int"},
-      "available": {"type": "int"}
-    }
-  },
   "orderSummaryQuantity": "Qty {quantity}",
   "@orderSummaryQuantity": {
     "placeholders": {
-      "quantity": {"type": "int"}
+      "quantity": {
+        "type": "int"
+      }
     }
   },
   "orderSummaryUnitCharge": "Unit {amount}",
   "@orderSummaryUnitCharge": {
     "placeholders": {
-      "amount": {"type": "String"}
+      "amount": {
+        "type": "String"
+      }
     }
   },
-  "depositTopUpOptionalLabel": "Advance (optional)",
-  "depositTopUpOptionalHint": "Held on this order, in rupees",
   "moreOptions": "More options",
   "addUnitLabelsAction": "Add unit labels",
-  "itemKindDefaultLabel": "Default order mode",
   "itemKindRentalLabel": "Rental",
   "itemKindSaleLabel": "Sale",
   "itemKindServiceLabel": "Service",
@@ -997,10 +854,8 @@
   "lineFulfillmentJob": "Job",
   "saleAmountLabel": "Sale amount",
   "saleAmountHint": "Amount in rupees",
-  "saleAmountRequiredError": "Enter a sale amount greater than zero.",
   "jobAmountLabel": "Job charge",
   "jobAmountHint": "Amount in rupees",
-  "jobAmountRequiredError": "Enter a job charge greater than zero.",
   "soldLineBadge": "Sold",
   "completedJobLineBadge": "Completed",
   "selectLinesToComplete": "Select job lines to mark complete",
@@ -1010,7 +865,9 @@
   "confirmCompleteJobsBody": "Close {count} job line(s). Stock is not restored.",
   "@confirmCompleteJobsBody": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "jobsCompletedSnack": "Jobs marked complete",
@@ -1036,9 +893,15 @@
   "inventoryStockMeta": "{category} · {available}/{total}",
   "@inventoryStockMeta": {
     "placeholders": {
-      "category": {"type": "String"},
-      "available": {"type": "int"},
-      "total": {"type": "int"}
+      "category": {
+        "type": "String"
+      },
+      "available": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "moneyLabelBase": "Base",
@@ -1051,7 +914,6 @@
   "moneyLabelNetDue": "Net due",
   "reportWhatsAppGateBanner": "Set your WhatsApp number in More to share reports.",
   "reportConfigureWhatsAppAction": "Set WhatsApp",
-
   "timelineEmpty": "No rental events yet.",
   "timelineTitleOrderOpened": "Order opened",
   "timelineTitleReplacementOpened": "Replacement opened",
@@ -1070,7 +932,6 @@
   "timelineTitleDueExtended": "Due extended",
   "timelineTitleAutoVacated": "Auto vacated",
   "timelineTitlePaymentReceived": "Payment received",
-
   "timelineSubtitleCreatedOrderFlow": "Created from phone-first order flow.",
   "timelineSubtitleCreatedOrderFlowSale": "Created from phone-first order flow (sale).",
   "timelineSubtitleCreatedOrderFlowJob": "Created from phone-first order flow (job).",
@@ -1078,15 +939,23 @@
   "timelineSubtitleReplacementFor": "Replacement for {orderId}.",
   "@timelineSubtitleReplacementFor": {
     "placeholders": {
-      "orderId": {"type": "String"}
+      "orderId": {
+        "type": "String"
+      }
     }
   },
   "timelineSubtitlePaymentReceived": "Received {received} · sell {sell} · advance {advance}",
   "@timelineSubtitlePaymentReceived": {
     "placeholders": {
-      "received": {"type": "String"},
-      "sell": {"type": "String"},
-      "advance": {"type": "String"}
+      "received": {
+        "type": "String"
+      },
+      "sell": {
+        "type": "String"
+      },
+      "advance": {
+        "type": "String"
+      }
     }
   },
   "orderPaymentTitle": "Payment",
@@ -1109,8 +978,6 @@
   "paymentPreviewAdvance": "Advance to hold",
   "paymentPreviewRemainingSell": "Sell remaining after this payment",
   "paymentConfirmAction": "Confirm payment",
-  "paymentSkipAction": "Skip",
-  "paymentPayLaterAction": "Pay later",
   "paymentPayAction": "Pay",
   "paymentAddAdvanceAction": "Add advance",
   "unpaidSellBadge": "Unpaid",
@@ -1119,44 +986,68 @@
   "timelineSubtitlePartialReturnLines": "Returned {returned} of {total} lines.",
   "@timelineSubtitlePartialReturnLines": {
     "placeholders": {
-      "returned": {"type": "int"},
-      "total": {"type": "int"}
+      "returned": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "timelineSubtitlePartialReturnQty": "Returned {summary} ({returned} of {total} lines).",
   "@timelineSubtitlePartialReturnQty": {
     "placeholders": {
-      "summary": {"type": "String"},
-      "returned": {"type": "int"},
-      "total": {"type": "int"}
+      "summary": {
+        "type": "String"
+      },
+      "returned": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "timelineSubtitleUnitsLostQty": "Marked lost: {summary} ({count} units).",
   "@timelineSubtitleUnitsLostQty": {
     "placeholders": {
-      "summary": {"type": "String"},
-      "count": {"type": "int"}
+      "summary": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
     }
   },
   "timelineSubtitleAllJobsComplete": "All job lines marked complete.",
   "timelineSubtitleJobsCompletedCount": "Completed {count} job line(s).",
   "@timelineSubtitleJobsCompletedCount": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "timelineSubtitleCancelSettlement": "Kept {kept}; returned {returned}.",
   "@timelineSubtitleCancelSettlement": {
     "placeholders": {
-      "kept": {"type": "String"},
-      "returned": {"type": "String"}
+      "kept": {
+        "type": "String"
+      },
+      "returned": {
+        "type": "String"
+      }
     }
   },
   "timelineSubtitleNoteBody": "{kind}: {body}",
   "@timelineSubtitleNoteBody": {
     "placeholders": {
-      "kind": {"type": "String"},
-      "body": {"type": "String"}
+      "kind": {
+        "type": "String"
+      },
+      "body": {
+        "type": "String"
+      }
     }
   },
   "timelineSubtitleAutoReminder": "Auto reminder generated.",
@@ -1166,97 +1057,132 @@
   "timelineSubtitleStatusChanged": "{from} → {to}",
   "@timelineSubtitleStatusChanged": {
     "placeholders": {
-      "from": {"type": "String"},
-      "to": {"type": "String"}
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
     }
   },
   "timelineSubtitleDueExtended": "Due moved {from} → {to}.",
   "@timelineSubtitleDueExtended": {
     "placeholders": {
-      "from": {"type": "String"},
-      "to": {"type": "String"}
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
     }
   },
   "timelineSubtitleDueExtendedSet": "Due set to {to}.",
   "@timelineSubtitleDueExtendedSet": {
     "placeholders": {
-      "to": {"type": "String"}
+      "to": {
+        "type": "String"
+      }
     }
   },
   "timelineSubtitleDueExtendedGeneric": "Due date extended.",
   "timelineSubtitleAutoVacated": "Auto-vacated {summary} ({count} units).",
   "@timelineSubtitleAutoVacated": {
     "placeholders": {
-      "summary": {"type": "String"},
-      "count": {"type": "int"}
+      "summary": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
     }
   },
   "timelineSubtitleAutoVacatedGeneric": "Overdue open units auto-vacated.",
   "timelineSubtitleDiscountBit": "Discount {amount}.",
   "@timelineSubtitleDiscountBit": {
     "placeholders": {
-      "amount": {"type": "String"}
+      "amount": {
+        "type": "String"
+      }
     }
   },
   "timelineSubtitleNoteBit": "Note: {note}",
   "@timelineSubtitleNoteBit": {
     "placeholders": {
-      "note": {"type": "String"}
+      "note": {
+        "type": "String"
+      }
     }
   },
-
   "reportHeader": "{appName} report",
   "@reportHeader": {
     "placeholders": {
-      "appName": {"type": "String"}
+      "appName": {
+        "type": "String"
+      }
     }
   },
   "reportActiveCount": "Active: {count}",
   "@reportActiveCount": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "reportOpenedCount": "Opened: {count}",
   "@reportOpenedCount": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "reportReturnedCount": "Returned: {count}",
   "@reportReturnedCount": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "reportOverdueCount": "Overdue: {count}",
   "@reportOverdueCount": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "reportChargesOpened": "Charges (opened in range): {amount}",
   "@reportChargesOpened": {
     "placeholders": {
-      "amount": {"type": "String"}
+      "amount": {
+        "type": "String"
+      }
     }
   },
   "reportChargesReturned": "Charges (returned in range): {amount}",
   "@reportChargesReturned": {
     "placeholders": {
-      "amount": {"type": "String"}
+      "amount": {
+        "type": "String"
+      }
     }
   },
   "reportDepositAppliedRange": "Deposit applied (returned in range): {amount}",
   "@reportDepositAppliedRange": {
     "placeholders": {
-      "amount": {"type": "String"}
+      "amount": {
+        "type": "String"
+      }
     }
   },
   "reportBalanceDueReturned": "Balance due after deposit (returned): {amount}",
   "@reportBalanceDueReturned": {
     "placeholders": {
-      "amount": {"type": "String"}
+      "amount": {
+        "type": "String"
+      }
     }
   },
   "reportNoRentalsInRange": "(no rentals in range)",
@@ -1264,8 +1190,12 @@
   "reportCustomerWithDeposit": "{header} | deposit {amount}",
   "@reportCustomerWithDeposit": {
     "placeholders": {
-      "header": {"type": "String"},
-      "amount": {"type": "String"}
+      "header": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
     }
   },
   "reportStatusReturnedBit": "[returned]",
@@ -1274,57 +1204,98 @@
   "reportLinesPartialBit": " | lines {open} open/{returned} returned",
   "@reportLinesPartialBit": {
     "placeholders": {
-      "open": {"type": "int"},
-      "returned": {"type": "int"}
+      "open": {
+        "type": "int"
+      },
+      "returned": {
+        "type": "int"
+      }
     }
   },
   "reportDepositDueBit": " | deposit {deposit} | due {due}",
   "@reportDepositDueBit": {
     "placeholders": {
-      "deposit": {"type": "String"},
-      "due": {"type": "String"}
+      "deposit": {
+        "type": "String"
+      },
+      "due": {
+        "type": "String"
+      }
     }
   },
   "reportOpenEnded": "open-ended",
   "reportDueDateBit": "due {date}",
   "@reportDueDateBit": {
     "placeholders": {
-      "date": {"type": "String"}
+      "date": {
+        "type": "String"
+      }
     }
   },
   "reportCustomerRentalLine": "  • {prefix}{rentalId}: {items} | {dueBit} | {status} | {amount}{partialBit}{depositBit}",
   "@reportCustomerRentalLine": {
     "placeholders": {
-      "prefix": {"type": "String"},
-      "rentalId": {"type": "String"},
-      "items": {"type": "String"},
-      "dueBit": {"type": "String"},
-      "status": {"type": "String"},
-      "amount": {"type": "String"},
-      "partialBit": {"type": "String"},
-      "depositBit": {"type": "String"}
+      "prefix": {
+        "type": "String"
+      },
+      "rentalId": {
+        "type": "String"
+      },
+      "items": {
+        "type": "String"
+      },
+      "dueBit": {
+        "type": "String"
+      },
+      "status": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      },
+      "partialBit": {
+        "type": "String"
+      },
+      "depositBit": {
+        "type": "String"
+      }
     }
   },
   "reportInventoryItemLine": "• {name}: rented {rented}× | out {out} | avail {available}/{total} | {billing} {rate}",
   "@reportInventoryItemLine": {
     "placeholders": {
-      "name": {"type": "String"},
-      "rented": {"type": "int"},
-      "out": {"type": "int"},
-      "available": {"type": "int"},
-      "total": {"type": "int"},
-      "billing": {"type": "String"},
-      "rate": {"type": "String"}
+      "name": {
+        "type": "String"
+      },
+      "rented": {
+        "type": "int"
+      },
+      "out": {
+        "type": "int"
+      },
+      "available": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "billing": {
+        "type": "String"
+      },
+      "rate": {
+        "type": "String"
+      }
     }
   },
   "reportTruncatedSuffix": "\n…(truncated — open {appName} for full)",
   "@reportTruncatedSuffix": {
     "placeholders": {
-      "appName": {"type": "String"}
+      "appName": {
+        "type": "String"
+      }
     }
   },
   "loansTitle": "Loans",
-  "loansMoreSubtitle": "Cash loans given and taken",
   "loanCreateTitle": "New loan",
   "loanCreateAction": "New loan",
   "loanDetailTitle": "Loan calculator",
@@ -1338,25 +1309,12 @@
   "loanDirectionGiven": "Given (lent out)",
   "loanDirectionTaken": "Taken (borrowed)",
   "loanCustomerLabel": "Customer",
-  "loanCustomerHint": "Select customer",
-  "loanCustomerRequired": "Select a customer",
   "loanPrincipalLabel": "Principal",
   "loanOriginalPrincipalLabel": "Original principal",
   "loanPrincipalRequired": "Enter a principal amount",
   "loanMoneyGivenOnLabel": "Money given on",
-  "loanAdvancePaymentFlag": "Advance / prior payment",
-  "loanAdvancePaymentHint": "On loan day, accrued interest plus this payment are applied (interest first), then the remaining principal continues.",
-  "loanAdvancePaymentAmountLabel": "Advance amount",
-  "loanAdvancePaymentDateLabel": "Advance paid on",
-  "loanAdvancePaymentRequired": "Enter an advance amount",
-  "loanAdvancePaymentExceedsPrincipal": "Advance cannot exceed principal",
-  "loanAdvancePaymentDateInvalid": "Advance date must be on or after money given date and on or before today",
-  "loanAdvancePaymentEntryNote": "Advance payment",
   "loanDueOptionalLabel": "Due / end (optional)",
   "loanDueNone": "No due date",
-  "loanInterestKindLabel": "Interest",
-  "loanInterestSimple": "Simple",
-  "loanInterestCompound": "Compound",
   "loanCalculationFrequencyLabel": "Interest calculation",
   "loanRateDaily": "Daily",
   "loanInterestAccrualLabel": "Interest accrual",
@@ -1384,8 +1342,6 @@
   "loanRatePeriodLabel": "Period",
   "loanRateMonthly": "Monthly",
   "loanRateYearly": "Yearly",
-  "loanPeriodEndInterestHintSimple": "Interest always accrues into unpaid interest from the signed principal balance. Capitalization (adding unpaid to principal) follows the selected policy. Overpay earns reverse interest.",
-  "loanPeriodEndInterestHintCompound": "Interest always accrues into unpaid interest from the signed principal balance. Capitalization (adding unpaid to principal) follows the selected policy. Overpay earns reverse interest.",
   "loanCapPolicyHintNever": "Principal stays fixed; unpaid interest grows separately. Outstanding = principal + unpaid.",
   "loanCapPolicyHintOnPayment": "Unpaid interest is added to principal immediately before each repayment.",
   "loanCapPolicyHintOnScheduledCycle": "Unpaid interest is added to principal on each capitalization cycle anniversary.",
@@ -1426,7 +1382,9 @@
   "loanCloseWithPendingBody": "Still pending {amount}. Close anyway, or add an adjustment first?",
   "@loanCloseWithPendingBody": {
     "placeholders": {
-      "amount": {"type": "String"}
+      "amount": {
+        "type": "String"
+      }
     }
   },
   "loanEditSetupTooltip": "Edit loan",
@@ -1434,191 +1392,149 @@
   "loanSetupSummary": "Start {start} · Due {due} · {rate} {period} · {policy}",
   "@loanSetupSummary": {
     "placeholders": {
-      "start": {"type": "String"},
-      "due": {"type": "String"},
-      "rate": {"type": "String"},
-      "period": {"type": "String"},
-      "policy": {"type": "String"}
+      "start": {
+        "type": "String"
+      },
+      "due": {
+        "type": "String"
+      },
+      "rate": {
+        "type": "String"
+      },
+      "period": {
+        "type": "String"
+      },
+      "policy": {
+        "type": "String"
+      }
     }
   },
   "loanPrepaymentSetupLabel": "Repayments: {mode}",
   "@loanPrepaymentSetupLabel": {
     "placeholders": {
-      "mode": {"type": "String"}
+      "mode": {
+        "type": "String"
+      }
     }
   },
   "loanTimelineInterestCapitalized": "{date} — Interest capitalized {amount} → principal",
   "@loanTimelineInterestCapitalized": {
     "placeholders": {
-      "date": {"type": "String"},
-      "amount": {"type": "String"}
-    }
-  },
-  "loanTimelineStart": "{date} — Loan started · {amount}",
-  "@loanTimelineStart": {
-    "placeholders": {
-      "date": {"type": "String"},
-      "amount": {"type": "String"}
-    }
-  },
-  "loanTimelineInterest": "Interest posted {date} on {principal} → {amount} (added to principal)",
-  "@loanTimelineInterest": {
-    "placeholders": {
-      "date": {"type": "String"},
-      "principal": {"type": "String"},
-      "amount": {"type": "String"}
+      "date": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
     }
   },
   "loanTimelineInterestSegment": "Interest on {principal} ({from}–{to}) → {amount}",
   "@loanTimelineInterestSegment": {
     "placeholders": {
-      "principal": {"type": "String"},
-      "from": {"type": "String"},
-      "to": {"type": "String"},
-      "amount": {"type": "String"}
+      "principal": {
+        "type": "String"
+      },
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
     }
   },
   "loanTimelineReverseInterestSegment": "Reverse interest on credit {principal} ({from}–{to}) → {amount}",
   "@loanTimelineReverseInterestSegment": {
     "placeholders": {
-      "principal": {"type": "String"},
-      "from": {"type": "String"},
-      "to": {"type": "String"},
-      "amount": {"type": "String"}
+      "principal": {
+        "type": "String"
+      },
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
     }
   },
   "loanTimelinePendingOverpaid": "{date} — Overpaid {amount}",
   "@loanTimelinePendingOverpaid": {
     "placeholders": {
-      "date": {"type": "String"},
-      "amount": {"type": "String"}
-    }
-  },
-  "loanTimelineDeferredSlice": "Interest on repaid {principal} through {date} → {amount} (adds at period end)",
-  "@loanTimelineDeferredSlice": {
-    "placeholders": {
-      "principal": {"type": "String"},
-      "date": {"type": "String"},
-      "amount": {"type": "String"}
-    }
-  },
-  "loanTimelineDeferredAddSlice": "Interest on added {principal} from {fromDate} through {toDate} → {amount}",
-  "@loanTimelineDeferredAddSlice": {
-    "placeholders": {
-      "principal": {"type": "String"},
-      "fromDate": {"type": "String"},
-      "toDate": {"type": "String"},
-      "amount": {"type": "String"}
-    }
-  },
-  "loanTimelineAccruedThroughAsOf": "Interest accrued on {principal} through {date} → {amount} (pending)",
-  "@loanTimelineAccruedThroughAsOf": {
-    "placeholders": {
-      "principal": {"type": "String"},
-      "date": {"type": "String"},
-      "amount": {"type": "String"}
-    }
-  },
-  "loanTimelinePeriodEndSlice": "Interest on payment {repaid} ({from}–{to}) → {interest} (added to principal)",
-  "@loanTimelinePeriodEndSlice": {
-    "placeholders": {
-      "repaid": {"type": "String"},
-      "from": {"type": "String"},
-      "to": {"type": "String"},
-      "interest": {"type": "String"}
-    }
-  },
-  "loanTimelinePeriodEndSliceDue": "Interest due on payment {repaid} ({from}–{to}) → {interest} (not added to principal)",
-  "@loanTimelinePeriodEndSliceDue": {
-    "placeholders": {
-      "repaid": {"type": "String"},
-      "from": {"type": "String"},
-      "to": {"type": "String"},
-      "interest": {"type": "String"}
-    }
-  },
-  "loanTimelinePeriodEndAddSlice": "Interest on added principal {added} ({from}–{to}) → {interest} (added to principal)",
-  "@loanTimelinePeriodEndAddSlice": {
-    "placeholders": {
-      "added": {"type": "String"},
-      "from": {"type": "String"},
-      "to": {"type": "String"},
-      "interest": {"type": "String"}
-    }
-  },
-  "loanTimelinePeriodEndAddSliceDue": "Interest due on added principal {added} ({from}–{to}) → {interest} (not added to principal)",
-  "@loanTimelinePeriodEndAddSliceDue": {
-    "placeholders": {
-      "added": {"type": "String"},
-      "from": {"type": "String"},
-      "to": {"type": "String"},
-      "interest": {"type": "String"}
-    }
-  },
-  "loanTimelineRemainingPeriodInterest": "Interest on remaining {principal} for full period → {amount} (added to principal)",
-  "@loanTimelineRemainingPeriodInterest": {
-    "placeholders": {
-      "principal": {"type": "String"},
-      "amount": {"type": "String"}
-    }
-  },
-  "loanTimelineRemainingPeriodInterestDue": "Interest due on remaining {principal} for full period → {amount} (not added to principal)",
-  "@loanTimelineRemainingPeriodInterestDue": {
-    "placeholders": {
-      "principal": {"type": "String"},
-      "amount": {"type": "String"}
-    }
-  },
-  "loanTimelinePrincipalNow": "{date} — Principal now {amount}",
-  "@loanTimelinePrincipalNow": {
-    "placeholders": {
-      "date": {"type": "String"},
-      "amount": {"type": "String"}
-    }
-  },
-  "loanTimelinePrincipalRemains": "{date} — Principal remains {amount}",
-  "@loanTimelinePrincipalRemains": {
-    "placeholders": {
-      "date": {"type": "String"},
-      "amount": {"type": "String"}
+      "date": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
     }
   },
   "loanTimelinePayment": "{date} — Repayment {amount} → principal {principal}",
   "@loanTimelinePayment": {
     "placeholders": {
-      "date": {"type": "String"},
-      "amount": {"type": "String"},
-      "principal": {"type": "String"}
+      "date": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      },
+      "principal": {
+        "type": "String"
+      }
     }
   },
   "loanTimelinePaymentSplit": "{date} — Repayment {amount} → interest {interest}, principal {principal}",
   "@loanTimelinePaymentSplit": {
     "placeholders": {
-      "date": {"type": "String"},
-      "amount": {"type": "String"},
-      "interest": {"type": "String"},
-      "principal": {"type": "String"}
+      "date": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      },
+      "interest": {
+        "type": "String"
+      },
+      "principal": {
+        "type": "String"
+      }
     }
   },
   "loanTimelineDisbursement": "{date} — Added principal {amount}",
   "@loanTimelineDisbursement": {
     "placeholders": {
-      "date": {"type": "String"},
-      "amount": {"type": "String"}
+      "date": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
     }
   },
   "loanTimelineAdjustment": "{date} — Adjustment {amount}",
   "@loanTimelineAdjustment": {
     "placeholders": {
-      "date": {"type": "String"},
-      "amount": {"type": "String"}
+      "date": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
     }
   },
   "loanTimelinePending": "{date} — Pending {amount}",
   "@loanTimelinePending": {
     "placeholders": {
-      "date": {"type": "String"},
-      "amount": {"type": "String"}
+      "date": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
     }
   },
   "modulePendingLoans": "Pending loans",
@@ -1629,21 +1545,25 @@
   "moduleDueLoansSubtitle": "Pending loans at or past their due date",
   "dueLoansTitle": "Due loans",
   "dueLoansEmptySubtitle": "No due loans right now.",
-  "customerLoansHeading": "Loans",
-  "customerLoansEmpty": "No loans for this customer.",
   "customerLoansViewAll": "View all loans",
   "reportPendingLoansCount": "Pending loans: {count}",
   "@reportPendingLoansCount": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "reportNoOutstandingLoans": "No outstanding loans.",
   "reportOutstandingLoansTotal": "Total {amount} across {count} loan(s)",
   "@reportOutstandingLoansTotal": {
     "placeholders": {
-      "amount": {"type": "String"},
-      "count": {"type": "int"}
+      "amount": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
     }
   }
 }

@@ -104,12 +104,6 @@ abstract class AppLocalizations {
   /// **'Home'**
   String get navHome;
 
-  /// No description provided for @navRentals.
-  ///
-  /// In en, this message translates to:
-  /// **'Transactions'**
-  String get navRentals;
-
   /// No description provided for @navTransactions.
   ///
   /// In en, this message translates to:
@@ -145,12 +139,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'New Order'**
   String get actionNewRental;
-
-  /// No description provided for @transactionsTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Transactions'**
-  String get transactionsTitle;
 
   /// No description provided for @transactionsFilterAll.
   ///
@@ -229,18 +217,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No transactions for this customer.'**
   String get customerTransactionsEmpty;
-
-  /// No description provided for @customerTransactionsViewAll.
-  ///
-  /// In en, this message translates to:
-  /// **'View all'**
-  String get customerTransactionsViewAll;
-
-  /// No description provided for @transactionsMoreSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Orders and cash loans'**
-  String get transactionsMoreSubtitle;
 
   /// No description provided for @issueItemAction.
   ///
@@ -380,12 +356,6 @@ abstract class AppLocalizations {
   /// **'Unknown customer'**
   String get unknownCustomer;
 
-  /// No description provided for @rentalDueSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'{customerName} • Due {date}'**
-  String rentalDueSubtitle(String customerName, String date);
-
   /// No description provided for @inventoryAvailableSubtitle.
   ///
   /// In en, this message translates to:
@@ -403,12 +373,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Standard'**
   String get customerStandard;
-
-  /// No description provided for @customerSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'{phone} • {tier}'**
-  String customerSubtitle(String phone, String tier);
 
   /// No description provided for @offlineSimulationTitle.
   ///
@@ -608,12 +572,6 @@ abstract class AppLocalizations {
   /// **'Add all {count} starter items for {name} and set the recommended Home layout?'**
   String onboardingTemplateConfirmBody(int count, String name);
 
-  /// No description provided for @onboardingTemplateBusy.
-  ///
-  /// In en, this message translates to:
-  /// **'Setting up…'**
-  String get onboardingTemplateBusy;
-
   /// No description provided for @phoneLabel.
   ///
   /// In en, this message translates to:
@@ -637,24 +595,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Extend'**
   String get extendAction;
-
-  /// No description provided for @shareAction.
-  ///
-  /// In en, this message translates to:
-  /// **'Share'**
-  String get shareAction;
-
-  /// No description provided for @extendPlaceholder.
-  ///
-  /// In en, this message translates to:
-  /// **'Extend is a placeholder action.'**
-  String get extendPlaceholder;
-
-  /// No description provided for @sharePlaceholder.
-  ///
-  /// In en, this message translates to:
-  /// **'Share is a placeholder action.'**
-  String get sharePlaceholder;
 
   /// No description provided for @extendDueTitle.
   ///
@@ -818,107 +758,17 @@ abstract class AppLocalizations {
   /// **'Save changes'**
   String get saveChanges;
 
-  /// No description provided for @nameCategoryRequired.
-  ///
-  /// In en, this message translates to:
-  /// **'Name and category are required.'**
-  String get nameCategoryRequired;
-
   /// No description provided for @resourceUpdated.
   ///
   /// In en, this message translates to:
   /// **'Resource updated.'**
   String get resourceUpdated;
 
-  /// No description provided for @hideFromNewOrderAction.
-  ///
-  /// In en, this message translates to:
-  /// **'Hide from New Order'**
-  String get hideFromNewOrderAction;
-
-  /// No description provided for @restoreToCatalogAction.
-  ///
-  /// In en, this message translates to:
-  /// **'Restore to catalog'**
-  String get restoreToCatalogAction;
-
-  /// No description provided for @deleteResourcePermanentlyAction.
-  ///
-  /// In en, this message translates to:
-  /// **'Delete permanently'**
-  String get deleteResourcePermanentlyAction;
-
-  /// No description provided for @confirmHideResourceTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Hide this resource?'**
-  String get confirmHideResourceTitle;
-
-  /// No description provided for @confirmHideResourceBody.
-  ///
-  /// In en, this message translates to:
-  /// **'It will no longer appear in New Order or the default Resources list. You can restore it later.'**
-  String get confirmHideResourceBody;
-
-  /// No description provided for @confirmRestoreResourceTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Restore this resource?'**
-  String get confirmRestoreResourceTitle;
-
-  /// No description provided for @confirmRestoreResourceBody.
-  ///
-  /// In en, this message translates to:
-  /// **'It will show again in New Order and the Resources list.'**
-  String get confirmRestoreResourceBody;
-
-  /// No description provided for @confirmDeleteResourceTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Delete permanently?'**
-  String get confirmDeleteResourceTitle;
-
-  /// No description provided for @confirmDeleteResourceBody.
-  ///
-  /// In en, this message translates to:
-  /// **'This cannot be undone. Only unused resources with no order history can be deleted.'**
-  String get confirmDeleteResourceBody;
-
-  /// No description provided for @deleteResourceBlockedMessage.
-  ///
-  /// In en, this message translates to:
-  /// **'Can\'t delete — this resource appears on past or open orders. Hide it instead.'**
-  String get deleteResourceBlockedMessage;
-
-  /// No description provided for @resourceHiddenSnack.
-  ///
-  /// In en, this message translates to:
-  /// **'Resource hidden from New Order.'**
-  String get resourceHiddenSnack;
-
-  /// No description provided for @resourceRestoredSnack.
-  ///
-  /// In en, this message translates to:
-  /// **'Resource restored to catalog.'**
-  String get resourceRestoredSnack;
-
   /// No description provided for @resourceDeletedSnack.
   ///
   /// In en, this message translates to:
   /// **'Resource deleted.'**
   String get resourceDeletedSnack;
-
-  /// No description provided for @showHiddenResourcesFilter.
-  ///
-  /// In en, this message translates to:
-  /// **'Show hidden'**
-  String get showHiddenResourcesFilter;
-
-  /// No description provided for @resourceHiddenBadge.
-  ///
-  /// In en, this message translates to:
-  /// **'Hidden'**
-  String get resourceHiddenBadge;
 
   /// No description provided for @customerProfileTitle.
   ///
@@ -956,18 +806,6 @@ abstract class AppLocalizations {
   /// **'WhatsApp placeholder action.'**
   String get whatsAppPlaceholder;
 
-  /// No description provided for @recentRentals.
-  ///
-  /// In en, this message translates to:
-  /// **'Recent orders'**
-  String get recentRentals;
-
-  /// No description provided for @dueDate.
-  ///
-  /// In en, this message translates to:
-  /// **'Due {date}'**
-  String dueDate(String date);
-
   /// No description provided for @returnedDate.
   ///
   /// In en, this message translates to:
@@ -1004,12 +842,6 @@ abstract class AppLocalizations {
   /// **'Resources'**
   String get searchSectionResources;
 
-  /// No description provided for @noMatchingSection.
-  ///
-  /// In en, this message translates to:
-  /// **'No matching {section}'**
-  String noMatchingSection(String section);
-
   /// No description provided for @inventoryUnitsSubtitle.
   ///
   /// In en, this message translates to:
@@ -1033,12 +865,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'10-digit customer phone'**
   String get phoneNumberHint;
-
-  /// No description provided for @existingCustomer.
-  ///
-  /// In en, this message translates to:
-  /// **'Existing customer'**
-  String get existingCustomer;
 
   /// No description provided for @existingCustomerSubtitle.
   ///
@@ -1082,71 +908,17 @@ abstract class AppLocalizations {
   /// **'Enter a 10-digit phone number, or choose No phone number.'**
   String get phoneRequiredError;
 
-  /// No description provided for @phoneAlreadyUsedError.
-  ///
-  /// In en, this message translates to:
-  /// **'This phone is already used by another customer.'**
-  String get phoneAlreadyUsedError;
-
   /// No description provided for @customerSuggestionSubtitle.
   ///
   /// In en, this message translates to:
   /// **'{name} · {phone}'**
   String customerSuggestionSubtitle(String name, String phone);
 
-  /// No description provided for @rentalNicknameLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Display name for this order'**
-  String get rentalNicknameLabel;
-
-  /// No description provided for @rentalNicknameHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Optional name shown on this order'**
-  String get rentalNicknameHint;
-
-  /// No description provided for @reviewNickname.
-  ///
-  /// In en, this message translates to:
-  /// **'Name: {nickname} · {customerName}'**
-  String reviewNickname(String nickname, String customerName);
-
   /// No description provided for @rentalNicknameSubtitle.
   ///
   /// In en, this message translates to:
   /// **'{customerName} · {phone}'**
   String rentalNicknameSubtitle(String customerName, String phone);
-
-  /// No description provided for @rentalNicknameDueSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'{nickname} • Due {date}'**
-  String rentalNicknameDueSubtitle(String nickname, String date);
-
-  /// No description provided for @selectItems.
-  ///
-  /// In en, this message translates to:
-  /// **'Select items'**
-  String get selectItems;
-
-  /// No description provided for @itemAvailableCount.
-  ///
-  /// In en, this message translates to:
-  /// **'{category} • {available} available'**
-  String itemAvailableCount(String category, int available);
-
-  /// No description provided for @labelInstancesHeading.
-  ///
-  /// In en, this message translates to:
-  /// **'Name each item'**
-  String get labelInstancesHeading;
-
-  /// No description provided for @labelInstancesHint.
-  ///
-  /// In en, this message translates to:
-  /// **'For novels/tools: enter this copy’s name and a short code.'**
-  String get labelInstancesHint;
 
   /// No description provided for @instanceNameLabel.
   ///
@@ -1189,30 +961,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Individual copies are named with a short code when you generate an order.'**
   String get inventoryInstancesNote;
-
-  /// No description provided for @reviewHeading.
-  ///
-  /// In en, this message translates to:
-  /// **'Review'**
-  String get reviewHeading;
-
-  /// No description provided for @reviewPhone.
-  ///
-  /// In en, this message translates to:
-  /// **'Phone: {phone}'**
-  String reviewPhone(String phone);
-
-  /// No description provided for @reviewName.
-  ///
-  /// In en, this message translates to:
-  /// **'Name: {name}'**
-  String reviewName(String name);
-
-  /// No description provided for @reviewItemsLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Items:'**
-  String get reviewItemsLabel;
 
   /// No description provided for @back.
   ///
@@ -1340,12 +1088,6 @@ abstract class AppLocalizations {
   /// **'Choose the active industry pack. Switching replaces Home layout and enabled resource types. Existing loans, orders, and inventory stay. New Loan is available when Money Lending is active.'**
   String get templatesIntro;
 
-  /// No description provided for @starterItemsCount.
-  ///
-  /// In en, this message translates to:
-  /// **'{count} starter items'**
-  String starterItemsCount(int count);
-
   /// No description provided for @activeTemplateLabel.
   ///
   /// In en, this message translates to:
@@ -1430,18 +1172,6 @@ abstract class AppLocalizations {
   /// **'{category} • {units}'**
   String templateItemSubtitle(String category, String units);
 
-  /// No description provided for @adding.
-  ///
-  /// In en, this message translates to:
-  /// **'Adding…'**
-  String get adding;
-
-  /// No description provided for @addSelectedToResources.
-  ///
-  /// In en, this message translates to:
-  /// **'Add selected to resources'**
-  String get addSelectedToResources;
-
   /// No description provided for @applyTemplateSelection.
   ///
   /// In en, this message translates to:
@@ -1453,12 +1183,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Applying…'**
   String get applyingTemplateSelection;
-
-  /// No description provided for @templateImportResult.
-  ///
-  /// In en, this message translates to:
-  /// **'Added {added} items ({skipped} already present)'**
-  String templateImportResult(int added, int skipped);
 
   /// No description provided for @templateApplyResult.
   ///
@@ -1759,18 +1483,6 @@ abstract class AppLocalizations {
   /// **'Rental pricing'**
   String get pricingSectionTitle;
 
-  /// No description provided for @durationHeading.
-  ///
-  /// In en, this message translates to:
-  /// **'Rental duration'**
-  String get durationHeading;
-
-  /// No description provided for @durationHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Based on the first selected item’s billing mode.'**
-  String get durationHint;
-
   /// No description provided for @durationUnitsLabel.
   ///
   /// In en, this message translates to:
@@ -1819,29 +1531,11 @@ abstract class AppLocalizations {
   /// **'{item} — {amount}'**
   String chargeLineAmount(String item, String amount);
 
-  /// No description provided for @chargeBaseLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Base: {amount}'**
-  String chargeBaseLabel(String amount);
-
-  /// No description provided for @chargeLateLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Late fee: {amount}'**
-  String chargeLateLabel(String amount);
-
   /// No description provided for @chargeTotalLabel.
   ///
   /// In en, this message translates to:
   /// **'Total: {amount}'**
   String chargeTotalLabel(String amount);
-
-  /// No description provided for @reviewChargesLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Charges:'**
-  String get reviewChargesLabel;
 
   /// No description provided for @reviewDueLabel.
   ///
@@ -1867,155 +1561,11 @@ abstract class AppLocalizations {
   /// **'Charges'**
   String get chargesHeading;
 
-  /// No description provided for @durationRequired.
-  ///
-  /// In en, this message translates to:
-  /// **'Enter a valid duration (at least 1).'**
-  String get durationRequired;
-
-  /// No description provided for @customEndRequired.
-  ///
-  /// In en, this message translates to:
-  /// **'Pick a return-by date on or after today.'**
-  String get customEndRequired;
-
-  /// No description provided for @depositBalanceLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Deposit balance'**
-  String get depositBalanceLabel;
-
-  /// No description provided for @depositBalanceAmount.
-  ///
-  /// In en, this message translates to:
-  /// **'Deposit: {amount}'**
-  String depositBalanceAmount(String amount);
-
-  /// No description provided for @depositAddAction.
-  ///
-  /// In en, this message translates to:
-  /// **'Add deposit'**
-  String get depositAddAction;
-
-  /// No description provided for @depositRefundAction.
-  ///
-  /// In en, this message translates to:
-  /// **'Refund'**
-  String get depositRefundAction;
-
-  /// No description provided for @depositAmountLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Amount (₹)'**
-  String get depositAmountLabel;
-
   /// No description provided for @depositAmountHint.
   ///
   /// In en, this message translates to:
   /// **'e.g. 500'**
   String get depositAmountHint;
-
-  /// No description provided for @depositNoteLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Note (optional)'**
-  String get depositNoteLabel;
-
-  /// No description provided for @depositNoteHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Reason or reference'**
-  String get depositNoteHint;
-
-  /// No description provided for @depositTopUpTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Add deposit'**
-  String get depositTopUpTitle;
-
-  /// No description provided for @depositRefundTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Refund deposit'**
-  String get depositRefundTitle;
-
-  /// No description provided for @depositConfirmTopUp.
-  ///
-  /// In en, this message translates to:
-  /// **'Add'**
-  String get depositConfirmTopUp;
-
-  /// No description provided for @depositConfirmRefund.
-  ///
-  /// In en, this message translates to:
-  /// **'Refund'**
-  String get depositConfirmRefund;
-
-  /// No description provided for @depositInvalidAmount.
-  ///
-  /// In en, this message translates to:
-  /// **'Enter an amount greater than zero.'**
-  String get depositInvalidAmount;
-
-  /// No description provided for @depositRefundExceeds.
-  ///
-  /// In en, this message translates to:
-  /// **'Refund cannot exceed the current deposit balance.'**
-  String get depositRefundExceeds;
-
-  /// No description provided for @depositTopUpSuccess.
-  ///
-  /// In en, this message translates to:
-  /// **'Deposit updated to {amount}.'**
-  String depositTopUpSuccess(String amount);
-
-  /// No description provided for @depositRefundSuccess.
-  ///
-  /// In en, this message translates to:
-  /// **'Refunded. Deposit now {amount}.'**
-  String depositRefundSuccess(String amount);
-
-  /// No description provided for @depositLedgerHeading.
-  ///
-  /// In en, this message translates to:
-  /// **'Deposit history'**
-  String get depositLedgerHeading;
-
-  /// No description provided for @depositLedgerEmpty.
-  ///
-  /// In en, this message translates to:
-  /// **'No deposit activity yet.'**
-  String get depositLedgerEmpty;
-
-  /// No description provided for @depositLedgerTopUp.
-  ///
-  /// In en, this message translates to:
-  /// **'Top-up {amount}'**
-  String depositLedgerTopUp(String amount);
-
-  /// No description provided for @depositLedgerApply.
-  ///
-  /// In en, this message translates to:
-  /// **'Applied on return {amount}'**
-  String depositLedgerApply(String amount);
-
-  /// No description provided for @depositLedgerRefund.
-  ///
-  /// In en, this message translates to:
-  /// **'Refund {amount}'**
-  String depositLedgerRefund(String amount);
-
-  /// No description provided for @depositLedgerAdjust.
-  ///
-  /// In en, this message translates to:
-  /// **'Adjust {amount}'**
-  String depositLedgerAdjust(String amount);
-
-  /// No description provided for @depositLedgerBalanceAfter.
-  ///
-  /// In en, this message translates to:
-  /// **'Balance {amount}'**
-  String depositLedgerBalanceAfter(String amount);
 
   /// No description provided for @depositAvailableLabel.
   ///
@@ -2046,12 +1596,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Deposit applied: {amount}'**
   String depositAppliedLabel(String amount);
-
-  /// No description provided for @depositNetDueLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Net due: {amount}'**
-  String depositNetDueLabel(String amount);
 
   /// No description provided for @returnSettlementTitle.
   ///
@@ -2173,18 +1717,6 @@ abstract class AppLocalizations {
   /// **'Returned. Total {total} due in cash.'**
   String depositReturnSnackNoDeposit(String total);
 
-  /// No description provided for @customerSubtitleWithDeposit.
-  ///
-  /// In en, this message translates to:
-  /// **'{phone} • {tier} • Deposit {amount}'**
-  String customerSubtitleWithDeposit(String phone, String tier, String amount);
-
-  /// No description provided for @existingCustomerWithDeposit.
-  ///
-  /// In en, this message translates to:
-  /// **'{phone} • Existing • Deposit {amount}'**
-  String existingCustomerWithDeposit(String phone, String amount);
-
   /// No description provided for @returnSelectedAction.
   ///
   /// In en, this message translates to:
@@ -2196,18 +1728,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Return all'**
   String get returnAllAction;
-
-  /// No description provided for @replaceLineAction.
-  ///
-  /// In en, this message translates to:
-  /// **'Replace'**
-  String get replaceLineAction;
-
-  /// No description provided for @selectLinesToReturn.
-  ///
-  /// In en, this message translates to:
-  /// **'Select lines to return'**
-  String get selectLinesToReturn;
 
   /// No description provided for @returnByQuantityHint.
   ///
@@ -2281,12 +1801,6 @@ abstract class AppLocalizations {
   /// **'Pick units to return'**
   String get pickUnitsToReturn;
 
-  /// No description provided for @openLinesHeading.
-  ///
-  /// In en, this message translates to:
-  /// **'Out'**
-  String get openLinesHeading;
-
   /// No description provided for @returnedLinesHeading.
   ///
   /// In en, this message translates to:
@@ -2310,30 +1824,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Returned {count} item(s). Rental still active.'**
   String partialReturnSnack(int count);
-
-  /// No description provided for @replaceFlowTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Replace item'**
-  String get replaceFlowTitle;
-
-  /// No description provided for @replaceSettlementIntro.
-  ///
-  /// In en, this message translates to:
-  /// **'Settle the old item, then issue a replacement.'**
-  String get replaceSettlementIntro;
-
-  /// No description provided for @replaceConfirmAction.
-  ///
-  /// In en, this message translates to:
-  /// **'Replace & issue'**
-  String get replaceConfirmAction;
-
-  /// No description provided for @replaceSuccessSnack.
-  ///
-  /// In en, this message translates to:
-  /// **'Settled old line; opened {newId}. Deposit balance {balance}.'**
-  String replaceSuccessSnack(String newId, String balance);
 
   /// No description provided for @noLinesSelected.
   ///
@@ -2370,12 +1860,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Needs attention'**
   String get needsAttentionTitle;
-
-  /// No description provided for @needsAttentionEmptyTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Nothing needs attention'**
-  String get needsAttentionEmptyTitle;
 
   /// No description provided for @needsAttentionEmptySubtitle.
   ///
@@ -2563,42 +2047,6 @@ abstract class AppLocalizations {
   /// **'Optional beta tips'**
   String get moduleSuggestionsSubtitle;
 
-  /// No description provided for @applyHomeLayoutTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Apply Home layout?'**
-  String get applyHomeLayoutTitle;
-
-  /// No description provided for @applyHomeLayoutBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Replace Home modules and enabled resource types with this template’s recommended set. Importing items alone only merges types.'**
-  String get applyHomeLayoutBody;
-
-  /// No description provided for @applyHomeLayoutCustomizedBody.
-  ///
-  /// In en, this message translates to:
-  /// **'You customized Home earlier. Replace Home modules and enabled resource types with this template’s set?'**
-  String get applyHomeLayoutCustomizedBody;
-
-  /// No description provided for @applyHomeLayoutSkip.
-  ///
-  /// In en, this message translates to:
-  /// **'Keep current'**
-  String get applyHomeLayoutSkip;
-
-  /// No description provided for @applyHomeLayoutConfirm.
-  ///
-  /// In en, this message translates to:
-  /// **'Apply layout'**
-  String get applyHomeLayoutConfirm;
-
-  /// No description provided for @applyHomeLayoutDone.
-  ///
-  /// In en, this message translates to:
-  /// **'Home layout and resource types updated.'**
-  String get applyHomeLayoutDone;
-
   /// No description provided for @minMeaningfulTextError.
   ///
   /// In en, this message translates to:
@@ -2653,12 +2101,6 @@ abstract class AppLocalizations {
   /// **'Catalog default can be changed for this rental'**
   String get orderLineRateHint;
 
-  /// No description provided for @continueWithoutDueDate.
-  ///
-  /// In en, this message translates to:
-  /// **'Continue without due date'**
-  String get continueWithoutDueDate;
-
   /// No description provided for @openEndedDurationHint.
   ///
   /// In en, this message translates to:
@@ -2701,12 +2143,6 @@ abstract class AppLocalizations {
   /// **'Pending'**
   String get balancePendingLabel;
 
-  /// No description provided for @balanceDueLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Due'**
-  String get balanceDueLabel;
-
   /// No description provided for @balanceCreditLabel.
   ///
   /// In en, this message translates to:
@@ -2731,18 +2167,6 @@ abstract class AppLocalizations {
   /// **'{count} item(s) out'**
   String balanceOpenItemsCount(int count);
 
-  /// No description provided for @customerSubtitleWithBalances.
-  ///
-  /// In en, this message translates to:
-  /// **'{phone} • {tier} • Advance {advance} · Pending {pending} · Net {net}'**
-  String customerSubtitleWithBalances(
-    String phone,
-    String tier,
-    String advance,
-    String pending,
-    String net,
-  );
-
   /// No description provided for @orderStatusOpen.
   ///
   /// In en, this message translates to:
@@ -2760,36 +2184,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cancelled'**
   String get orderStatusCancelled;
-
-  /// No description provided for @orderBillDepositLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Advance {amount}'**
-  String orderBillDepositLabel(String amount);
-
-  /// No description provided for @orderBillTotalLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Bill {amount}'**
-  String orderBillTotalLabel(String amount);
-
-  /// No description provided for @orderDepositLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Order advance'**
-  String get orderDepositLabel;
-
-  /// No description provided for @customerOrdersHeading.
-  ///
-  /// In en, this message translates to:
-  /// **'Orders'**
-  String get customerOrdersHeading;
-
-  /// No description provided for @orderDepositSettlementExceeds.
-  ///
-  /// In en, this message translates to:
-  /// **'Kept + returned cannot exceed order advance.'**
-  String get orderDepositSettlementExceeds;
 
   /// No description provided for @requiresUnitIdentityLabel.
   ///
@@ -2821,12 +2215,6 @@ abstract class AppLocalizations {
   /// **'Individual items get catalog name and an auto short code.'**
   String get labelsAutoAssignedHint;
 
-  /// No description provided for @orderStatusHeading.
-  ///
-  /// In en, this message translates to:
-  /// **'Order status'**
-  String get orderStatusHeading;
-
   /// No description provided for @workflowStatusHeading.
   ///
   /// In en, this message translates to:
@@ -2850,60 +2238,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Order completed for this pipeline.'**
   String get workflowStatusTerminalHint;
-
-  /// No description provided for @orderIssuedSummary.
-  ///
-  /// In en, this message translates to:
-  /// **'Originally issued: {count}'**
-  String orderIssuedSummary(int count);
-
-  /// No description provided for @orderPendingSummary.
-  ///
-  /// In en, this message translates to:
-  /// **'Still out: {count}'**
-  String orderPendingSummary(int count);
-
-  /// No description provided for @orderReturnedSummary.
-  ///
-  /// In en, this message translates to:
-  /// **'Already returned: {count}'**
-  String orderReturnedSummary(int count);
-
-  /// No description provided for @rentalOrderStatusChips.
-  ///
-  /// In en, this message translates to:
-  /// **'Issued {issued} · Pending {pending} · Returned {returned}'**
-  String rentalOrderStatusChips(int issued, int pending, int returned);
-
-  /// No description provided for @activityTimelineHeading.
-  ///
-  /// In en, this message translates to:
-  /// **'Activity'**
-  String get activityTimelineHeading;
-
-  /// No description provided for @activityIssued.
-  ///
-  /// In en, this message translates to:
-  /// **'Issued: {labels}'**
-  String activityIssued(String labels);
-
-  /// No description provided for @activityReturned.
-  ///
-  /// In en, this message translates to:
-  /// **'Returned: {label}'**
-  String activityReturned(String label);
-
-  /// No description provided for @activityEmpty.
-  ///
-  /// In en, this message translates to:
-  /// **'No activity yet.'**
-  String get activityEmpty;
-
-  /// No description provided for @changeCustomerAction.
-  ///
-  /// In en, this message translates to:
-  /// **'Change customer'**
-  String get changeCustomerAction;
 
   /// No description provided for @addOrderLineAction.
   ///
@@ -2941,12 +2275,6 @@ abstract class AppLocalizations {
   /// **'Order summary'**
   String get orderSummaryHeading;
 
-  /// No description provided for @orderSummaryUnavailable.
-  ///
-  /// In en, this message translates to:
-  /// **'Not enough stock for {name} (need {need}, available {available}). Adjust quantities to continue.'**
-  String orderSummaryUnavailable(String name, int need, int available);
-
   /// No description provided for @orderSummaryQuantity.
   ///
   /// In en, this message translates to:
@@ -2959,18 +2287,6 @@ abstract class AppLocalizations {
   /// **'Unit {amount}'**
   String orderSummaryUnitCharge(String amount);
 
-  /// No description provided for @depositTopUpOptionalLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Advance (optional)'**
-  String get depositTopUpOptionalLabel;
-
-  /// No description provided for @depositTopUpOptionalHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Held on this order, in rupees'**
-  String get depositTopUpOptionalHint;
-
   /// No description provided for @moreOptions.
   ///
   /// In en, this message translates to:
@@ -2982,12 +2298,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add unit labels'**
   String get addUnitLabelsAction;
-
-  /// No description provided for @itemKindDefaultLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Default order mode'**
-  String get itemKindDefaultLabel;
 
   /// No description provided for @itemKindRentalLabel.
   ///
@@ -3121,12 +2431,6 @@ abstract class AppLocalizations {
   /// **'Amount in rupees'**
   String get saleAmountHint;
 
-  /// No description provided for @saleAmountRequiredError.
-  ///
-  /// In en, this message translates to:
-  /// **'Enter a sale amount greater than zero.'**
-  String get saleAmountRequiredError;
-
   /// No description provided for @jobAmountLabel.
   ///
   /// In en, this message translates to:
@@ -3138,12 +2442,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Amount in rupees'**
   String get jobAmountHint;
-
-  /// No description provided for @jobAmountRequiredError.
-  ///
-  /// In en, this message translates to:
-  /// **'Enter a job charge greater than zero.'**
-  String get jobAmountRequiredError;
 
   /// No description provided for @soldLineBadge.
   ///
@@ -3641,18 +2939,6 @@ abstract class AppLocalizations {
   /// **'Confirm payment'**
   String get paymentConfirmAction;
 
-  /// No description provided for @paymentSkipAction.
-  ///
-  /// In en, this message translates to:
-  /// **'Skip'**
-  String get paymentSkipAction;
-
-  /// No description provided for @paymentPayLaterAction.
-  ///
-  /// In en, this message translates to:
-  /// **'Pay later'**
-  String get paymentPayLaterAction;
-
   /// No description provided for @paymentPayAction.
   ///
   /// In en, this message translates to:
@@ -3956,12 +3242,6 @@ abstract class AppLocalizations {
   /// **'Loans'**
   String get loansTitle;
 
-  /// No description provided for @loansMoreSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Cash loans given and taken'**
-  String get loansMoreSubtitle;
-
   /// No description provided for @loanCreateTitle.
   ///
   /// In en, this message translates to:
@@ -4040,18 +3320,6 @@ abstract class AppLocalizations {
   /// **'Customer'**
   String get loanCustomerLabel;
 
-  /// No description provided for @loanCustomerHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Select customer'**
-  String get loanCustomerHint;
-
-  /// No description provided for @loanCustomerRequired.
-  ///
-  /// In en, this message translates to:
-  /// **'Select a customer'**
-  String get loanCustomerRequired;
-
   /// No description provided for @loanPrincipalLabel.
   ///
   /// In en, this message translates to:
@@ -4076,54 +3344,6 @@ abstract class AppLocalizations {
   /// **'Money given on'**
   String get loanMoneyGivenOnLabel;
 
-  /// No description provided for @loanAdvancePaymentFlag.
-  ///
-  /// In en, this message translates to:
-  /// **'Advance / prior payment'**
-  String get loanAdvancePaymentFlag;
-
-  /// No description provided for @loanAdvancePaymentHint.
-  ///
-  /// In en, this message translates to:
-  /// **'On loan day, accrued interest plus this payment are applied (interest first), then the remaining principal continues.'**
-  String get loanAdvancePaymentHint;
-
-  /// No description provided for @loanAdvancePaymentAmountLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Advance amount'**
-  String get loanAdvancePaymentAmountLabel;
-
-  /// No description provided for @loanAdvancePaymentDateLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Advance paid on'**
-  String get loanAdvancePaymentDateLabel;
-
-  /// No description provided for @loanAdvancePaymentRequired.
-  ///
-  /// In en, this message translates to:
-  /// **'Enter an advance amount'**
-  String get loanAdvancePaymentRequired;
-
-  /// No description provided for @loanAdvancePaymentExceedsPrincipal.
-  ///
-  /// In en, this message translates to:
-  /// **'Advance cannot exceed principal'**
-  String get loanAdvancePaymentExceedsPrincipal;
-
-  /// No description provided for @loanAdvancePaymentDateInvalid.
-  ///
-  /// In en, this message translates to:
-  /// **'Advance date must be on or after money given date and on or before today'**
-  String get loanAdvancePaymentDateInvalid;
-
-  /// No description provided for @loanAdvancePaymentEntryNote.
-  ///
-  /// In en, this message translates to:
-  /// **'Advance payment'**
-  String get loanAdvancePaymentEntryNote;
-
   /// No description provided for @loanDueOptionalLabel.
   ///
   /// In en, this message translates to:
@@ -4135,24 +3355,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No due date'**
   String get loanDueNone;
-
-  /// No description provided for @loanInterestKindLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Interest'**
-  String get loanInterestKindLabel;
-
-  /// No description provided for @loanInterestSimple.
-  ///
-  /// In en, this message translates to:
-  /// **'Simple'**
-  String get loanInterestSimple;
-
-  /// No description provided for @loanInterestCompound.
-  ///
-  /// In en, this message translates to:
-  /// **'Compound'**
-  String get loanInterestCompound;
 
   /// No description provided for @loanCalculationFrequencyLabel.
   ///
@@ -4315,18 +3517,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Yearly'**
   String get loanRateYearly;
-
-  /// No description provided for @loanPeriodEndInterestHintSimple.
-  ///
-  /// In en, this message translates to:
-  /// **'Interest always accrues into unpaid interest from the signed principal balance. Capitalization (adding unpaid to principal) follows the selected policy. Overpay earns reverse interest.'**
-  String get loanPeriodEndInterestHintSimple;
-
-  /// No description provided for @loanPeriodEndInterestHintCompound.
-  ///
-  /// In en, this message translates to:
-  /// **'Interest always accrues into unpaid interest from the signed principal balance. Capitalization (adding unpaid to principal) follows the selected policy. Overpay earns reverse interest.'**
-  String get loanPeriodEndInterestHintCompound;
 
   /// No description provided for @loanCapPolicyHintNever.
   ///
@@ -4592,18 +3782,6 @@ abstract class AppLocalizations {
   /// **'{date} — Interest capitalized {amount} → principal'**
   String loanTimelineInterestCapitalized(String date, String amount);
 
-  /// No description provided for @loanTimelineStart.
-  ///
-  /// In en, this message translates to:
-  /// **'{date} — Loan started · {amount}'**
-  String loanTimelineStart(String date, String amount);
-
-  /// No description provided for @loanTimelineInterest.
-  ///
-  /// In en, this message translates to:
-  /// **'Interest posted {date} on {principal} → {amount} (added to principal)'**
-  String loanTimelineInterest(String date, String principal, String amount);
-
   /// No description provided for @loanTimelineInterestSegment.
   ///
   /// In en, this message translates to:
@@ -4631,108 +3809,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{date} — Overpaid {amount}'**
   String loanTimelinePendingOverpaid(String date, String amount);
-
-  /// No description provided for @loanTimelineDeferredSlice.
-  ///
-  /// In en, this message translates to:
-  /// **'Interest on repaid {principal} through {date} → {amount} (adds at period end)'**
-  String loanTimelineDeferredSlice(
-    String principal,
-    String date,
-    String amount,
-  );
-
-  /// No description provided for @loanTimelineDeferredAddSlice.
-  ///
-  /// In en, this message translates to:
-  /// **'Interest on added {principal} from {fromDate} through {toDate} → {amount}'**
-  String loanTimelineDeferredAddSlice(
-    String principal,
-    String fromDate,
-    String toDate,
-    String amount,
-  );
-
-  /// No description provided for @loanTimelineAccruedThroughAsOf.
-  ///
-  /// In en, this message translates to:
-  /// **'Interest accrued on {principal} through {date} → {amount} (pending)'**
-  String loanTimelineAccruedThroughAsOf(
-    String principal,
-    String date,
-    String amount,
-  );
-
-  /// No description provided for @loanTimelinePeriodEndSlice.
-  ///
-  /// In en, this message translates to:
-  /// **'Interest on payment {repaid} ({from}–{to}) → {interest} (added to principal)'**
-  String loanTimelinePeriodEndSlice(
-    String repaid,
-    String from,
-    String to,
-    String interest,
-  );
-
-  /// No description provided for @loanTimelinePeriodEndSliceDue.
-  ///
-  /// In en, this message translates to:
-  /// **'Interest due on payment {repaid} ({from}–{to}) → {interest} (not added to principal)'**
-  String loanTimelinePeriodEndSliceDue(
-    String repaid,
-    String from,
-    String to,
-    String interest,
-  );
-
-  /// No description provided for @loanTimelinePeriodEndAddSlice.
-  ///
-  /// In en, this message translates to:
-  /// **'Interest on added principal {added} ({from}–{to}) → {interest} (added to principal)'**
-  String loanTimelinePeriodEndAddSlice(
-    String added,
-    String from,
-    String to,
-    String interest,
-  );
-
-  /// No description provided for @loanTimelinePeriodEndAddSliceDue.
-  ///
-  /// In en, this message translates to:
-  /// **'Interest due on added principal {added} ({from}–{to}) → {interest} (not added to principal)'**
-  String loanTimelinePeriodEndAddSliceDue(
-    String added,
-    String from,
-    String to,
-    String interest,
-  );
-
-  /// No description provided for @loanTimelineRemainingPeriodInterest.
-  ///
-  /// In en, this message translates to:
-  /// **'Interest on remaining {principal} for full period → {amount} (added to principal)'**
-  String loanTimelineRemainingPeriodInterest(String principal, String amount);
-
-  /// No description provided for @loanTimelineRemainingPeriodInterestDue.
-  ///
-  /// In en, this message translates to:
-  /// **'Interest due on remaining {principal} for full period → {amount} (not added to principal)'**
-  String loanTimelineRemainingPeriodInterestDue(
-    String principal,
-    String amount,
-  );
-
-  /// No description provided for @loanTimelinePrincipalNow.
-  ///
-  /// In en, this message translates to:
-  /// **'{date} — Principal now {amount}'**
-  String loanTimelinePrincipalNow(String date, String amount);
-
-  /// No description provided for @loanTimelinePrincipalRemains.
-  ///
-  /// In en, this message translates to:
-  /// **'{date} — Principal remains {amount}'**
-  String loanTimelinePrincipalRemains(String date, String amount);
 
   /// No description provided for @loanTimelinePayment.
   ///
@@ -4816,18 +3892,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No due loans right now.'**
   String get dueLoansEmptySubtitle;
-
-  /// No description provided for @customerLoansHeading.
-  ///
-  /// In en, this message translates to:
-  /// **'Loans'**
-  String get customerLoansHeading;
-
-  /// No description provided for @customerLoansEmpty.
-  ///
-  /// In en, this message translates to:
-  /// **'No loans for this customer.'**
-  String get customerLoansEmpty;
 
   /// No description provided for @customerLoansViewAll.
   ///

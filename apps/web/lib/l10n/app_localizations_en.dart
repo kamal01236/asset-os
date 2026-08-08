@@ -12,9 +12,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navHome => 'Home';
 
   @override
-  String get navRentals => 'Transactions';
-
-  @override
   String get navTransactions => 'Transactions';
 
   @override
@@ -31,9 +28,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get actionNewRental => 'New Order';
-
-  @override
-  String get transactionsTitle => 'Transactions';
 
   @override
   String get transactionsFilterAll => 'All';
@@ -74,12 +68,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get customerTransactionsEmpty => 'No transactions for this customer.';
-
-  @override
-  String get customerTransactionsViewAll => 'View all';
-
-  @override
-  String get transactionsMoreSubtitle => 'Orders and cash loans';
 
   @override
   String get issueItemAction => 'Issue';
@@ -153,11 +141,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get unknownCustomer => 'Unknown customer';
 
   @override
-  String rentalDueSubtitle(String customerName, String date) {
-    return '$customerName • Due $date';
-  }
-
-  @override
   String inventoryAvailableSubtitle(String category, int available, int total) {
     return '$category • $available/$total available';
   }
@@ -167,11 +150,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get customerStandard => 'Standard';
-
-  @override
-  String customerSubtitle(String phone, String tier) {
-    return '$phone • $tier';
-  }
 
   @override
   String get offlineSimulationTitle => 'Offline simulation';
@@ -286,9 +264,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get onboardingTemplateBusy => 'Setting up…';
-
-  @override
   String phoneLabel(String phone) {
     return 'Phone: $phone';
   }
@@ -301,15 +276,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get extendAction => 'Extend';
-
-  @override
-  String get shareAction => 'Share';
-
-  @override
-  String get extendPlaceholder => 'Extend is a placeholder action.';
-
-  @override
-  String get sharePlaceholder => 'Share is a placeholder action.';
 
   @override
   String get extendDueTitle => 'Extend due date';
@@ -397,59 +363,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get saveChanges => 'Save changes';
 
   @override
-  String get nameCategoryRequired => 'Name and category are required.';
-
-  @override
   String get resourceUpdated => 'Resource updated.';
 
   @override
-  String get hideFromNewOrderAction => 'Hide from New Order';
-
-  @override
-  String get restoreToCatalogAction => 'Restore to catalog';
-
-  @override
-  String get deleteResourcePermanentlyAction => 'Delete permanently';
-
-  @override
-  String get confirmHideResourceTitle => 'Hide this resource?';
-
-  @override
-  String get confirmHideResourceBody =>
-      'It will no longer appear in New Order or the default Resources list. You can restore it later.';
-
-  @override
-  String get confirmRestoreResourceTitle => 'Restore this resource?';
-
-  @override
-  String get confirmRestoreResourceBody =>
-      'It will show again in New Order and the Resources list.';
-
-  @override
-  String get confirmDeleteResourceTitle => 'Delete permanently?';
-
-  @override
-  String get confirmDeleteResourceBody =>
-      'This cannot be undone. Only unused resources with no order history can be deleted.';
-
-  @override
-  String get deleteResourceBlockedMessage =>
-      'Can\'t delete — this resource appears on past or open orders. Hide it instead.';
-
-  @override
-  String get resourceHiddenSnack => 'Resource hidden from New Order.';
-
-  @override
-  String get resourceRestoredSnack => 'Resource restored to catalog.';
-
-  @override
   String get resourceDeletedSnack => 'Resource deleted.';
-
-  @override
-  String get showHiddenResourcesFilter => 'Show hidden';
-
-  @override
-  String get resourceHiddenBadge => 'Hidden';
 
   @override
   String get customerProfileTitle => 'Customer profile';
@@ -468,14 +385,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get whatsAppPlaceholder => 'WhatsApp placeholder action.';
-
-  @override
-  String get recentRentals => 'Recent orders';
-
-  @override
-  String dueDate(String date) {
-    return 'Due $date';
-  }
 
   @override
   String returnedDate(String date) {
@@ -498,11 +407,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchSectionResources => 'Resources';
 
   @override
-  String noMatchingSection(String section) {
-    return 'No matching $section';
-  }
-
-  @override
   String inventoryUnitsSubtitle(String category, int available, int total) {
     return '$category • $available/$total';
   }
@@ -517,9 +421,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get phoneNumberHint => '10-digit customer phone';
-
-  @override
-  String get existingCustomer => 'Existing customer';
 
   @override
   String existingCustomerSubtitle(String phone) {
@@ -546,49 +447,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Enter a 10-digit phone number, or choose No phone number.';
 
   @override
-  String get phoneAlreadyUsedError =>
-      'This phone is already used by another customer.';
-
-  @override
   String customerSuggestionSubtitle(String name, String phone) {
     return '$name · $phone';
-  }
-
-  @override
-  String get rentalNicknameLabel => 'Display name for this order';
-
-  @override
-  String get rentalNicknameHint => 'Optional name shown on this order';
-
-  @override
-  String reviewNickname(String nickname, String customerName) {
-    return 'Name: $nickname · $customerName';
   }
 
   @override
   String rentalNicknameSubtitle(String customerName, String phone) {
     return '$customerName · $phone';
   }
-
-  @override
-  String rentalNicknameDueSubtitle(String nickname, String date) {
-    return '$nickname • Due $date';
-  }
-
-  @override
-  String get selectItems => 'Select items';
-
-  @override
-  String itemAvailableCount(String category, int available) {
-    return '$category • $available available';
-  }
-
-  @override
-  String get labelInstancesHeading => 'Name each item';
-
-  @override
-  String get labelInstancesHint =>
-      'For novels/tools: enter this copy’s name and a short code.';
 
   @override
   String get instanceNameLabel => 'Unit name';
@@ -614,22 +480,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get inventoryInstancesNote =>
       'Individual copies are named with a short code when you generate an order.';
-
-  @override
-  String get reviewHeading => 'Review';
-
-  @override
-  String reviewPhone(String phone) {
-    return 'Phone: $phone';
-  }
-
-  @override
-  String reviewName(String name) {
-    return 'Name: $name';
-  }
-
-  @override
-  String get reviewItemsLabel => 'Items:';
 
   @override
   String get back => 'Back';
@@ -700,11 +550,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Choose the active industry pack. Switching replaces Home layout and enabled resource types. Existing loans, orders, and inventory stay. New Loan is available when Money Lending is active.';
 
   @override
-  String starterItemsCount(int count) {
-    return '$count starter items';
-  }
-
-  @override
   String get activeTemplateLabel => 'Active pack';
 
   @override
@@ -759,21 +604,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get adding => 'Adding…';
-
-  @override
-  String get addSelectedToResources => 'Add selected to resources';
-
-  @override
   String get applyTemplateSelection => 'Apply';
 
   @override
   String get applyingTemplateSelection => 'Applying…';
-
-  @override
-  String templateImportResult(int added, int skipped) {
-    return 'Added $added items ($skipped already present)';
-  }
 
   @override
   String templateApplyResult(
@@ -940,12 +774,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pricingSectionTitle => 'Rental pricing';
 
   @override
-  String get durationHeading => 'Rental duration';
-
-  @override
-  String get durationHint => 'Based on the first selected item’s billing mode.';
-
-  @override
   String get durationUnitsLabel => 'Duration';
 
   @override
@@ -974,22 +802,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String chargeBaseLabel(String amount) {
-    return 'Base: $amount';
-  }
-
-  @override
-  String chargeLateLabel(String amount) {
-    return 'Late fee: $amount';
-  }
-
-  @override
   String chargeTotalLabel(String amount) {
     return 'Total: $amount';
   }
-
-  @override
-  String get reviewChargesLabel => 'Charges:';
 
   @override
   String reviewDueLabel(String date) {
@@ -1010,96 +825,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chargesHeading => 'Charges';
 
   @override
-  String get durationRequired => 'Enter a valid duration (at least 1).';
-
-  @override
-  String get customEndRequired => 'Pick a return-by date on or after today.';
-
-  @override
-  String get depositBalanceLabel => 'Deposit balance';
-
-  @override
-  String depositBalanceAmount(String amount) {
-    return 'Deposit: $amount';
-  }
-
-  @override
-  String get depositAddAction => 'Add deposit';
-
-  @override
-  String get depositRefundAction => 'Refund';
-
-  @override
-  String get depositAmountLabel => 'Amount (₹)';
-
-  @override
   String get depositAmountHint => 'e.g. 500';
-
-  @override
-  String get depositNoteLabel => 'Note (optional)';
-
-  @override
-  String get depositNoteHint => 'Reason or reference';
-
-  @override
-  String get depositTopUpTitle => 'Add deposit';
-
-  @override
-  String get depositRefundTitle => 'Refund deposit';
-
-  @override
-  String get depositConfirmTopUp => 'Add';
-
-  @override
-  String get depositConfirmRefund => 'Refund';
-
-  @override
-  String get depositInvalidAmount => 'Enter an amount greater than zero.';
-
-  @override
-  String get depositRefundExceeds =>
-      'Refund cannot exceed the current deposit balance.';
-
-  @override
-  String depositTopUpSuccess(String amount) {
-    return 'Deposit updated to $amount.';
-  }
-
-  @override
-  String depositRefundSuccess(String amount) {
-    return 'Refunded. Deposit now $amount.';
-  }
-
-  @override
-  String get depositLedgerHeading => 'Deposit history';
-
-  @override
-  String get depositLedgerEmpty => 'No deposit activity yet.';
-
-  @override
-  String depositLedgerTopUp(String amount) {
-    return 'Top-up $amount';
-  }
-
-  @override
-  String depositLedgerApply(String amount) {
-    return 'Applied on return $amount';
-  }
-
-  @override
-  String depositLedgerRefund(String amount) {
-    return 'Refund $amount';
-  }
-
-  @override
-  String depositLedgerAdjust(String amount) {
-    return 'Adjust $amount';
-  }
-
-  @override
-  String depositLedgerBalanceAfter(String amount) {
-    return 'Balance $amount';
-  }
 
   @override
   String depositAvailableLabel(String amount) {
@@ -1124,11 +850,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String depositAppliedLabel(String amount) {
     return 'Deposit applied: $amount';
-  }
-
-  @override
-  String depositNetDueLabel(String amount) {
-    return 'Net due: $amount';
   }
 
   @override
@@ -1204,26 +925,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String customerSubtitleWithDeposit(String phone, String tier, String amount) {
-    return '$phone • $tier • Deposit $amount';
-  }
-
-  @override
-  String existingCustomerWithDeposit(String phone, String amount) {
-    return '$phone • Existing • Deposit $amount';
-  }
-
-  @override
   String get returnSelectedAction => 'Return selected';
 
   @override
   String get returnAllAction => 'Return all';
-
-  @override
-  String get replaceLineAction => 'Replace';
-
-  @override
-  String get selectLinesToReturn => 'Select lines to return';
 
   @override
   String get returnByQuantityHint => 'Choose how many to return for each item';
@@ -1268,9 +973,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pickUnitsToReturn => 'Pick units to return';
 
   @override
-  String get openLinesHeading => 'Out';
-
-  @override
   String get returnedLinesHeading => 'Returned';
 
   @override
@@ -1282,21 +984,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String partialReturnSnack(int count) {
     return 'Returned $count item(s). Rental still active.';
-  }
-
-  @override
-  String get replaceFlowTitle => 'Replace item';
-
-  @override
-  String get replaceSettlementIntro =>
-      'Settle the old item, then issue a replacement.';
-
-  @override
-  String get replaceConfirmAction => 'Replace & issue';
-
-  @override
-  String replaceSuccessSnack(String newId, String balance) {
-    return 'Settled old line; opened $newId. Deposit balance $balance.';
   }
 
   @override
@@ -1322,9 +1009,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get needsAttentionTitle => 'Needs attention';
-
-  @override
-  String get needsAttentionEmptyTitle => 'Nothing needs attention';
 
   @override
   String get needsAttentionEmptySubtitle =>
@@ -1430,26 +1114,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get moduleSuggestionsSubtitle => 'Optional beta tips';
 
   @override
-  String get applyHomeLayoutTitle => 'Apply Home layout?';
-
-  @override
-  String get applyHomeLayoutBody =>
-      'Replace Home modules and enabled resource types with this template’s recommended set. Importing items alone only merges types.';
-
-  @override
-  String get applyHomeLayoutCustomizedBody =>
-      'You customized Home earlier. Replace Home modules and enabled resource types with this template’s set?';
-
-  @override
-  String get applyHomeLayoutSkip => 'Keep current';
-
-  @override
-  String get applyHomeLayoutConfirm => 'Apply layout';
-
-  @override
-  String get applyHomeLayoutDone => 'Home layout and resource types updated.';
-
-  @override
   String minMeaningfulTextError(int min) {
     return 'Enter at least $min characters.';
   }
@@ -1482,9 +1146,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Catalog default can be changed for this rental';
 
   @override
-  String get continueWithoutDueDate => 'Continue without due date';
-
-  @override
   String get openEndedDurationHint =>
       'All selected items allow open-ended rentals. Enter a duration, or continue without a due date.';
 
@@ -1509,9 +1170,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get balancePendingLabel => 'Pending';
 
   @override
-  String get balanceDueLabel => 'Due';
-
-  @override
   String get balanceCreditLabel => 'Credit';
 
   @override
@@ -1526,17 +1184,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String customerSubtitleWithBalances(
-    String phone,
-    String tier,
-    String advance,
-    String pending,
-    String net,
-  ) {
-    return '$phone • $tier • Advance $advance · Pending $pending · Net $net';
-  }
-
-  @override
   String get orderStatusOpen => 'Open';
 
   @override
@@ -1544,26 +1191,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get orderStatusCancelled => 'Cancelled';
-
-  @override
-  String orderBillDepositLabel(String amount) {
-    return 'Advance $amount';
-  }
-
-  @override
-  String orderBillTotalLabel(String amount) {
-    return 'Bill $amount';
-  }
-
-  @override
-  String get orderDepositLabel => 'Order advance';
-
-  @override
-  String get customerOrdersHeading => 'Orders';
-
-  @override
-  String get orderDepositSettlementExceeds =>
-      'Kept + returned cannot exceed order advance.';
 
   @override
   String get requiresUnitIdentityLabel => 'Requires unit name/id';
@@ -1585,9 +1212,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Individual items get catalog name and an auto short code.';
 
   @override
-  String get orderStatusHeading => 'Order status';
-
-  @override
   String get workflowStatusHeading => 'Workflow status';
 
   @override
@@ -1598,45 +1222,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get workflowStatusTerminalHint => 'Order completed for this pipeline.';
-
-  @override
-  String orderIssuedSummary(int count) {
-    return 'Originally issued: $count';
-  }
-
-  @override
-  String orderPendingSummary(int count) {
-    return 'Still out: $count';
-  }
-
-  @override
-  String orderReturnedSummary(int count) {
-    return 'Already returned: $count';
-  }
-
-  @override
-  String rentalOrderStatusChips(int issued, int pending, int returned) {
-    return 'Issued $issued · Pending $pending · Returned $returned';
-  }
-
-  @override
-  String get activityTimelineHeading => 'Activity';
-
-  @override
-  String activityIssued(String labels) {
-    return 'Issued: $labels';
-  }
-
-  @override
-  String activityReturned(String label) {
-    return 'Returned: $label';
-  }
-
-  @override
-  String get activityEmpty => 'No activity yet.';
-
-  @override
-  String get changeCustomerAction => 'Change customer';
 
   @override
   String get addOrderLineAction => 'Add line';
@@ -1661,11 +1246,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get orderSummaryHeading => 'Order summary';
 
   @override
-  String orderSummaryUnavailable(String name, int need, int available) {
-    return 'Not enough stock for $name (need $need, available $available). Adjust quantities to continue.';
-  }
-
-  @override
   String orderSummaryQuantity(int quantity) {
     return 'Qty $quantity';
   }
@@ -1676,19 +1256,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get depositTopUpOptionalLabel => 'Advance (optional)';
-
-  @override
-  String get depositTopUpOptionalHint => 'Held on this order, in rupees';
-
-  @override
   String get moreOptions => 'More options';
 
   @override
   String get addUnitLabelsAction => 'Add unit labels';
-
-  @override
-  String get itemKindDefaultLabel => 'Default order mode';
 
   @override
   String get itemKindRentalLabel => 'Rental';
@@ -1757,17 +1328,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get saleAmountHint => 'Amount in rupees';
 
   @override
-  String get saleAmountRequiredError =>
-      'Enter a sale amount greater than zero.';
-
-  @override
   String get jobAmountLabel => 'Job charge';
 
   @override
   String get jobAmountHint => 'Amount in rupees';
-
-  @override
-  String get jobAmountRequiredError => 'Enter a job charge greater than zero.';
 
   @override
   String get soldLineBadge => 'Sold';
@@ -2035,12 +1599,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get paymentConfirmAction => 'Confirm payment';
 
   @override
-  String get paymentSkipAction => 'Skip';
-
-  @override
-  String get paymentPayLaterAction => 'Pay later';
-
-  @override
   String get paymentPayAction => 'Pay';
 
   @override
@@ -2263,9 +1821,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loansTitle => 'Loans';
 
   @override
-  String get loansMoreSubtitle => 'Cash loans given and taken';
-
-  @override
   String get loanCreateTitle => 'New loan';
 
   @override
@@ -2305,12 +1860,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loanCustomerLabel => 'Customer';
 
   @override
-  String get loanCustomerHint => 'Select customer';
-
-  @override
-  String get loanCustomerRequired => 'Select a customer';
-
-  @override
   String get loanPrincipalLabel => 'Principal';
 
   @override
@@ -2323,46 +1872,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loanMoneyGivenOnLabel => 'Money given on';
 
   @override
-  String get loanAdvancePaymentFlag => 'Advance / prior payment';
-
-  @override
-  String get loanAdvancePaymentHint =>
-      'On loan day, accrued interest plus this payment are applied (interest first), then the remaining principal continues.';
-
-  @override
-  String get loanAdvancePaymentAmountLabel => 'Advance amount';
-
-  @override
-  String get loanAdvancePaymentDateLabel => 'Advance paid on';
-
-  @override
-  String get loanAdvancePaymentRequired => 'Enter an advance amount';
-
-  @override
-  String get loanAdvancePaymentExceedsPrincipal =>
-      'Advance cannot exceed principal';
-
-  @override
-  String get loanAdvancePaymentDateInvalid =>
-      'Advance date must be on or after money given date and on or before today';
-
-  @override
-  String get loanAdvancePaymentEntryNote => 'Advance payment';
-
-  @override
   String get loanDueOptionalLabel => 'Due / end (optional)';
 
   @override
   String get loanDueNone => 'No due date';
-
-  @override
-  String get loanInterestKindLabel => 'Interest';
-
-  @override
-  String get loanInterestSimple => 'Simple';
-
-  @override
-  String get loanInterestCompound => 'Compound';
 
   @override
   String get loanCalculationFrequencyLabel => 'Interest calculation';
@@ -2446,14 +1959,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get loanRateYearly => 'Yearly';
-
-  @override
-  String get loanPeriodEndInterestHintSimple =>
-      'Interest always accrues into unpaid interest from the signed principal balance. Capitalization (adding unpaid to principal) follows the selected policy. Overpay earns reverse interest.';
-
-  @override
-  String get loanPeriodEndInterestHintCompound =>
-      'Interest always accrues into unpaid interest from the signed principal balance. Capitalization (adding unpaid to principal) follows the selected policy. Overpay earns reverse interest.';
 
   @override
   String get loanCapPolicyHintNever =>
@@ -2606,16 +2111,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String loanTimelineStart(String date, String amount) {
-    return '$date — Loan started · $amount';
-  }
-
-  @override
-  String loanTimelineInterest(String date, String principal, String amount) {
-    return 'Interest posted $date on $principal → $amount (added to principal)';
-  }
-
-  @override
   String loanTimelineInterestSegment(
     String principal,
     String from,
@@ -2638,97 +2133,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String loanTimelinePendingOverpaid(String date, String amount) {
     return '$date — Overpaid $amount';
-  }
-
-  @override
-  String loanTimelineDeferredSlice(
-    String principal,
-    String date,
-    String amount,
-  ) {
-    return 'Interest on repaid $principal through $date → $amount (adds at period end)';
-  }
-
-  @override
-  String loanTimelineDeferredAddSlice(
-    String principal,
-    String fromDate,
-    String toDate,
-    String amount,
-  ) {
-    return 'Interest on added $principal from $fromDate through $toDate → $amount';
-  }
-
-  @override
-  String loanTimelineAccruedThroughAsOf(
-    String principal,
-    String date,
-    String amount,
-  ) {
-    return 'Interest accrued on $principal through $date → $amount (pending)';
-  }
-
-  @override
-  String loanTimelinePeriodEndSlice(
-    String repaid,
-    String from,
-    String to,
-    String interest,
-  ) {
-    return 'Interest on payment $repaid ($from–$to) → $interest (added to principal)';
-  }
-
-  @override
-  String loanTimelinePeriodEndSliceDue(
-    String repaid,
-    String from,
-    String to,
-    String interest,
-  ) {
-    return 'Interest due on payment $repaid ($from–$to) → $interest (not added to principal)';
-  }
-
-  @override
-  String loanTimelinePeriodEndAddSlice(
-    String added,
-    String from,
-    String to,
-    String interest,
-  ) {
-    return 'Interest on added principal $added ($from–$to) → $interest (added to principal)';
-  }
-
-  @override
-  String loanTimelinePeriodEndAddSliceDue(
-    String added,
-    String from,
-    String to,
-    String interest,
-  ) {
-    return 'Interest due on added principal $added ($from–$to) → $interest (not added to principal)';
-  }
-
-  @override
-  String loanTimelineRemainingPeriodInterest(String principal, String amount) {
-    return 'Interest on remaining $principal for full period → $amount (added to principal)';
-  }
-
-  @override
-  String loanTimelineRemainingPeriodInterestDue(
-    String principal,
-    String amount,
-  ) {
-    return 'Interest due on remaining $principal for full period → $amount (not added to principal)';
-  }
-
-  @override
-  String loanTimelinePrincipalNow(String date, String amount) {
-    return '$date — Principal now $amount';
-  }
-
-  @override
-  String loanTimelinePrincipalRemains(String date, String amount) {
-    return '$date — Principal remains $amount';
   }
 
   @override
@@ -2785,12 +2189,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dueLoansEmptySubtitle => 'No due loans right now.';
-
-  @override
-  String get customerLoansHeading => 'Loans';
-
-  @override
-  String get customerLoansEmpty => 'No loans for this customer.';
 
   @override
   String get customerLoansViewAll => 'View all loans';

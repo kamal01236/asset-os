@@ -12,9 +12,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get navHome => 'होम';
 
   @override
-  String get navRentals => 'लेन-देन';
-
-  @override
   String get navTransactions => 'लेन-देन';
 
   @override
@@ -31,9 +28,6 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get actionNewRental => 'नया ऑर्डर';
-
-  @override
-  String get transactionsTitle => 'लेन-देन';
 
   @override
   String get transactionsFilterAll => 'सभी';
@@ -74,12 +68,6 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get customerTransactionsEmpty => 'इस ग्राहक के लिए कोई लेन-देन नहीं।';
-
-  @override
-  String get customerTransactionsViewAll => 'सभी देखें';
-
-  @override
-  String get transactionsMoreSubtitle => 'ऑर्डर और नकद कर्ज';
 
   @override
   String get issueItemAction => 'जारी करें';
@@ -154,11 +142,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get unknownCustomer => 'अज्ञात ग्राहक';
 
   @override
-  String rentalDueSubtitle(String customerName, String date) {
-    return '$customerName • देय $date';
-  }
-
-  @override
   String inventoryAvailableSubtitle(String category, int available, int total) {
     return '$category • $available/$total उपलब्ध';
   }
@@ -168,11 +151,6 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get customerStandard => 'सामान्य';
-
-  @override
-  String customerSubtitle(String phone, String tier) {
-    return '$phone • $tier';
-  }
 
   @override
   String get offlineSimulationTitle => 'ऑफ़लाइन सिमुलेशन';
@@ -287,9 +265,6 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String get onboardingTemplateBusy => 'सेटअप हो रहा है…';
-
-  @override
   String phoneLabel(String phone) {
     return 'फ़ोन: $phone';
   }
@@ -302,15 +277,6 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get extendAction => 'बढ़ाएँ';
-
-  @override
-  String get shareAction => 'शेयर';
-
-  @override
-  String get extendPlaceholder => 'बढ़ाना एक प्लेसहोल्डर कार्रवाई है।';
-
-  @override
-  String get sharePlaceholder => 'शेयर एक प्लेसहोल्डर कार्रवाई है।';
 
   @override
   String get extendDueTitle => 'देय तिथि बढ़ाएँ';
@@ -398,59 +364,10 @@ class AppLocalizationsHi extends AppLocalizations {
   String get saveChanges => 'बदलाव सहेजें';
 
   @override
-  String get nameCategoryRequired => 'नाम और श्रेणी आवश्यक हैं।';
-
-  @override
   String get resourceUpdated => 'संसाधन अपडेट हो गया।';
 
   @override
-  String get hideFromNewOrderAction => 'नए ऑर्डर से छिपाएँ';
-
-  @override
-  String get restoreToCatalogAction => 'कैटलॉग में पुनर्स्थापित करें';
-
-  @override
-  String get deleteResourcePermanentlyAction => 'स्थायी रूप से हटाएँ';
-
-  @override
-  String get confirmHideResourceTitle => 'यह संसाधन छिपाएँ?';
-
-  @override
-  String get confirmHideResourceBody =>
-      'यह नए ऑर्डर और डिफ़ॉल्ट संसाधन सूची में नहीं दिखेगा। बाद में पुनर्स्थापित कर सकते हैं।';
-
-  @override
-  String get confirmRestoreResourceTitle => 'यह संसाधन पुनर्स्थापित करें?';
-
-  @override
-  String get confirmRestoreResourceBody =>
-      'यह फिर से नए ऑर्डर और संसाधन सूची में दिखेगा।';
-
-  @override
-  String get confirmDeleteResourceTitle => 'स्थायी रूप से हटाएँ?';
-
-  @override
-  String get confirmDeleteResourceBody =>
-      'यह पूर्ववत नहीं हो सकता। केवल बिना ऑर्डर इतिहास वाले अनुपयोगी संसाधन हटाए जा सकते हैं।';
-
-  @override
-  String get deleteResourceBlockedMessage =>
-      'हटा नहीं सकते — यह संसाधन पिछले या खुले ऑर्डर में है। इसके बजाय छिपाएँ।';
-
-  @override
-  String get resourceHiddenSnack => 'संसाधन नए ऑर्डर से छिपा दिया गया।';
-
-  @override
-  String get resourceRestoredSnack => 'संसाधन कैटलॉग में पुनर्स्थापित हो गया।';
-
-  @override
   String get resourceDeletedSnack => 'संसाधन हटा दिया गया।';
-
-  @override
-  String get showHiddenResourcesFilter => 'छिपे हुए दिखाएँ';
-
-  @override
-  String get resourceHiddenBadge => 'छिपा हुआ';
 
   @override
   String get customerProfileTitle => 'ग्राहक प्रोफ़ाइल';
@@ -469,14 +386,6 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get whatsAppPlaceholder => 'WhatsApp प्लेसहोल्डर कार्रवाई।';
-
-  @override
-  String get recentRentals => 'हाल के ऑर्डर';
-
-  @override
-  String dueDate(String date) {
-    return 'देय $date';
-  }
 
   @override
   String returnedDate(String date) {
@@ -499,11 +408,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get searchSectionResources => 'संसाधन';
 
   @override
-  String noMatchingSection(String section) {
-    return 'कोई मिलान नहीं: $section';
-  }
-
-  @override
   String inventoryUnitsSubtitle(String category, int available, int total) {
     return '$category • $available/$total';
   }
@@ -518,9 +422,6 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get phoneNumberHint => '10 अंकों का ग्राहक फ़ोन';
-
-  @override
-  String get existingCustomer => 'मौजूदा ग्राहक';
 
   @override
   String existingCustomerSubtitle(String phone) {
@@ -547,49 +448,14 @@ class AppLocalizationsHi extends AppLocalizations {
       '10 अंकों का फ़ोन दर्ज करें, या फ़ोन नंबर नहीं है चुनें।';
 
   @override
-  String get phoneAlreadyUsedError =>
-      'यह फ़ोन पहले से किसी अन्य ग्राहक के पास है।';
-
-  @override
   String customerSuggestionSubtitle(String name, String phone) {
     return '$name · $phone';
-  }
-
-  @override
-  String get rentalNicknameLabel => 'इस ऑर्डर का प्रदर्शन नाम';
-
-  @override
-  String get rentalNicknameHint => 'इस ऑर्डर पर दिखने वाला वैकल्पिक नाम';
-
-  @override
-  String reviewNickname(String nickname, String customerName) {
-    return 'नाम: $nickname · $customerName';
   }
 
   @override
   String rentalNicknameSubtitle(String customerName, String phone) {
     return '$customerName · $phone';
   }
-
-  @override
-  String rentalNicknameDueSubtitle(String nickname, String date) {
-    return '$nickname • देय $date';
-  }
-
-  @override
-  String get selectItems => 'वस्तुएँ चुनें';
-
-  @override
-  String itemAvailableCount(String category, int available) {
-    return '$category • $available उपलब्ध';
-  }
-
-  @override
-  String get labelInstancesHeading => 'प्रत्येक वस्तु का नाम दें';
-
-  @override
-  String get labelInstancesHint =>
-      'उपन्यास/उपकरणों के लिए: इस प्रति का नाम और छोटा कोड दर्ज करें।';
 
   @override
   String get instanceNameLabel => 'इकाई का नाम';
@@ -615,22 +481,6 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get inventoryInstancesNote =>
       'ऑर्डर बनाते समय व्यक्तिगत प्रतियों का नाम और छोटा कोड दर्ज किया जाता है।';
-
-  @override
-  String get reviewHeading => 'समीक्षा';
-
-  @override
-  String reviewPhone(String phone) {
-    return 'फ़ोन: $phone';
-  }
-
-  @override
-  String reviewName(String name) {
-    return 'नाम: $name';
-  }
-
-  @override
-  String get reviewItemsLabel => 'वस्तुएँ:';
 
   @override
   String get back => 'वापस';
@@ -701,11 +551,6 @@ class AppLocalizationsHi extends AppLocalizations {
       'सक्रिय उद्योग पैक चुनें। बदलने पर होम लेआउट और सक्षम संसाधन प्रकार अपडेट होते हैं। मौजूदा कर्ज, ऑर्डर और इन्वेंटरी बनी रहती है। नया कर्ज तब उपलब्ध है जब मनी लेंडिंग सक्रिय हो।';
 
   @override
-  String starterItemsCount(int count) {
-    return '$count स्टार्टर वस्तुएँ';
-  }
-
-  @override
   String get activeTemplateLabel => 'सक्रिय पैक';
 
   @override
@@ -760,21 +605,10 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String get adding => 'जोड़ा जा रहा है…';
-
-  @override
-  String get addSelectedToResources => 'चयनित को संसाधनों में जोड़ें';
-
-  @override
   String get applyTemplateSelection => 'लागू करें';
 
   @override
   String get applyingTemplateSelection => 'लागू हो रहा है…';
-
-  @override
-  String templateImportResult(int added, int skipped) {
-    return '$added वस्तुएँ जोड़ी गईं ($skipped पहले से मौजूद)';
-  }
 
   @override
   String templateApplyResult(
@@ -942,12 +776,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get pricingSectionTitle => 'किराया मूल्य';
 
   @override
-  String get durationHeading => 'किराए की अवधि';
-
-  @override
-  String get durationHint => 'पहले चुनी गई वस्तु के बिलिंग मोड पर आधारित।';
-
-  @override
   String get durationUnitsLabel => 'अवधि';
 
   @override
@@ -976,22 +804,9 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String chargeBaseLabel(String amount) {
-    return 'आधार: $amount';
-  }
-
-  @override
-  String chargeLateLabel(String amount) {
-    return 'विलंब शुल्क: $amount';
-  }
-
-  @override
   String chargeTotalLabel(String amount) {
     return 'कुल: $amount';
   }
-
-  @override
-  String get reviewChargesLabel => 'शुल्क:';
 
   @override
   String reviewDueLabel(String date) {
@@ -1012,96 +827,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get chargesHeading => 'शुल्क';
 
   @override
-  String get durationRequired => 'मान्य अवधि दर्ज करें (कम से कम 1)।';
-
-  @override
-  String get customEndRequired => 'आज या उसके बाद की वापसी तिथि चुनें।';
-
-  @override
-  String get depositBalanceLabel => 'जमा शेष';
-
-  @override
-  String depositBalanceAmount(String amount) {
-    return 'जमा: $amount';
-  }
-
-  @override
-  String get depositAddAction => 'जमा जोड़ें';
-
-  @override
-  String get depositRefundAction => 'वापसी';
-
-  @override
-  String get depositAmountLabel => 'राशि (₹)';
-
-  @override
   String get depositAmountHint => 'जैसे 500';
-
-  @override
-  String get depositNoteLabel => 'नोट (वैकल्पिक)';
-
-  @override
-  String get depositNoteHint => 'कारण या संदर्भ';
-
-  @override
-  String get depositTopUpTitle => 'जमा जोड़ें';
-
-  @override
-  String get depositRefundTitle => 'जमा वापसी';
-
-  @override
-  String get depositConfirmTopUp => 'जोड़ें';
-
-  @override
-  String get depositConfirmRefund => 'वापसी';
-
-  @override
-  String get depositInvalidAmount => 'शून्य से अधिक राशि दर्ज करें।';
-
-  @override
-  String get depositRefundExceeds =>
-      'वापसी वर्तमान जमा शेष से अधिक नहीं हो सकती।';
-
-  @override
-  String depositTopUpSuccess(String amount) {
-    return 'जमा अपडेट होकर $amount हो गई।';
-  }
-
-  @override
-  String depositRefundSuccess(String amount) {
-    return 'वापसी हो गई। जमा अब $amount है।';
-  }
-
-  @override
-  String get depositLedgerHeading => 'जमा इतिहास';
-
-  @override
-  String get depositLedgerEmpty => 'अभी कोई जमा गतिविधि नहीं।';
-
-  @override
-  String depositLedgerTopUp(String amount) {
-    return 'टॉप-अप $amount';
-  }
-
-  @override
-  String depositLedgerApply(String amount) {
-    return 'वापसी पर लागू $amount';
-  }
-
-  @override
-  String depositLedgerRefund(String amount) {
-    return 'वापसी $amount';
-  }
-
-  @override
-  String depositLedgerAdjust(String amount) {
-    return 'समायोजन $amount';
-  }
-
-  @override
-  String depositLedgerBalanceAfter(String amount) {
-    return 'शेष $amount';
-  }
 
   @override
   String depositAvailableLabel(String amount) {
@@ -1126,11 +852,6 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String depositAppliedLabel(String amount) {
     return 'जमा लागू: $amount';
-  }
-
-  @override
-  String depositNetDueLabel(String amount) {
-    return 'नेट देय: $amount';
   }
 
   @override
@@ -1206,26 +927,10 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String customerSubtitleWithDeposit(String phone, String tier, String amount) {
-    return '$phone • $tier • जमा $amount';
-  }
-
-  @override
-  String existingCustomerWithDeposit(String phone, String amount) {
-    return '$phone • मौजूदा • जमा $amount';
-  }
-
-  @override
   String get returnSelectedAction => 'चयनित वापस करें';
 
   @override
   String get returnAllAction => 'सभी वापस करें';
-
-  @override
-  String get replaceLineAction => 'बदलें';
-
-  @override
-  String get selectLinesToReturn => 'वापसी के लिए पंक्तियाँ चुनें';
 
   @override
   String get returnByQuantityHint => 'प्रत्येक वस्तु के लिए वापसी संख्या चुनें';
@@ -1270,9 +975,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get pickUnitsToReturn => 'वापसी के लिए इकाइयाँ चुनें';
 
   @override
-  String get openLinesHeading => 'बाहर';
-
-  @override
   String get returnedLinesHeading => 'वापस हुए';
 
   @override
@@ -1284,21 +986,6 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String partialReturnSnack(int count) {
     return '$count वस्तु वापस। किराया अभी सक्रिय है।';
-  }
-
-  @override
-  String get replaceFlowTitle => 'वस्तु बदलें';
-
-  @override
-  String get replaceSettlementIntro =>
-      'पुरानी वस्तु का निपटान करें, फिर नया जारी करें।';
-
-  @override
-  String get replaceConfirmAction => 'बदलें और जारी करें';
-
-  @override
-  String replaceSuccessSnack(String newId, String balance) {
-    return 'पुरानी पंक्ति निपटाई; नया $newId। जमा शेष $balance।';
   }
 
   @override
@@ -1324,9 +1011,6 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get needsAttentionTitle => 'ध्यान दें';
-
-  @override
-  String get needsAttentionEmptyTitle => 'कुछ ध्यान देने योग्य नहीं';
 
   @override
   String get needsAttentionEmptySubtitle =>
@@ -1431,26 +1115,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get moduleSuggestionsSubtitle => 'वैकल्पिक बीटा सुझाव';
 
   @override
-  String get applyHomeLayoutTitle => 'होम लेआउट लागू करें?';
-
-  @override
-  String get applyHomeLayoutBody =>
-      'होम मॉड्यूल और सक्षम संसाधन प्रकारों को इस टेम्पलेट के अनुशंसित सेट से बदलें। केवल आइटम आयात करने पर प्रकार मर्ज होते हैं।';
-
-  @override
-  String get applyHomeLayoutCustomizedBody =>
-      'आपने होम पहले अनुकूलित किया है। होम मॉड्यूल और सक्षम संसाधन प्रकारों को इस टेम्पलेट के सेट से बदलें?';
-
-  @override
-  String get applyHomeLayoutSkip => 'वर्तमान रखें';
-
-  @override
-  String get applyHomeLayoutConfirm => 'लेआउट लागू करें';
-
-  @override
-  String get applyHomeLayoutDone => 'होम लेआउट और संसाधन प्रकार अपडेट हो गए।';
-
-  @override
   String minMeaningfulTextError(int min) {
     return 'कम से कम $min अक्षर दर्ज करें।';
   }
@@ -1482,9 +1146,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get orderLineRateHint => 'इस किराए के लिए कैटलॉग दर बदली जा सकती है';
 
   @override
-  String get continueWithoutDueDate => 'देय तिथि के बिना जारी रखें';
-
-  @override
   String get openEndedDurationHint =>
       'चयनित सभी वस्तुएँ खुली अवधि की अनुमति देती हैं। अवधि दर्ज करें, या देय तिथि के बिना जारी रखें।';
 
@@ -1509,9 +1170,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get balancePendingLabel => 'लंबित';
 
   @override
-  String get balanceDueLabel => 'देय';
-
-  @override
   String get balanceCreditLabel => 'जमा शेष';
 
   @override
@@ -1526,17 +1184,6 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String customerSubtitleWithBalances(
-    String phone,
-    String tier,
-    String advance,
-    String pending,
-    String net,
-  ) {
-    return '$phone • $tier • अग्रिम $advance · लंबित $pending · नेट $net';
-  }
-
-  @override
   String get orderStatusOpen => 'खुला';
 
   @override
@@ -1544,26 +1191,6 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get orderStatusCancelled => 'रद्द';
-
-  @override
-  String orderBillDepositLabel(String amount) {
-    return 'अग्रिम $amount';
-  }
-
-  @override
-  String orderBillTotalLabel(String amount) {
-    return 'बिल $amount';
-  }
-
-  @override
-  String get orderDepositLabel => 'ऑर्डर अग्रिम';
-
-  @override
-  String get customerOrdersHeading => 'ऑर्डर';
-
-  @override
-  String get orderDepositSettlementExceeds =>
-      'रखी + लौटाई राशि ऑर्डर अग्रिम से अधिक नहीं हो सकती।';
 
   @override
   String get requiresUnitIdentityLabel => 'यूनिट नाम/आईडी आवश्यक';
@@ -1585,9 +1212,6 @@ class AppLocalizationsHi extends AppLocalizations {
       'व्यक्तिगत वस्तुओं को कैटलॉग नाम और स्वतः छोटा कोड मिलता है।';
 
   @override
-  String get orderStatusHeading => 'ऑर्डर स्थिति';
-
-  @override
   String get workflowStatusHeading => 'कार्यप्रवाह स्थिति';
 
   @override
@@ -1598,45 +1222,6 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get workflowStatusTerminalHint => 'इस पाइपलाइन के लिए ऑर्डर पूर्ण।';
-
-  @override
-  String orderIssuedSummary(int count) {
-    return 'मूल रूप से जारी: $count';
-  }
-
-  @override
-  String orderPendingSummary(int count) {
-    return 'अभी बाहर: $count';
-  }
-
-  @override
-  String orderReturnedSummary(int count) {
-    return 'पहले से वापस: $count';
-  }
-
-  @override
-  String rentalOrderStatusChips(int issued, int pending, int returned) {
-    return 'जारी $issued · लंबित $pending · वापस $returned';
-  }
-
-  @override
-  String get activityTimelineHeading => 'गतिविधि';
-
-  @override
-  String activityIssued(String labels) {
-    return 'जारी: $labels';
-  }
-
-  @override
-  String activityReturned(String label) {
-    return 'वापस: $label';
-  }
-
-  @override
-  String get activityEmpty => 'अभी कोई गतिविधि नहीं।';
-
-  @override
-  String get changeCustomerAction => 'ग्राहक बदलें';
 
   @override
   String get addOrderLineAction => 'पंक्ति जोड़ें';
@@ -1661,11 +1246,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get orderSummaryHeading => 'ऑर्डर सारांश';
 
   @override
-  String orderSummaryUnavailable(String name, int need, int available) {
-    return '$name के लिए पर्याप्त स्टॉक नहीं है (आवश्यक $need, उपलब्ध $available)। जारी रखने के लिए मात्रा समायोजित करें।';
-  }
-
-  @override
   String orderSummaryQuantity(int quantity) {
     return 'मात्रा $quantity';
   }
@@ -1676,19 +1256,10 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String get depositTopUpOptionalLabel => 'अग्रिम (वैकल्पिक)';
-
-  @override
-  String get depositTopUpOptionalHint => 'इस ऑर्डर पर रखा जाएगा, रुपये में';
-
-  @override
   String get moreOptions => 'और विकल्प';
 
   @override
   String get addUnitLabelsAction => 'यूनिट लेबल जोड़ें';
-
-  @override
-  String get itemKindDefaultLabel => 'डिफ़ॉल्ट ऑर्डर मोड';
 
   @override
   String get itemKindRentalLabel => 'किराया';
@@ -1757,16 +1328,10 @@ class AppLocalizationsHi extends AppLocalizations {
   String get saleAmountHint => 'राशि रुपये में';
 
   @override
-  String get saleAmountRequiredError => 'शून्य से अधिक बिक्री राशि दर्ज करें।';
-
-  @override
   String get jobAmountLabel => 'जॉब शुल्क';
 
   @override
   String get jobAmountHint => 'राशि रुपये में';
-
-  @override
-  String get jobAmountRequiredError => 'शून्य से अधिक जॉब शुल्क दर्ज करें।';
 
   @override
   String get soldLineBadge => 'बेचा गया';
@@ -2034,12 +1599,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get paymentConfirmAction => 'भुगतान पुष्टि करें';
 
   @override
-  String get paymentSkipAction => 'छोड़ें';
-
-  @override
-  String get paymentPayLaterAction => 'बाद में भुगतान';
-
-  @override
   String get paymentPayAction => 'भुगतान करें';
 
   @override
@@ -2262,9 +1821,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get loansTitle => 'कर्ज';
 
   @override
-  String get loansMoreSubtitle => 'दिए और लिए गए नकद कर्ज';
-
-  @override
   String get loanCreateTitle => 'नया कर्ज';
 
   @override
@@ -2304,12 +1860,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get loanCustomerLabel => 'ग्राहक';
 
   @override
-  String get loanCustomerHint => 'ग्राहक चुनें';
-
-  @override
-  String get loanCustomerRequired => 'ग्राहक चुनें';
-
-  @override
   String get loanPrincipalLabel => 'मूलधन';
 
   @override
@@ -2322,46 +1872,10 @@ class AppLocalizationsHi extends AppLocalizations {
   String get loanMoneyGivenOnLabel => 'पैसे दिए गए दिन';
 
   @override
-  String get loanAdvancePaymentFlag => 'अग्रिम / पूर्व भुगतान';
-
-  @override
-  String get loanAdvancePaymentHint =>
-      'कर्ज के दिन, अर्जित ब्याज और यह भुगतान लागू होते हैं (पहले ब्याज), फिर शेष मूलधन जारी रहता है।';
-
-  @override
-  String get loanAdvancePaymentAmountLabel => 'अग्रिम राशि';
-
-  @override
-  String get loanAdvancePaymentDateLabel => 'अग्रिम भुगतान तिथि';
-
-  @override
-  String get loanAdvancePaymentRequired => 'अग्रिम राशि दर्ज करें';
-
-  @override
-  String get loanAdvancePaymentExceedsPrincipal =>
-      'अग्रिम मूलधन से अधिक नहीं हो सकता';
-
-  @override
-  String get loanAdvancePaymentDateInvalid =>
-      'अग्रिम तिथि पैसे दिए गए दिन या उसके बाद और आज या उससे पहले होनी चाहिए';
-
-  @override
-  String get loanAdvancePaymentEntryNote => 'अग्रिम भुगतान';
-
-  @override
   String get loanDueOptionalLabel => 'देय / समाप्ति (वैकल्पिक)';
 
   @override
   String get loanDueNone => 'कोई देय तिथि नहीं';
-
-  @override
-  String get loanInterestKindLabel => 'ब्याज';
-
-  @override
-  String get loanInterestSimple => 'सरल';
-
-  @override
-  String get loanInterestCompound => 'चक्रवृद्धि';
 
   @override
   String get loanCalculationFrequencyLabel => 'ब्याज गणना';
@@ -2445,14 +1959,6 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get loanRateYearly => 'वार्षिक';
-
-  @override
-  String get loanPeriodEndInterestHintSimple =>
-      'ब्याज हमेशा हस्ताक्षरित मूलधन शेष से अवैतनिक ब्याज में जमा होता है। पूंजीकरण चयनित नीति का पालन करता है। अधिक भुगतान पर उल्टा ब्याज मिलता है।';
-
-  @override
-  String get loanPeriodEndInterestHintCompound =>
-      'ब्याज हमेशा हस्ताक्षरित मूलधन शेष से अवैतनिक ब्याज में जमा होता है। पूंजीकरण चयनित नीति का पालन करता है। अधिक भुगतान पर उल्टा ब्याज मिलता है।';
 
   @override
   String get loanCapPolicyHintNever =>
@@ -2606,16 +2112,6 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
-  String loanTimelineStart(String date, String amount) {
-    return '$date — कर्ज शुरू · $amount';
-  }
-
-  @override
-  String loanTimelineInterest(String date, String principal, String amount) {
-    return 'ब्याज दर्ज $date · $principal पर → $amount (मूलधन में जोड़ा)';
-  }
-
-  @override
   String loanTimelineInterestSegment(
     String principal,
     String from,
@@ -2638,97 +2134,6 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String loanTimelinePendingOverpaid(String date, String amount) {
     return '$date — अधिक भुगतान $amount';
-  }
-
-  @override
-  String loanTimelineDeferredSlice(
-    String principal,
-    String date,
-    String amount,
-  ) {
-    return 'चुकाए $principal पर ब्याज $date तक → $amount (अवधि अंत में जुड़ेगा)';
-  }
-
-  @override
-  String loanTimelineDeferredAddSlice(
-    String principal,
-    String fromDate,
-    String toDate,
-    String amount,
-  ) {
-    return 'जोड़े $principal पर ब्याज $fromDate से $toDate तक → $amount';
-  }
-
-  @override
-  String loanTimelineAccruedThroughAsOf(
-    String principal,
-    String date,
-    String amount,
-  ) {
-    return '$principal पर $date तक अर्जित ब्याज → $amount (लंबित)';
-  }
-
-  @override
-  String loanTimelinePeriodEndSlice(
-    String repaid,
-    String from,
-    String to,
-    String interest,
-  ) {
-    return 'भुगतान $repaid पर ब्याज ($from–$to) → $interest (मूलधन में जोड़ा)';
-  }
-
-  @override
-  String loanTimelinePeriodEndSliceDue(
-    String repaid,
-    String from,
-    String to,
-    String interest,
-  ) {
-    return 'भुगतान $repaid पर देय ब्याज ($from–$to) → $interest (मूलधन में नहीं जोड़ा)';
-  }
-
-  @override
-  String loanTimelinePeriodEndAddSlice(
-    String added,
-    String from,
-    String to,
-    String interest,
-  ) {
-    return 'जोड़े मूलधन $added पर ब्याज ($from–$to) → $interest (मूलधन में जोड़ा)';
-  }
-
-  @override
-  String loanTimelinePeriodEndAddSliceDue(
-    String added,
-    String from,
-    String to,
-    String interest,
-  ) {
-    return 'जोड़े मूलधन $added पर देय ब्याज ($from–$to) → $interest (मूलधन में नहीं जोड़ा)';
-  }
-
-  @override
-  String loanTimelineRemainingPeriodInterest(String principal, String amount) {
-    return 'शेष $principal पर पूरी अवधि का ब्याज → $amount (मूलधन में जोड़ा)';
-  }
-
-  @override
-  String loanTimelineRemainingPeriodInterestDue(
-    String principal,
-    String amount,
-  ) {
-    return 'शेष $principal पर पूरी अवधि का देय ब्याज → $amount (मूलधन में नहीं जोड़ा)';
-  }
-
-  @override
-  String loanTimelinePrincipalNow(String date, String amount) {
-    return '$date — अब मूलधन $amount';
-  }
-
-  @override
-  String loanTimelinePrincipalRemains(String date, String amount) {
-    return '$date — मूलधन $amount ही रहता है';
   }
 
   @override
@@ -2784,12 +2189,6 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get dueLoansEmptySubtitle => 'अभी कोई देय कर्ज नहीं।';
-
-  @override
-  String get customerLoansHeading => 'कर्ज';
-
-  @override
-  String get customerLoansEmpty => 'इस ग्राहक के कोई कर्ज नहीं।';
 
   @override
   String get customerLoansViewAll => 'सभी कर्ज देखें';
