@@ -63,7 +63,11 @@ void main() {
       );
       expect(
         repo.enabledResourceTypes(),
-        <ResourceType>[ResourceType.rental, ResourceType.loan],
+        <ResourceType>[
+          ResourceType.rental,
+          ResourceType.loan,
+          ResourceType.membership,
+        ],
       );
     });
 

@@ -7,6 +7,7 @@ import 'package:asset_os/domain/home/home_modules.dart';
 import 'package:asset_os/domain/models/entities.dart';
 import 'package:asset_os/domain/reports/report_widgets.dart';
 import 'package:asset_os/application/local_repository.dart';
+import 'package:asset_os/domain/orders/commercial_policy.dart';
 import 'package:asset_os/domain/templates/industry_templates.dart';
 import 'package:asset_os/domain/templates/workflows.dart';
 
@@ -349,11 +350,40 @@ void main() {
       expect(library.defaultHomeModules, kLibraryHomeModules);
       expect(
         library.enabledResourceTypes,
-        <ResourceType>[ResourceType.rental, ResourceType.loan],
+        <ResourceType>[
+          ResourceType.rental,
+          ResourceType.loan,
+          ResourceType.membership,
+        ],
       );
       expect(
         library.items.any((TemplateInventoryItem i) => i.name == 'Reading seat'),
         isTrue,
+      );
+      expect(
+        library.items
+            .where((TemplateInventoryItem i) => i.defaultItemKind == ResourceType.loan)
+            .map((TemplateInventoryItem i) => i.name),
+        containsAll(<String>['Novel', 'Book', 'Journal', 'Magazine', 'Calculator']),
+      );
+      expect(
+        library.items.any(
+          (TemplateInventoryItem i) =>
+              i.name == 'Library membership' &&
+              i.defaultItemKind == ResourceType.membership,
+        ),
+        isTrue,
+      );
+      expect(
+        library.commercialByType?[ResourceType.loan]?.pay,
+        CommercialRequirement.off,
+      );
+      expect(
+        library.commercialByType?[ResourceType.loan]?.requireAnyOf,
+        <CommercialStep>[
+          CommercialStep.security,
+          CommercialStep.subscription,
+        ],
       );
       expect(library.defaultReportWidgets, contains(ReportWidgetId.unitOccupancy));
     });
@@ -457,8 +487,49 @@ void main() {
       expect(facial.requiresUnitIdentity, isFalse);
       expect(steamer.defaultItemKind, ResourceType.rental);
       expect(steamer.requiresUnitIdentity, isFalse);
+      expect(steamer.securityDepositPaise, 20000);
       expect(membership.defaultItemKind, ResourceType.membership);
       expect(hairOil.defaultItemKind, ResourceType.sale);
+    });
+
+    test('camera pack seeds deposits and security-required rental policy',
+        () async {
+      final LocalRepository repo = await bootRepo();
+      final IndustryTemplate camera = industryTemplateById('camera')!;
+      expect(
+        camera.commercialByType?[ResourceType.rental]?.security,
+        CommercialRequirement.required,
+      );
+
+      await repo.importTemplateInventory(camera.items);
+      final List<InventoryItem> inventory = await repo.listInventory();
+      final InventoryItem dslr =
+          inventory.firstWhere((InventoryItem i) => i.name == 'DSLR');
+      expect(dslr.securityDepositPaise, 500000);
+      expect(dslr.defaultItemKind, ResourceType.rental);
+      expect(
+        commercialDeltaFromMetadata(dslr.metadata)?.security,
+        CommercialRequirement.required,
+      );
+    });
+
+    test('library pack seeds loan books and membership', () async {
+      final LocalRepository repo = await bootRepo();
+      final IndustryTemplate library = industryTemplateById('library')!;
+      await repo.importTemplateInventory(library.items);
+      final List<InventoryItem> inventory = await repo.listInventory();
+      final InventoryItem novel =
+          inventory.firstWhere((InventoryItem i) => i.name == 'Novel');
+      final InventoryItem seat =
+          inventory.firstWhere((InventoryItem i) => i.name == 'Reading seat');
+      final InventoryItem membership = inventory.firstWhere(
+        (InventoryItem i) => i.name == 'Library membership',
+      );
+      expect(novel.defaultItemKind, ResourceType.loan);
+      expect(novel.rateAmount, 0);
+      expect(seat.defaultItemKind, ResourceType.rental);
+      expect(membership.defaultItemKind, ResourceType.membership);
+      expect(membership.metadata[kEntitlementDaysMetadataKey], 30);
     });
 
     test('gym pack seeds membership and sale day pass', () async {

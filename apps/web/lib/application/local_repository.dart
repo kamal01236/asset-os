@@ -10,6 +10,7 @@ import '../domain/loans/loan_balance.dart';
 import '../domain/loans/loan_models.dart';
 import '../domain/models/entities.dart';
 import '../domain/models/unknown_customer.dart';
+import '../domain/orders/commercial_policy.dart' as commercial_policy;
 import '../domain/orders/order_payment.dart';
 import '../domain/pricing/rental_pricing.dart';
 import '../domain/reports/report_widgets.dart';
@@ -949,6 +950,74 @@ class LocalRepository {
     });
 
     return rentalId;
+  }
+
+  /// Create an order and record pay/security in one local transaction.
+  ///
+  /// When [commercial] is set, [assertCommercialSatisfied] runs before stock
+  /// is issued so required gates cannot be skipped.
+  Future<String> createOrderWithSettlement({
+    required Customer customer,
+    required List<RentalLineInput> lines,
+    String? nickname,
+    int durationUnits = 1,
+    DateTime? customEnd,
+    BillingMode? billingModeOverride,
+    String? replacedFromRentalId,
+    bool openEnded = false,
+    int amountReceivedPaise = 0,
+    int securityPaise = 0,
+    bool treatExcessAsDiscount = false,
+    bool subscriptionSatisfied = false,
+    commercial_policy.AggregatedOrderCommercial? commercial,
+  }) async {
+    if (commercial != null) {
+      commercial_policy.assertCommercialSatisfied(
+        aggregated: commercial,
+        amountReceivedPaise: amountReceivedPaise,
+        securityPaise: securityPaise,
+        subscriptionSatisfied: subscriptionSatisfied,
+      );
+    }
+    return _db.transaction(() async {
+      final String rentalId = await createRental(
+        customer: customer,
+        lines: lines,
+        nickname: nickname,
+        durationUnits: durationUnits,
+        customEnd: customEnd,
+        billingModeOverride: billingModeOverride,
+        replacedFromRentalId: replacedFromRentalId,
+        openEnded: openEnded,
+      );
+      if (amountReceivedPaise > 0 || securityPaise > 0) {
+        await recordOrderPayment(
+          rentalId: rentalId,
+          amountReceivedPaise: amountReceivedPaise,
+          securityPaise: securityPaise,
+          treatExcessAsDiscount: treatExcessAsDiscount,
+        );
+      }
+      return rentalId;
+    });
+  }
+
+  /// True when [customerId] has a still-valid membership/subscription sell.
+  Future<bool> customerHasActiveEntitlement(
+    String customerId, {
+    DateTime? now,
+  }) async {
+    final List<Rental> rentals = await listRentals();
+    final List<InventoryItem> inventory =
+        await listInventory(includeInactive: true);
+    final Map<String, InventoryItem> byId = <String, InventoryItem>{
+      for (final InventoryItem item in inventory) item.id: item,
+    };
+    return commercial_policy.customerHasActiveEntitlement(
+      customerOrders: rentals.where((Rental r) => r.customerId == customerId),
+      inventoryById: byId,
+      now: now ?? DateTime.now(),
+    );
   }
 
   /// Sell line charges due on [rental] (paise).
@@ -2760,7 +2829,7 @@ class LocalRepository {
     );
   }
 
-  Future<void> addInventory({
+  Future<String> addInventory({
     required String name,
     required String category,
     required int units,
@@ -2793,9 +2862,10 @@ class LocalRepository {
     }
     final String? storedPrefix = _storedUnitCodePrefix(unitCodePrefix);
     final String stamp = _nextStamp();
+    final String id = 'INV-$stamp';
     await _db.into(_db.inventoryItems).insert(
       InventoryItemsCompanion.insert(
-        id: 'INV-$stamp',
+        id: id,
         name: trimmedName,
         category: trimmedCategory,
         availableUnits: units,
@@ -2822,6 +2892,7 @@ class LocalRepository {
         ),
       ),
     );
+    return id;
   }
 
   /// Merge selected template items into inventory. Same name (case-insensitive) is skipped.
@@ -2881,6 +2952,10 @@ class LocalRepository {
           unitCodePrefix: Value<String?>(_storedUnitCodePrefix(item.unitCodePrefix)),
           allowsDynamicPricing: const Value<bool>(false),
           defaultItemKind: Value<String>(item.defaultItemKind.storageValue),
+          metadata: Value<String?>(encodeMetadata(item.seedMetadata)),
+          securityDepositPaise: Value<int>(
+            item.securityDepositPaise < 0 ? 0 : item.securityDepositPaise,
+          ),
         ),
       );
       existingNames.add(key);

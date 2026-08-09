@@ -4,6 +4,7 @@ library;
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:asset_os/domain/models/entities.dart';
+import 'package:asset_os/domain/orders/commercial_policy.dart';
 import 'package:asset_os/domain/orders/order_payment.dart';
 import 'package:asset_os/application/local_repository.dart';
 
@@ -255,6 +256,124 @@ void main() {
       expect(paid.depositAmount, 100000);
       expect(paid.sellPaidPaise, 0);
       expect(paid.sellDiscountPaise, 0);
+    });
+  });
+
+  group('createOrderWithSettlement', () {
+    test('refuses issue when required security missing', () async {
+      final LocalRepository repository = await bootRepo();
+      await repository.addInventory(
+        name: 'DSLR',
+        category: 'Camera',
+        units: 2,
+        rateAmount: 150000,
+        securityDepositPaise: 500000,
+        requiresUnitIdentity: false,
+      );
+      final InventoryItem item = (await repository.listInventory()).single;
+      final Customer customer = await ensureCustomer(repository);
+      final AggregatedOrderCommercial commercial = resolveOrderCommercial(
+        <CommercialLineInput>[
+          CommercialLineInput.fromCatalog(
+            item: item,
+            fulfillment: LineFulfillment.rent,
+            lineAmountPaise: 150000,
+            unitRatePaise: 150000,
+          ),
+        ],
+        templateByType: const <ResourceType, CommercialPolicy>{
+          ResourceType.rental: CommercialPolicy(
+            pay: CommercialRequirement.optional,
+            security: CommercialRequirement.required,
+          ),
+        },
+      );
+      expect(
+        () => repository.createOrderWithSettlement(
+          customer: customer,
+          lines: <RentalLineInput>[
+            RentalLineInput(
+              itemId: item.id,
+              instanceName: 'Body A',
+              shortCode: 'CAM-A1',
+              durationUnits: 1,
+            ),
+          ],
+          amountReceivedPaise: 0,
+          securityPaise: 0,
+          commercial: commercial,
+        ),
+        throwsA(isA<ArgumentError>()),
+      );
+      expect(await repository.listRentals(), isEmpty);
+    });
+
+    test('records sell pay and security atomically', () async {
+      final LocalRepository repository = await bootRepo();
+      await repository.addInventory(
+        name: 'Oil',
+        category: 'Parlour',
+        units: 5,
+        rateAmount: 15000,
+        defaultItemKind: ResourceType.sale,
+        requiresUnitIdentity: false,
+      );
+      await repository.addInventory(
+        name: 'Steamer',
+        category: 'Parlour',
+        units: 2,
+        rateAmount: 20000,
+        securityDepositPaise: 20000,
+        requiresUnitIdentity: false,
+      );
+      final List<InventoryItem> inventory = await repository.listInventory();
+      final InventoryItem oil =
+          inventory.firstWhere((InventoryItem i) => i.name == 'Oil');
+      final InventoryItem steamer =
+          inventory.firstWhere((InventoryItem i) => i.name == 'Steamer');
+      final Customer customer = await ensureCustomer(repository);
+      final AggregatedOrderCommercial commercial = resolveOrderCommercial(
+        <CommercialLineInput>[
+          CommercialLineInput.fromCatalog(
+            item: oil,
+            fulfillment: LineFulfillment.sell,
+            lineAmountPaise: 15000,
+            unitRatePaise: 15000,
+          ),
+          CommercialLineInput.fromCatalog(
+            item: steamer,
+            fulfillment: LineFulfillment.rent,
+            lineAmountPaise: 20000,
+            unitRatePaise: 20000,
+          ),
+        ],
+      );
+      final String rentalId = await repository.createOrderWithSettlement(
+        customer: customer,
+        lines: <RentalLineInput>[
+          RentalLineInput(
+            itemId: oil.id,
+            instanceName: 'Oil',
+            shortCode: 'OIL-1',
+            fulfillment: LineFulfillment.sell,
+            manualSaleAmountPaise: 15000,
+          ),
+          RentalLineInput(
+            itemId: steamer.id,
+            instanceName: 'Steamer',
+            shortCode: 'STM-1',
+            durationUnits: 1,
+          ),
+        ],
+        amountReceivedPaise: 35000,
+        securityPaise: 20000,
+        commercial: commercial,
+      );
+      final Rental paid = (await repository.listRentals())
+          .firstWhere((Rental r) => r.id == rentalId);
+      expect(paid.sellPaidPaise, 15000);
+      expect(paid.depositAmount, 20000);
+      expect(paid.hasUnpaidSell, isFalse);
     });
   });
 }

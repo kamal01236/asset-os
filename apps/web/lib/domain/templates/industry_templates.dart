@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 
 import '../home/home_modules.dart';
 import '../models/entities.dart';
+import '../orders/commercial_policy.dart';
 import '../reports/report_widgets.dart';
 import 'field_defs.dart';
 import 'workflows.dart';
@@ -25,6 +26,9 @@ class TemplateInventoryItem {
     this.requiresUnitIdentity = false,
     this.unitCodePrefix,
     this.dueDateOptional = false,
+    this.securityDepositPaise = 0,
+    this.commercial,
+    this.entitlementDays,
   });
 
   final String name;
@@ -43,6 +47,24 @@ class TemplateInventoryItem {
   /// Optional short-code pool prefix seeded into catalog.
   final String? unitCodePrefix;
   final bool dueDateOptional;
+  /// Suggested security per unit (paise) seeded into catalog.
+  final int securityDepositPaise;
+  /// Optional per-item commercial overlay stored in catalog metadata.
+  final CommercialPolicy? commercial;
+  /// Membership validity length (days) stored in catalog metadata.
+  final int? entitlementDays;
+
+  /// Catalog metadata written on seed / import.
+  Map<String, Object?> get seedMetadata {
+    final Map<String, Object?> out = <String, Object?>{};
+    if (commercial != null) {
+      out[kCommercialMetadataKey] = commercial!.toJson();
+    }
+    if (entitlementDays != null) {
+      out[kEntitlementDaysMetadataKey] = entitlementDays;
+    }
+    return out;
+  }
 
   String localizedName(Locale locale) =>
       _isHindi(locale) && nameHi.isNotEmpty ? nameHi : name;
@@ -70,9 +92,31 @@ class TemplateInventoryItem {
       requiresUnitIdentity: requiresUnitIdentity,
       unitCodePrefix: unitCodePrefix,
       dueDateOptional: dueDateOptional,
+      securityDepositPaise: securityDepositPaise,
+      commercial: commercial,
+      entitlementDays: entitlementDays,
     );
   }
 }
+
+/// Library books: no pay-now; membership or security (requireAnyOf).
+const CommercialPolicy kLibraryLoanCommercial = CommercialPolicy(
+  pay: CommercialRequirement.off,
+  advance: CommercialRequirement.off,
+  security: CommercialRequirement.optional,
+  subscription: CommercialRequirement.optional,
+  requireAnyOf: <CommercialStep>[
+    CommercialStep.security,
+    CommercialStep.subscription,
+  ],
+);
+
+/// High-value rentals (camera, farm, construction, boutique).
+const CommercialPolicy kSecurityRequiredRentalCommercial = CommercialPolicy(
+  pay: CommercialRequirement.optional,
+  advance: CommercialRequirement.optional,
+  security: CommercialRequirement.required,
+);
 
 /// Prefs key for comma-separated [ResourceType.name] values.
 const String kEnabledResourceTypesPrefsKey = 'asset_os_enabled_resource_types';
@@ -226,6 +270,7 @@ class IndustryTemplate {
     this.workflowId = kDefaultWorkflowId,
     this.extraFieldIds = const <String>[],
     this.defaultReportWidgets = kDefaultReportWidgets,
+    this.commercialByType,
   });
 
   final String id;
@@ -249,6 +294,9 @@ class IndustryTemplate {
 
   /// Default Share Reports widget composition for this pack.
   final List<ReportWidgetId> defaultReportWidgets;
+
+  /// Per-type commercial defaults; omitted types use built-ins.
+  final Map<ResourceType, CommercialPolicy>? commercialByType;
 
   /// Resource types this pack enables for New Order fulfillment chrome.
   /// Defaults to the union of [items] `.defaultItemKind` when override omitted.
@@ -290,7 +338,11 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
     enabledResourceTypesOverride: <ResourceType>[
       ResourceType.rental,
       ResourceType.loan,
+      ResourceType.membership,
     ],
+    commercialByType: <ResourceType, CommercialPolicy>{
+      ResourceType.loan: kLibraryLoanCommercial,
+    },
     items: <TemplateInventoryItem>[
       TemplateInventoryItem(
         name: 'Novel',
@@ -299,8 +351,10 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
         categoryHi: 'पुस्तकालय',
         defaultUnits: 20,
         billingMode: BillingMode.weekly,
-        rateAmount: 5000, // ₹50/week
-        lateFeePerDay: 500, // ₹5/day
+        rateAmount: 0,
+        lateFeePerDay: 500, // ₹5/day late only
+        defaultItemKind: ResourceType.loan,
+        commercial: kLibraryLoanCommercial,
       ),
       TemplateInventoryItem(
         name: 'Book',
@@ -309,7 +363,9 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
         categoryHi: 'पुस्तकालय',
         defaultUnits: 10,
         billingMode: BillingMode.weekly,
-        rateAmount: 3000,
+        rateAmount: 0,
+        defaultItemKind: ResourceType.loan,
+        commercial: kLibraryLoanCommercial,
       ),
       TemplateInventoryItem(
         name: 'Journal',
@@ -318,7 +374,9 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
         categoryHi: 'पुस्तकालय',
         defaultUnits: 5,
         billingMode: BillingMode.weekly,
-        rateAmount: 2000,
+        rateAmount: 0,
+        defaultItemKind: ResourceType.loan,
+        commercial: kLibraryLoanCommercial,
       ),
       TemplateInventoryItem(
         name: 'Magazine',
@@ -327,7 +385,9 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
         categoryHi: 'पुस्तकालय',
         defaultUnits: 8,
         billingMode: BillingMode.weekly,
-        rateAmount: 1500,
+        rateAmount: 0,
+        defaultItemKind: ResourceType.loan,
+        commercial: kLibraryLoanCommercial,
       ),
       TemplateInventoryItem(
         name: 'Calculator',
@@ -336,7 +396,10 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
         categoryHi: 'पुस्तकालय',
         defaultUnits: 4,
         billingMode: BillingMode.daily,
-        rateAmount: 1000,
+        rateAmount: 0,
+        lateFeePerDay: 500,
+        defaultItemKind: ResourceType.loan,
+        commercial: kLibraryLoanCommercial,
       ),
       TemplateInventoryItem(
         name: 'Reading seat',
@@ -349,6 +412,19 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
         lateFeePerDay: 1000, // ₹10/day
         requiresUnitIdentity: true,
         unitCodePrefix: 'SEAT',
+        defaultItemKind: ResourceType.rental,
+      ),
+      TemplateInventoryItem(
+        name: 'Library membership',
+        nameHi: 'पुस्तकालय सदस्यता',
+        category: 'Library',
+        categoryHi: 'पुस्तकालय',
+        defaultUnits: 50,
+        billingMode: BillingMode.monthly,
+        rateAmount: 10000, // ₹100/month
+        defaultItemKind: ResourceType.membership,
+        requiresUnitIdentity: false,
+        entitlementDays: 30,
       ),
     ],
   ),
@@ -363,6 +439,9 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
     defaultReportWidgets: kRentalReportWidgets,
     extraFieldIds: <String>[kFieldBarcode],
     enabledResourceTypesOverride: <ResourceType>[ResourceType.rental],
+    commercialByType: <ResourceType, CommercialPolicy>{
+      ResourceType.rental: kSecurityRequiredRentalCommercial,
+    },
     items: <TemplateInventoryItem>[
       TemplateInventoryItem(
         name: 'DSLR',
@@ -373,6 +452,8 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
         billingMode: BillingMode.daily,
         rateAmount: 150000,
         lateFeePerDay: 20000,
+        securityDepositPaise: 500000, // ₹5,000
+        commercial: kSecurityRequiredRentalCommercial,
       ),
       TemplateInventoryItem(
         name: 'Lens',
@@ -382,6 +463,8 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
         defaultUnits: 4,
         billingMode: BillingMode.daily,
         rateAmount: 80000,
+        securityDepositPaise: 300000, // ₹3,000
+        commercial: kSecurityRequiredRentalCommercial,
       ),
       TemplateInventoryItem(
         name: 'Battery',
@@ -409,6 +492,8 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
         defaultUnits: 3,
         billingMode: BillingMode.daily,
         rateAmount: 20000,
+        securityDepositPaise: 50000, // ₹500
+        commercial: kSecurityRequiredRentalCommercial,
       ),
     ],
   ),
@@ -431,6 +516,9 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
       kFieldAcres,
     ],
     enabledResourceTypesOverride: <ResourceType>[ResourceType.rental],
+    commercialByType: <ResourceType, CommercialPolicy>{
+      ResourceType.rental: kSecurityRequiredRentalCommercial,
+    },
     items: <TemplateInventoryItem>[
       TemplateInventoryItem(
         name: 'Tractor',
@@ -441,6 +529,7 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
         billingMode: BillingMode.daily,
         rateAmount: 500000,
         lateFeePerDay: 50000,
+        securityDepositPaise: 1000000, // ₹10,000
       ),
       TemplateInventoryItem(
         name: 'Harvester',
@@ -451,6 +540,7 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
         billingMode: BillingMode.daily,
         rateAmount: 800000,
         lateFeePerDay: 80000,
+        securityDepositPaise: 1500000,
       ),
       TemplateInventoryItem(
         name: 'Water Tanker',
@@ -461,6 +551,7 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
         billingMode: BillingMode.daily,
         rateAmount: 300000,
         lateFeePerDay: 30000,
+        securityDepositPaise: 500000,
       ),
       TemplateInventoryItem(
         name: 'Seeder',
@@ -470,6 +561,7 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
         defaultUnits: 2,
         billingMode: BillingMode.daily,
         rateAmount: 150000,
+        securityDepositPaise: 200000,
       ),
       TemplateInventoryItem(
         name: 'Rotavator',
@@ -479,6 +571,7 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
         defaultUnits: 2,
         billingMode: BillingMode.daily,
         rateAmount: 200000,
+        securityDepositPaise: 200000,
       ),
       TemplateInventoryItem(
         name: 'Water Pump',
@@ -488,6 +581,7 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
         defaultUnits: 3,
         billingMode: BillingMode.daily,
         rateAmount: 80000,
+        securityDepositPaise: 100000,
       ),
     ],
   ),
@@ -746,6 +840,9 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
     defaultReportWidgets: kRentalReportWidgets,
     extraFieldIds: <String>[kFieldBarcode],
     enabledResourceTypesOverride: <ResourceType>[ResourceType.rental],
+    commercialByType: <ResourceType, CommercialPolicy>{
+      ResourceType.rental: kSecurityRequiredRentalCommercial,
+    },
     items: <TemplateInventoryItem>[
       TemplateInventoryItem(
         name: 'Drill Kit',
@@ -756,6 +853,7 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
         billingMode: BillingMode.daily,
         rateAmount: 25000,
         lateFeePerDay: 5000,
+        securityDepositPaise: 100000,
       ),
       TemplateInventoryItem(
         name: 'Angle Grinder',
@@ -765,6 +863,7 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
         defaultUnits: 3,
         billingMode: BillingMode.daily,
         rateAmount: 30000,
+        securityDepositPaise: 100000,
       ),
       TemplateInventoryItem(
         name: 'Ladder',
@@ -774,6 +873,7 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
         defaultUnits: 3,
         billingMode: BillingMode.daily,
         rateAmount: 15000,
+        securityDepositPaise: 50000,
       ),
       TemplateInventoryItem(
         name: 'Safety Kit',
@@ -783,6 +883,7 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
         defaultUnits: 5,
         billingMode: BillingMode.fixed,
         rateAmount: 10000,
+        securityDepositPaise: 20000,
       ),
     ],
   ),
@@ -806,6 +907,7 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
         billingMode: BillingMode.weekly,
         rateAmount: 200000,
         lateFeePerDay: 10000,
+        securityDepositPaise: 500000,
       ),
       TemplateInventoryItem(
         name: 'Monitor',
@@ -815,6 +917,7 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
         defaultUnits: 6,
         billingMode: BillingMode.weekly,
         rateAmount: 50000,
+        securityDepositPaise: 100000,
       ),
       TemplateInventoryItem(
         name: 'Projector',
@@ -824,6 +927,7 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
         defaultUnits: 2,
         billingMode: BillingMode.daily,
         rateAmount: 100000,
+        securityDepositPaise: 200000,
       ),
       TemplateInventoryItem(
         name: 'Access Card',
@@ -943,6 +1047,7 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
         rateAmount: 200000, // ₹2,000/month
         defaultItemKind: ResourceType.membership,
         requiresUnitIdentity: false,
+        entitlementDays: 30,
       ),
       TemplateInventoryItem(
         name: 'Steamer Kit',
@@ -953,6 +1058,7 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
         billingMode: BillingMode.daily,
         rateAmount: 20000, // ₹200/day
         lateFeePerDay: 5000,
+        securityDepositPaise: 20000,
       ),
       TemplateInventoryItem(
         name: 'Chair',
@@ -962,6 +1068,7 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
         defaultUnits: 4,
         billingMode: BillingMode.daily,
         rateAmount: 50000, // ₹500/day
+        securityDepositPaise: 20000,
       ),
     ],
   ),
@@ -980,6 +1087,9 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
       ResourceType.sale,
       ResourceType.job,
     ],
+    commercialByType: <ResourceType, CommercialPolicy>{
+      ResourceType.rental: kSecurityRequiredRentalCommercial,
+    },
     items: <TemplateInventoryItem>[
       TemplateInventoryItem(
         name: 'Lehenga',
@@ -991,6 +1101,7 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
         rateAmount: 200000, // ₹2,000/week
         lateFeePerDay: 20000,
         requiresUnitIdentity: true,
+        securityDepositPaise: 200000,
       ),
       TemplateInventoryItem(
         name: 'Saree',
@@ -1002,6 +1113,7 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
         rateAmount: 80000, // ₹800/week
         lateFeePerDay: 10000,
         requiresUnitIdentity: true,
+        securityDepositPaise: 80000,
       ),
       TemplateInventoryItem(
         name: 'Suit Set',
@@ -1012,6 +1124,7 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
         billingMode: BillingMode.weekly,
         rateAmount: 100000, // ₹1,000/week
         requiresUnitIdentity: true,
+        securityDepositPaise: 100000,
       ),
       TemplateInventoryItem(
         name: 'Dupatta',
@@ -1022,6 +1135,7 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
         billingMode: BillingMode.daily,
         rateAmount: 10000, // ₹100/day
         requiresUnitIdentity: true,
+        securityDepositPaise: 20000,
       ),
       TemplateInventoryItem(
         name: 'Jewellery Set',
@@ -1033,6 +1147,7 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
         rateAmount: 150000, // ₹1,500/week
         lateFeePerDay: 15000,
         requiresUnitIdentity: true,
+        securityDepositPaise: 300000,
       ),
     ],
   ),
@@ -1062,6 +1177,7 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
         rateAmount: 150000, // ₹1,500/month
         defaultItemKind: ResourceType.membership,
         requiresUnitIdentity: false,
+        entitlementDays: 30,
       ),
       TemplateInventoryItem(
         name: 'Quarterly Membership',
@@ -1073,6 +1189,7 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
         rateAmount: 400000, // ₹4,000
         defaultItemKind: ResourceType.membership,
         requiresUnitIdentity: false,
+        entitlementDays: 90,
       ),
       TemplateInventoryItem(
         name: 'Annual Membership',
@@ -1084,6 +1201,7 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
         rateAmount: 1200000, // ₹12,000
         defaultItemKind: ResourceType.membership,
         requiresUnitIdentity: false,
+        entitlementDays: 365,
       ),
       TemplateInventoryItem(
         name: 'Day Pass',
@@ -1105,6 +1223,7 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
         billingMode: BillingMode.monthly,
         rateAmount: 30000, // ₹300/month
         requiresUnitIdentity: false,
+        securityDepositPaise: 50000,
       ),
     ],
   ),
@@ -1192,6 +1311,7 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
         rateAmount: 150000,
         defaultItemKind: ResourceType.membership,
         requiresUnitIdentity: false,
+        entitlementDays: 30,
       ),
     ],
   ),

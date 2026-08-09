@@ -1537,6 +1537,40 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
+  String get commercialStepHeading => 'भुगतान और सिक्योरिटी';
+
+  @override
+  String get commercialStepSubtitle =>
+      'इस कार्ट के लिए जो ज़रूरी है वही लें। वैकल्पिक फ़ील्ड छोड़ सकते हैं और बाद में ऑर्डर विवरण से भुगतान कर सकते हैं।';
+
+  @override
+  String get commercialStepPay => 'भुगतान';
+
+  @override
+  String get commercialStepAdvance => 'अग्रिम';
+
+  @override
+  String get commercialStepSecurity => 'सिक्योरिटी';
+
+  @override
+  String get commercialStepMembershipRequired => 'सदस्यता आवश्यक';
+
+  @override
+  String get commercialMinPayLabel => 'अभी न्यूनतम देय';
+
+  @override
+  String get commercialSecurityRequiredHelper =>
+      'ऑर्डर जारी करने से पहले आवश्यक';
+
+  @override
+  String get commercialSubscriptionHint =>
+      'जारी रखने के लिए सदस्यता लाइन जोड़ें या सिक्योरिटी लें।';
+
+  @override
+  String get commercialSubscriptionSatisfied =>
+      'इस ग्राहक की सदस्यता सक्रिय है।';
+
+  @override
   String get orderPaymentTitle => 'भुगतान';
 
   @override

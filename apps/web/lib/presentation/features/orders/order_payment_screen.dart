@@ -4,8 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../infrastructure/l10n/l10n_ext.dart';
 import '../../../domain/models/entities.dart';
+import '../../../domain/orders/commercial_policy.dart';
 import '../../../domain/orders/order_payment.dart';
 import '../../../domain/pricing/rental_pricing.dart';
+import '../../../domain/templates/industry_templates.dart';
 import '../../../application/providers/app_providers.dart';
 import '../../widgets/ui_primitives.dart';
 
@@ -29,6 +31,23 @@ class _OrderPaymentScreenState extends ConsumerState<OrderPaymentScreen> {
   bool _seeded = false;
   bool _treatExcessAsDiscount = false;
   bool _submitting = false;
+  Map<ResourceType, CommercialPolicy>? _templateByType;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final String? id =
+          await ref.read(repositoryProvider).selectedIndustryTemplateId();
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _templateByType =
+            id == null ? null : industryTemplateById(id)?.commercialByType;
+      });
+    });
+  }
 
   @override
   void dispose() {
@@ -37,17 +56,40 @@ class _OrderPaymentScreenState extends ConsumerState<OrderPaymentScreen> {
     super.dispose();
   }
 
-  void _seedFields(Rental rental, List<InventoryItem> inventory) {
-    if (_seeded) {
-      return;
-    }
+  AggregatedOrderCommercial _aggregated(
+    Rental rental,
+    List<InventoryItem> inventory,
+  ) {
     final Map<String, InventoryItem> byId = <String, InventoryItem>{
       for (final InventoryItem item in inventory) item.id: item,
     };
-    final int suggested = computeSuggestedSecurityPaise(rental, byId);
+    return resolveRentalCommercial(
+      rental,
+      byId,
+      templateByType: _templateByType,
+    );
+  }
+
+  void _seedFields(
+    Rental rental,
+    List<InventoryItem> inventory,
+    AggregatedOrderCommercial commercial,
+  ) {
+    if (_seeded) {
+      return;
+    }
+    final int suggested =
+        commercial.showSecurity ? commercial.suggestedSecurityPaise : 0;
     final int sellOutstanding = rental.sellOutstandingPaise;
-    _securityController.text = paiseToRupeesField(suggested);
-    _receivedController.text = paiseToRupeesField(sellOutstanding + suggested);
+    if (commercial.showSecurity) {
+      _securityController.text = paiseToRupeesField(suggested);
+    } else {
+      _securityController.text = '0';
+    }
+    final int receivedSeed = commercial.showPay || sellOutstanding > 0
+        ? sellOutstanding + suggested
+        : suggested;
+    _receivedController.text = paiseToRupeesField(receivedSeed);
     _seeded = true;
   }
 
@@ -99,11 +141,15 @@ class _OrderPaymentScreenState extends ConsumerState<OrderPaymentScreen> {
     final Rental rental = rentals.firstWhere(
       (Rental r) => r.id == widget.rentalId,
     );
-    _seedFields(rental, inventory);
+    final AggregatedOrderCommercial commercial =
+        _aggregated(rental, inventory);
+    _seedFields(rental, inventory, commercial);
 
     final int sellDue = rental.sellDuePaise;
     final int sellOutstanding = rental.sellOutstandingPaise;
-    final int securityPaise = _securityPaise();
+    final bool showSecurity = commercial.showSecurity;
+    final bool showPay = commercial.showPay || sellOutstanding > 0;
+    final int securityPaise = showSecurity ? _securityPaise() : 0;
     final int receivedPaise = _receivedPaise();
     final OrderPaymentAllocation preview = allocateOrderPayment(
       sellOutstandingPaise: sellOutstanding,
@@ -131,44 +177,48 @@ class _OrderPaymentScreenState extends ConsumerState<OrderPaymentScreen> {
           const SizedBox(height: 8),
           Text(l10n.orderPaymentSubtitle),
           const SizedBox(height: 16),
-          MoneyStack(
-            label: l10n.paymentMinSoldLabel,
-            amount: formatMoney(sellDue),
-            emphasis: MoneyStackEmphasis.total,
-          ),
-          if (rental.sellPaidPaise > 0)
+          if (showPay) ...<Widget>[
             MoneyStack(
-              label: l10n.paymentSellPaidLabel,
-              amount: formatMoney(rental.sellPaidPaise),
-              emphasis: MoneyStackEmphasis.muted,
+              label: l10n.paymentMinSoldLabel,
+              amount: formatMoney(sellDue),
+              emphasis: MoneyStackEmphasis.total,
             ),
-          if (rental.sellDiscountPaise > 0)
-            MoneyStack(
-              label: l10n.paymentSellDiscountLabel,
-              amount: formatMoney(rental.sellDiscountPaise),
-              emphasis: MoneyStackEmphasis.muted,
+            if (rental.sellPaidPaise > 0)
+              MoneyStack(
+                label: l10n.paymentSellPaidLabel,
+                amount: formatMoney(rental.sellPaidPaise),
+                emphasis: MoneyStackEmphasis.muted,
+              ),
+            if (rental.sellDiscountPaise > 0)
+              MoneyStack(
+                label: l10n.paymentSellDiscountLabel,
+                amount: formatMoney(rental.sellDiscountPaise),
+                emphasis: MoneyStackEmphasis.muted,
+              ),
+            if (sellOutstanding > 0)
+              MoneyStack(
+                label: l10n.paymentSellOutstandingLabel,
+                amount: formatMoney(sellOutstanding),
+                emphasis: MoneyStackEmphasis.due,
+              ),
+            const SizedBox(height: 12),
+          ],
+          if (showSecurity) ...<Widget>[
+            TextField(
+              controller: _securityController,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              inputFormatters: <TextInputFormatter>[
+                FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+              ],
+              decoration: InputDecoration(
+                labelText: l10n.paymentSecurityLabel,
+                hintText: l10n.paymentSecurityHint,
+                helperText: l10n.paymentSecurityHelper,
+              ),
+              onChanged: (_) => setState(() {}),
             ),
-          if (sellOutstanding > 0)
-            MoneyStack(
-              label: l10n.paymentSellOutstandingLabel,
-              amount: formatMoney(sellOutstanding),
-              emphasis: MoneyStackEmphasis.due,
-            ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _securityController,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            inputFormatters: <TextInputFormatter>[
-              FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
-            ],
-            decoration: InputDecoration(
-              labelText: l10n.paymentSecurityLabel,
-              hintText: l10n.paymentSecurityHint,
-              helperText: l10n.paymentSecurityHelper,
-            ),
-            onChanged: (_) => setState(() {}),
-          ),
-          const SizedBox(height: 12),
+            const SizedBox(height: 12),
+          ],
           TextField(
             controller: _receivedController,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),

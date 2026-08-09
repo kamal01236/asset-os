@@ -1537,6 +1537,40 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get commercialStepHeading => 'Payment & security';
+
+  @override
+  String get commercialStepSubtitle =>
+      'Collect only what this cart requires. Optional fields can be skipped and paid later from order detail.';
+
+  @override
+  String get commercialStepPay => 'Pay';
+
+  @override
+  String get commercialStepAdvance => 'Advance';
+
+  @override
+  String get commercialStepSecurity => 'Security';
+
+  @override
+  String get commercialStepMembershipRequired => 'Membership required';
+
+  @override
+  String get commercialMinPayLabel => 'Minimum due now';
+
+  @override
+  String get commercialSecurityRequiredHelper =>
+      'Required before this order can be issued';
+
+  @override
+  String get commercialSubscriptionHint =>
+      'Add a membership line or collect security to continue.';
+
+  @override
+  String get commercialSubscriptionSatisfied =>
+      'Membership is active for this customer.';
+
+  @override
   String get orderPaymentTitle => 'Payment';
 
   @override

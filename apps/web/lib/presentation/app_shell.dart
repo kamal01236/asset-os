@@ -8,6 +8,7 @@ import '../infrastructure/l10n/l10n_ext.dart';
 import '../domain/models/customer_balance.dart';
 import '../domain/models/entities.dart';
 import '../domain/models/unknown_customer.dart';
+import '../domain/orders/commercial_policy.dart';
 import '../domain/orders/order_payment.dart';
 import '../domain/pricing/rental_pricing.dart';
 import '../application/providers/app_providers.dart';
@@ -1856,22 +1857,43 @@ class _RentalDetailScreenState extends ConsumerState<RentalDetailScreen> {
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
             if (rental.orderStatus != OrderStatus.cancelled) ...<Widget>[
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  onPressed: () => pushOrderPayment(
-                    context,
-                    rentalId: rental.id,
-                  ),
-                  icon: const Icon(Icons.payments_outlined),
-                  label: Text(
-                    rental.hasUnpaidSell
-                        ? l10n.paymentPayAction
-                        : l10n.paymentAddAdvanceAction,
-                  ),
-                ),
+              Builder(
+                builder: (BuildContext context) {
+                  final Map<String, InventoryItem> byId =
+                      <String, InventoryItem>{
+                    for (final InventoryItem item in inventory) item.id: item,
+                  };
+                  final AggregatedOrderCommercial payPolicy =
+                      resolveRentalCommercial(rental, byId);
+                  if (!shouldShowOrderPayCta(
+                    aggregated: payPolicy,
+                    rental: rental,
+                  )) {
+                    return const SizedBox.shrink();
+                  }
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: <Widget>[
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton.icon(
+                          onPressed: () => pushOrderPayment(
+                            context,
+                            rentalId: rental.id,
+                          ),
+                          icon: const Icon(Icons.payments_outlined),
+                          label: Text(
+                            rental.hasUnpaidSell
+                                ? l10n.paymentPayAction
+                                : l10n.paymentAddAdvanceAction,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                    ],
+                  );
+                },
               ),
-              const SizedBox(height: 8),
             ],
             SizedBox(
               width: double.infinity,

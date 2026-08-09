@@ -2819,6 +2819,66 @@ abstract class AppLocalizations {
     String advance,
   );
 
+  /// No description provided for @commercialStepHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment & security'**
+  String get commercialStepHeading;
+
+  /// No description provided for @commercialStepSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Collect only what this cart requires. Optional fields can be skipped and paid later from order detail.'**
+  String get commercialStepSubtitle;
+
+  /// No description provided for @commercialStepPay.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay'**
+  String get commercialStepPay;
+
+  /// No description provided for @commercialStepAdvance.
+  ///
+  /// In en, this message translates to:
+  /// **'Advance'**
+  String get commercialStepAdvance;
+
+  /// No description provided for @commercialStepSecurity.
+  ///
+  /// In en, this message translates to:
+  /// **'Security'**
+  String get commercialStepSecurity;
+
+  /// No description provided for @commercialStepMembershipRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Membership required'**
+  String get commercialStepMembershipRequired;
+
+  /// No description provided for @commercialMinPayLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimum due now'**
+  String get commercialMinPayLabel;
+
+  /// No description provided for @commercialSecurityRequiredHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Required before this order can be issued'**
+  String get commercialSecurityRequiredHelper;
+
+  /// No description provided for @commercialSubscriptionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a membership line or collect security to continue.'**
+  String get commercialSubscriptionHint;
+
+  /// No description provided for @commercialSubscriptionSatisfied.
+  ///
+  /// In en, this message translates to:
+  /// **'Membership is active for this customer.'**
+  String get commercialSubscriptionSatisfied;
+
   /// No description provided for @orderPaymentTitle.
   ///
   /// In en, this message translates to:

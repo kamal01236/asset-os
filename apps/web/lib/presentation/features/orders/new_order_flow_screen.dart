@@ -7,7 +7,9 @@ import '../../../infrastructure/l10n/india_date_format.dart';
 import '../../../infrastructure/l10n/l10n_ext.dart';
 import '../../../domain/models/entities.dart';
 import '../../../domain/models/unknown_customer.dart';
+import '../../../domain/orders/commercial_policy.dart';
 import '../../../domain/pricing/rental_pricing.dart';
+import '../../../domain/templates/industry_templates.dart';
 import '../../../application/providers/app_providers.dart';
 import '../../../application/local_repository.dart';
 import '../../validation/input_formatters.dart';
@@ -37,7 +39,7 @@ class NewOrderFlowScreen extends ConsumerStatefulWidget {
   ConsumerState<NewOrderFlowScreen> createState() => _NewOrderFlowScreenState();
 }
 
-enum _OrderPhase { form, customer, summary }
+enum _OrderPhase { form, customer, commercial, summary }
 
 /// Soft upper bound for qty stepper (not stock-related).
 const int _kMaxOrderLineQuantity = 999;
@@ -121,6 +123,12 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
   bool _submitting = false;
   bool _prefillApplied = false;
   late _OrderPhase _phase;
+  Map<ResourceType, CommercialPolicy>? _templateCommercialByType;
+  bool _customerEntitled = false;
+  final TextEditingController _payController = TextEditingController();
+  final TextEditingController _securityController = TextEditingController();
+  final TextEditingController _advanceController = TextEditingController();
+  bool _commercialSeeded = false;
 
   bool get _skipCustomerStep {
     final String? id = widget.initialCustomerId;
@@ -144,6 +152,7 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
       _lines.add(_OrderLineDraft());
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadTemplateCommercial();
       _applyPrefill();
       if (widget.initialInventoryItemIds.isNotEmpty) {
         _seedPrefillLabels();
@@ -155,10 +164,25 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
   void dispose() {
     _phoneController.dispose();
     _nameController.dispose();
+    _payController.dispose();
+    _securityController.dispose();
+    _advanceController.dispose();
     for (final _OrderLineDraft line in _lines) {
       line.dispose();
     }
     super.dispose();
+  }
+
+  Future<void> _loadTemplateCommercial() async {
+    final String? id =
+        await ref.read(repositoryProvider).selectedIndustryTemplateId();
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _templateCommercialByType =
+          id == null ? null : industryTemplateById(id)?.commercialByType;
+    });
   }
 
   Future<void> _applyPrefill() async {
@@ -359,7 +383,7 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
 
   void _applyFulfillmentDefaults(_OrderLineDraft draft, InventoryItem item) {
     draft.fulfillment = _defaultFulfillment(item);
-    if (draft.isJob && item.rateAmount > 0) {
+    if (draft.usesManualAmount && item.rateAmount > 0) {
       draft.saleAmountController.text = paiseToRupeesField(item.rateAmount);
     } else if (!draft.usesManualAmount) {
       draft.saleAmountController.clear();
@@ -533,6 +557,144 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
       total += _lineAmount(draft, item) * draft.quantity;
     }
     return total;
+  }
+
+  List<CommercialLineInput> _commercialInputs(List<InventoryItem> catalog) {
+    final List<CommercialLineInput> inputs = <CommercialLineInput>[];
+    for (final _OrderLineDraft draft in _lines) {
+      final InventoryItem? item = _itemFor(draft, catalog);
+      if (item == null) {
+        continue;
+      }
+      inputs.add(
+        CommercialLineInput.fromCatalog(
+          item: item,
+          fulfillment: draft.fulfillment,
+          lineAmountPaise: _lineAmount(draft, item) * draft.quantity,
+          quantity: draft.quantity,
+          unitRatePaise: draft.usesManualAmount
+              ? _saleAmountPaise(draft)
+              : _effectiveRatePaise(draft, item),
+        ),
+      );
+    }
+    return inputs;
+  }
+
+  AggregatedOrderCommercial _aggregatedCommercial(List<InventoryItem> catalog) {
+    return resolveOrderCommercial(
+      _commercialInputs(catalog),
+      templateByType: _templateCommercialByType,
+    );
+  }
+
+  bool _cartHasMembership(List<InventoryItem> catalog) {
+    return cartSatisfiesSubscription(_commercialInputs(catalog));
+  }
+
+  bool _subscriptionSatisfied(List<InventoryItem> catalog) {
+    return _customerEntitled || _cartHasMembership(catalog);
+  }
+
+  int _payPaise() => parseRupeesToPaise(_payController.text);
+
+  int _securityPaise() => parseRupeesToPaise(_securityController.text);
+
+  int _advancePaise() => parseRupeesToPaise(_advanceController.text);
+
+  bool _commercialSatisfied(
+    AggregatedOrderCommercial agg,
+    List<InventoryItem> catalog,
+  ) {
+    try {
+      assertCommercialSatisfied(
+        aggregated: agg,
+        amountReceivedPaise: _payPaise() +
+            (agg.showSecurity ? _securityPaise() : _advancePaise()),
+        securityPaise: agg.showSecurity ? _securityPaise() : _advancePaise(),
+        advancePaise: _advancePaise(),
+        subscriptionSatisfied: _subscriptionSatisfied(catalog),
+      );
+      return true;
+    } on ArgumentError {
+      return false;
+    }
+  }
+
+  void _seedCommercialFields(AggregatedOrderCommercial agg) {
+    if (_commercialSeeded) {
+      return;
+    }
+    if (agg.showPay && agg.minPayNowPaise > 0) {
+      _payController.text = paiseToRupeesField(agg.minPayNowPaise);
+    }
+    if (agg.showSecurity && agg.suggestedSecurityPaise > 0) {
+      _securityController.text =
+          paiseToRupeesField(agg.suggestedSecurityPaise);
+    }
+    if (agg.showAdvance && agg.suggestedSecurityPaise > 0) {
+      _advanceController.text = paiseToRupeesField(agg.suggestedSecurityPaise);
+    }
+    _commercialSeeded = true;
+  }
+
+  int _settlementReceivedPaise(AggregatedOrderCommercial agg) {
+    final int pay = agg.showPay ? _payPaise() : 0;
+    final int hold = agg.showSecurity
+        ? _securityPaise()
+        : (agg.showAdvance ? _advancePaise() : 0);
+    if (agg.showPay && (agg.showSecurity || agg.showAdvance)) {
+      return pay + hold;
+    }
+    if (agg.showPay) {
+      return pay;
+    }
+    return hold;
+  }
+
+  int _settlementSecurityPaise(AggregatedOrderCommercial agg) {
+    if (agg.showSecurity) {
+      return _securityPaise();
+    }
+    if (agg.showAdvance) {
+      return _advancePaise();
+    }
+    return 0;
+  }
+
+  void _enterCommercialOrSummary(List<InventoryItem> catalog) {
+    final AggregatedOrderCommercial agg = _aggregatedCommercial(catalog);
+    if (!agg.shouldShowCommercialStep) {
+      setState(() => _phase = _OrderPhase.summary);
+      return;
+    }
+    final String? customerId = _resolvedCustomer?.id ??
+        (widget.initialCustomerId != null &&
+                !isUnknownCustomerId(widget.initialCustomerId!) &&
+                widget.initialCustomerId != kLegacySelfCustomerId
+            ? widget.initialCustomerId
+            : null);
+    bool entitled = false;
+    if (customerId != null) {
+      final List<Rental> rentals =
+          ref.read(rentalsProvider).valueOrNull ?? const <Rental>[];
+      final List<InventoryItem> inv =
+          ref.read(inventoryProvider).valueOrNull ?? catalog;
+      entitled = customerHasActiveEntitlement(
+        customerOrders:
+            rentals.where((Rental r) => r.customerId == customerId),
+        inventoryById: <String, InventoryItem>{
+          for (final InventoryItem item in inv) item.id: item,
+        },
+        now: DateTime.now(),
+      );
+    }
+    setState(() {
+      _customerEntitled = entitled;
+      _commercialSeeded = false;
+      _seedCommercialFields(agg);
+      _phase = _OrderPhase.commercial;
+    });
   }
 
   bool _labelsReady(_OrderLineDraft draft, InventoryItem item) {
@@ -780,11 +942,11 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
     return true;
   }
 
-  Future<void> _continueFromCustomer() async {
+  Future<void> _continueFromCustomer(List<InventoryItem> catalog) async {
     if (!_validateCustomerOrSnack()) {
       return;
     }
-    setState(() => _phase = _OrderPhase.summary);
+    _enterCommercialOrSummary(catalog);
   }
 
   Future<void> _generateOrder(List<InventoryItem> catalog) async {
@@ -823,11 +985,30 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
               await repository.listAvailableUnitCodes(item.id);
         }
       }
-      final String rentalId = await repository.createRental(
-        customer: customer,
-        lines: _buildLineInputs(catalog),
-        nickname: nickname,
-      );
+      final AggregatedOrderCommercial commercial =
+          _aggregatedCommercial(catalog);
+      final List<RentalLineInput> lineInputs = _buildLineInputs(catalog);
+      final String rentalId;
+      if (commercial.shouldShowCommercialStep ||
+          _payPaise() > 0 ||
+          _securityPaise() > 0 ||
+          _advancePaise() > 0) {
+        rentalId = await repository.createOrderWithSettlement(
+          customer: customer,
+          lines: lineInputs,
+          nickname: nickname,
+          amountReceivedPaise: _settlementReceivedPaise(commercial),
+          securityPaise: _settlementSecurityPaise(commercial),
+          subscriptionSatisfied: _subscriptionSatisfied(catalog),
+          commercial: commercial,
+        );
+      } else {
+        rentalId = await repository.createRental(
+          customer: customer,
+          lines: lineInputs,
+          nickname: nickname,
+        );
+      }
       if (!mounted) {
         return;
       }
@@ -872,34 +1053,50 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
 
     final bool onForm = _phase == _OrderPhase.form;
     final bool onCustomer = _phase == _OrderPhase.customer;
+    final bool onCommercial = _phase == _OrderPhase.commercial;
     final bool onSummary = _phase == _OrderPhase.summary;
     final bool formReady = _formReady(inventory);
-
-    final int stepCurrent = onForm
-        ? 1
-        : onCustomer
-            ? 2
-            : 3;
+    final AggregatedOrderCommercial commercial =
+        _aggregatedCommercial(inventory);
+    final bool showCommercial = commercial.shouldShowCommercialStep;
+    final int totalSteps = (_skipCustomerStep ? 2 : 3) + (showCommercial ? 1 : 0);
+    final int stepCurrent;
+    if (onForm) {
+      stepCurrent = 1;
+    } else if (onCustomer) {
+      stepCurrent = 2;
+    } else if (onCommercial) {
+      stepCurrent = _skipCustomerStep ? 2 : 3;
+    } else {
+      stepCurrent = totalSteps;
+    }
 
     VoidCallback? primaryAction;
     final String primaryLabel;
     if (onForm) {
       primaryLabel = l10n.continueAction;
       if (formReady) {
-        primaryAction = () => setState(
-              () => _phase = _skipCustomerStep
-                  ? _OrderPhase.summary
-                  : _OrderPhase.customer,
-            );
+        primaryAction = () {
+          if (_skipCustomerStep) {
+            _enterCommercialOrSummary(inventory);
+          } else {
+            setState(() => _phase = _OrderPhase.customer);
+          }
+        };
       }
     } else if (onCustomer) {
       primaryLabel = l10n.continueAction;
       if (_customerReady) {
-        primaryAction = _continueFromCustomer;
+        primaryAction = () => _continueFromCustomer(inventory);
+      }
+    } else if (onCommercial) {
+      primaryLabel = l10n.continueAction;
+      if (_commercialSatisfied(commercial, inventory)) {
+        primaryAction = () => setState(() => _phase = _OrderPhase.summary);
       }
     } else {
       primaryLabel = l10n.confirmRental;
-      if (formReady) {
+      if (formReady && _commercialSatisfied(commercial, inventory)) {
         primaryAction = () => _generateOrder(inventory);
       }
     }
@@ -909,14 +1106,15 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: <Widget>[
-          if (!_skipCustomerStep)
+          if (!_skipCustomerStep || showCommercial)
             Text(
-              l10n.stepOf(stepCurrent, 3),
+              l10n.stepOf(stepCurrent, totalSteps),
               style: Theme.of(context).textTheme.labelLarge,
             ),
-          if (!_skipCustomerStep) const SizedBox(height: 8),
+          if (!_skipCustomerStep || showCommercial) const SizedBox(height: 8),
           if (onForm) ..._buildFormStep(l10n, inventory),
           if (onCustomer) ..._buildCustomerStep(l10n, inventory),
+          if (onCommercial) ..._buildCommercialStep(l10n, commercial, inventory),
           if (onSummary) ..._buildSummaryStep(l10n, inventory),
         ],
       ),
@@ -933,6 +1131,12 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
                         ? null
                         : () => setState(() {
                               if (onSummary) {
+                                _phase = showCommercial
+                                    ? _OrderPhase.commercial
+                                    : (_skipCustomerStep
+                                        ? _OrderPhase.form
+                                        : _OrderPhase.customer);
+                              } else if (onCommercial) {
                                 _phase = _skipCustomerStep
                                     ? _OrderPhase.form
                                     : _OrderPhase.customer;
@@ -949,6 +1153,7 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
               child: SizedBox(
                 height: 48,
                 child: FilledButton(
+                  key: const ValueKey<String>('order-primary-action'),
                   onPressed: _submitting ? null : primaryAction,
                   child: Text(primaryLabel),
                 ),
@@ -958,6 +1163,123 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
         ),
       ),
     );
+  }
+
+  List<Widget> _buildCommercialStep(
+    AppLocalizations l10n,
+    AggregatedOrderCommercial commercial,
+    List<InventoryItem> inventory,
+  ) {
+    return <Widget>[
+      Text(
+        l10n.commercialStepHeading,
+        key: const ValueKey<String>('order-commercial-heading'),
+        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+      ),
+      const SizedBox(height: 8),
+      Text(l10n.commercialStepSubtitle),
+      const SizedBox(height: 16),
+      if (commercial.showPay) ...<Widget>[
+        Text(
+          l10n.commercialStepPay,
+          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+        ),
+        if (commercial.minPayNowPaise > 0) ...<Widget>[
+          const SizedBox(height: 8),
+          MoneyStack(
+            label: l10n.commercialMinPayLabel,
+            amount: formatMoney(commercial.minPayNowPaise),
+            emphasis: MoneyStackEmphasis.due,
+          ),
+        ],
+        const SizedBox(height: 8),
+        TextField(
+          key: const ValueKey<String>('commercial-pay-field'),
+          controller: _payController,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          inputFormatters: <TextInputFormatter>[
+            FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+          ],
+          decoration: InputDecoration(
+            labelText: l10n.paymentAmountReceivedLabel,
+            hintText: l10n.paymentAmountReceivedHint,
+          ),
+          onChanged: (_) => setState(() {}),
+        ),
+        const SizedBox(height: 16),
+      ],
+      if (commercial.showAdvance) ...<Widget>[
+        Text(
+          l10n.commercialStepAdvance,
+          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+        ),
+        const SizedBox(height: 8),
+        TextField(
+          key: const ValueKey<String>('commercial-advance-field'),
+          controller: _advanceController,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          inputFormatters: <TextInputFormatter>[
+            FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+          ],
+          decoration: InputDecoration(
+            labelText: l10n.paymentSecurityLabel,
+            hintText: l10n.paymentSecurityHint,
+          ),
+          onChanged: (_) => setState(() {}),
+        ),
+        const SizedBox(height: 16),
+      ],
+      if (commercial.showSecurity) ...<Widget>[
+        Text(
+          l10n.commercialStepSecurity,
+          key: const ValueKey<String>('commercial-security-title'),
+          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+        ),
+        const SizedBox(height: 8),
+        TextField(
+          key: const ValueKey<String>('commercial-security-field'),
+          controller: _securityController,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          inputFormatters: <TextInputFormatter>[
+            FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+          ],
+          decoration: InputDecoration(
+            labelText: l10n.paymentSecurityLabel,
+            hintText: l10n.paymentSecurityHint,
+            helperText: commercial.requireSecurity
+                ? l10n.commercialSecurityRequiredHelper
+                : l10n.paymentSecurityHelper,
+          ),
+          onChanged: (_) => setState(() {}),
+        ),
+        const SizedBox(height: 16),
+      ],
+      if (commercial.showSubscription ||
+          commercial.requireAnyOf.contains(CommercialStep.subscription)) ...<
+          Widget>[
+        Text(
+          l10n.commercialStepMembershipRequired,
+          key: const ValueKey<String>('commercial-membership-title'),
+          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+        ),
+        const SizedBox(height: 8),
+        Text(l10n.commercialSubscriptionHint),
+        if (_subscriptionSatisfied(inventory)) ...<Widget>[
+          const SizedBox(height: 8),
+          Text(l10n.commercialSubscriptionSatisfied),
+        ],
+      ],
+    ];
   }
 
   List<Widget> _buildSummaryStep(
@@ -1423,8 +1745,7 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
                             if (draft.usesManualAmount) {
                               draft.leaveOpenEnded = false;
                               draft.customEnd = null;
-                              if (draft.isJob &&
-                                  selected.rateAmount > 0 &&
+                              if (selected.rateAmount > 0 &&
                                   draft.saleAmountController.text
                                       .trim()
                                       .isEmpty) {

@@ -958,6 +958,16 @@
       }
     }
   },
+  "commercialStepHeading": "भुगतान और सिक्योरिटी",
+  "commercialStepSubtitle": "इस कार्ट के लिए जो ज़रूरी है वही लें। वैकल्पिक फ़ील्ड छोड़ सकते हैं और बाद में ऑर्डर विवरण से भुगतान कर सकते हैं।",
+  "commercialStepPay": "भुगतान",
+  "commercialStepAdvance": "अग्रिम",
+  "commercialStepSecurity": "सिक्योरिटी",
+  "commercialStepMembershipRequired": "सदस्यता आवश्यक",
+  "commercialMinPayLabel": "अभी न्यूनतम देय",
+  "commercialSecurityRequiredHelper": "ऑर्डर जारी करने से पहले आवश्यक",
+  "commercialSubscriptionHint": "जारी रखने के लिए सदस्यता लाइन जोड़ें या सिक्योरिटी लें।",
+  "commercialSubscriptionSatisfied": "इस ग्राहक की सदस्यता सक्रिय है।",
   "orderPaymentTitle": "भुगतान",
   "orderPaymentHeading": "भुगतान लें",
   "orderPaymentSubtitle": "बेची गई वस्तुएँ अभी देय हैं। सिक्योरिटी ऑर्डर अग्रिम के रूप में रखी जाती है और वापसी पर लगाई जाती है।",

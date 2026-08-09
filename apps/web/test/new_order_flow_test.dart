@@ -9,6 +9,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:asset_os/presentation/app_shell.dart';
 import 'package:asset_os/infrastructure/l10n/l10n_ext.dart';
 import 'package:asset_os/domain/models/entities.dart';
+import 'package:asset_os/domain/orders/commercial_policy.dart';
+import 'package:asset_os/domain/templates/industry_templates.dart';
 import 'package:asset_os/application/providers/app_providers.dart';
 import 'package:asset_os/application/local_repository.dart';
 import 'package:asset_os/presentation/theme/app_theme.dart';
@@ -70,10 +72,35 @@ Future<void> _fillOneUnitLine(WidgetTester tester) async {
   await _settle(tester, ticks: 8);
 }
 
-Future<void> _continueToSummary(WidgetTester tester) async {
-  await tester.tap(find.widgetWithText(FilledButton, 'Continue'));
+Finder _primaryAction() =>
+    find.byKey(const ValueKey<String>('order-primary-action'));
+
+FilledButton _primaryButton(WidgetTester tester) =>
+    tester.widget<FilledButton>(_primaryAction());
+
+/// Invoke the footer CTA without hit-testing (avoids offscreen tap hangs).
+Future<void> _pressPrimary(WidgetTester tester) async {
+  final VoidCallback? action = _primaryButton(tester).onPressed;
+  expect(action, isNotNull);
+  action!();
   await tester.pump();
   await _settle(tester, ticks: 8);
+}
+
+Future<void> _setKeyedField(
+  WidgetTester tester,
+  Key key,
+  String text,
+) async {
+  final Finder field = find.byKey(key);
+  expect(field, findsOneWidget);
+  await tester.enterText(field, text);
+  await tester.pump();
+  await _settle(tester, ticks: 4);
+}
+
+Future<void> _continueToSummary(WidgetTester tester) async {
+  await _pressPrimary(tester);
   expect(find.text('Order summary'), findsOneWidget);
 }
 
@@ -616,4 +643,223 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(milliseconds: 1));
   });
+
+  testWidgets('library loan-only requires membership or security', (
+    WidgetTester tester,
+  ) async {
+    final ProviderContainer container = await bootContainer(seedDemo: true);
+    final LocalRepository repo = container.read(repositoryProvider);
+    final String novelId = await repo.addInventory(
+      name: 'Library Novel',
+      category: 'Books',
+      units: 5,
+      billingMode: BillingMode.weekly,
+      rateAmount: 0,
+      defaultItemKind: ResourceType.loan,
+      requiresUnitIdentity: false,
+      metadata: <String, Object?>{
+        kCommercialMetadataKey: kLibraryLoanCommercial.toJson(),
+      },
+    );
+
+    tester.view.physicalSize = const Size(800, 1600);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await _pumpFlow(
+      tester,
+      container: container,
+      home: NewOrderFlowScreen(
+        initialCustomerId: 'CUS-1001',
+        initialInventoryItemIds: <String>[novelId],
+      ),
+    );
+    await pumpFrames(tester, frames: 8);
+
+    await _pressPrimary(tester);
+
+    expect(find.byKey(const ValueKey<String>('order-commercial-heading')),
+        findsOneWidget);
+    expect(find.text('Membership required'), findsOneWidget);
+    expect(find.byKey(const ValueKey<String>('commercial-security-field')),
+        findsOneWidget);
+    expect(_primaryButton(tester).onPressed, isNull);
+
+    await _setKeyedField(
+      tester,
+      const ValueKey<String>('commercial-security-field'),
+      '100',
+    );
+    expect(_primaryButton(tester).onPressed, isNotNull);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(milliseconds: 1));
+  }, timeout: const Timeout(Duration(seconds: 45)));
+
+  testWidgets('camera security blocks generate until deposit entered', (
+    WidgetTester tester,
+  ) async {
+    final ProviderContainer container = await bootContainer(seedDemo: true);
+    final LocalRepository repo = container.read(repositoryProvider);
+    final String dslrId = await repo.addInventory(
+      name: 'Studio Camera',
+      category: 'Camera',
+      units: 2,
+      billingMode: BillingMode.daily,
+      rateAmount: 150000,
+      securityDepositPaise: 500000,
+      requiresUnitIdentity: false,
+      metadata: <String, Object?>{
+        kCommercialMetadataKey: kSecurityRequiredRentalCommercial.toJson(),
+      },
+    );
+
+    tester.view.physicalSize = const Size(800, 1600);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await _pumpFlow(
+      tester,
+      container: container,
+      home: NewOrderFlowScreen(
+        initialCustomerId: 'CUS-1001',
+        initialInventoryItemIds: <String>[dslrId],
+      ),
+    );
+    await pumpFrames(tester, frames: 8);
+
+    await _pressPrimary(tester);
+
+    expect(find.byKey(const ValueKey<String>('commercial-security-field')),
+        findsOneWidget);
+    await _setKeyedField(
+      tester,
+      const ValueKey<String>('commercial-security-field'),
+      '',
+    );
+    expect(_primaryButton(tester).onPressed, isNull);
+
+    await _setKeyedField(
+      tester,
+      const ValueKey<String>('commercial-security-field'),
+      '5000',
+    );
+    expect(_primaryButton(tester).onPressed, isNotNull);
+
+    await _pressPrimary(tester);
+    expect(find.text('Order summary'), findsOneWidget);
+    await _pressPrimary(tester);
+
+    final Rental created = (await repo.listRentals()).firstWhere(
+      (Rental r) => r.lines.any((RentalLine l) => l.itemId == dslrId),
+    );
+    expect(created.depositAmount, 500000);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(milliseconds: 1));
+  }, timeout: const Timeout(Duration(seconds: 45)));
+
+  testWidgets('mixed parlour shows pay and optional security', (
+    WidgetTester tester,
+  ) async {
+    final ProviderContainer container = await bootContainer(seedDemo: true);
+    final LocalRepository repo = container.read(repositoryProvider);
+    final String oilId = await repo.addInventory(
+      name: 'Parlour Hair Oil',
+      category: 'Parlour',
+      units: 10,
+      billingMode: BillingMode.fixed,
+      rateAmount: 15000,
+      defaultItemKind: ResourceType.sale,
+      requiresUnitIdentity: false,
+    );
+    final String steamerId = await repo.addInventory(
+      name: 'Parlour Steamer',
+      category: 'Parlour',
+      units: 2,
+      billingMode: BillingMode.daily,
+      rateAmount: 20000,
+      securityDepositPaise: 20000,
+      requiresUnitIdentity: false,
+    );
+
+    tester.view.physicalSize = const Size(800, 1800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await _pumpFlow(
+      tester,
+      container: container,
+      home: NewOrderFlowScreen(
+        initialCustomerId: 'CUS-1001',
+        initialInventoryItemIds: <String>[oilId, steamerId],
+      ),
+    );
+    await pumpFrames(tester, frames: 8);
+
+    await _pressPrimary(tester);
+
+    expect(find.text('Pay'), findsOneWidget);
+    expect(find.byKey(const ValueKey<String>('commercial-pay-field')),
+        findsOneWidget);
+    expect(find.byKey(const ValueKey<String>('commercial-security-field')),
+        findsOneWidget);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(milliseconds: 1));
+  }, timeout: const Timeout(Duration(seconds: 45)));
+
+  testWidgets('gym membership plus locker shows pay and optional security', (
+    WidgetTester tester,
+  ) async {
+    final ProviderContainer container = await bootContainer(seedDemo: true);
+    final LocalRepository repo = container.read(repositoryProvider);
+    final String membershipId = await repo.addInventory(
+      name: 'Gym Monthly Pass',
+      category: 'Gym',
+      units: 20,
+      billingMode: BillingMode.monthly,
+      rateAmount: 150000,
+      defaultItemKind: ResourceType.membership,
+      requiresUnitIdentity: false,
+    );
+    final String lockerId = await repo.addInventory(
+      name: 'Gym Locker',
+      category: 'Gym',
+      units: 10,
+      billingMode: BillingMode.monthly,
+      rateAmount: 30000,
+      securityDepositPaise: 50000,
+      requiresUnitIdentity: false,
+    );
+
+    tester.view.physicalSize = const Size(800, 1800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await _pumpFlow(
+      tester,
+      container: container,
+      home: NewOrderFlowScreen(
+        initialCustomerId: 'CUS-1001',
+        initialInventoryItemIds: <String>[membershipId, lockerId],
+      ),
+    );
+    await pumpFrames(tester, frames: 8);
+
+    await _pressPrimary(tester);
+
+    expect(find.text('Pay'), findsOneWidget);
+    expect(find.byKey(const ValueKey<String>('commercial-pay-field')),
+        findsOneWidget);
+    expect(find.byKey(const ValueKey<String>('commercial-security-field')),
+        findsOneWidget);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(milliseconds: 1));
+  }, timeout: const Timeout(Duration(seconds: 45)));
 }
