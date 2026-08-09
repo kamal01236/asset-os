@@ -5,6 +5,7 @@ Flutter shell for Hando (web for local validation and GitHub Pages feedback). Na
 ## Local-first foundation
 
 - **Source of truth:** Drift (SQLite). On web, `sqlite3.wasm` and `drift_worker.js` live under `web/`.
+- **Layers:** `lib/presentation/` (UI), `lib/application/` (Riverpod + `LocalRepository`), `lib/domain/` (rules), `lib/infrastructure/` (Drift + share + l10n helpers). Composition root is `lib/main.dart`. See [ADR-005](../../docs/architecture/decisions/ADR-005-client-layering.md).
 - **State:** Riverpod providers watch repository streams; UI screens are `ConsumerWidget`s.
 - **Migration:** One-time import from SharedPreferences `asset_os_snapshot_v1` when the DB is empty. Production first boot does **not** load the Priya/DSLR demo snapshot — only the Unknown customer sentinel, then the Language → Mode → WhatsApp (online) → industry-template wizard seeds inventory.
 - **Sync / encryption:** Not implemented yet — see [ADR-002](../../docs/architecture/decisions/ADR-002-local-first-foundation.md).

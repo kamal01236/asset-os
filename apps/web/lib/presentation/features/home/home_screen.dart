@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/l10n/india_date_format.dart';
-import '../../core/l10n/l10n_ext.dart';
-import '../../core/models/entities.dart';
-import '../../core/models/unknown_customer.dart';
-import '../../core/pricing/rental_pricing.dart';
-import '../../core/providers/app_providers.dart';
-import '../../core/widgets/global_search_typeahead.dart';
-import '../../core/widgets/ui_primitives.dart';
+import '../../../infrastructure/l10n/india_date_format.dart';
+import '../../../infrastructure/l10n/l10n_ext.dart';
+import '../../../domain/models/entities.dart';
+import '../../../domain/models/unknown_customer.dart';
+import '../../../domain/pricing/rental_pricing.dart';
+import '../../../application/providers/app_providers.dart';
+import '../../widgets/global_search_typeahead.dart';
+import '../../widgets/ui_primitives.dart';
 import '../loans/loan_detail_screen.dart';
 import '../loans/loans_list_screen.dart';
 

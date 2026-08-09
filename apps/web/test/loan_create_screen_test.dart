@@ -6,13 +6,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:asset_os/core/l10n/l10n_ext.dart';
-import 'package:asset_os/core/models/entities.dart';
-import 'package:asset_os/core/providers/app_providers.dart';
-import 'package:asset_os/core/repositories/local_repository.dart';
-import 'package:asset_os/core/theme/app_theme.dart';
-import 'package:asset_os/features/loans/loan_create_screen.dart';
-import 'package:asset_os/features/loans/loan_detail_screen.dart';
+import 'package:asset_os/infrastructure/l10n/l10n_ext.dart';
+import 'package:asset_os/domain/models/entities.dart';
+import 'package:asset_os/application/providers/app_providers.dart';
+import 'package:asset_os/application/local_repository.dart';
+import 'package:asset_os/presentation/theme/app_theme.dart';
+import 'package:asset_os/presentation/features/loans/loan_create_screen.dart';
+import 'package:asset_os/presentation/features/loans/loan_detail_screen.dart';
 
 import 'support/test_harness.dart';
 

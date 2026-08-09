@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../models/entities.dart';
+import '../../domain/models/entities.dart';
 
 class AppTheme {
   const AppTheme._();

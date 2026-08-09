@@ -3,9 +3,9 @@ library;
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:asset_os/core/loans/loan_models.dart';
-import 'package:asset_os/core/models/entities.dart';
-import 'package:asset_os/core/transactions/transaction_list_item.dart';
+import 'package:asset_os/domain/loans/loan_models.dart';
+import 'package:asset_os/domain/models/entities.dart';
+import 'package:asset_os/presentation/transactions/transaction_list_item.dart';
 
 Rental _order({
   required String id,

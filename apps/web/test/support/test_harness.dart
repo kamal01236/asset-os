@@ -3,10 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:asset_os/core/db/app_database.dart';
-import 'package:asset_os/core/models/entities.dart';
-import 'package:asset_os/core/providers/app_providers.dart';
-import 'package:asset_os/core/repositories/local_repository.dart';
+import 'package:asset_os/infrastructure/db/app_database.dart';
+import 'package:asset_os/domain/models/entities.dart';
+import 'package:asset_os/application/providers/app_providers.dart';
+import 'package:asset_os/application/local_repository.dart';
 
 /// In-memory Drift repo. Default skips demo seed for fast domain tests.
 Future<LocalRepository> bootRepo({bool seedDemo = false}) async {

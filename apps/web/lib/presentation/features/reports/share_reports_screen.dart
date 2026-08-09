@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/l10n/india_date_format.dart';
-import '../../core/l10n/l10n_ext.dart';
-import '../../core/models/entities.dart';
-import '../../core/providers/app_providers.dart';
-import '../../core/reports/report_builder.dart';
-import '../../core/reports/report_models.dart';
-import '../../core/sharing/whatsapp_share.dart';
-import '../../core/widgets/ui_primitives.dart';
+import '../../../infrastructure/l10n/india_date_format.dart';
+import '../../../infrastructure/l10n/l10n_ext.dart';
+import '../../../domain/models/entities.dart';
+import '../../../application/providers/app_providers.dart';
+import '../../../application/reports/report_builder.dart';
+import '../../../domain/reports/report_models.dart';
+import '../../../infrastructure/sharing/whatsapp_share.dart';
+import '../../widgets/ui_primitives.dart';
 
 /// Generate a text report and share it to the owner's WhatsApp (share-to-self).
 class ShareReportsScreen extends ConsumerStatefulWidget {

@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
 
-import '../models/entities.dart';
-import '../templates/workflows.dart';
+import '../../domain/models/entities.dart';
+import '../../domain/templates/workflows.dart';
 import 'l10n_ext.dart';
 
 /// Stable keys written to [RentalEvent.title] / demo seed; localized at display.

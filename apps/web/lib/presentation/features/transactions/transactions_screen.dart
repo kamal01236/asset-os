@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/l10n/india_date_format.dart';
-import '../../core/l10n/l10n_ext.dart';
-import '../../core/models/entities.dart';
-import '../../core/providers/app_providers.dart';
-import '../../core/transactions/transaction_list_item.dart';
-import '../../core/validation/text_rules.dart';
-import '../../core/widgets/scoped_search_field.dart';
-import '../../core/widgets/ui_primitives.dart';
+import '../../../infrastructure/l10n/india_date_format.dart';
+import '../../../infrastructure/l10n/l10n_ext.dart';
+import '../../../domain/models/entities.dart';
+import '../../../application/providers/app_providers.dart';
+import '../../transactions/transaction_list_item.dart';
+import '../../../domain/validation/text_rules.dart';
+import '../../widgets/scoped_search_field.dart';
+import '../../widgets/ui_primitives.dart';
 import '../loans/loan_create_screen.dart';
 import '../loans/loan_detail_screen.dart';
 import '../orders/new_order_flow_screen.dart';

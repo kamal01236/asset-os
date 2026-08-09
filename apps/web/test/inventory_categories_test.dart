@@ -3,8 +3,8 @@ library;
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:asset_os/core/inventory/inventory_categories.dart';
-import 'package:asset_os/core/models/entities.dart';
+import 'package:asset_os/domain/inventory/inventory_categories.dart';
+import 'package:asset_os/domain/models/entities.dart';
 
 InventoryItem _item({
   required String id,

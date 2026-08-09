@@ -6,9 +6,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:asset_os/core/models/entities.dart';
-import 'package:asset_os/core/providers/app_providers.dart';
-import 'package:asset_os/features/templates/enabled_resource_types_screen.dart';
+import 'package:asset_os/domain/models/entities.dart';
+import 'package:asset_os/application/providers/app_providers.dart';
+import 'package:asset_os/presentation/features/templates/enabled_resource_types_screen.dart';
 import 'package:asset_os/l10n/app_localizations.dart';
 
 import 'support/test_harness.dart';

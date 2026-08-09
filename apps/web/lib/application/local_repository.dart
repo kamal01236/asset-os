@@ -2,26 +2,26 @@ import 'package:drift/drift.dart';
 import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../db/app_database.dart';
-import '../home/home_modules.dart';
-import '../inventory/unit_code_pool.dart';
-import '../l10n/timeline_l10n.dart';
-import '../loans/loan_balance.dart';
-import '../loans/loan_models.dart';
-import '../models/entities.dart';
-import '../models/unknown_customer.dart';
-import '../orders/order_payment.dart';
-import '../pricing/rental_pricing.dart';
-import '../reports/report_widgets.dart';
-import '../search/search_scope.dart';
-import '../templates/field_defs.dart';
-import '../templates/industry_templates.dart';
-import '../templates/workflows.dart';
-import '../validation/text_rules.dart';
-export '../inventory/unit_code_pool.dart'
+import '../infrastructure/db/app_database.dart';
+import '../domain/home/home_modules.dart';
+import '../domain/inventory/unit_code_pool.dart';
+import '../infrastructure/l10n/timeline_l10n.dart';
+import '../domain/loans/loan_balance.dart';
+import '../domain/loans/loan_models.dart';
+import '../domain/models/entities.dart';
+import '../domain/models/unknown_customer.dart';
+import '../domain/orders/order_payment.dart';
+import '../domain/pricing/rental_pricing.dart';
+import '../domain/reports/report_widgets.dart';
+import '../domain/search/search_scope.dart';
+import '../domain/templates/field_defs.dart';
+import '../domain/templates/industry_templates.dart';
+import '../domain/templates/workflows.dart';
+import '../domain/validation/text_rules.dart';
+export '../domain/inventory/unit_code_pool.dart'
     show generateUnitPool, normalizeUnitCodePrefix, UnitOccupancyRow;
-export '../loans/loan_models.dart';
-export '../loans/loan_balance.dart'
+export '../domain/loans/loan_models.dart';
+export '../domain/loans/loan_balance.dart'
     show
         computeLoanScenario,
         periodInterestPaise,

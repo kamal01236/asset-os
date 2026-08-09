@@ -6,12 +6,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import 'package:asset_os/core/config/app_branding.dart';
-import 'package:asset_os/core/models/entities.dart';
-import 'package:asset_os/core/models/unknown_customer.dart';
-import 'package:asset_os/core/reports/report_builder.dart';
-import 'package:asset_os/core/reports/report_models.dart';
-import 'package:asset_os/core/sharing/whatsapp_share.dart';
+import 'package:asset_os/domain/config/app_branding.dart';
+import 'package:asset_os/domain/models/entities.dart';
+import 'package:asset_os/domain/models/unknown_customer.dart';
+import 'package:asset_os/application/reports/report_builder.dart';
+import 'package:asset_os/domain/reports/report_models.dart';
+import 'package:asset_os/infrastructure/sharing/whatsapp_share.dart';
 import 'package:asset_os/l10n/app_localizations.dart';
 
 void main() {

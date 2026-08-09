@@ -56,7 +56,7 @@ echo "==> flutter pub get"
   cd "$WEB"
   flutter pub get
   # Regenerate Drift sources when schema/deps change.
-  if [[ -f "$WEB/lib/core/db/app_database.dart" ]]; then
+  if [[ -f "$WEB/lib/infrastructure/db/app_database.dart" ]]; then
     echo "==> dart run build_runner (Drift)"
     dart run build_runner build
   fi

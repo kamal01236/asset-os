@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/l10n/l10n_ext.dart';
-import '../../core/models/entities.dart';
-import '../../core/pricing/rental_pricing.dart';
-import '../../core/providers/app_providers.dart';
-import '../../core/widgets/ui_primitives.dart';
+import '../../../infrastructure/l10n/l10n_ext.dart';
+import '../../../domain/models/entities.dart';
+import '../../../domain/pricing/rental_pricing.dart';
+import '../../../application/providers/app_providers.dart';
+import '../../widgets/ui_primitives.dart';
 import 'loan_create_screen.dart';
 import 'loan_detail_screen.dart';
 

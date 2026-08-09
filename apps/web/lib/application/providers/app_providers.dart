@@ -2,36 +2,36 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../db/app_database.dart';
-import '../home/home_modules.dart';
-import '../models/entities.dart';
-import '../repositories/local_repository.dart';
-import '../sharing/whatsapp_share.dart';
-import '../templates/field_defs.dart';
-import '../templates/industry_templates.dart';
-import '../templates/workflows.dart';
-import '../reports/report_widgets.dart';
+import '../../infrastructure/db/app_database.dart';
+import '../../domain/home/home_modules.dart';
+import '../../domain/models/entities.dart';
+import '../local_repository.dart';
+import '../../infrastructure/sharing/whatsapp_share.dart';
+import '../../domain/templates/field_defs.dart';
+import '../../domain/templates/industry_templates.dart';
+import '../../domain/templates/workflows.dart';
+import '../../domain/reports/report_widgets.dart';
 
-export '../home/home_modules.dart';
+export '../../domain/home/home_modules.dart';
 export '../home/home_filter.dart';
-export '../loans/loan_models.dart';
-export '../loans/loan_balance.dart'
+export '../../domain/loans/loan_models.dart';
+export '../../domain/loans/loan_balance.dart'
     show computeLoanScenario, LoanScenario, LoanTimelineEvent, LoanTimelineKind;
-export '../templates/industry_templates.dart'
+export '../../domain/templates/industry_templates.dart'
     show
         kEnabledResourceTypesPrefsKey,
         encodeEnabledResourceTypes,
         parseEnabledResourceTypes,
         resolveEnabledResourceTypes,
         fulfillmentOptionsForEnabledTypes;
-export '../templates/workflows.dart'
+export '../../domain/templates/workflows.dart'
     show
         kActiveWorkflowIdPrefsKey,
         kDefaultWorkflowId,
         resolveWorkflow,
         WorkflowDefinition,
         WorkflowStatus;
-export '../templates/field_defs.dart'
+export '../../domain/templates/field_defs.dart'
     show
         kExtraFieldIdsPrefsKey,
         FieldDef,
@@ -39,7 +39,7 @@ export '../templates/field_defs.dart'
         resolveExtraFields,
         parseExtraFieldIds,
         encodeExtraFieldIds;
-export '../reports/report_widgets.dart'
+export '../../domain/reports/report_widgets.dart'
     show
         kReportWidgetsPrefsKey,
         ReportWidgetId,

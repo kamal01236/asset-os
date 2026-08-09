@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../l10n/l10n_ext.dart';
-import '../models/entities.dart';
-import '../pricing/rental_pricing.dart';
+import '../../infrastructure/l10n/l10n_ext.dart';
+import '../../domain/models/entities.dart';
+import '../../domain/pricing/rental_pricing.dart';
 import '../theme/app_theme.dart';
 
 class StatusPill extends StatelessWidget {

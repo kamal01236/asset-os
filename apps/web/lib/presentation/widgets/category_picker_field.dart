@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../inventory/inventory_categories.dart';
+import '../../domain/inventory/inventory_categories.dart';
 
 /// Category dropdown with General on top and Other revealing a custom text field.
 class CategoryPickerField extends StatelessWidget {

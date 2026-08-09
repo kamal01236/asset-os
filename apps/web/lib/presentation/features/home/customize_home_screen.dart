@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/l10n/l10n_ext.dart';
-import '../../core/providers/app_providers.dart';
+import '../../../infrastructure/l10n/l10n_ext.dart';
+import '../../../application/providers/app_providers.dart';
 
 /// Toggle removable Home modules; search stays locked on.
 class CustomizeHomeScreen extends ConsumerWidget {

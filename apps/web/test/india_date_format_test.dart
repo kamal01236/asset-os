@@ -3,7 +3,7 @@ library;
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:asset_os/core/l10n/india_date_format.dart';
+import 'package:asset_os/infrastructure/l10n/india_date_format.dart';
 
 void main() {
   group('formatIndiaDate', () {

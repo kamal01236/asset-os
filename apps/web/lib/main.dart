@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'app_shell.dart';
-import 'core/config/app_branding.dart';
-import 'core/db/app_database.dart';
-import 'core/l10n/l10n_ext.dart';
-import 'core/providers/app_providers.dart';
-import 'core/repositories/local_repository.dart';
-import 'core/theme/app_theme.dart';
-import 'features/onboarding/onboarding_wizard_screen.dart';
+import 'presentation/app_shell.dart';
+import 'domain/config/app_branding.dart';
+import 'infrastructure/db/app_database.dart';
+import 'infrastructure/l10n/l10n_ext.dart';
+import 'application/providers/app_providers.dart';
+import 'application/local_repository.dart';
+import 'presentation/theme/app_theme.dart';
+import 'presentation/features/onboarding/onboarding_wizard_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

@@ -3,9 +3,9 @@ library;
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:asset_os/core/models/entities.dart';
-import 'package:asset_os/core/orders/order_payment.dart';
-import 'package:asset_os/core/repositories/local_repository.dart';
+import 'package:asset_os/domain/models/entities.dart';
+import 'package:asset_os/domain/orders/order_payment.dart';
+import 'package:asset_os/application/local_repository.dart';
 
 import 'support/test_harness.dart';
 

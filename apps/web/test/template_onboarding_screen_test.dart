@@ -7,13 +7,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:asset_os/app_shell.dart';
-import 'package:asset_os/core/config/app_branding.dart';
-import 'package:asset_os/core/l10n/l10n_ext.dart';
-import 'package:asset_os/core/providers/app_providers.dart';
-import 'package:asset_os/core/theme/app_theme.dart';
-import 'package:asset_os/features/onboarding/onboarding_wizard_screen.dart';
-import 'package:asset_os/features/onboarding/template_onboarding_screen.dart';
+import 'package:asset_os/presentation/app_shell.dart';
+import 'package:asset_os/domain/config/app_branding.dart';
+import 'package:asset_os/infrastructure/l10n/l10n_ext.dart';
+import 'package:asset_os/application/providers/app_providers.dart';
+import 'package:asset_os/presentation/theme/app_theme.dart';
+import 'package:asset_os/presentation/features/onboarding/onboarding_wizard_screen.dart';
+import 'package:asset_os/presentation/features/onboarding/template_onboarding_screen.dart';
 import 'package:asset_os/main.dart';
 
 import 'support/test_harness.dart';

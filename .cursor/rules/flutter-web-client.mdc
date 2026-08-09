@@ -7,8 +7,14 @@ alwaysApply: false
 # Flutter web client
 
 - Stack: Flutter + Riverpod + Drift. Local DB is the source of truth; sync must stay additive and never required for core flows.
-- Put shared logic under `lib/core/` (db, providers, repositories, widgets, theme, config). Keep screens in `app_shell.dart` until a clear split is needed.
-- Reuse `lib/core/widgets/ui_primitives.dart` and `lib/core/theme/app_theme.dart`; avoid one-off styles that fight the shell.
-- User-visible product name: import `kAppDisplayName` from `lib/core/config/app_branding.dart` — never literal brand strings.
+- Layered monolith (see ADR-005). Do not add files under `lib/core/`.
+  - Presentation: `lib/presentation/` (`app_shell.dart`, `features/`, `widgets/`, `theme/`)
+  - Application: `lib/application/` (Riverpod providers, `LocalRepository` facade, report builder)
+  - Domain: `lib/domain/` (entities, pricing, loans, templates, search, branding)
+  - Infrastructure: `lib/infrastructure/` (Drift `db/`, WhatsApp share, l10n helpers)
+  - Composition root: `lib/main.dart` (may import every layer). Generated l10n stays at `lib/l10n/`.
+- Dependency rules: presentation → application + domain (must not import `infrastructure/db` / Drift); application → domain + infrastructure; domain → no application / presentation / infrastructure / Drift / Riverpod / shared_preferences; infrastructure → domain (not presentation). Temporary: presentation may call `LocalRepository` and `whatsapp_share`; domain may import Flutter `Locale` / `AppLocalizations`.
+- Reuse `lib/presentation/widgets/ui_primitives.dart` and `lib/presentation/theme/app_theme.dart`; avoid one-off styles that fight the shell. Keep remaining screens in `app_shell.dart` until a clear split is needed.
+- User-visible product name: import `kAppDisplayName` from `lib/domain/config/app_branding.dart` — never literal brand strings.
 - Run checks via `.\scripts\wsl.ps1 test` or `./scripts/test.sh`, not a second ad-hoc CI path.
 - Do not add Android/iOS platform folders for web features.

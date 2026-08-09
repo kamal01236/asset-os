@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../models/entities.dart';
+import '../../domain/models/entities.dart';
 
 /// Status filter selected from Home KPI chips (optional in-place Home results).
 /// Null means no Home filter.

@@ -4,11 +4,11 @@ library;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:asset_os/core/models/entities.dart';
-import 'package:asset_os/core/repositories/local_repository.dart';
-import 'package:asset_os/core/templates/industry_templates.dart';
-import 'package:asset_os/core/templates/workflows.dart';
-import 'package:asset_os/core/l10n/timeline_l10n.dart';
+import 'package:asset_os/domain/models/entities.dart';
+import 'package:asset_os/application/local_repository.dart';
+import 'package:asset_os/domain/templates/industry_templates.dart';
+import 'package:asset_os/domain/templates/workflows.dart';
+import 'package:asset_os/infrastructure/l10n/timeline_l10n.dart';
 
 import 'support/test_harness.dart';
 

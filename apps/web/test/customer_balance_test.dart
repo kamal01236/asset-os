@@ -3,8 +3,8 @@ library;
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:asset_os/core/models/customer_balance.dart';
-import 'package:asset_os/core/models/entities.dart';
+import 'package:asset_os/domain/models/customer_balance.dart';
+import 'package:asset_os/domain/models/entities.dart';
 
 Customer _customer({String id = 'C-1'}) {
   return Customer(

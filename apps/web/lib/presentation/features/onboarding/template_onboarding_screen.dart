@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/config/app_branding.dart';
-import '../../core/l10n/l10n_ext.dart';
-import '../../core/providers/app_providers.dart';
-import '../../core/templates/industry_templates.dart';
-import '../../core/widgets/ui_primitives.dart';
+import '../../../domain/config/app_branding.dart';
+import '../../../infrastructure/l10n/l10n_ext.dart';
+import '../../../application/providers/app_providers.dart';
+import '../../../domain/templates/industry_templates.dart';
+import '../../widgets/ui_primitives.dart';
 
 /// Standalone first-load template picker (Scaffold + brand). Prefer embedding
 /// [TemplateOnboardingBody] inside [OnboardingWizardScreen] for the full gate.

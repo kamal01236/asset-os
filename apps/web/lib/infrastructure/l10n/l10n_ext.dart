@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
 
 import '../../l10n/app_localizations.dart';
-import '../models/entities.dart';
+import '../../domain/models/entities.dart';
 
 export '../../l10n/app_localizations.dart';
 

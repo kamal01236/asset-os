@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-import '../l10n/india_date_format.dart';
-import '../l10n/l10n_ext.dart';
-import '../l10n/timeline_l10n.dart';
-import '../models/entities.dart';
+import '../../infrastructure/l10n/india_date_format.dart';
+import '../../infrastructure/l10n/l10n_ext.dart';
+import '../../infrastructure/l10n/timeline_l10n.dart';
+import '../../domain/models/entities.dart';
 
 class RentalTimeline extends StatelessWidget {
   const RentalTimeline({

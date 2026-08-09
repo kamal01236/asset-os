@@ -5,7 +5,7 @@ alwaysApply: true
 
 # Hando project
 
-- Product display name is **Hando**. Change it only via `apps/web/lib/core/config/app_branding.dart` (`kAppDisplayName`). Do not hardcode "Asset OS" in UI.
+- Product display name is **Hando**. Change it only via `apps/web/lib/domain/config/app_branding.dart` (`kAppDisplayName`). Do not hardcode "Asset OS" in UI.
 - Keep package/repo ids (`asset_os`, `asset-os`) unless explicitly asked to rename them.
 - Client is **Flutter web only** in `apps/web`. Do not create or commit `android/`, `ios/`, `linux/`, `macos/`, or `windows/` under the app.
 - Product SoT: `docs/vision/complete-idea-summary.md`. Do not contradict local-first / offline-first / cloud-optional philosophy.

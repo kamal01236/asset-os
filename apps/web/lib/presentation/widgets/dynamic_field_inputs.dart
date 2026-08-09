@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../l10n/l10n_ext.dart';
-import '../pricing/rental_pricing.dart';
-import '../templates/field_defs.dart';
+import '../../infrastructure/l10n/l10n_ext.dart';
+import '../../domain/pricing/rental_pricing.dart';
+import '../../domain/templates/field_defs.dart';
 
 /// Controllers + values for dynamic [FieldDef] inputs on add/edit resource.
 class DynamicFieldEditors {

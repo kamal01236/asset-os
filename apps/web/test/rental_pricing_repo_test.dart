@@ -4,9 +4,9 @@ library;
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:asset_os/core/db/app_database.dart';
-import 'package:asset_os/core/models/entities.dart';
-import 'package:asset_os/core/repositories/local_repository.dart';
+import 'package:asset_os/infrastructure/db/app_database.dart';
+import 'package:asset_os/domain/models/entities.dart';
+import 'package:asset_os/application/local_repository.dart';
 
 import 'support/test_harness.dart';
 

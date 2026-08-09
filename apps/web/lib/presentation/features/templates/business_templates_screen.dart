@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/l10n/l10n_ext.dart';
-import '../../core/models/entities.dart';
-import '../../core/providers/app_providers.dart';
-import '../../core/repositories/local_repository.dart';
-import '../../core/templates/industry_templates.dart';
+import '../../../infrastructure/l10n/l10n_ext.dart';
+import '../../../domain/models/entities.dart';
+import '../../../application/providers/app_providers.dart';
+import '../../../application/local_repository.dart';
+import '../../../domain/templates/industry_templates.dart';
 
 /// Switch the single active industry pack; optionally import starter inventory.
 class BusinessTemplatesScreen extends ConsumerStatefulWidget {

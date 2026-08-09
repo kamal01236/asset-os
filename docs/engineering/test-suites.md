@@ -65,16 +65,17 @@ Every suite file has exactly one:
 
 | Touched area | Run |
 |--------------|-----|
-| `core/pricing/**` | `test pricing` |
-| `features/orders/**`, order repo create | `test orders` (+ `test pricing` if billing changed) |
+| `domain/pricing/**` | `test pricing` |
+| `presentation/features/orders/**`, order repo create | `test orders` (+ `test pricing` if billing changed) |
 | returns / partial return | `test returns` |
 | inventory categories / add inventory | `test inventory` |
 | customer balance / unknown customer | `test customers` |
 | deposit wallet | `test deposit` |
-| search widgets / `core/search` | `test search` |
+| search widgets / `domain/search` | `test search` |
 | `app_shell` / home / multi-tab | `test shell` and/or `test integration` |
 | reports / WhatsApp share | `test reports` |
 | rental notes | `test notes` |
 | instance labels | `test labels` |
-| `core/loans/**`, money lending template | `test loans` |
+| `domain/loans/**`, money lending template | `test loans` |
+| `test/architecture/layer_import_test.dart` | `test unit` |
 | Unsure / schema migration / many areas | `test` (full) |

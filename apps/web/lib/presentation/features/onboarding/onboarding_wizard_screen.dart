@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/config/app_branding.dart';
-import '../../core/l10n/l10n_ext.dart';
-import '../../core/providers/app_providers.dart';
+import '../../../domain/config/app_branding.dart';
+import '../../../infrastructure/l10n/l10n_ext.dart';
+import '../../../application/providers/app_providers.dart';
 import 'template_onboarding_screen.dart';
 
 enum _WizardStep { language, mode, whatsapp, template }

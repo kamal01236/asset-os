@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../l10n/india_date_format.dart';
-import '../l10n/l10n_ext.dart';
-import '../models/entities.dart';
-import '../pricing/rental_pricing.dart';
-import '../providers/app_providers.dart';
-import '../repositories/local_repository.dart';
-import '../search/search_scope.dart';
-import '../validation/text_rules.dart';
+import '../../infrastructure/l10n/india_date_format.dart';
+import '../../infrastructure/l10n/l10n_ext.dart';
+import '../../domain/models/entities.dart';
+import '../../domain/pricing/rental_pricing.dart';
+import '../../application/providers/app_providers.dart';
+import '../../application/local_repository.dart';
+import '../../domain/search/search_scope.dart';
+import '../../domain/validation/text_rules.dart';
 import 'scoped_search_field.dart';
 
 /// In-page global search typeahead (customers, rentals, inventory).

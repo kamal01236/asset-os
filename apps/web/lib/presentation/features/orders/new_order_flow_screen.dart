@@ -2,17 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/inventory/inventory_categories.dart';
-import '../../core/l10n/india_date_format.dart';
-import '../../core/l10n/l10n_ext.dart';
-import '../../core/models/entities.dart';
-import '../../core/models/unknown_customer.dart';
-import '../../core/pricing/rental_pricing.dart';
-import '../../core/providers/app_providers.dart';
-import '../../core/repositories/local_repository.dart';
-import '../../core/validation/input_formatters.dart';
-import '../../core/validation/text_rules.dart';
-import '../../core/widgets/ui_primitives.dart';
+import '../../../domain/inventory/inventory_categories.dart';
+import '../../../infrastructure/l10n/india_date_format.dart';
+import '../../../infrastructure/l10n/l10n_ext.dart';
+import '../../../domain/models/entities.dart';
+import '../../../domain/models/unknown_customer.dart';
+import '../../../domain/pricing/rental_pricing.dart';
+import '../../../application/providers/app_providers.dart';
+import '../../../application/local_repository.dart';
+import '../../validation/input_formatters.dart';
+import '../../../domain/validation/text_rules.dart';
+import '../../widgets/ui_primitives.dart';
 import 'rental_detail_nav.dart';
 
 /// New Order flow: items first (with running total), then customer, then

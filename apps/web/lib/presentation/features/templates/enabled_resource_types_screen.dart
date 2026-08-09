@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/l10n/l10n_ext.dart';
-import '../../core/models/entities.dart';
-import '../../core/providers/app_providers.dart';
+import '../../../infrastructure/l10n/l10n_ext.dart';
+import '../../../domain/models/entities.dart';
+import '../../../application/providers/app_providers.dart';
 
 /// More → toggle which [ResourceType]s gate New Order fulfillment chrome.
 class EnabledResourceTypesScreen extends ConsumerWidget {

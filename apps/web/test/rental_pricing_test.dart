@@ -3,7 +3,7 @@ library;
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:asset_os/core/pricing/rental_pricing.dart';
+import 'package:asset_os/domain/pricing/rental_pricing.dart';
 
 void main() {
   group('computeDueAt', () {

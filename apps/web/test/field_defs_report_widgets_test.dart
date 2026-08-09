@@ -4,12 +4,12 @@ library;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:asset_os/core/models/entities.dart';
-import 'package:asset_os/core/reports/report_builder.dart';
-import 'package:asset_os/core/reports/report_models.dart';
-import 'package:asset_os/core/reports/report_widgets.dart';
-import 'package:asset_os/core/templates/field_defs.dart';
-import 'package:asset_os/core/templates/industry_templates.dart';
+import 'package:asset_os/domain/models/entities.dart';
+import 'package:asset_os/application/reports/report_builder.dart';
+import 'package:asset_os/domain/reports/report_models.dart';
+import 'package:asset_os/domain/reports/report_widgets.dart';
+import 'package:asset_os/domain/templates/field_defs.dart';
+import 'package:asset_os/domain/templates/industry_templates.dart';
 import 'package:asset_os/l10n/app_localizations.dart';
 
 void main() {

@@ -1,15 +1,15 @@
 import 'package:flutter/widgets.dart';
 
-import '../config/app_branding.dart';
-import '../inventory/unit_code_pool.dart';
-import '../l10n/india_date_format.dart';
-import '../l10n/l10n_ext.dart';
-import '../loans/loan_balance.dart';
-import '../loans/loan_models.dart';
-import '../models/entities.dart';
-import '../pricing/rental_pricing.dart';
-import 'report_models.dart';
-import 'report_widgets.dart';
+import '../../domain/config/app_branding.dart';
+import '../../domain/inventory/unit_code_pool.dart';
+import '../../infrastructure/l10n/india_date_format.dart';
+import '../../infrastructure/l10n/l10n_ext.dart';
+import '../../domain/loans/loan_balance.dart';
+import '../../domain/loans/loan_models.dart';
+import '../../domain/models/entities.dart';
+import '../../domain/pricing/rental_pricing.dart';
+import '../../domain/reports/report_models.dart';
+import '../../domain/reports/report_widgets.dart';
 
 /// Soft cap for WhatsApp URL length; longer text is truncated with a note.
 const int kReportMaxChars = 3500;

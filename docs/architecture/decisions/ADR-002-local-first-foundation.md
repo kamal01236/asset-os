@@ -22,7 +22,7 @@ In `apps/web`:
 - Use **Riverpod** (`flutter_riverpod`) for reactive app state (lists, tab index, offline demo toggle).
 - Expose a thin **`LocalRepository` facade** over Drift tables so existing Home / Rentals / Inventory / Customers / Search / Scan / flow screens keep the same workflows with wiring-only changes.
 - On first boot after upgrade: if the Drift DB is empty and SharedPreferences key `asset_os_snapshot_v1` exists, **migrate once** into Drift, then clear the prefs key. If neither exists, **seed demo data**.
-- Keep domain models in `lib/core/models/`; tables live under `lib/core/db/`; providers under `lib/core/providers/`.
+- Keep domain models in `lib/domain/models/`; tables live under `lib/infrastructure/db/`; providers under `lib/application/providers/`. Folder map and dependency rules: [ADR-005](ADR-005-client-layering.md).
 
 ---
 

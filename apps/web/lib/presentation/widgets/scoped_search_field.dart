@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../validation/text_rules.dart';
+import '../../domain/validation/text_rules.dart';
 
 /// Entity kind for a [SearchSuggestion], used by global typeahead navigation.
 enum SearchHitKind { customer, rental, inventory }

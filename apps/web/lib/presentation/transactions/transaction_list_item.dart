@@ -1,8 +1,8 @@
-import '../loans/loan_balance.dart';
-import '../loans/loan_models.dart';
-import '../models/entities.dart';
-import '../models/unknown_customer.dart';
-import '../pricing/rental_pricing.dart';
+import '../../domain/loans/loan_balance.dart';
+import '../../domain/loans/loan_models.dart';
+import '../../domain/models/entities.dart';
+import '../../domain/models/unknown_customer.dart';
+import '../../domain/pricing/rental_pricing.dart';
 
 /// Product-level type for the unified Transactions list (engines stay separate).
 enum TransactionKind { order, loan }
