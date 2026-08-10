@@ -690,7 +690,9 @@ void assertCommercialSatisfied({
   required int securityPaise,
   int advancePaise = 0,
   bool subscriptionSatisfied = false,
+  bool? minTierCovered,
 }) {
+  final bool tierOk = minTierCovered ?? subscriptionSatisfied;
   final int received = amountReceivedPaise < 0 ? 0 : amountReceivedPaise;
   final int security = securityPaise < 0 ? 0 : securityPaise;
   final int advance = advancePaise < 0 ? 0 : advancePaise;
@@ -713,7 +715,7 @@ void assertCommercialSatisfied({
     throw ArgumentError('Active membership is required before issue');
   }
   if (aggregated.requireAnyOf.isEmpty) {
-    if (aggregated.needsSubscriptionCoverage && !subscriptionSatisfied) {
+    if (aggregated.needsSubscriptionCoverage && !tierOk) {
       throw ArgumentError('Active membership is required before issue');
     }
     return;

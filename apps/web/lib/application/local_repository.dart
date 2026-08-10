@@ -425,10 +425,32 @@ class LocalRepository {
     });
   }
 
-  Future<List<Customer>> listCustomers() => watchCustomers().first;
-  Future<List<InventoryItem>> listInventory({bool includeInactive = false}) =>
-      watchInventory(includeInactive: includeInactive).first;
-  Future<List<Rental>> listRentals() => watchRentals().first;
+  Future<List<Customer>> listCustomers() async {
+    final query = _db.select(_db.customers)
+      ..orderBy([(t) => OrderingTerm(expression: t.name)]);
+    final rows = await query.get();
+    return rows.map(_mapCustomer).toList();
+  }
+
+  Future<List<InventoryItem>> listInventory({bool includeInactive = false}) async {
+    final query = _db.select(_db.inventoryItems)
+      ..orderBy([(t) => OrderingTerm(expression: t.name)]);
+    if (!includeInactive) {
+      query.where((t) => t.catalogActive.equals(true));
+    }
+    final rows = await query.get();
+    return rows.map(_mapInventory).toList();
+  }
+
+  Future<List<Rental>> listRentals() async {
+    final rows = await _db.select(_db.rentals).get();
+    final List<Rental> rentals = <Rental>[];
+    for (final row in rows) {
+      rentals.add(await _mapRental(row));
+    }
+    rentals.sort((a, b) => b.startedAt.compareTo(a.startedAt));
+    return rentals;
+  }
 
   /// Soft-archive or restore a catalog resource for New Order / Resources list.
   Future<void> setInventoryCatalogActive(
@@ -983,6 +1005,7 @@ class LocalRepository {
     int securityPaise = 0,
     bool treatExcessAsDiscount = false,
     bool subscriptionSatisfied = false,
+    bool minTierCovered = true,
     commercial_policy.AggregatedOrderCommercial? commercial,
   }) async {
     if (commercial != null) {
@@ -991,6 +1014,7 @@ class LocalRepository {
         amountReceivedPaise: amountReceivedPaise,
         securityPaise: securityPaise,
         subscriptionSatisfied: subscriptionSatisfied,
+        minTierCovered: minTierCovered,
       );
     }
     return _db.transaction(() async {
@@ -1022,7 +1046,8 @@ class LocalRepository {
           aggregated: commercial,
           amountReceivedPaise: amountReceivedPaise,
           securityPaise: securityPaise,
-          subscriptionSatisfied: covered,
+          subscriptionSatisfied: rank > 0,
+          minTierCovered: covered,
         );
       }
       return rentalId;
@@ -1045,18 +1070,12 @@ class LocalRepository {
   Stream<List<CustomerSubscription>> watchCustomerSubscriptions({
     String? customerId,
   }) {
-    final query = _db.select(_db.customerSubscriptions);
-    if (customerId != null) {
-      query.where((t) => t.customerId.equals(customerId));
-    }
-    query.orderBy([
-      (t) => OrderingTerm.desc(t.validUntil),
-    ]);
-    return query.watch().map(
-      (List<CustomerSubscriptionRow> rows) => rows
-          .map(_mapCustomerSubscription)
-          .toList(growable: false),
-    );
+    // Emit from get() first. Direct `.watch()` on this table can stall the
+    // isolate with hand-maintained Drift codegen; rental writes already
+    // happen on every grant, so reuse that live query as the invalidation tick.
+    return _db.select(_db.rentals).watch().asyncMap(
+          (_) => listCustomerSubscriptions(customerId),
+        );
   }
 
   Future<List<CustomerSubscription>> listCustomerSubscriptions(

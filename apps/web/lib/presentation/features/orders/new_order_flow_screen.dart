@@ -631,6 +631,14 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
     );
   }
 
+  bool _hasMembershipEntitlement(List<InventoryItem> catalog) {
+    return hasSubscriptionEntitlement(
+      customerRank: _customerRank(),
+      lines: _subscriptionViews(catalog),
+      customerCanHoldLedger: _customerCanHoldLedger(),
+    );
+  }
+
   bool _shouldShowCommercial(
     AggregatedOrderCommercial agg,
     List<InventoryItem> catalog,
@@ -664,7 +672,8 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
             (agg.showSecurity ? _securityPaise() : _advancePaise()),
         securityPaise: agg.showSecurity ? _securityPaise() : _advancePaise(),
         advancePaise: _advancePaise(),
-        subscriptionSatisfied: _subscriptionSatisfied(catalog),
+        subscriptionSatisfied: _hasMembershipEntitlement(catalog),
+        minTierCovered: _subscriptionSatisfied(catalog),
       );
       return true;
     } on ArgumentError {
@@ -744,14 +753,6 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
             : null);
     if (customerId == null) {
       _customerSubscriptions = const <CustomerSubscription>[];
-      return;
-    }
-    final AsyncValue<List<CustomerSubscription>> cached =
-        ref.read(customerSubscriptionsProvider);
-    if (cached.hasValue) {
-      _customerSubscriptions = (cached.value ?? const <CustomerSubscription>[])
-          .where((CustomerSubscription s) => s.customerId == customerId)
-          .toList(growable: false);
       return;
     }
     _customerSubscriptions = await ref
@@ -1131,7 +1132,8 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
           nickname: nickname,
           amountReceivedPaise: _settlementReceivedPaise(commercial),
           securityPaise: _settlementSecurityPaise(commercial),
-          subscriptionSatisfied: _subscriptionSatisfied(catalog),
+          subscriptionSatisfied: _hasMembershipEntitlement(catalog),
+          minTierCovered: _subscriptionSatisfied(catalog),
           commercial: commercial,
         );
       } else {

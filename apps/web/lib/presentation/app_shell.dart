@@ -714,9 +714,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
     final AsyncValue<List<Rental>> rentalsAsync = ref.watch(rentalsProvider);
     final AsyncValue<List<CustomerSubscription>> subsAsync =
         ref.watch(customerSubscriptionsProvider);
-    if (customersAsync.isLoading ||
-        rentalsAsync.isLoading ||
-        subsAsync.isLoading) {
+    if (customersAsync.isLoading || rentalsAsync.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
     if (customersAsync.hasError) {
@@ -2721,9 +2719,7 @@ class CustomerDetailScreen extends ConsumerWidget {
     final AsyncValue<List<CustomerSubscription>> subsAsync =
         ref.watch(customerSubscriptionsForCustomerProvider(customerId));
 
-    if (customersAsync.isLoading ||
-        rentalsAsync.isLoading ||
-        subsAsync.isLoading) {
+    if (customersAsync.isLoading || rentalsAsync.isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 

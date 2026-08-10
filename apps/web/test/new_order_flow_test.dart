@@ -153,8 +153,7 @@ void main() {
     );
     expect(generate.onPressed, isNotNull);
 
-    await tester.tap(find.widgetWithText(FilledButton, 'Generate Order'));
-    await tester.pump();
+    await _pressPrimary(tester);
     await _settle(tester, ticks: 25);
 
     final List<Rental> rentals = await repo.listRentals();
@@ -245,8 +244,7 @@ void main() {
     );
     expect(generate.onPressed, isNotNull);
 
-    await tester.tap(find.widgetWithText(FilledButton, 'Generate Order'));
-    await tester.pump();
+    await _pressPrimary(tester);
     await _settle(tester, ticks: 20);
 
     final List<Rental> rentals = await repo.listRentals();
@@ -555,8 +553,7 @@ void main() {
     expect(find.text('Qty 2 · Rent'), findsOneWidget);
     expect(find.textContaining('Order total: ₹800'), findsOneWidget);
 
-    await tester.tap(find.widgetWithText(FilledButton, 'Generate Order'));
-    await tester.pump();
+    await _pressPrimary(tester);
     await _settle(tester, ticks: 20);
 
     final List<Rental> rentals = await repo.listRentals();

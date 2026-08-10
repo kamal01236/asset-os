@@ -6803,7 +6803,8 @@ class $CustomerSubscriptionsTable extends CustomerSubscriptions
       status: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}status'],
-      )!,
+      ) ??
+          'active',
     );
   }
 

@@ -146,6 +146,24 @@ int cartGrantedSubscriptionRank(
   return rank;
 }
 
+/// Active ledger rank or a same-order membership / subscription SKU.
+///
+/// Used for `requireAnyOf` / require-subscription gates. Vacuous min-tier
+/// coverage (`none`) is not an entitlement.
+bool hasSubscriptionEntitlement({
+  required int customerRank,
+  required Iterable<({ResourceType type, Map<String, Object?> metadata})> lines,
+  required bool customerCanHoldLedger,
+}) {
+  if (cartGrantedSubscriptionRank(lines) > SubscriptionTier.none.rank) {
+    return true;
+  }
+  if (!customerCanHoldLedger) {
+    return false;
+  }
+  return customerRank > SubscriptionTier.none.rank;
+}
+
 /// Whether [customerRank] plus same-order SKUs cover every gated line.
 ///
 /// Unknown / no-phone customers cannot hold a ledger and never cover a min-tier.

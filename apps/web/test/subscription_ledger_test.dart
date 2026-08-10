@@ -18,6 +18,12 @@ void main() {
     expect(repo.database.schemaVersion, 23);
   });
 
+  test('seedDemo initialize completes', () async {
+    final LocalRepository repo = await bootRepo(seedDemo: true);
+    expect(await repo.listCustomers(), isNotEmpty);
+    expect(await repo.listInventory(), isNotEmpty);
+  });
+
   test('grant on membership sell; same-tier renew extends end', () async {
     final LocalRepository repo = await bootRepo();
     final Customer customer = await ensureCustomer(repo);
@@ -296,5 +302,14 @@ void main() {
     );
     expect(await repo.listCustomerSubscriptions(unknown.id), isEmpty);
     expect(await repo.customerEffectiveSubscriptionRank(unknown.id), 0);
+  });
+
+  test('watchCustomerSubscriptions emits current rows', () async {
+    final LocalRepository repo = await bootRepo();
+    final List<CustomerSubscription> first = await repo
+        .watchCustomerSubscriptions()
+        .first
+        .timeout(const Duration(seconds: 5));
+    expect(first, isEmpty);
   });
 }

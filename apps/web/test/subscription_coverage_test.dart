@@ -216,6 +216,37 @@ void main() {
   });
 
   group('library OR security vs subscription coverage', () {
+    test('hasSubscriptionEntitlement ignores vacuous min-tier none', () {
+      expect(
+        hasSubscriptionEntitlement(
+          customerRank: 0,
+          lines: const <({ResourceType type, Map<String, Object?> metadata})>[
+            (
+              type: ResourceType.loan,
+              metadata: <String, Object?>{},
+            ),
+          ],
+          customerCanHoldLedger: true,
+        ),
+        isFalse,
+      );
+      expect(
+        hasSubscriptionEntitlement(
+          customerRank: 0,
+          lines: const <({ResourceType type, Map<String, Object?> metadata})>[
+            (
+              type: ResourceType.membership,
+              metadata: <String, Object?>{
+                kSubscriptionTierMetadataKey: 'basic',
+              },
+            ),
+          ],
+          customerCanHoldLedger: true,
+        ),
+        isTrue,
+      );
+    });
+
     test('requireAnyOf still passes on security without subscription', () {
       final AggregatedOrderCommercial agg = resolveOrderCommercial(
         const <CommercialLineInput>[
