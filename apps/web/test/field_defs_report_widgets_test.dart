@@ -135,10 +135,12 @@ void main() {
         now: now,
         widgets: kMembershipReportWidgets,
       );
-      expect(text, contains('Revenue'));
-      expect(text, contains('Activity'));
+      expect(text, contains('Charges opened'));
+      expect(text, contains('₹1500'));
       expect(text, contains('Top customers'));
+      expect(text, contains('Priya'));
       expect(text, isNot(contains(l10n.reportOverdueCount(0))));
+      expect(text, isNot(contains('${l10n.reportKpiOverdue}: 0')));
     });
   });
 }

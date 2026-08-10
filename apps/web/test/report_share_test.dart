@@ -11,8 +11,10 @@ import 'package:asset_os/domain/models/entities.dart';
 import 'package:asset_os/domain/models/unknown_customer.dart';
 import 'package:asset_os/application/reports/report_builder.dart';
 import 'package:asset_os/domain/reports/report_models.dart';
+import 'package:asset_os/domain/reports/report_snapshot.dart';
 import 'package:asset_os/infrastructure/sharing/whatsapp_share.dart';
 import 'package:asset_os/l10n/app_localizations.dart';
+import 'package:asset_os/presentation/features/reports/report_print.dart';
 
 void main() {
   late AppLocalizations l10n;
@@ -178,14 +180,12 @@ void main() {
       expect(text, contains(l10n.reportHeader(kAppDisplayName)));
       expect(text, contains('26/07/2026 → 02/08/2026'));
       expect(text, contains(l10n.reportTypeSummary));
-      expect(text, contains(l10n.reportActiveCount(2)));
-      expect(text, contains(l10n.reportOpenedCount(2)));
-      expect(text, contains(l10n.reportReturnedCount(1)));
-      expect(text, contains(l10n.reportOverdueCount(1)));
-      expect(text, contains('Charges (opened in range):'));
-      expect(text, contains('Charges (returned in range):'));
-      expect(text, contains('Deposit applied (returned in range):'));
-      expect(text, contains('Balance due after deposit (returned):'));
+      expect(text, contains('${l10n.reportKpiIssued}: 2'));
+      expect(text, contains('${l10n.reportKpiReturned}: 1'));
+      expect(text, contains('${l10n.reportKpiStillOut}: 2'));
+      expect(text, contains('${l10n.reportKpiOverdue}: 1'));
+      expect(text, isNot(contains(l10n.reportOverdueCount(0))));
+      expect(text, isNot(contains('Charges opened')));
     });
 
     test('customer-wise lists customers and items', () {
@@ -204,8 +204,9 @@ void main() {
       );
       expect(text, contains(l10n.reportTypeCustomerWise));
       expect(text, contains('Priya Patel'));
-      expect(text, contains('Tripod · Floor stand (TRP-001)'));
       expect(text, contains('Amit Shah'));
+      expect(text, contains(l10n.reportStillOutAsOf('02/08/2026')));
+      expect(text, contains('Tripod · Floor stand (TRP-001)'));
     });
 
     test('customer-wise prefixes nickname on rental lines', () {
@@ -246,7 +247,7 @@ void main() {
         now: now,
       );
       expect(text, contains('$kUnknownCustomerName ($kUnknownCustomerPhone)'));
-      expect(text, contains('Raju — REN-UNK-1'));
+      expect(text, contains('Raju'));
     });
 
     test('inventory-wise lists rent counts and availability', () {
@@ -266,8 +267,157 @@ void main() {
       expect(text, contains(l10n.reportTypeResourcesWise));
       expect(text, contains('DSLR'));
       expect(text, contains('Tripod'));
-      expect(text, contains('Floor stand (TRP-001)'));
-      expect(text, contains('avail'));
+      expect(text, contains(l10n.reportColAvail));
+    });
+
+    test('resources-wise excludes idle catalog', () {
+      final ReportDateRange range = ReportDateRange.resolve(
+        period: ReportPeriod.monthly,
+        now: now,
+      );
+      final List<InventoryItem> withIdle = <InventoryItem>[
+        ...inventory,
+        const InventoryItem(
+          id: 'INV-IDLE',
+          name: 'Idle lens',
+          category: 'Glass',
+          availableUnits: 3,
+          totalUnits: 3,
+          status: AssetStatus.available,
+          qrCode: 'inv:idle',
+        ),
+      ];
+      final ReportSnapshot snap = ReportSnapshot.assemble(
+        type: ReportType.inventoryWise,
+        range: range,
+        customers: customers,
+        inventory: withIdle,
+        rentals: rentals,
+      );
+      expect(snap.resources.map((ReportResourceRow r) => r.name), isNot(contains('Idle lens')));
+      expect(snap.resources.map((ReportResourceRow r) => r.name), containsAll(<String>['DSLR', 'Tripod']));
+      final String text = builder.build(
+        l10n: l10n,
+        type: ReportType.inventoryWise,
+        range: range,
+        customers: customers,
+        inventory: withIdle,
+        rentals: rentals,
+        now: now,
+      );
+      expect(text, isNot(contains('Idle lens')));
+    });
+
+    test('customer-wise daily excludes old active from issued', () {
+      final ReportDateRange range = ReportDateRange.resolve(
+        period: ReportPeriod.daily,
+        now: now,
+      );
+      final ReportSnapshot snap = ReportSnapshot.assemble(
+        type: ReportType.customerWise,
+        range: range,
+        customers: customers,
+        inventory: inventory,
+        rentals: rentals,
+      );
+      expect(snap.issued, isEmpty);
+      expect(
+        snap.stillOut.map((ReportOrderRow r) => r.rentalId),
+        containsAll(<String>['REN-1', 'REN-2']),
+      );
+      expect(
+        snap.customersPeriod.map((ReportCustomerRow r) => r.customerId),
+        isEmpty,
+      );
+      final String text = builder.build(
+        l10n: l10n,
+        type: ReportType.customerWise,
+        range: range,
+        customers: customers,
+        inventory: inventory,
+        rentals: rentals,
+        now: now,
+      );
+      expect(text, contains(l10n.reportStillOutAsOf('02/08/2026')));
+      expect(text, contains('Priya Patel'));
+      expect(text, contains('Amit Shah'));
+      expect(text, isNot(contains(l10n.reportSectionIssued)));
+    });
+
+    test('occupancy lists occupied codes only with out/total header', () {
+      final ReportDateRange range = ReportDateRange.resolve(
+        period: ReportPeriod.daily,
+        now: now,
+      );
+      final List<InventoryItem> pooled = <InventoryItem>[
+        const InventoryItem(
+          id: 'INV-SEAT',
+          name: 'Reading seat',
+          category: 'Library',
+          availableUnits: 1,
+          totalUnits: 2,
+          status: AssetStatus.rented,
+          qrCode: 'inv:seat',
+          requiresUnitIdentity: true,
+          unitCodePrefix: 'SEAT',
+        ),
+      ];
+      final List<Rental> seatRentals = <Rental>[
+        Rental(
+          id: 'REN-SEAT',
+          customerId: 'CUS-1',
+          lines: const <RentalLine>[
+            RentalLine(
+              id: 'RLI-SEAT-1',
+              itemId: 'INV-SEAT',
+              catalogName: 'Reading seat',
+              instanceName: 'Priya',
+              shortCode: 'SEAT-1',
+            ),
+          ],
+          startedAt: now.subtract(const Duration(days: 3)),
+          dueAt: now.add(const Duration(days: 10)),
+          timeline: const <RentalEvent>[],
+          qrCode: 'rental:seat',
+        ),
+      ];
+      final String text = builder.build(
+        l10n: l10n,
+        type: ReportType.unitOccupancy,
+        range: range,
+        customers: customers,
+        inventory: pooled,
+        rentals: seatRentals,
+        now: now,
+      );
+      expect(text, contains(l10n.reportUnitOccupancyItemHeading('Reading seat', 1, 2)));
+      expect(text, contains('SEAT-1'));
+      expect(text, contains('Priya Patel'));
+      expect(text, isNot(contains('SEAT-2')));
+      expect(text, isNot(contains(l10n.reportUnitStatusAvailable)));
+    });
+
+    test('print html is A4 and uses snapshot tables', () {
+      final ReportDateRange range = ReportDateRange.resolve(
+        period: ReportPeriod.weekly,
+        now: now,
+      );
+      final html = buildReportPrintHtml(
+        builder.document(
+          l10n: l10n,
+          type: ReportType.summary,
+          range: range,
+          customers: customers,
+          inventory: inventory,
+          rentals: rentals,
+          now: now,
+        ),
+      );
+      expect(html, contains('@page'));
+      expect(html, contains('A4'));
+      expect(html, contains(l10n.reportHeader(kAppDisplayName)));
+      expect(html, contains(l10n.reportStillOutAsOf('02/08/2026')));
+      expect(html, contains('color: #000'));
     });
 
     test('truncates long reports', () {

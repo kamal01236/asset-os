@@ -81,7 +81,7 @@ void main() {
       expect(available, <String>['SEAT-1', 'SEAT-2', 'SEAT-3']);
     });
 
-    test('occupancy rows and report include occupied + available', () async {
+    test('occupancy rows list all codes; report lists occupied only', () async {
       final LocalRepository repo = await bootRepo();
       await repo.addInventory(
         name: 'Reading seat',
@@ -115,7 +115,7 @@ void main() {
 
       final AppLocalizations l10n =
           await AppLocalizations.delegate.load(const Locale('en'));
-      final DateTime now = DateTime(2026, 8, 7, 12);
+      final DateTime now = DateTime.now();
       final String text = const ReportBuilder().build(
         l10n: l10n,
         type: ReportType.unitOccupancy,
@@ -127,10 +127,10 @@ void main() {
       );
       expect(text, contains('Unit occupancy'));
       expect(text, contains('SEAT-1'));
-      expect(text, contains('Occupied'));
       expect(text, contains('Priya Patel'));
-      expect(text, contains('SEAT-2'));
-      expect(text, contains('Available'));
+      expect(text, contains('out 1 / 2'));
+      expect(text, isNot(contains('SEAT-2')));
+      expect(text, isNot(contains('Available')));
     });
   });
 

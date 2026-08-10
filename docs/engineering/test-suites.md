@@ -56,7 +56,7 @@ Every suite file has exactly one:
 | `deposit` | Deposit wallet, order deposit |
 | `search` | Min-length search / text rules |
 | `shell` | App shell, Home KPIs, UX polish |
-| `reports` | Report share / WhatsApp text |
+| `reports` | Report snapshot filters, WhatsApp text, print HTML |
 | `notes` | Rental order notes |
 | `labels` | Rental instance labels |
 | `loans` | Cash money-loan calculator, ledger, money_lending template |

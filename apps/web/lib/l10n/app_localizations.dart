@@ -1273,11 +1273,17 @@ abstract class AppLocalizations {
   /// **'No resources with a unit code prefix.'**
   String get reportNoUnitPools;
 
+  /// No description provided for @reportNoOccupiedUnits.
+  ///
+  /// In en, this message translates to:
+  /// **'No units currently out.'**
+  String get reportNoOccupiedUnits;
+
   /// No description provided for @reportUnitOccupancyItemHeading.
   ///
   /// In en, this message translates to:
-  /// **'{name} ({total} units)'**
-  String reportUnitOccupancyItemHeading(String name, int total);
+  /// **'{name} · out {out} / {total}'**
+  String reportUnitOccupancyItemHeading(String name, int out, int total);
 
   /// No description provided for @reportUnitOccupancyRow.
   ///
@@ -1344,6 +1350,174 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Preview'**
   String get reportPreviewLabel;
+
+  /// No description provided for @printReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Print'**
+  String get printReport;
+
+  /// No description provided for @reportStillOutAsOf.
+  ///
+  /// In en, this message translates to:
+  /// **'Still out (as of {date})'**
+  String reportStillOutAsOf(String date);
+
+  /// No description provided for @reportIssuedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Issued: {count}'**
+  String reportIssuedCount(int count);
+
+  /// No description provided for @reportStillOutCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Still out: {count}'**
+  String reportStillOutCount(int count);
+
+  /// No description provided for @reportMoreCount.
+  ///
+  /// In en, this message translates to:
+  /// **'+{count} more'**
+  String reportMoreCount(int count);
+
+  /// No description provided for @reportKpiIssued.
+  ///
+  /// In en, this message translates to:
+  /// **'Issued'**
+  String get reportKpiIssued;
+
+  /// No description provided for @reportKpiReturned.
+  ///
+  /// In en, this message translates to:
+  /// **'Returned'**
+  String get reportKpiReturned;
+
+  /// No description provided for @reportKpiStillOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Still out'**
+  String get reportKpiStillOut;
+
+  /// No description provided for @reportKpiOverdue.
+  ///
+  /// In en, this message translates to:
+  /// **'Overdue'**
+  String get reportKpiOverdue;
+
+  /// No description provided for @reportKpiChargesOpened.
+  ///
+  /// In en, this message translates to:
+  /// **'Charges opened'**
+  String get reportKpiChargesOpened;
+
+  /// No description provided for @reportKpiChargesReturned.
+  ///
+  /// In en, this message translates to:
+  /// **'Charges returned'**
+  String get reportKpiChargesReturned;
+
+  /// No description provided for @reportKpiDepositApplied.
+  ///
+  /// In en, this message translates to:
+  /// **'Deposit applied'**
+  String get reportKpiDepositApplied;
+
+  /// No description provided for @reportKpiSellCollected.
+  ///
+  /// In en, this message translates to:
+  /// **'Sell collected'**
+  String get reportKpiSellCollected;
+
+  /// No description provided for @reportKpiBalanceDue.
+  ///
+  /// In en, this message translates to:
+  /// **'Balance due'**
+  String get reportKpiBalanceDue;
+
+  /// No description provided for @reportKpiPendingLoans.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending loans'**
+  String get reportKpiPendingLoans;
+
+  /// No description provided for @reportSectionIssued.
+  ///
+  /// In en, this message translates to:
+  /// **'Issued'**
+  String get reportSectionIssued;
+
+  /// No description provided for @reportSectionReturned.
+  ///
+  /// In en, this message translates to:
+  /// **'Returned'**
+  String get reportSectionReturned;
+
+  /// No description provided for @reportColParty.
+  ///
+  /// In en, this message translates to:
+  /// **'Party'**
+  String get reportColParty;
+
+  /// No description provided for @reportColIssued.
+  ///
+  /// In en, this message translates to:
+  /// **'Issued'**
+  String get reportColIssued;
+
+  /// No description provided for @reportColReturned.
+  ///
+  /// In en, this message translates to:
+  /// **'Returned'**
+  String get reportColReturned;
+
+  /// No description provided for @reportColAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount'**
+  String get reportColAmount;
+
+  /// No description provided for @reportColStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get reportColStatus;
+
+  /// No description provided for @reportColItems.
+  ///
+  /// In en, this message translates to:
+  /// **'Items'**
+  String get reportColItems;
+
+  /// No description provided for @reportColResource.
+  ///
+  /// In en, this message translates to:
+  /// **'Resource'**
+  String get reportColResource;
+
+  /// No description provided for @reportColOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Out'**
+  String get reportColOut;
+
+  /// No description provided for @reportColAvail.
+  ///
+  /// In en, this message translates to:
+  /// **'Avail'**
+  String get reportColAvail;
+
+  /// No description provided for @reportColCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Code'**
+  String get reportColCode;
+
+  /// No description provided for @reportColCustomer.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer'**
+  String get reportColCustomer;
 
   /// No description provided for @shareToMyWhatsApp.
   ///

@@ -1,20 +1,20 @@
 import 'package:flutter/widgets.dart';
 
 import '../../domain/config/app_branding.dart';
-import '../../domain/inventory/unit_code_pool.dart';
 import '../../infrastructure/l10n/india_date_format.dart';
 import '../../infrastructure/l10n/l10n_ext.dart';
-import '../../domain/loans/loan_balance.dart';
 import '../../domain/loans/loan_models.dart';
 import '../../domain/models/entities.dart';
 import '../../domain/pricing/rental_pricing.dart';
 import '../../domain/reports/report_models.dart';
+import '../../domain/reports/report_snapshot.dart';
 import '../../domain/reports/report_widgets.dart';
+import 'report_document.dart';
 
 /// Soft cap for WhatsApp URL length; longer text is truncated with a note.
 const int kReportMaxChars = 3500;
 
-/// Builds plain-text business reports from local Drift-backed entities.
+/// Builds snapshot-backed business reports (text, preview tables, print).
 class ReportBuilder {
   const ReportBuilder({
     this.appName = kAppDisplayName,
@@ -23,6 +23,127 @@ class ReportBuilder {
 
   final String appName;
   final int maxChars;
+
+  ReportSnapshot snapshot({
+    required ReportType type,
+    required ReportDateRange range,
+    required List<Customer> customers,
+    required List<InventoryItem> inventory,
+    required List<Rental> rentals,
+    List<ReportWidgetId>? widgets,
+    List<MoneyLoan> moneyLoans = const <MoneyLoan>[],
+  }) {
+    return ReportSnapshot.assemble(
+      type: type,
+      range: range,
+      customers: customers,
+      inventory: inventory,
+      rentals: rentals,
+      moneyLoans: moneyLoans,
+      widgets: widgets,
+    );
+  }
+
+  /// Snapshot + localized tables + truncated WhatsApp text.
+  ReportDocument document({
+    required AppLocalizations l10n,
+    required ReportType type,
+    required ReportDateRange range,
+    required List<Customer> customers,
+    required List<InventoryItem> inventory,
+    required List<Rental> rentals,
+    DateTime? now,
+    List<ReportWidgetId>? widgets,
+    Locale locale = const Locale('en'),
+    List<MoneyLoan> moneyLoans = const <MoneyLoan>[],
+  }) {
+    final ReportSnapshot snap = snapshot(
+      type: type,
+      range: range,
+      customers: customers,
+      inventory: inventory,
+      rentals: rentals,
+      widgets: widgets,
+      moneyLoans: moneyLoans,
+    );
+    return compose(snapshot: snap, l10n: l10n, locale: locale);
+  }
+
+  ReportDocument compose({
+    required ReportSnapshot snapshot,
+    required AppLocalizations l10n,
+    Locale locale = const Locale('en'),
+  }) {
+    final String title = l10n.reportHeader(appName);
+    final String rangeLabel =
+        '${formatIndiaDate(snapshot.range.start)} → ${formatIndiaDate(snapshot.range.end)}';
+    final String typeHeading = _typeHeading(l10n, snapshot.type);
+    final List<ReportKpi> kpis = <ReportKpi>[];
+    final List<ReportTableSection> sections = <ReportTableSection>[];
+
+    switch (snapshot.type) {
+      case ReportType.summary:
+        _composeSummary(
+          snapshot: snapshot,
+          l10n: l10n,
+          locale: locale,
+          kpis: kpis,
+          sections: sections,
+        );
+      case ReportType.customerWise:
+        _composeCustomerWise(
+          snapshot: snapshot,
+          l10n: l10n,
+          kpis: kpis,
+          sections: sections,
+        );
+      case ReportType.inventoryWise:
+        _composeResources(
+          snapshot: snapshot,
+          l10n: l10n,
+          sections: sections,
+        );
+      case ReportType.unitOccupancy:
+        _composeOccupancy(
+          snapshot: snapshot,
+          l10n: l10n,
+          locale: locale,
+          sections: sections,
+          standalone: true,
+        );
+    }
+
+    if (kpis.isEmpty && sections.isEmpty) {
+      sections.add(
+        ReportTableSection(
+          title: typeHeading,
+          columns: const <String>[],
+          rows: const <List<String>>[],
+          emptyMessage: _emptyMessage(l10n, snapshot.type),
+        ),
+      );
+    }
+
+    final String text = _truncate(
+      l10n,
+      _formatText(
+        title: title,
+        rangeLabel: rangeLabel,
+        typeHeading: typeHeading,
+        kpis: kpis,
+        sections: sections,
+      ),
+    );
+    return ReportDocument(
+      snapshot: snapshot,
+      title: title,
+      rangeLabel: rangeLabel,
+      typeHeading: typeHeading,
+      kpis: kpis,
+      sections: sections,
+      text: text,
+    );
+  }
 
   /// Legacy type-based entry; [ReportType.summary] uses [widgets].
   String build({
@@ -37,32 +158,18 @@ class ReportBuilder {
     Locale locale = const Locale('en'),
     List<MoneyLoan> moneyLoans = const <MoneyLoan>[],
   }) {
-    final DateTime clock = now ?? range.end;
-    final String body;
-    switch (type) {
-      case ReportType.summary:
-        body = buildFromWidgets(
-          l10n: l10n,
-          locale: locale,
-          widgets: widgets ?? kDefaultReportWidgets,
-          range: range,
-          customers: customers,
-          inventory: inventory,
-          rentals: rentals,
-          moneyLoans: moneyLoans,
-          now: clock,
-          includeTypeHeading: true,
-        );
-      case ReportType.customerWise:
-        body = _buildCustomerWise(l10n, range, customers, inventory, rentals, clock);
-      case ReportType.inventoryWise:
-        body = _buildInventoryWise(l10n, range, inventory, rentals);
-      case ReportType.unitOccupancy:
-        body = _buildUnitOccupancy(l10n, customers, inventory, rentals);
-    }
-    final String header =
-        '${l10n.reportHeader(appName)}\n${formatIndiaDate(range.start)} → ${formatIndiaDate(range.end)}\n';
-    return _truncate(l10n, '$header\n$body'.trimRight());
+    return document(
+      l10n: l10n,
+      type: type,
+      range: range,
+      customers: customers,
+      inventory: inventory,
+      rentals: rentals,
+      now: now,
+      widgets: widgets,
+      locale: locale,
+      moneyLoans: moneyLoans,
+    ).text;
   }
 
   /// Compose a report body from ordered [widgets] (no header).
@@ -78,565 +185,604 @@ class ReportBuilder {
     bool includeTypeHeading = false,
     List<MoneyLoan> moneyLoans = const <MoneyLoan>[],
   }) {
-    final DateTime clock = now ?? range.end;
-    final List<String> sections = <String>[];
-    if (includeTypeHeading) {
-      sections.add(l10n.reportTypeSummary);
-    }
-    for (final ReportWidgetId id in widgets) {
-      final String section = _buildWidget(
-        id: id,
-        l10n: l10n,
-        locale: locale,
-        range: range,
-        customers: customers,
-        inventory: inventory,
-        rentals: rentals,
-        moneyLoans: moneyLoans,
-        clock: clock,
-      );
-      if (section.trim().isNotEmpty) {
-        sections.add(section);
-      }
-    }
-    return sections.join('\n\n');
+    final ReportDocument doc = document(
+      l10n: l10n,
+      type: ReportType.summary,
+      range: range,
+      customers: customers,
+      inventory: inventory,
+      rentals: rentals,
+      now: now,
+      widgets: widgets,
+      locale: locale,
+      moneyLoans: moneyLoans,
+    );
+    final String body = _formatBody(
+      typeHeading: includeTypeHeading ? doc.typeHeading : '',
+      kpis: doc.kpis,
+      sections: doc.sections,
+    );
+    return body.trim();
   }
 
-  String _buildWidget({
-    required ReportWidgetId id,
+  void _composeSummary({
+    required ReportSnapshot snapshot,
     required AppLocalizations l10n,
     required Locale locale,
-    required ReportDateRange range,
-    required List<Customer> customers,
-    required List<InventoryItem> inventory,
-    required List<Rental> rentals,
-    required List<MoneyLoan> moneyLoans,
-    required DateTime clock,
+    required List<ReportKpi> kpis,
+    required List<ReportTableSection> sections,
   }) {
-    final ReportWidgetDef? def = reportWidgetDefById(id);
-    final String title = def?.localizedLabel(locale) ?? id.name;
-    switch (id) {
-      case ReportWidgetId.summaryRevenue:
-        return <String>[
-          title,
-          l10n.reportChargesOpened(formatMoney(_sumOpenedCharges(rentals, range))),
-          l10n.reportChargesReturned(
-            formatMoney(_sumReturnedCharges(rentals, range)),
+    final bool onlyLoansGiven = snapshot.widgets.length == 1 &&
+        snapshot.hasWidget(ReportWidgetId.outstandingLoansGiven);
+    final bool onlyLoansTaken = snapshot.widgets.length == 1 &&
+        snapshot.hasWidget(ReportWidgetId.outstandingLoansTaken);
+    final bool onlyLoans = snapshot.widgets.isNotEmpty &&
+        snapshot.widgets.every(
+          (ReportWidgetId id) =>
+              id == ReportWidgetId.outstandingLoansGiven ||
+              id == ReportWidgetId.outstandingLoansTaken,
+        );
+
+    if (snapshot.hasWidget(ReportWidgetId.transactionsToday)) {
+      if (snapshot.issued.isNotEmpty) {
+        kpis.add(
+          ReportKpi(
+            label: l10n.reportKpiIssued,
+            value: '${snapshot.issued.length}',
           ),
-          l10n.reportDepositAppliedRange(
-            formatMoney(_sumDepositApplied(rentals, range)),
+        );
+      }
+      if (snapshot.returned.isNotEmpty) {
+        kpis.add(
+          ReportKpi(
+            label: l10n.reportKpiReturned,
+            value: '${snapshot.returned.length}',
           ),
-          l10n.reportBalanceDueReturned(
-            formatMoney(_sumBalanceDue(rentals, range)),
+        );
+      }
+      if (snapshot.stillOut.isNotEmpty) {
+        kpis.add(
+          ReportKpi(
+            label: l10n.reportKpiStillOut,
+            value: '${snapshot.stillOut.length}',
           ),
-        ].join('\n');
-      case ReportWidgetId.transactionsToday:
-        final int active = rentals.where((Rental r) => r.isActive).length;
-        final int opened =
-            rentals.where((Rental r) => _inRange(r.startedAt, range)).length;
-        final int returned = rentals
-            .where(
-              (Rental r) =>
-                  r.returnedAt != null && _inRange(r.returnedAt!, range),
-            )
-            .length;
-        final int pendingLoans = moneyLoans
-            .where((MoneyLoan l) => l.status == MoneyLoanStatus.pending)
-            .length;
-        return <String>[
-          title,
-          l10n.reportActiveCount(active),
-          l10n.reportOpenedCount(opened),
-          l10n.reportReturnedCount(returned),
-          if (moneyLoans.isNotEmpty) l10n.reportPendingLoansCount(pendingLoans),
-        ].join('\n');
-      case ReportWidgetId.overdue:
-        final int overdue = rentals
-            .where((Rental r) => r.statusFor(clock) == AssetStatus.overdue)
-            .length;
-        return <String>[
-          title,
-          l10n.reportOverdueCount(overdue),
-        ].join('\n');
-      case ReportWidgetId.topCustomers:
-        return _buildTopCustomers(
-          title: title,
+        );
+      }
+      if (snapshot.pendingLoansCount > 0) {
+        kpis.add(
+          ReportKpi(
+            label: l10n.reportKpiPendingLoans,
+            value: '${snapshot.pendingLoansCount}',
+          ),
+        );
+      }
+    }
+    if (snapshot.hasWidget(ReportWidgetId.overdue) && snapshot.overdueCount > 0) {
+      kpis.add(
+        ReportKpi(
+          label: l10n.reportKpiOverdue,
+          value: '${snapshot.overdueCount}',
+        ),
+      );
+    }
+    if (snapshot.hasWidget(ReportWidgetId.summaryRevenue)) {
+      if (snapshot.chargesOpenedPaise != 0) {
+        kpis.add(
+          ReportKpi(
+            label: l10n.reportKpiChargesOpened,
+            value: formatMoney(snapshot.chargesOpenedPaise),
+          ),
+        );
+      }
+      if (snapshot.chargesReturnedPaise != 0) {
+        kpis.add(
+          ReportKpi(
+            label: l10n.reportKpiChargesReturned,
+            value: formatMoney(snapshot.chargesReturnedPaise),
+          ),
+        );
+      }
+      if (snapshot.depositAppliedPaise != 0) {
+        kpis.add(
+          ReportKpi(
+            label: l10n.reportKpiDepositApplied,
+            value: formatMoney(snapshot.depositAppliedPaise),
+          ),
+        );
+      }
+      if (snapshot.sellCollectedPaise != 0) {
+        kpis.add(
+          ReportKpi(
+            label: l10n.reportKpiSellCollected,
+            value: formatMoney(snapshot.sellCollectedPaise),
+          ),
+        );
+      }
+      if (snapshot.balanceDueReturnedPaise != 0) {
+        kpis.add(
+          ReportKpi(
+            label: l10n.reportKpiBalanceDue,
+            value: formatMoney(snapshot.balanceDueReturnedPaise),
+          ),
+        );
+      }
+    }
+
+    if (snapshot.hasWidget(ReportWidgetId.transactionsToday)) {
+      _addOrderTable(
+        sections: sections,
+        title: l10n.reportSectionIssued,
+        snapshotRows: snapshot.issued,
+        l10n: l10n,
+        cap: kReportSummaryRowCap,
+      );
+      _addOrderTable(
+        sections: sections,
+        title: l10n.reportSectionReturned,
+        snapshotRows: snapshot.returned,
+        l10n: l10n,
+        cap: kReportSummaryRowCap,
+      );
+      _addOrderTable(
+        sections: sections,
+        title: l10n.reportStillOutAsOf(formatIndiaDate(snapshot.asOf)),
+        snapshotRows: snapshot.stillOut,
+        l10n: l10n,
+        cap: kReportSummaryRowCap,
+        includeNickname: true,
+      );
+    }
+
+    if (snapshot.hasWidget(ReportWidgetId.topCustomers) &&
+        snapshot.topCustomers.isNotEmpty) {
+      sections.add(
+        ReportTableSection(
+          title: _widgetTitle(locale, ReportWidgetId.topCustomers, l10n.reportTypeCustomerWise),
+          columns: <String>[
+            l10n.reportColParty,
+            l10n.reportColIssued,
+            l10n.reportColAmount,
+          ],
+          rows: snapshot.topCustomers
+              .map(
+                (ReportTopCustomerRow row) => <String>[
+                  _partyName(row.name, row.phone),
+                  '${row.orderCount}',
+                  formatMoney(row.chargesPaise),
+                ],
+              )
+              .toList(growable: false),
+        ),
+      );
+    }
+
+    if (snapshot.hasWidget(ReportWidgetId.resourcesUtilisation) &&
+        snapshot.resources.isNotEmpty) {
+      sections.add(
+        _resourcesSection(
+          title: _widgetTitle(
+            locale,
+            ReportWidgetId.resourcesUtilisation,
+            l10n.reportTypeResourcesWise,
+          ),
+          rows: snapshot.resources,
           l10n: l10n,
-          range: range,
-          customers: customers,
-          rentals: rentals,
-          clock: clock,
-        );
-      case ReportWidgetId.resourcesUtilisation:
-        return _buildResourcesUtilisation(
-          title: title,
-          l10n: l10n,
-          range: range,
-          inventory: inventory,
-          rentals: rentals,
-        );
-      case ReportWidgetId.outstandingLoansGiven:
-        return _buildOutstandingLoans(
-          title: title,
-          l10n: l10n,
-          customers: customers,
-          moneyLoans: moneyLoans,
-          direction: MoneyLoanDirection.given,
-          clock: clock,
-        );
-      case ReportWidgetId.outstandingLoansTaken:
-        return _buildOutstandingLoans(
-          title: title,
-          l10n: l10n,
-          customers: customers,
-          moneyLoans: moneyLoans,
-          direction: MoneyLoanDirection.taken,
-          clock: clock,
-        );
-      case ReportWidgetId.unitOccupancy:
-        return _buildUnitOccupancy(
-          l10n,
-          customers,
-          inventory,
-          rentals,
-          title: title,
-        );
+          cap: kReportSummaryRowCap,
+        ),
+      );
+    }
+
+    if (snapshot.hasWidget(ReportWidgetId.unitOccupancy)) {
+      _composeOccupancy(
+        snapshot: snapshot,
+        l10n: l10n,
+        locale: locale,
+        sections: sections,
+        standalone: false,
+      );
+    }
+
+    if (snapshot.hasWidget(ReportWidgetId.outstandingLoansGiven)) {
+      _addLoanSection(
+        sections: sections,
+        title: _widgetTitle(
+          locale,
+          ReportWidgetId.outstandingLoansGiven,
+          l10n.reportKpiPendingLoans,
+        ),
+        rows: snapshot.loansGiven,
+        l10n: l10n,
+        forceEmpty: onlyLoansGiven || onlyLoans,
+      );
+    }
+    if (snapshot.hasWidget(ReportWidgetId.outstandingLoansTaken)) {
+      _addLoanSection(
+        sections: sections,
+        title: _widgetTitle(
+          locale,
+          ReportWidgetId.outstandingLoansTaken,
+          l10n.reportKpiPendingLoans,
+        ),
+        rows: snapshot.loansTaken,
+        l10n: l10n,
+        forceEmpty: onlyLoansTaken || onlyLoans,
+      );
     }
   }
 
-  String _buildOutstandingLoans({
-    required String title,
+  void _composeCustomerWise({
+    required ReportSnapshot snapshot,
     required AppLocalizations l10n,
-    required List<Customer> customers,
-    required List<MoneyLoan> moneyLoans,
-    required MoneyLoanDirection direction,
-    required DateTime clock,
+    required List<ReportKpi> kpis,
+    required List<ReportTableSection> sections,
   }) {
-    final Map<String, Customer> byId = <String, Customer>{
-      for (final Customer c in customers) c.id: c,
-    };
-    final List<MoneyLoan> pending = moneyLoans
-        .where(
-          (MoneyLoan l) =>
-              l.status == MoneyLoanStatus.pending && l.direction == direction,
-        )
-        .toList();
-    if (pending.isEmpty) {
-      return '$title\n${l10n.reportNoOutstandingLoans}';
-    }
-    int totalPending = 0;
-    final List<String> lines = <String>[title];
-    for (final MoneyLoan loan in pending) {
-      final LoanScenario scenario =
-          computeLoanScenario(loan: loan, now: clock);
-      totalPending += scenario.pendingPaise;
-      final Customer? customer = byId[loan.customerId];
-      final String name = customer?.name ?? loan.customerId;
-      lines.add(
-        '• $name: ${formatMoney(scenario.pendingPaise, currencyCode: loan.currencyCode)}',
+    final bool showDeposit = snapshot.customersPeriod
+        .any((ReportCustomerRow r) => r.depositBalancePaise > 0);
+    if (snapshot.customersPeriod.isNotEmpty) {
+      final List<String> columns = <String>[
+        l10n.reportColParty,
+        l10n.reportColIssued,
+        l10n.reportColReturned,
+        l10n.reportColAmount,
+        l10n.reportColStatus,
+        if (showDeposit) l10n.reportKpiDepositApplied,
+      ];
+      sections.add(
+        ReportTableSection(
+          title: '',
+          columns: columns,
+          rows: snapshot.customersPeriod.map((ReportCustomerRow row) {
+            final List<String> cells = <String>[
+              _partyName(row.name, row.phone),
+              '${row.issuedCount}',
+              '${row.returnedCount}',
+              formatMoney(row.amountPaise),
+              row.periodStatus == null
+                  ? l10n.orderStatusCompleted
+                  : localizedStatusLabel(l10n, row.periodStatus!),
+            ];
+            if (showDeposit) {
+              cells.add(
+                row.depositBalancePaise > 0
+                    ? formatMoney(row.depositBalancePaise)
+                    : '',
+              );
+            }
+            return cells;
+          }).toList(growable: false),
+        ),
       );
     }
-    lines.insert(
-      1,
-      l10n.reportOutstandingLoansTotal(
-        formatMoney(totalPending),
-        pending.length,
+    if (snapshot.stillOut.isNotEmpty) {
+      _addOrderTable(
+        sections: sections,
+        title: l10n.reportStillOutAsOf(formatIndiaDate(snapshot.asOf)),
+        snapshotRows: snapshot.stillOut,
+        l10n: l10n,
+        includeNickname: true,
+      );
+    }
+  }
+
+  void _composeResources({
+    required ReportSnapshot snapshot,
+    required AppLocalizations l10n,
+    required List<ReportTableSection> sections,
+  }) {
+    if (snapshot.resources.isEmpty) {
+      sections.add(
+        ReportTableSection(
+          title: '',
+          columns: const <String>[],
+          rows: const <List<String>>[],
+          emptyMessage: l10n.reportNoResources,
+        ),
+      );
+      return;
+    }
+    sections.add(
+      _resourcesSection(
+        title: '',
+        rows: snapshot.resources,
+        l10n: l10n,
       ),
     );
-    return lines.join('\n');
   }
 
-  String _buildTopCustomers({
-    required String title,
+  void _composeOccupancy({
+    required ReportSnapshot snapshot,
     required AppLocalizations l10n,
-    required ReportDateRange range,
-    required List<Customer> customers,
-    required List<Rental> rentals,
-    required DateTime clock,
+    required Locale locale,
+    required List<ReportTableSection> sections,
+    required bool standalone,
   }) {
-    final Map<String, Customer> byId = <String, Customer>{
-      for (final Customer c in customers) c.id: c,
-    };
-    final Map<String, int> counts = <String, int>{};
-    final Map<String, int> charges = <String, int>{};
-    for (final Rental r in rentals) {
-      final bool inScope = _inRange(r.startedAt, range) ||
-          (r.returnedAt != null && _inRange(r.returnedAt!, range)) ||
-          (r.isActive && !r.startedAt.isAfter(range.end));
-      if (!inScope) {
-        continue;
-      }
-      counts[r.customerId] = (counts[r.customerId] ?? 0) + 1;
-      final int amount =
-          r.isActive ? r.totalAmountAsOf(clock) : r.totalAmount;
-      charges[r.customerId] = (charges[r.customerId] ?? 0) + amount;
-    }
-    if (counts.isEmpty) {
-      return '$title\n${l10n.reportNoRentalsInRange}';
-    }
-    final List<String> ranked = counts.keys.toList()
-      ..sort((String a, String b) {
-        final int byCount = (counts[b] ?? 0).compareTo(counts[a] ?? 0);
-        if (byCount != 0) {
-          return byCount;
-        }
-        return (charges[b] ?? 0).compareTo(charges[a] ?? 0);
-      });
-    final List<String> lines = <String>[title];
-    for (final String customerId in ranked.take(5)) {
-      final Customer? customer = byId[customerId];
-      final String name = customer?.name ?? customerId;
-      final String phone = customer?.phone ?? '';
-      final String header = phone.isEmpty ? name : '$name ($phone)';
-      lines.add(
-        '• $header: ${counts[customerId]} · ${formatMoney(charges[customerId] ?? 0)}',
-      );
-    }
-    return lines.join('\n');
-  }
-
-  String _buildResourcesUtilisation({
-    required String title,
-    required AppLocalizations l10n,
-    required ReportDateRange range,
-    required List<InventoryItem> inventory,
-    required List<Rental> rentals,
-  }) {
-    if (inventory.isEmpty) {
-      return '$title\n${l10n.reportNoResources}';
-    }
-    final List<Rental> openedInRange =
-        rentals.where((Rental r) => _inRange(r.startedAt, range)).toList();
-    final Map<String, int> rentCount = <String, int>{
-      for (final InventoryItem i in inventory) i.id: 0,
-    };
-    final Map<String, int> unitsOut = <String, int>{
-      for (final InventoryItem i in inventory) i.id: 0,
-    };
-    for (final Rental rental in openedInRange) {
-      for (final RentalLine line in rental.lines) {
-        rentCount[line.itemId] = (rentCount[line.itemId] ?? 0) + 1;
-      }
-    }
-    for (final Rental rental in rentals.where((Rental r) => r.isActive)) {
-      for (final RentalLine line in rental.openLines) {
-        unitsOut[line.itemId] = (unitsOut[line.itemId] ?? 0) + 1;
-      }
-    }
-    final List<InventoryItem> sorted = List<InventoryItem>.from(inventory)
-      ..sort((InventoryItem a, InventoryItem b) {
-        final int byOut =
-            (unitsOut[b.id] ?? 0).compareTo(unitsOut[a.id] ?? 0);
-        if (byOut != 0) {
-          return byOut;
-        }
-        return (rentCount[b.id] ?? 0).compareTo(rentCount[a.id] ?? 0);
-      });
-    final List<String> lines = <String>[title];
-    for (final InventoryItem item in sorted.take(8)) {
-      lines.add(
-        l10n.reportInventoryItemLine(
-          item.name,
-          rentCount[item.id] ?? 0,
-          unitsOut[item.id] ?? 0,
-          item.availableUnits,
-          item.totalUnits,
-          localizedBillingMode(l10n, item.billingMode),
-          formatMoney(item.rateAmount, currencyCode: item.currencyCode),
-        ),
-      );
-    }
-    return lines.join('\n');
-  }
-
-  int _sumOpenedCharges(List<Rental> rentals, ReportDateRange range) {
-    int total = 0;
-    for (final Rental r in rentals) {
-      if (_inRange(r.startedAt, range)) {
-        total += r.baseAmount;
-      }
-    }
-    return total;
-  }
-
-  int _sumReturnedCharges(List<Rental> rentals, ReportDateRange range) {
-    int total = 0;
-    for (final Rental r in rentals) {
-      if (r.returnedAt != null && _inRange(r.returnedAt!, range)) {
-        total += r.totalAmount;
-      }
-    }
-    return total;
-  }
-
-  int _sumDepositApplied(List<Rental> rentals, ReportDateRange range) {
-    int total = 0;
-    for (final Rental r in rentals) {
-      if (r.returnedAt != null && _inRange(r.returnedAt!, range)) {
-        total += r.depositApplied;
-      }
-    }
-    return total;
-  }
-
-  int _sumBalanceDue(List<Rental> rentals, ReportDateRange range) {
-    int total = 0;
-    for (final Rental r in rentals) {
-      if (r.returnedAt != null && _inRange(r.returnedAt!, range)) {
-        total += r.amountDueAfterDeposit;
-      }
-    }
-    return total;
-  }
-
-  String _buildCustomerWise(
-    AppLocalizations l10n,
-    ReportDateRange range,
-    List<Customer> customers,
-    List<InventoryItem> inventory,
-    List<Rental> rentals,
-    DateTime clock,
-  ) {
-    final Map<String, Customer> byId = <String, Customer>{
-      for (final Customer c in customers) c.id: c,
-    };
-    final Map<String, InventoryItem> itemsById = <String, InventoryItem>{
-      for (final InventoryItem i in inventory) i.id: i,
-    };
-
-    final List<Rental> inScope = rentals.where((Rental r) {
-      if (_inRange(r.startedAt, range)) {
-        return true;
-      }
-      if (r.returnedAt != null && _inRange(r.returnedAt!, range)) {
-        return true;
-      }
-      // Active rentals that overlap the window (due/open during period).
-      if (r.isActive && !r.startedAt.isAfter(range.end)) {
-        return true;
-      }
-      return false;
-    }).toList();
-
-    final Map<String, List<Rental>> byCustomer = <String, List<Rental>>{};
-    for (final Rental r in inScope) {
-      byCustomer.putIfAbsent(r.customerId, () => <Rental>[]).add(r);
-    }
-
-    if (byCustomer.isEmpty) {
-      return '${l10n.reportTypeCustomerWise}\n${l10n.reportNoRentalsInRange}';
-    }
-
-    final List<String> lines = <String>[l10n.reportTypeCustomerWise];
-    final List<String> customerIds = byCustomer.keys.toList()..sort();
-    for (final String customerId in customerIds) {
-      final Customer? customer = byId[customerId];
-      final String name = customer?.name ?? customerId;
-      final String phone = customer?.phone ?? '';
-      lines.add('');
-      final String header = phone.isEmpty ? name : '$name ($phone)';
-      final int deposit = customer?.depositBalance ?? 0;
-      lines.add(
-        deposit > 0
-            ? l10n.reportCustomerWithDeposit(header, formatMoney(deposit))
-            : header,
-      );
-      for (final Rental rental in byCustomer[customerId]!) {
-        final String itemNames = rental.lines
-            .map((RentalLine line) {
-              final String statusBit = line.isOpen
-                  ? ''
-                  : ' ${_reportClosedLineStatusBit(l10n, line)}';
-              if (line.catalogName.trim().isEmpty) {
-                final String fallback =
-                    itemsById[line.itemId]?.name ?? line.itemId;
-                return '${RentalLine(
-                  id: line.id,
-                  itemId: line.itemId,
-                  catalogName: fallback,
-                  instanceName: line.instanceName,
-                  shortCode: line.shortCode,
-                ).displayLabel}$statusBit';
-              }
-              return '${line.displayLabel}$statusBit';
-            })
-            .join(', ');
-        final AssetStatus status = rental.statusFor(clock);
-        final String nick = rental.nickname?.trim() ?? '';
-        final String prefix = nick.isNotEmpty ? '$nick — ' : '';
-        final int amount = rental.isActive
-            ? rental.totalAmountAsOf(clock)
-            : rental.totalAmount;
-        final int openCount = rental.openLines.length;
-        final int returnedCount = rental.returnedLines.length;
-        final String partialBit = rental.isActive && returnedCount > 0
-            ? l10n.reportLinesPartialBit(openCount, returnedCount)
-            : '';
-        final String depositBit = rental.depositApplied > 0
-            ? l10n.reportDepositDueBit(
-                formatMoney(rental.depositApplied),
-                formatMoney(rental.amountDueAfterDeposit),
-              )
-            : '';
-        final String dueBit = rental.dueAt == null
-            ? l10n.reportOpenEnded
-            : l10n.reportDueDateBit(formatIndiaDate(rental.dueAt!));
-        lines.add(
-          l10n.reportCustomerRentalLine(
-            prefix,
-            rental.id,
-            itemNames,
-            dueBit,
-            localizedStatusLabel(l10n, status),
-            formatMoney(amount),
-            partialBit,
-            depositBit,
+    if (snapshot.occupancy.isEmpty) {
+      if (standalone) {
+        sections.add(
+          ReportTableSection(
+            title: '',
+            columns: const <String>[],
+            rows: const <List<String>>[],
+            emptyMessage: l10n.reportNoOccupiedUnits,
           ),
         );
       }
+      return;
     }
-    return lines.join('\n');
-  }
-
-  String _buildInventoryWise(
-    AppLocalizations l10n,
-    ReportDateRange range,
-    List<InventoryItem> inventory,
-    List<Rental> rentals,
-  ) {
-    final List<Rental> openedInRange =
-        rentals.where((Rental r) => _inRange(r.startedAt, range)).toList();
-
-    final Map<String, int> rentCount = <String, int>{};
-    final Map<String, int> unitsOut = <String, int>{};
-    final Map<String, List<String>> activeLabels = <String, List<String>>{};
-
-    for (final InventoryItem item in inventory) {
-      rentCount[item.id] = 0;
-      unitsOut[item.id] = 0;
-      activeLabels[item.id] = <String>[];
-    }
-
-    for (final Rental rental in openedInRange) {
-      for (final RentalLine line in rental.lines) {
-        rentCount[line.itemId] = (rentCount[line.itemId] ?? 0) + 1;
-      }
-    }
-
-    for (final Rental rental in rentals.where((Rental r) => r.isActive)) {
-      for (final RentalLine line in rental.openLines) {
-        unitsOut[line.itemId] = (unitsOut[line.itemId] ?? 0) + 1;
-        final String label = line.instanceName.trim().isEmpty
-            ? line.shortCode
-            : '${line.instanceName} (${line.shortCode})';
-        activeLabels.putIfAbsent(line.itemId, () => <String>[]).add(label);
-      }
-    }
-
-    if (inventory.isEmpty) {
-      return '${l10n.reportTypeResourcesWise}\n${l10n.reportNoResources}';
-    }
-
-    final List<String> lines = <String>[l10n.reportTypeResourcesWise];
-    final List<InventoryItem> sorted = List<InventoryItem>.from(inventory)
-      ..sort((InventoryItem a, InventoryItem b) => a.name.compareTo(b.name));
-    for (final InventoryItem item in sorted) {
-      final int rented = rentCount[item.id] ?? 0;
-      final int out = unitsOut[item.id] ?? 0;
-      lines.add(
-        l10n.reportInventoryItemLine(
-          item.name,
-          rented,
-          out,
-          item.availableUnits,
-          item.totalUnits,
-          localizedBillingMode(l10n, item.billingMode),
-          formatMoney(item.rateAmount, currencyCode: item.currencyCode),
+    if (!standalone) {
+      sections.add(
+        ReportTableSection(
+          title: _widgetTitle(
+            locale,
+            ReportWidgetId.unitOccupancy,
+            l10n.reportTypeUnitOccupancy,
+          ),
+          columns: const <String>[],
+          rows: const <List<String>>[],
         ),
       );
-      final List<String> labels = activeLabels[item.id] ?? const <String>[];
-      for (final String label in labels) {
-        lines.add('  - $label');
-      }
     }
-    return lines.join('\n');
+    for (final ReportOccupancyPool pool in snapshot.occupancy) {
+      sections.add(
+        ReportTableSection(
+          title: l10n.reportUnitOccupancyItemHeading(
+            pool.itemName,
+            pool.outCount,
+            pool.totalUnits,
+          ),
+          columns: <String>[l10n.reportColCode, l10n.reportColCustomer],
+          rows: pool.units
+              .map(
+                (ReportOccupancyUnit u) => <String>[u.code, u.holderName],
+              )
+              .toList(growable: false),
+        ),
+      );
+    }
   }
 
-  String _buildUnitOccupancy(
-    AppLocalizations l10n,
-    List<Customer> customers,
-    List<InventoryItem> inventory,
-    List<Rental> rentals, {
-    String? title,
+  void _addOrderTable({
+    required List<ReportTableSection> sections,
+    required String title,
+    required List<ReportOrderRow> snapshotRows,
+    required AppLocalizations l10n,
+    int? cap,
+    bool includeNickname = false,
   }) {
-    final Map<String, Customer> customersById = <String, Customer>{
-      for (final Customer c in customers) c.id: c,
-    };
-    final Map<String, ({String rentalId, String customerId, String instanceName})>
-        occupiedByCode = <String, ({String rentalId, String customerId, String instanceName})>{};
-    for (final Rental rental in rentals.where((Rental r) => r.isActive)) {
-      for (final RentalLine line in rental.openRentLines) {
-        final String code = line.shortCode.trim().toUpperCase();
-        if (code.isEmpty) {
-          continue;
-        }
-        occupiedByCode[code] = (
-          rentalId: rental.id,
-          customerId: rental.customerId,
-          instanceName: line.instanceName,
+    if (snapshotRows.isEmpty) {
+      return;
+    }
+    final bool showSell =
+        snapshotRows.any((ReportOrderRow r) => r.sellPaidPaise > 0);
+    final bool showDeposit =
+        snapshotRows.any((ReportOrderRow r) => r.depositAppliedPaise > 0);
+    final int take = cap ?? snapshotRows.length;
+    final List<ReportOrderRow> visible = snapshotRows.take(take).toList();
+    final int extra = snapshotRows.length - visible.length;
+    final List<String> columns = <String>[
+      l10n.reportColParty,
+      l10n.reportColItems,
+      l10n.reportColAmount,
+      l10n.reportColStatus,
+      if (showSell) l10n.reportKpiSellCollected,
+      if (showDeposit) l10n.reportKpiDepositApplied,
+    ];
+    sections.add(
+      ReportTableSection(
+        title: title,
+        columns: columns,
+        rows: visible.map((ReportOrderRow row) {
+          final String party = includeNickname
+              ? _partyWithNickname(row)
+              : _partyName(row.customerName, row.customerPhone);
+          final List<String> cells = <String>[
+            party,
+            row.itemsLabel,
+            formatMoney(row.amountPaise),
+            _orderStatusLabel(l10n, row),
+          ];
+          if (showSell) {
+            cells.add(
+              row.sellPaidPaise > 0 ? formatMoney(row.sellPaidPaise) : '',
+            );
+          }
+          if (showDeposit) {
+            cells.add(
+              row.depositAppliedPaise > 0
+                  ? formatMoney(row.depositAppliedPaise)
+                  : '',
+            );
+          }
+          return cells;
+        }).toList(growable: false),
+        moreLabel: extra > 0 ? l10n.reportMoreCount(extra) : null,
+      ),
+    );
+  }
+
+  ReportTableSection _resourcesSection({
+    required String title,
+    required List<ReportResourceRow> rows,
+    required AppLocalizations l10n,
+    int? cap,
+  }) {
+    final int take = cap ?? rows.length;
+    final List<ReportResourceRow> visible = rows.take(take).toList();
+    final int extra = rows.length - visible.length;
+    return ReportTableSection(
+      title: title,
+      columns: <String>[
+        l10n.reportColResource,
+        l10n.reportColIssued,
+        l10n.reportColReturned,
+        l10n.reportColOut,
+        l10n.reportColAvail,
+      ],
+      rows: visible
+          .map(
+            (ReportResourceRow row) => <String>[
+              row.name,
+              '${row.issuedCount}×',
+              '${row.returnedCount}×',
+              '${row.outCount}',
+              '${row.availableUnits}/${row.totalUnits}',
+            ],
+          )
+          .toList(growable: false),
+      moreLabel: extra > 0 ? l10n.reportMoreCount(extra) : null,
+    );
+  }
+
+  void _addLoanSection({
+    required List<ReportTableSection> sections,
+    required String title,
+    required List<ReportLoanRow> rows,
+    required AppLocalizations l10n,
+    required bool forceEmpty,
+  }) {
+    if (rows.isEmpty) {
+      if (forceEmpty) {
+        sections.add(
+          ReportTableSection(
+            title: title,
+            columns: const <String>[],
+            rows: const <List<String>>[],
+            emptyMessage: l10n.reportNoOutstandingLoans,
+          ),
         );
       }
+      return;
     }
-
-    final List<InventoryItem> poolItems = inventory
-        .where((InventoryItem i) => i.hasUnitCodePool)
-        .toList()
-      ..sort((InventoryItem a, InventoryItem b) => a.name.compareTo(b.name));
-
-    final String heading = title ?? l10n.reportTypeUnitOccupancy;
-    if (poolItems.isEmpty) {
-      return '$heading\n${l10n.reportNoUnitPools}';
+    int total = 0;
+    for (final ReportLoanRow row in rows) {
+      total += row.pendingPaise;
     }
-
-    final List<String> lines = <String>[heading];
-    for (final InventoryItem item in poolItems) {
-      lines.add(l10n.reportUnitOccupancyItemHeading(item.name, item.totalUnits));
-      final List<String> pool = generateUnitPool(
-        prefix: item.unitCodePrefix!,
-        total: item.totalUnits,
-      );
-      for (final String code in pool) {
-        final occupied = occupiedByCode[code];
-        if (occupied == null) {
-          lines.add(
-            l10n.reportUnitOccupancyRow(
-              code,
-              l10n.reportUnitStatusAvailable,
-              '—',
-            ),
-          );
-        } else {
-          final Customer? customer = customersById[occupied.customerId];
-          final String who = customer?.name.trim().isNotEmpty == true
-              ? customer!.name
-              : (occupied.instanceName.trim().isNotEmpty
-                  ? occupied.instanceName
-                  : occupied.customerId);
-          lines.add(
-            l10n.reportUnitOccupancyRow(
-              code,
-              l10n.reportUnitStatusOccupied,
-              who,
-            ),
-          );
-        }
-      }
-    }
-    return lines.join('\n');
+    sections.add(
+      ReportTableSection(
+        title: title,
+        columns: <String>[l10n.reportColParty, l10n.reportColAmount],
+        rows: rows
+            .map(
+              (ReportLoanRow row) => <String>[
+                row.customerName,
+                formatMoney(row.pendingPaise, currencyCode: row.currencyCode),
+              ],
+            )
+            .toList(growable: false),
+        moreLabel: l10n.reportOutstandingLoansTotal(formatMoney(total), rows.length),
+      ),
+    );
   }
 
-  bool _inRange(DateTime value, ReportDateRange range) {
-    return !value.isBefore(range.start) && !value.isAfter(range.end);
+  String _formatText({
+    required String title,
+    required String rangeLabel,
+    required String typeHeading,
+    required List<ReportKpi> kpis,
+    required List<ReportTableSection> sections,
+  }) {
+    final List<String> lines = <String>[title, rangeLabel, ''];
+    final String body = _formatBody(
+      typeHeading: typeHeading,
+      kpis: kpis,
+      sections: sections,
+    );
+    if (body.isNotEmpty) {
+      lines.add(body);
+    }
+    return lines.join('\n').trimRight();
+  }
+
+  String _formatBody({
+    required String typeHeading,
+    required List<ReportKpi> kpis,
+    required List<ReportTableSection> sections,
+  }) {
+    final List<String> lines = <String>[];
+    if (typeHeading.trim().isNotEmpty) {
+      lines.add(typeHeading.trim());
+    }
+    for (final ReportKpi kpi in kpis) {
+      lines.add('${kpi.label}: ${kpi.value}');
+    }
+    for (final ReportTableSection section in sections) {
+      if (lines.isNotEmpty) {
+        lines.add('');
+      }
+      if (section.title.trim().isNotEmpty) {
+        lines.add(section.title.trim());
+      }
+      if (section.emptyMessage != null && section.emptyMessage!.isNotEmpty) {
+        lines.add(section.emptyMessage!);
+        continue;
+      }
+      if (section.columns.isNotEmpty && section.rows.isNotEmpty) {
+        lines.add(section.columns.join('\t'));
+      }
+      for (final List<String> row in section.rows) {
+        lines.add(row.join('\t'));
+      }
+      if (section.moreLabel != null && section.moreLabel!.isNotEmpty) {
+        lines.add(section.moreLabel!);
+      }
+    }
+    return lines.join('\n').trim();
+  }
+
+  String _typeHeading(AppLocalizations l10n, ReportType type) {
+    switch (type) {
+      case ReportType.summary:
+        return l10n.reportTypeSummary;
+      case ReportType.customerWise:
+        return l10n.reportTypeCustomerWise;
+      case ReportType.inventoryWise:
+        return l10n.reportTypeResourcesWise;
+      case ReportType.unitOccupancy:
+        return l10n.reportTypeUnitOccupancy;
+    }
+  }
+
+  String _emptyMessage(AppLocalizations l10n, ReportType type) {
+    switch (type) {
+      case ReportType.inventoryWise:
+        return l10n.reportNoResources;
+      case ReportType.unitOccupancy:
+        return l10n.reportNoOccupiedUnits;
+      case ReportType.summary:
+      case ReportType.customerWise:
+        return l10n.reportNoRentalsInRange;
+    }
+  }
+
+  String _widgetTitle(Locale locale, ReportWidgetId id, String fallback) {
+    return reportWidgetDefById(id)?.localizedLabel(locale) ?? fallback;
+  }
+
+  String _partyName(String name, String phone) {
+    if (phone.trim().isEmpty) {
+      return name;
+    }
+    return '$name ($phone)';
+  }
+
+  String _partyWithNickname(ReportOrderRow row) {
+    final String nick = row.nickname?.trim() ?? '';
+    final String base = _partyName(row.customerName, row.customerPhone);
+    if (nick.isEmpty) {
+      return base;
+    }
+    return '$nick · $base';
+  }
+
+  String _orderStatusLabel(AppLocalizations l10n, ReportOrderRow row) {
+    if (row.orderStatus == OrderStatus.completed ||
+        row.status == AssetStatus.available) {
+      return localizedOrderStatus(l10n, OrderStatus.completed);
+    }
+    if (row.orderStatus == OrderStatus.cancelled) {
+      return localizedOrderStatus(l10n, OrderStatus.cancelled);
+    }
+    return localizedStatusLabel(l10n, row.status);
   }
 
   String _truncate(AppLocalizations l10n, String text) {
@@ -650,14 +796,4 @@ class ReportBuilder {
     }
     return '${text.substring(0, keep)}$suffix';
   }
-}
-
-String _reportClosedLineStatusBit(AppLocalizations l10n, RentalLine line) {
-  if (line.isSell) {
-    return l10n.reportStatusSoldBit;
-  }
-  if (line.isJob) {
-    return l10n.reportStatusCompletedBit;
-  }
-  return l10n.reportStatusReturnedBit;
 }

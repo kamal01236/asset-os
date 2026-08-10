@@ -661,8 +661,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reportNoUnitPools => 'No resources with a unit code prefix.';
 
   @override
-  String reportUnitOccupancyItemHeading(String name, int total) {
-    return '$name ($total units)';
+  String get reportNoOccupiedUnits => 'No units currently out.';
+
+  @override
+  String reportUnitOccupancyItemHeading(String name, int out, int total) {
+    return '$name · out $out / $total';
   }
 
   @override
@@ -699,6 +702,98 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reportPreviewLabel => 'Preview';
+
+  @override
+  String get printReport => 'Print';
+
+  @override
+  String reportStillOutAsOf(String date) {
+    return 'Still out (as of $date)';
+  }
+
+  @override
+  String reportIssuedCount(int count) {
+    return 'Issued: $count';
+  }
+
+  @override
+  String reportStillOutCount(int count) {
+    return 'Still out: $count';
+  }
+
+  @override
+  String reportMoreCount(int count) {
+    return '+$count more';
+  }
+
+  @override
+  String get reportKpiIssued => 'Issued';
+
+  @override
+  String get reportKpiReturned => 'Returned';
+
+  @override
+  String get reportKpiStillOut => 'Still out';
+
+  @override
+  String get reportKpiOverdue => 'Overdue';
+
+  @override
+  String get reportKpiChargesOpened => 'Charges opened';
+
+  @override
+  String get reportKpiChargesReturned => 'Charges returned';
+
+  @override
+  String get reportKpiDepositApplied => 'Deposit applied';
+
+  @override
+  String get reportKpiSellCollected => 'Sell collected';
+
+  @override
+  String get reportKpiBalanceDue => 'Balance due';
+
+  @override
+  String get reportKpiPendingLoans => 'Pending loans';
+
+  @override
+  String get reportSectionIssued => 'Issued';
+
+  @override
+  String get reportSectionReturned => 'Returned';
+
+  @override
+  String get reportColParty => 'Party';
+
+  @override
+  String get reportColIssued => 'Issued';
+
+  @override
+  String get reportColReturned => 'Returned';
+
+  @override
+  String get reportColAmount => 'Amount';
+
+  @override
+  String get reportColStatus => 'Status';
+
+  @override
+  String get reportColItems => 'Items';
+
+  @override
+  String get reportColResource => 'Resource';
+
+  @override
+  String get reportColOut => 'Out';
+
+  @override
+  String get reportColAvail => 'Avail';
+
+  @override
+  String get reportColCode => 'Code';
+
+  @override
+  String get reportColCustomer => 'Customer';
 
   @override
   String get shareToMyWhatsApp => 'Share to my WhatsApp';

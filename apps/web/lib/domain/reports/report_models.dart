@@ -24,6 +24,10 @@ class ReportDateRange {
   final DateTime start;
   final DateTime end;
 
+  /// Inclusive check for timestamps falling inside this range.
+  bool contains(DateTime value) =>
+      !value.isBefore(start) && !value.isAfter(end);
+
   /// Resolve presets; [customStart]/[customEnd] used when [period] is custom.
   /// End is inclusive through end-of-day when a calendar date is chosen.
   factory ReportDateRange.resolve({

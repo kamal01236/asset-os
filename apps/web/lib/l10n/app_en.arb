@@ -377,11 +377,15 @@
   "reportTypeResourcesWise": "Resources-wise",
   "reportTypeUnitOccupancy": "Unit occupancy",
   "reportNoUnitPools": "No resources with a unit code prefix.",
-  "reportUnitOccupancyItemHeading": "{name} ({total} units)",
+  "reportNoOccupiedUnits": "No units currently out.",
+  "reportUnitOccupancyItemHeading": "{name} · out {out} / {total}",
   "@reportUnitOccupancyItemHeading": {
     "placeholders": {
       "name": {
         "type": "String"
+      },
+      "out": {
+        "type": "int"
       },
       "total": {
         "type": "int"
@@ -412,6 +416,62 @@
   "reportStartDate": "Start date",
   "reportEndDate": "End date",
   "reportPreviewLabel": "Preview",
+  "printReport": "Print",
+  "reportStillOutAsOf": "Still out (as of {date})",
+  "@reportStillOutAsOf": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "reportIssuedCount": "Issued: {count}",
+  "@reportIssuedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "reportStillOutCount": "Still out: {count}",
+  "@reportStillOutCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "reportMoreCount": "+{count} more",
+  "@reportMoreCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "reportKpiIssued": "Issued",
+  "reportKpiReturned": "Returned",
+  "reportKpiStillOut": "Still out",
+  "reportKpiOverdue": "Overdue",
+  "reportKpiChargesOpened": "Charges opened",
+  "reportKpiChargesReturned": "Charges returned",
+  "reportKpiDepositApplied": "Deposit applied",
+  "reportKpiSellCollected": "Sell collected",
+  "reportKpiBalanceDue": "Balance due",
+  "reportKpiPendingLoans": "Pending loans",
+  "reportSectionIssued": "Issued",
+  "reportSectionReturned": "Returned",
+  "reportColParty": "Party",
+  "reportColIssued": "Issued",
+  "reportColReturned": "Returned",
+  "reportColAmount": "Amount",
+  "reportColStatus": "Status",
+  "reportColItems": "Items",
+  "reportColResource": "Resource",
+  "reportColOut": "Out",
+  "reportColAvail": "Avail",
+  "reportColCode": "Code",
+  "reportColCustomer": "Customer",
   "shareToMyWhatsApp": "Share to my WhatsApp",
   "copyReportText": "Copy text",
   "reportCopied": "Report copied to clipboard.",

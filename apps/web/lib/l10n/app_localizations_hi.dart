@@ -662,8 +662,11 @@ class AppLocalizationsHi extends AppLocalizations {
   String get reportNoUnitPools => 'कोड उपसर्ग वाले कोई संसाधन नहीं।';
 
   @override
-  String reportUnitOccupancyItemHeading(String name, int total) {
-    return '$name ($total इकाइयाँ)';
+  String get reportNoOccupiedUnits => 'अभी कोई यूनिट बाहर नहीं।';
+
+  @override
+  String reportUnitOccupancyItemHeading(String name, int out, int total) {
+    return '$name · बाहर $out / $total';
   }
 
   @override
@@ -700,6 +703,98 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get reportPreviewLabel => 'पूर्वावलोकन';
+
+  @override
+  String get printReport => 'प्रिंट';
+
+  @override
+  String reportStillOutAsOf(String date) {
+    return 'अभी बाहर ($date तक)';
+  }
+
+  @override
+  String reportIssuedCount(int count) {
+    return 'जारी: $count';
+  }
+
+  @override
+  String reportStillOutCount(int count) {
+    return 'अभी बाहर: $count';
+  }
+
+  @override
+  String reportMoreCount(int count) {
+    return '+$count और';
+  }
+
+  @override
+  String get reportKpiIssued => 'जारी';
+
+  @override
+  String get reportKpiReturned => 'वापस';
+
+  @override
+  String get reportKpiStillOut => 'अभी बाहर';
+
+  @override
+  String get reportKpiOverdue => 'अतिदेय';
+
+  @override
+  String get reportKpiChargesOpened => 'शुल्क (खोले)';
+
+  @override
+  String get reportKpiChargesReturned => 'शुल्क (वापस)';
+
+  @override
+  String get reportKpiDepositApplied => 'अग्रिम लागू';
+
+  @override
+  String get reportKpiSellCollected => 'बिक्री वसूली';
+
+  @override
+  String get reportKpiBalanceDue => 'शेष देय';
+
+  @override
+  String get reportKpiPendingLoans => 'लंबित कर्ज';
+
+  @override
+  String get reportSectionIssued => 'जारी';
+
+  @override
+  String get reportSectionReturned => 'वापस';
+
+  @override
+  String get reportColParty => 'पक्ष';
+
+  @override
+  String get reportColIssued => 'जारी';
+
+  @override
+  String get reportColReturned => 'वापस';
+
+  @override
+  String get reportColAmount => 'राशि';
+
+  @override
+  String get reportColStatus => 'स्थिति';
+
+  @override
+  String get reportColItems => 'वस्तुएँ';
+
+  @override
+  String get reportColResource => 'संसाधन';
+
+  @override
+  String get reportColOut => 'बाहर';
+
+  @override
+  String get reportColAvail => 'उपलब्ध';
+
+  @override
+  String get reportColCode => 'कोड';
+
+  @override
+  String get reportColCustomer => 'ग्राहक';
 
   @override
   String get shareToMyWhatsApp => 'मेरे WhatsApp पर शेयर करें';

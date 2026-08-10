@@ -7,9 +7,10 @@ import '../../../infrastructure/l10n/l10n_ext.dart';
 import '../../../domain/models/entities.dart';
 import '../../../application/providers/app_providers.dart';
 import '../../../application/reports/report_builder.dart';
+import '../../../application/reports/report_document.dart';
 import '../../../domain/reports/report_models.dart';
 import '../../../infrastructure/sharing/whatsapp_share.dart';
-import '../../widgets/ui_primitives.dart';
+import 'report_print.dart';
 
 /// Generate a text report and share it to the owner's WhatsApp (share-to-self).
 class ShareReportsScreen extends ConsumerStatefulWidget {
@@ -59,9 +60,9 @@ class _ShareReportsScreenState extends ConsumerState<ShareReportsScreen> {
     );
 
     final Locale locale = Localizations.localeOf(context);
-    final String preview = loading
-        ? '…'
-        : const ReportBuilder().build(
+    final ReportDocument? document = loading
+        ? null
+        : const ReportBuilder().document(
             l10n: l10n,
             type: _type,
             range: range,
@@ -73,6 +74,7 @@ class _ShareReportsScreenState extends ConsumerState<ShareReportsScreen> {
             widgets: reportWidgets,
             locale: locale,
           );
+    final String preview = document?.text ?? '…';
 
     final bool canShare = whatsApp.isConfigured && !loading && !_sharing;
 
@@ -196,7 +198,7 @@ class _ShareReportsScreenState extends ConsumerState<ShareReportsScreen> {
             style: Theme.of(context).textTheme.titleSmall,
           ),
           const SizedBox(height: 8),
-          _StructuredReportPreview(preview: preview),
+          _ReportTablePreview(document: document),
           const SizedBox(height: 16),
           if (!whatsApp.isConfigured)
             Card(
@@ -233,20 +235,36 @@ class _ShareReportsScreenState extends ConsumerState<ShareReportsScreen> {
             label: Text(l10n.shareToMyWhatsApp),
           ),
           const SizedBox(height: 8),
-          OutlinedButton.icon(
-            onPressed: loading
-                ? null
-                : () async {
-                    await Clipboard.setData(ClipboardData(text: preview));
-                    if (!context.mounted) {
-                      return;
-                    }
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(l10n.reportCopied)),
-                    );
-                  },
-            icon: const Icon(Icons.copy_outlined),
-            label: Text(l10n.copyReportText),
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: loading
+                      ? null
+                      : () async {
+                          await Clipboard.setData(ClipboardData(text: preview));
+                          if (!context.mounted) {
+                            return;
+                          }
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(l10n.reportCopied)),
+                          );
+                        },
+                  icon: const Icon(Icons.copy_outlined),
+                  label: Text(l10n.copyReportText),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: loading || document == null
+                      ? null
+                      : () => printReportDocument(document),
+                  icon: const Icon(Icons.print_outlined),
+                  label: Text(l10n.printReport),
+                ),
+              ),
+            ],
           ),
         ],
         ),
@@ -323,83 +341,154 @@ class _ShareReportsScreenState extends ConsumerState<ShareReportsScreen> {
   }
 }
 
-/// Key-value rows for lines that look like `Label: value`; other lines as text.
-class _StructuredReportPreview extends StatelessWidget {
-  const _StructuredReportPreview({required this.preview});
+/// Compact table preview from the same snapshot as Copy / Print / WhatsApp.
+class _ReportTablePreview extends StatelessWidget {
+  const _ReportTablePreview({required this.document});
 
-  final String preview;
+  final ReportDocument? document;
 
   @override
   Widget build(BuildContext context) {
-    final List<Widget> children = <Widget>[];
-    bool firstHeading = true;
-    for (final String raw in preview.split('\n')) {
-      final String line = raw.trimRight();
-      if (line.trim().isEmpty) {
+    final ThemeData theme = Theme.of(context);
+    final ColorScheme colors = theme.colorScheme;
+    if (document == null) {
+      return Card(
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Text(
+            '…',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: colors.onSurfaceVariant,
+            ),
+          ),
+        ),
+      );
+    }
+    final ReportDocument doc = document!;
+    final List<Widget> children = <Widget>[
+      Text(
+        doc.title,
+        style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+      ),
+      const SizedBox(height: 2),
+      Text(
+        doc.rangeLabel,
+        style: theme.textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
+      ),
+    ];
+    if (doc.kpis.isNotEmpty) {
+      children.add(const SizedBox(height: 10));
+      children.add(
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: doc.kpis
+              .map(
+                (ReportKpi kpi) => Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: colors.outlineVariant),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        kpi.label,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: colors.onSurfaceVariant,
+                        ),
+                      ),
+                      Text(
+                        kpi.value,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+              .toList(growable: false),
+        ),
+      );
+    }
+    for (final ReportTableSection section in doc.sections) {
+      if (section.title.trim().isNotEmpty) {
+        children.add(const SizedBox(height: 12));
+        children.add(
+          Text(
+            section.title,
+            style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+          ),
+        );
+      }
+      if (section.emptyMessage != null && section.emptyMessage!.isNotEmpty) {
+        children.add(const SizedBox(height: 4));
+        children.add(
+          Text(
+            section.emptyMessage!,
+            style: theme.textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
+          ),
+        );
         continue;
       }
-      final int colon = line.indexOf(': ');
-      final String trimmed = line.trimLeft();
-      if (colon > 0 &&
-          !trimmed.startsWith('•') &&
-          !trimmed.startsWith('-')) {
-        final String label = line.substring(0, colon).trim();
-        final String value = line.substring(colon + 2).trim();
-        final bool strong = label.toLowerCase().contains('balance') ||
-            label.toLowerCase() == 'active' ||
-            label.toLowerCase().contains('charges');
+      if (section.columns.isNotEmpty && section.rows.isNotEmpty) {
+        children.add(const SizedBox(height: 6));
         children.add(
-          MoneyStack(
-            label: label,
-            amount: value,
-            emphasis: strong
-                ? MoneyStackEmphasis.total
-                : MoneyStackEmphasis.normal,
-          ),
-        );
-      } else if (!line.startsWith(' ') &&
-          !trimmed.startsWith('•') &&
-          !trimmed.startsWith('-') &&
-          !line.contains('→') &&
-          line.length < 40) {
-        children.add(
-          Padding(
-            padding: EdgeInsets.only(top: firstHeading ? 0 : 10, bottom: 4),
-            child: Text(
-              line.trim(),
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Table(
+              defaultColumnWidth: const IntrinsicColumnWidth(),
+              border: TableBorder.all(color: colors.outlineVariant, width: 0.5),
+              children: <TableRow>[
+                TableRow(
+                  decoration: BoxDecoration(color: colors.surfaceContainerHighest),
+                  children: section.columns
+                      .map((String col) => _cell(theme, col, header: true))
+                      .toList(growable: false),
+                ),
+                for (final List<String> row in section.rows)
+                  TableRow(
+                    children: row
+                        .map((String cell) => _cell(theme, cell))
+                        .toList(growable: false),
+                  ),
+              ],
             ),
           ),
         );
-        firstHeading = false;
-      } else {
+      }
+      if (section.moreLabel != null && section.moreLabel!.isNotEmpty) {
+        children.add(const SizedBox(height: 4));
         children.add(
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 2),
-            child: Text(
-              line,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                height: 1.35,
-              ),
-            ),
+          Text(
+            section.moreLabel!,
+            style: theme.textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
           ),
         );
       }
     }
 
     return Card(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxHeight: 320),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: children,
-          ),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: children,
         ),
+      ),
+    );
+  }
+
+  Widget _cell(ThemeData theme, String text, {bool header = false}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      child: Text(
+        text,
+        style: header
+            ? theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w700)
+            : theme.textTheme.bodySmall,
       ),
     );
   }

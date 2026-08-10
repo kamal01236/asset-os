@@ -377,11 +377,15 @@
   "reportTypeResourcesWise": "संसाधन-वार",
   "reportTypeUnitOccupancy": "यूनिट अधिभोग",
   "reportNoUnitPools": "कोड उपसर्ग वाले कोई संसाधन नहीं।",
-  "reportUnitOccupancyItemHeading": "{name} ({total} इकाइयाँ)",
+  "reportNoOccupiedUnits": "अभी कोई यूनिट बाहर नहीं।",
+  "reportUnitOccupancyItemHeading": "{name} · बाहर {out} / {total}",
   "@reportUnitOccupancyItemHeading": {
     "placeholders": {
       "name": {
         "type": "String"
+      },
+      "out": {
+        "type": "int"
       },
       "total": {
         "type": "int"
@@ -412,6 +416,62 @@
   "reportStartDate": "प्रारंभ तिथि",
   "reportEndDate": "समाप्ति तिथि",
   "reportPreviewLabel": "पूर्वावलोकन",
+  "printReport": "प्रिंट",
+  "reportStillOutAsOf": "अभी बाहर ({date} तक)",
+  "@reportStillOutAsOf": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "reportIssuedCount": "जारी: {count}",
+  "@reportIssuedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "reportStillOutCount": "अभी बाहर: {count}",
+  "@reportStillOutCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "reportMoreCount": "+{count} और",
+  "@reportMoreCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "reportKpiIssued": "जारी",
+  "reportKpiReturned": "वापस",
+  "reportKpiStillOut": "अभी बाहर",
+  "reportKpiOverdue": "अतिदेय",
+  "reportKpiChargesOpened": "शुल्क (खोले)",
+  "reportKpiChargesReturned": "शुल्क (वापस)",
+  "reportKpiDepositApplied": "अग्रिम लागू",
+  "reportKpiSellCollected": "बिक्री वसूली",
+  "reportKpiBalanceDue": "शेष देय",
+  "reportKpiPendingLoans": "लंबित कर्ज",
+  "reportSectionIssued": "जारी",
+  "reportSectionReturned": "वापस",
+  "reportColParty": "पक्ष",
+  "reportColIssued": "जारी",
+  "reportColReturned": "वापस",
+  "reportColAmount": "राशि",
+  "reportColStatus": "स्थिति",
+  "reportColItems": "वस्तुएँ",
+  "reportColResource": "संसाधन",
+  "reportColOut": "बाहर",
+  "reportColAvail": "उपलब्ध",
+  "reportColCode": "कोड",
+  "reportColCustomer": "ग्राहक",
   "shareToMyWhatsApp": "मेरे WhatsApp पर शेयर करें",
   "copyReportText": "टेक्स्ट कॉपी करें",
   "reportCopied": "रिपोर्ट क्लिपबोर्ड पर कॉपी हो गई।",
