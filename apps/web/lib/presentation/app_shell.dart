@@ -11,6 +11,8 @@ import '../domain/models/unknown_customer.dart';
 import '../domain/orders/commercial_policy.dart';
 import '../domain/orders/order_payment.dart';
 import '../domain/pricing/rental_pricing.dart';
+import '../domain/subscriptions/subscription_coverage.dart';
+import '../domain/subscriptions/subscription_models.dart';
 import '../application/providers/app_providers.dart';
 import '../application/local_repository.dart';
 import '../domain/search/search_scope.dart';
@@ -24,6 +26,7 @@ import 'widgets/dynamic_field_inputs.dart';
 import 'widgets/global_search_typeahead.dart';
 import 'widgets/rental_timeline.dart';
 import 'widgets/scoped_search_field.dart';
+import 'widgets/subscription_catalog_fields.dart';
 import 'widgets/ui_primitives.dart';
 import 'features/home/customize_home_screen.dart';
 import 'features/home/home_screen.dart';
@@ -709,7 +712,11 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
     final AsyncValue<List<Customer>> customersAsync =
         ref.watch(customersProvider);
     final AsyncValue<List<Rental>> rentalsAsync = ref.watch(rentalsProvider);
-    if (customersAsync.isLoading || rentalsAsync.isLoading) {
+    final AsyncValue<List<CustomerSubscription>> subsAsync =
+        ref.watch(customerSubscriptionsProvider);
+    if (customersAsync.isLoading ||
+        rentalsAsync.isLoading ||
+        subsAsync.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
     if (customersAsync.hasError) {
@@ -721,6 +728,8 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
     final List<Customer> customers =
         customersAsync.valueOrNull ?? const <Customer>[];
     final List<Rental> rentals = rentalsAsync.valueOrNull ?? const <Rental>[];
+    final List<CustomerSubscription> subscriptions =
+        subsAsync.valueOrNull ?? const <CustomerSubscription>[];
     final DateTime now = DateTime.now();
     final List<Customer> visible = _visibleCustomers(customers);
     return ListView(
@@ -743,6 +752,12 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
         ...visible.map((Customer customer) {
           final CustomerBalanceAsOf balance =
               customerBalanceAsOf(customer, rentals, now);
+          final CustomerSubscription? activeSub = highestActiveSubscription(
+            subscriptions.where(
+              (CustomerSubscription s) => s.customerId == customer.id,
+            ),
+            now,
+          );
           final ColorScheme scheme = Theme.of(context).colorScheme;
           final Color netColor = balance.netPaise > 0
               ? AppTheme.overdue
@@ -754,6 +769,12 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
             child: ListEntityRow(
               title: customer.name,
               secondary: customer.phone,
+              tertiary: activeSub == null
+                  ? null
+                  : l10n.customerSubscriptionMeta(
+                      localizedSubscriptionTier(l10n, activeSub.tier),
+                      formatIndiaDate(activeSub.validUntil),
+                    ),
               leadingIcon: Icons.person_outline,
               pill: TierPill(trusted: customer.isTrusted),
               trailing: Row(
@@ -2107,6 +2128,12 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
   bool _dueDateOptional = false;
   bool _requiresUnitIdentity = true;
   bool _allowsDynamicPricing = false;
+  ResourceType? _kindOverride;
+  SubscriptionTier _skuTier = SubscriptionTier.basic;
+  SubscriptionPeriodUnit _periodUnit = SubscriptionPeriodUnit.month;
+  final TextEditingController _periodCountController =
+      TextEditingController(text: '1');
+  SubscriptionTier _minTier = SubscriptionTier.none;
 
   @override
   void dispose() {
@@ -2118,6 +2145,7 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
     _lateFeeController.dispose();
     _securityDepositController.dispose();
     _unitCodePrefixController.dispose();
+    _periodCountController.dispose();
     _extraFields.dispose();
     super.dispose();
   }
@@ -2146,6 +2174,17 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
     _dueDateOptional = item.dueDateOptional;
     _requiresUnitIdentity = item.requiresUnitIdentity;
     _allowsDynamicPricing = item.allowsDynamicPricing;
+    _kindOverride = null;
+    _skuTier = subscriptionTierFromMetadata(
+          item.metadata,
+          fallback: SubscriptionTier.basic,
+        ) ??
+        SubscriptionTier.basic;
+    _periodUnit = subscriptionPeriodUnitFromMetadata(item.metadata) ??
+        SubscriptionPeriodUnit.month;
+    _periodCountController.text =
+        '${subscriptionPeriodCountFromMetadata(item.metadata) ?? 1}';
+    _minTier = minSubscriptionTierFromMetadata(item.metadata);
     final List<String> templateFields = ref.read(extraFieldIdsProvider);
     final List<FieldDef> fields = resolveExtraFields(
       type: item.defaultItemKind,
@@ -2167,6 +2206,13 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
       return ResourceType.rental;
     }
     return item.defaultItemKind;
+  }
+
+  ResourceType _editKind({
+    required InventoryItem item,
+    required String category,
+  }) {
+    return _kindOverride ?? _resolvedEditKind(item: item, category: category);
   }
 
   Future<void> _saveEdit() async {
@@ -2206,7 +2252,7 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
     final InventoryItem existing = inventory[existingIndex];
     final int units = int.tryParse(_unitsController.text.trim()) ?? 1;
     final ResourceType kind =
-        _resolvedEditKind(item: existing, category: category);
+        _editKind(item: existing, category: category);
     final List<String> templateFields = ref.read(extraFieldIdsProvider);
     final List<FieldDef> fields = resolveExtraFields(
       type: kind,
@@ -2229,7 +2275,16 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
       updateUnitCodePrefix: true,
       allowsDynamicPricing: _allowsDynamicPricing,
       defaultItemKind: kind,
-      metadata: _extraFields.collect(fields),
+      metadata: applySubscriptionCatalogMetadata(
+        <String, Object?>{
+          ...existing.metadata,
+          ..._extraFields.collect(fields),
+        },
+        skuTier: isSubscriptionCatalogType(kind) ? _skuTier : null,
+        periodUnit: _periodUnit,
+        periodCount: int.tryParse(_periodCountController.text.trim()),
+        minTier: isSubscriptionCatalogType(kind) ? null : _minTier,
+      ),
     );
     if (!mounted) {
       return;
@@ -2366,7 +2421,7 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
                       ),
                     ),
                     if (catalogSupportsSecurityDeposit(
-                      _resolvedEditKind(
+                      _editKind(
                         item: item,
                         category: resolveSelectedCategory(
                           selected: _selectedCategory,
@@ -2414,6 +2469,68 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
                         setState(() => _allowsDynamicPricing = value);
                       },
                     ),
+                    ...() {
+                      final String category = resolveSelectedCategory(
+                        selected: _selectedCategory,
+                        customText: _customCategoryController.text,
+                      );
+                      final ResourceType kind =
+                          _editKind(item: item, category: category);
+                      final List<ResourceType> enabled =
+                          ref.watch(enabledResourceTypesProvider);
+                      final bool showKindPicker =
+                          enabled.any(isSubscriptionCatalogType) ||
+                              isSubscriptionCatalogType(kind);
+                      final List<ResourceType> kindOptions = <ResourceType>{
+                        ...enabled,
+                        kind,
+                      }.toList();
+                      return <Widget>[
+                        if (showKindPicker) ...<Widget>[
+                          const SizedBox(height: 8),
+                          DropdownButtonFormField<ResourceType>(
+                            key: ValueKey<String>('edit-kind-$kind'),
+                            initialValue: kind,
+                            decoration: InputDecoration(
+                              labelText: l10n.catalogResourceTypeLabel,
+                            ),
+                            items: kindOptions
+                                .map(
+                                  (ResourceType type) =>
+                                      DropdownMenuItem<ResourceType>(
+                                    value: type,
+                                    child: Text(
+                                      localizedResourceTypeLabel(l10n, type),
+                                    ),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: (ResourceType? value) {
+                              if (value != null) {
+                                setState(() => _kindOverride = value);
+                              }
+                            },
+                          ),
+                        ],
+                        SubscriptionCatalogFields(
+                          fieldKeyPrefix: 'edit-sub',
+                          kind: kind,
+                          skuTier: _skuTier,
+                          periodUnit: _periodUnit,
+                          periodCountController: _periodCountController,
+                          minTier: _minTier,
+                          onSkuTierChanged: (SubscriptionTier t) {
+                            setState(() => _skuTier = t);
+                          },
+                          onPeriodUnitChanged: (SubscriptionPeriodUnit u) {
+                            setState(() => _periodUnit = u);
+                          },
+                          onMinTierChanged: (SubscriptionTier t) {
+                            setState(() => _minTier = t);
+                          },
+                        ),
+                      ];
+                    }(),
                     const SizedBox(height: 8),
                     TextField(
                       controller: _notesController,
@@ -2425,7 +2542,7 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
                     ...() {
                       final List<String> templateFields =
                           ref.watch(extraFieldIdsProvider);
-                      final ResourceType kind = _resolvedEditKind(
+                      final ResourceType kind = _editKind(
                         item: item,
                         category: resolveSelectedCategory(
                           selected: _selectedCategory,
@@ -2601,8 +2718,12 @@ class CustomerDetailScreen extends ConsumerWidget {
     final AsyncValue<List<Rental>> rentalsAsync = ref.watch(rentalsProvider);
     final AsyncValue<List<MoneyLoan>> loansAsync =
         ref.watch(moneyLoansForCustomerProvider(customerId));
+    final AsyncValue<List<CustomerSubscription>> subsAsync =
+        ref.watch(customerSubscriptionsForCustomerProvider(customerId));
 
-    if (customersAsync.isLoading || rentalsAsync.isLoading) {
+    if (customersAsync.isLoading ||
+        rentalsAsync.isLoading ||
+        subsAsync.isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
@@ -2622,6 +2743,16 @@ class CustomerDetailScreen extends ConsumerWidget {
       rentals: customerRentals,
       loans: customerLoans,
     );
+    final DateTime now = DateTime.now();
+    final List<CustomerSubscription> subscriptions =
+        List<CustomerSubscription>.of(
+      subsAsync.valueOrNull ?? const <CustomerSubscription>[],
+    )..sort(
+        (CustomerSubscription a, CustomerSubscription b) =>
+            b.validUntil.compareTo(a.validUntil),
+      );
+    final CustomerSubscription? activeSub =
+        highestActiveSubscription(subscriptions, now);
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.customerProfileTitle)),
@@ -2680,6 +2811,56 @@ class CustomerDetailScreen extends ConsumerWidget {
                     amount: formatMoney(balance.netPaise),
                     emphasize: balance.netPaise != 0,
                   ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    l10n.subscriptionHistoryHeading,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    activeSub == null
+                        ? l10n.subscriptionNoneActive
+                        : l10n.subscriptionUntilLabel(
+                            localizedSubscriptionTier(l10n, activeSub.tier),
+                            formatIndiaDate(activeSub.validUntil),
+                          ),
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  if (subscriptions.isNotEmpty) ...<Widget>[
+                    const SizedBox(height: 10),
+                    ...subscriptions.map((CustomerSubscription row) {
+                      final String status;
+                      if (row.status == CustomerSubscriptionStatus.cancelled) {
+                        status = l10n.subscriptionStatusCancelled;
+                      } else if (!row.isActiveAt(now)) {
+                        status = l10n.subscriptionStatusExpired;
+                      } else {
+                        status = localizedSubscriptionTier(l10n, row.tier);
+                      }
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 6),
+                        child: Text(
+                          '${localizedSubscriptionTier(l10n, row.tier)} · '
+                          '${formatIndiaDate(row.startsAt)} – '
+                          '${formatIndiaDate(row.validUntil)}'
+                          '${row.isActiveAt(now) && row.status == CustomerSubscriptionStatus.active ? '' : ' · $status'}',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      );
+                    }),
+                  ],
                 ],
               ),
             ),
@@ -2934,6 +3115,12 @@ class _AddInventoryFlowScreenState extends ConsumerState<AddInventoryFlowScreen>
   bool _requiresUnitIdentity = false;
   bool _allowsDynamicPricing = false;
   bool _submitting = false;
+  ResourceType? _kindOverride;
+  SubscriptionTier _skuTier = SubscriptionTier.basic;
+  SubscriptionPeriodUnit _periodUnit = SubscriptionPeriodUnit.month;
+  final TextEditingController _periodCountController =
+      TextEditingController(text: '1');
+  SubscriptionTier _minTier = SubscriptionTier.none;
 
   @override
   void initState() {
@@ -2953,6 +3140,7 @@ class _AddInventoryFlowScreenState extends ConsumerState<AddInventoryFlowScreen>
     _lateFeeController.dispose();
     _securityDepositController.dispose();
     _unitCodePrefixController.dispose();
+    _periodCountController.dispose();
     _extraFields.dispose();
     super.dispose();
   }
@@ -2971,12 +3159,12 @@ class _AddInventoryFlowScreenState extends ConsumerState<AddInventoryFlowScreen>
         : (categoryOptions.isNotEmpty
             ? categoryOptions.first
             : kCategoryOther);
-    final ResourceType addKind = defaultKindForCategory(
-      resolveSelectedCategory(
-        selected: selectedCategory,
-        customText: _customCategoryController.text,
-      ),
+    final String addCategory = resolveSelectedCategory(
+      selected: selectedCategory,
+      customText: _customCategoryController.text,
     );
+    final ResourceType addKind =
+        _kindOverride ?? defaultKindForCategory(addCategory);
     return Scaffold(
       appBar: AppBar(title: Text(l10n.actionAddResource)),
       body: ListView(
@@ -3106,11 +3294,65 @@ class _AddInventoryFlowScreenState extends ConsumerState<AddInventoryFlowScreen>
             },
           ),
           ...() {
+            final List<ResourceType> enabled =
+                ref.watch(enabledResourceTypesProvider);
+            final bool showKindPicker =
+                enabled.any(isSubscriptionCatalogType) ||
+                    isSubscriptionCatalogType(addKind);
+            final List<ResourceType> kindOptions = <ResourceType>{
+              ...enabled,
+              addKind,
+            }.toList();
+            return <Widget>[
+              if (showKindPicker) ...<Widget>[
+                const SizedBox(height: 8),
+                DropdownButtonFormField<ResourceType>(
+                  key: ValueKey<String>('add-kind-$addKind'),
+                  initialValue: addKind,
+                  decoration: InputDecoration(
+                    labelText: l10n.catalogResourceTypeLabel,
+                  ),
+                  items: kindOptions
+                      .map(
+                        (ResourceType type) => DropdownMenuItem<ResourceType>(
+                          value: type,
+                          child: Text(localizedResourceTypeLabel(l10n, type)),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (ResourceType? value) {
+                    if (value != null) {
+                      setState(() => _kindOverride = value);
+                    }
+                  },
+                ),
+              ],
+              SubscriptionCatalogFields(
+                fieldKeyPrefix: 'add-sub',
+                kind: addKind,
+                skuTier: _skuTier,
+                periodUnit: _periodUnit,
+                periodCountController: _periodCountController,
+                minTier: _minTier,
+                onSkuTierChanged: (SubscriptionTier t) {
+                  setState(() => _skuTier = t);
+                },
+                onPeriodUnitChanged: (SubscriptionPeriodUnit u) {
+                  setState(() => _periodUnit = u);
+                },
+                onMinTierChanged: (SubscriptionTier t) {
+                  setState(() => _minTier = t);
+                },
+              ),
+            ];
+          }(),
+          ...() {
             final String category = resolveSelectedCategory(
               selected: selectedCategory,
               customText: _customCategoryController.text,
             );
-            final ResourceType kind = defaultKindForCategory(category);
+            final ResourceType kind =
+                _kindOverride ?? defaultKindForCategory(category);
             final List<String> templateFields = ref.watch(extraFieldIdsProvider);
             final List<FieldDef> fields = resolveExtraFields(
               type: kind,
@@ -3175,7 +3417,8 @@ class _AddInventoryFlowScreenState extends ConsumerState<AddInventoryFlowScreen>
                     return;
                   }
                   final int units = int.tryParse(_unitsController.text.trim()) ?? 1;
-                  final ResourceType kind = defaultKindForCategory(category);
+                  final ResourceType kind =
+                      _kindOverride ?? defaultKindForCategory(category);
                   final List<String> templateFields =
                       ref.read(extraFieldIdsProvider);
                   final List<FieldDef> fields = resolveExtraFields(
@@ -3199,7 +3442,16 @@ class _AddInventoryFlowScreenState extends ConsumerState<AddInventoryFlowScreen>
                     unitCodePrefix: _unitCodePrefixController.text,
                     allowsDynamicPricing: _allowsDynamicPricing,
                     defaultItemKind: kind,
-                    metadata: _extraFields.collect(fields),
+                    metadata: applySubscriptionCatalogMetadata(
+                      _extraFields.collect(fields),
+                      skuTier:
+                          isSubscriptionCatalogType(kind) ? _skuTier : null,
+                      periodUnit: _periodUnit,
+                      periodCount:
+                          int.tryParse(_periodCountController.text.trim()),
+                      minTier:
+                          isSubscriptionCatalogType(kind) ? null : _minTier,
+                    ),
                   );
                   if (context.mounted) {
                     Navigator.of(context).pop();

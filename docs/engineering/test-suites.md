@@ -66,6 +66,7 @@ Every suite file has exactly one:
 | Touched area | Run |
 |--------------|-----|
 | `domain/pricing/**` | `test pricing` |
+| `domain/subscriptions/**`, commercial coverage, subscription ledger | `test orders` |
 | `presentation/features/orders/**`, order repo create | `test orders` (+ `test pricing` if billing changed) |
 | returns / partial return | `test returns` |
 | inventory categories / add inventory | `test inventory` |

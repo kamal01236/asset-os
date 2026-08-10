@@ -1,4 +1,6 @@
 import '../models/entities.dart';
+import '../subscriptions/subscription_coverage.dart';
+import '../subscriptions/subscription_models.dart';
 import 'order_payment.dart';
 
 /// How strongly a commercial checkout step applies to a line or order.
@@ -402,6 +404,9 @@ class CommercialLineInput {
       metadata: item.metadata,
     );
   }
+
+  ({ResourceType type, Map<String, Object?> metadata}) get subscriptionView =>
+      (type: type, metadata: metadata);
 }
 
 /// Union of line policies for New Order / Pay.
@@ -415,6 +420,7 @@ class AggregatedOrderCommercial {
     required this.suggestedSecurityPaise,
     required this.minPayNowPaise,
     required this.lines,
+    this.cartMinTier = SubscriptionTier.none,
   });
 
   final CommercialRequirement pay;
@@ -425,6 +431,8 @@ class AggregatedOrderCommercial {
   final int suggestedSecurityPaise;
   final int minPayNowPaise;
   final List<ResolvedLinePolicy> lines;
+  /// Highest [minSubscriptionTier] among non-SKU lines.
+  final SubscriptionTier cartMinTier;
 
   bool get showPay =>
       pay.isRequired ||
@@ -440,7 +448,11 @@ class AggregatedOrderCommercial {
 
   bool get showSubscription =>
       subscription.isRequired ||
-      requireAnyOf.contains(CommercialStep.subscription);
+      requireAnyOf.contains(CommercialStep.subscription) ||
+      needsSubscriptionCoverage;
+
+  bool get needsSubscriptionCoverage =>
+      cartMinTier != SubscriptionTier.none;
 
   bool get requirePay => pay.isRequired;
 
@@ -502,8 +514,9 @@ ResolvedLinePolicy resolveCommercialLine(
 }
 
 AggregatedOrderCommercial aggregateOrderCommercial(
-  List<ResolvedLinePolicy> lines,
-) {
+  List<ResolvedLinePolicy> lines, {
+  SubscriptionTier cartMinTier = SubscriptionTier.none,
+}) {
   CommercialRequirement pay = CommercialRequirement.off;
   CommercialRequirement advance = CommercialRequirement.off;
   CommercialRequirement security = CommercialRequirement.off;
@@ -536,6 +549,7 @@ AggregatedOrderCommercial aggregateOrderCommercial(
     suggestedSecurityPaise: suggested,
     minPayNowPaise: minPay,
     lines: lines,
+    cartMinTier: cartMinTier,
   );
 }
 
@@ -550,7 +564,14 @@ AggregatedOrderCommercial resolveOrderCommercial(
         templateTypeDefault: templateByType?[line.type],
       ),
   ];
-  return aggregateOrderCommercial(resolved);
+  return aggregateOrderCommercial(
+    resolved,
+    cartMinTier: cartMinSubscriptionTier(
+      lines.map(
+        (CommercialLineInput line) => line.subscriptionView,
+      ),
+    ),
+  );
 }
 
 /// Build line inputs from an issued rental + catalog map.
@@ -602,39 +623,7 @@ int suggestedSecurityPaiseForResolved(
   return computeSuggestedSecurityPaise(rental, inventoryById);
 }
 
-/// True when membership/subscription sell lines are still valid for [customerOrders].
-bool customerHasActiveEntitlement({
-  required Iterable<Rental> customerOrders,
-  required Map<String, InventoryItem> inventoryById,
-  required DateTime now,
-}) {
-  for (final Rental rental in customerOrders) {
-    if (rental.orderStatus == OrderStatus.cancelled) {
-      continue;
-    }
-    for (final RentalLine line in rental.lines) {
-      if (!line.isSell) {
-        continue;
-      }
-      final InventoryItem? item = inventoryById[line.itemId];
-      final ResourceType type =
-          item?.defaultItemKind ?? ResourceType.rental;
-      if (type != ResourceType.membership &&
-          type != ResourceType.subscription) {
-        continue;
-      }
-      final DateTime validUntil = entitlementValidUntil(
-        startedAt: rental.startedAt,
-        line: line,
-        item: item,
-      );
-      if (!now.isAfter(validUntil)) {
-        return true;
-      }
-    }
-  }
-  return false;
-}
+/// Historical sell-line validity used only to backfill [CustomerSubscription] rows.
 
 DateTime entitlementValidUntil({
   required DateTime startedAt,
@@ -694,16 +683,6 @@ int? _readEntitlementDays(Map<String, Object?> metadata) {
   return null;
 }
 
-bool cartSatisfiesSubscription(Iterable<CommercialLineInput> lines) {
-  for (final CommercialLineInput line in lines) {
-    if (line.type == ResourceType.membership ||
-        line.type == ResourceType.subscription) {
-      return true;
-    }
-  }
-  return false;
-}
-
 /// Throws [ArgumentError] when required commercial gates are unmet.
 void assertCommercialSatisfied({
   required AggregatedOrderCommercial aggregated,
@@ -734,6 +713,9 @@ void assertCommercialSatisfied({
     throw ArgumentError('Active membership is required before issue');
   }
   if (aggregated.requireAnyOf.isEmpty) {
+    if (aggregated.needsSubscriptionCoverage && !subscriptionSatisfied) {
+      throw ArgumentError('Active membership is required before issue');
+    }
     return;
   }
   final bool anyOk = aggregated.requireAnyOf.any((CommercialStep step) {

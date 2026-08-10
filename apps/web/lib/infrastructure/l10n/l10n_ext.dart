@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../domain/models/entities.dart';
+import '../../domain/subscriptions/subscription_models.dart';
 
 export '../../l10n/app_localizations.dart';
 
@@ -119,4 +120,38 @@ String categoryWithResourceTypeBadge(
     return item.category;
   }
   return '${item.category} · $badge';
+}
+
+String localizedSubscriptionTier(
+  AppLocalizations l10n,
+  SubscriptionTier tier,
+) {
+  switch (tier) {
+    case SubscriptionTier.none:
+      return l10n.subscriptionTierNone;
+    case SubscriptionTier.basic:
+      return l10n.subscriptionTierBasic;
+    case SubscriptionTier.standard:
+      return l10n.subscriptionTierStandard;
+    case SubscriptionTier.pro:
+      return l10n.subscriptionTierPro;
+    case SubscriptionTier.premium:
+      return l10n.subscriptionTierPremium;
+  }
+}
+
+String localizedSubscriptionPeriodUnit(
+  AppLocalizations l10n,
+  SubscriptionPeriodUnit unit,
+) {
+  switch (unit) {
+    case SubscriptionPeriodUnit.day:
+      return l10n.subscriptionPeriodDay;
+    case SubscriptionPeriodUnit.week:
+      return l10n.subscriptionPeriodWeek;
+    case SubscriptionPeriodUnit.month:
+      return l10n.subscriptionPeriodMonth;
+    case SubscriptionPeriodUnit.year:
+      return l10n.subscriptionPeriodYear;
+  }
 }

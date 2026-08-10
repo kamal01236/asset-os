@@ -1026,8 +1026,70 @@
   "commercialStepMembershipRequired": "सदस्यता आवश्यक",
   "commercialMinPayLabel": "अभी न्यूनतम देय",
   "commercialSecurityRequiredHelper": "ऑर्डर जारी करने से पहले आवश्यक",
-  "commercialSubscriptionHint": "जारी रखने के लिए सदस्यता लाइन जोड़ें या सिक्योरिटी लें।",
+  "commercialSubscriptionHint": "इस ऑर्डर पर कवरिंग सदस्यता जोड़ें, या जहाँ अनुमति हो वहाँ सिक्योरिटी लें।",
   "commercialSubscriptionSatisfied": "इस ग्राहक की सदस्यता सक्रिय है।",
+  "subscriptionTierNone": "कोई नहीं",
+  "subscriptionTierBasic": "बेसिक",
+  "subscriptionTierStandard": "स्टैंडर्ड",
+  "subscriptionTierPro": "प्रो",
+  "subscriptionTierPremium": "प्रीमियम",
+  "subscriptionPeriodDay": "दिन",
+  "subscriptionPeriodWeek": "सप्ताह",
+  "subscriptionPeriodMonth": "महीना",
+  "subscriptionPeriodYear": "वर्ष",
+  "subscriptionSkuTierLabel": "सदस्यता टियर",
+  "subscriptionPeriodUnitLabel": "अवधि इकाई",
+  "subscriptionPeriodCountLabel": "अवधि संख्या",
+  "minSubscriptionTierLabel": "सदस्यता आवश्यक",
+  "minSubscriptionTierHelper": "यह संसाधन जारी करने के लिए न्यूनतम ग्राहक टियर। कोई नहीं = बिना गेट।",
+  "catalogResourceTypeLabel": "संसाधन प्रकार",
+  "subscriptionChipOk": "{tier} {date} तक — जारी कर सकते हैं",
+  "@subscriptionChipOk": {
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "subscriptionChipUncovered": "इन वस्तुओं के लिए ग्राहक को {tier} (या उससे ऊपर) चाहिए।",
+  "@subscriptionChipUncovered": {
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
+  "subscriptionUpsellLabel": "इस ऑर्डर में सदस्यता जोड़ें",
+  "subscriptionNamedCustomerRequired": "सदस्यता के लिए फ़ोन वाला नामित ग्राहक आवश्यक है।",
+  "subscriptionHistoryHeading": "सदस्यताएँ",
+  "subscriptionNoneActive": "कोई सक्रिय सदस्यता नहीं",
+  "subscriptionStatusCancelled": "रद्द",
+  "subscriptionStatusExpired": "समाप्त",
+  "customerSubscriptionMeta": "{tier} · {date}",
+  "@customerSubscriptionMeta": {
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "subscriptionUntilLabel": "{tier} {date} तक",
+  "@subscriptionUntilLabel": {
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "orderPaymentTitle": "भुगतान",
   "orderPaymentHeading": "भुगतान लें",
   "orderPaymentSubtitle": "बेची गई वस्तुएँ अभी देय हैं। सिक्योरिटी ऑर्डर अग्रिम के रूप में रखी जाती है और वापसी पर लगाई जाती है।",

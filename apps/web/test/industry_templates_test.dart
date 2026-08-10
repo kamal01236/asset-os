@@ -8,6 +8,7 @@ import 'package:asset_os/domain/models/entities.dart';
 import 'package:asset_os/domain/reports/report_widgets.dart';
 import 'package:asset_os/application/local_repository.dart';
 import 'package:asset_os/domain/orders/commercial_policy.dart';
+import 'package:asset_os/domain/subscriptions/subscription_coverage.dart';
 import 'package:asset_os/domain/templates/industry_templates.dart';
 import 'package:asset_os/domain/templates/workflows.dart';
 
@@ -530,6 +531,8 @@ void main() {
       expect(seat.defaultItemKind, ResourceType.rental);
       expect(membership.defaultItemKind, ResourceType.membership);
       expect(membership.metadata[kEntitlementDaysMetadataKey], 30);
+      expect(membership.metadata[kSubscriptionTierMetadataKey], 'basic');
+      expect(novel.metadata[kMinSubscriptionTierMetadataKey], 'basic');
     });
 
     test('gym pack seeds membership and sale day pass', () async {
@@ -544,6 +547,7 @@ void main() {
           inventory.firstWhere((InventoryItem i) => i.name == 'Day Pass');
 
       expect(monthly.defaultItemKind, ResourceType.membership);
+      expect(monthly.metadata[kSubscriptionTierMetadataKey], 'standard');
       expect(dayPass.defaultItemKind, ResourceType.sale);
     });
   });

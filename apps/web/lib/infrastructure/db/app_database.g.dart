@@ -6590,6 +6590,532 @@ class MoneyLoanEntriesCompanion extends UpdateCompanion<MoneyLoanEntryRow> {
   }
 }
 
+class $CustomerSubscriptionsTable extends CustomerSubscriptions
+    with TableInfo<$CustomerSubscriptionsTable, CustomerSubscriptionRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CustomerSubscriptionsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _customerIdMeta = const VerificationMeta(
+    'customerId',
+  );
+  @override
+  late final GeneratedColumn<String> customerId = GeneratedColumn<String>(
+    'customer_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _tierMeta = const VerificationMeta('tier');
+  @override
+  late final GeneratedColumn<String> tier = GeneratedColumn<String>(
+    'tier',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _startsAtMeta = const VerificationMeta(
+    'startsAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> startsAt = GeneratedColumn<DateTime>(
+    'starts_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _validUntilMeta = const VerificationMeta(
+    'validUntil',
+  );
+  @override
+  late final GeneratedColumn<DateTime> validUntil = GeneratedColumn<DateTime>(
+    'valid_until',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sourceRentalIdMeta = const VerificationMeta(
+    'sourceRentalId',
+  );
+  @override
+  late final GeneratedColumn<String> sourceRentalId = GeneratedColumn<String>(
+    'source_rental_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _sourceItemIdMeta = const VerificationMeta(
+    'sourceItemId',
+  );
+  @override
+  late final GeneratedColumn<String> sourceItemId = GeneratedColumn<String>(
+    'source_item_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('active'),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    customerId,
+    tier,
+    startsAt,
+    validUntil,
+    sourceRentalId,
+    sourceItemId,
+    status,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'customer_subscriptions';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<CustomerSubscriptionRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('customer_id')) {
+      context.handle(
+        _customerIdMeta,
+        customerId.isAcceptableOrUnknown(data['customer_id']!, _customerIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_customerIdMeta);
+    }
+    if (data.containsKey('tier')) {
+      context.handle(
+        _tierMeta,
+        tier.isAcceptableOrUnknown(data['tier']!, _tierMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_tierMeta);
+    }
+    if (data.containsKey('starts_at')) {
+      context.handle(
+        _startsAtMeta,
+        startsAt.isAcceptableOrUnknown(data['starts_at']!, _startsAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_startsAtMeta);
+    }
+    if (data.containsKey('valid_until')) {
+      context.handle(
+        _validUntilMeta,
+        validUntil.isAcceptableOrUnknown(data['valid_until']!, _validUntilMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_validUntilMeta);
+    }
+    if (data.containsKey('source_rental_id')) {
+      context.handle(
+        _sourceRentalIdMeta,
+        sourceRentalId.isAcceptableOrUnknown(
+          data['source_rental_id']!,
+          _sourceRentalIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('source_item_id')) {
+      context.handle(
+        _sourceItemIdMeta,
+        sourceItemId.isAcceptableOrUnknown(
+          data['source_item_id']!,
+          _sourceItemIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  CustomerSubscriptionRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CustomerSubscriptionRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      customerId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}customer_id'],
+      )!,
+      tier: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tier'],
+      )!,
+      startsAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}starts_at'],
+      )!,
+      validUntil: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}valid_until'],
+      )!,
+      sourceRentalId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source_rental_id'],
+      ),
+      sourceItemId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source_item_id'],
+      ),
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+    );
+  }
+
+  @override
+  $CustomerSubscriptionsTable createAlias(String alias) {
+    return $CustomerSubscriptionsTable(attachedDatabase, alias);
+  }
+}
+
+class CustomerSubscriptionRow extends DataClass
+    implements Insertable<CustomerSubscriptionRow> {
+  final String id;
+  final String customerId;
+  final String tier;
+  final DateTime startsAt;
+  final DateTime validUntil;
+  final String? sourceRentalId;
+  final String? sourceItemId;
+  final String status;
+  const CustomerSubscriptionRow({
+    required this.id,
+    required this.customerId,
+    required this.tier,
+    required this.startsAt,
+    required this.validUntil,
+    this.sourceRentalId,
+    this.sourceItemId,
+    required this.status,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['customer_id'] = Variable<String>(customerId);
+    map['tier'] = Variable<String>(tier);
+    map['starts_at'] = Variable<DateTime>(startsAt);
+    map['valid_until'] = Variable<DateTime>(validUntil);
+    if (!nullToAbsent || sourceRentalId != null) {
+      map['source_rental_id'] = Variable<String>(sourceRentalId);
+    }
+    if (!nullToAbsent || sourceItemId != null) {
+      map['source_item_id'] = Variable<String>(sourceItemId);
+    }
+    map['status'] = Variable<String>(status);
+    return map;
+  }
+
+  CustomerSubscriptionsCompanion toCompanion(bool nullToAbsent) {
+    return CustomerSubscriptionsCompanion(
+      id: Value(id),
+      customerId: Value(customerId),
+      tier: Value(tier),
+      startsAt: Value(startsAt),
+      validUntil: Value(validUntil),
+      sourceRentalId: sourceRentalId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sourceRentalId),
+      sourceItemId: sourceItemId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sourceItemId),
+      status: Value(status),
+    );
+  }
+
+  factory CustomerSubscriptionRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CustomerSubscriptionRow(
+      id: serializer.fromJson<String>(json['id']),
+      customerId: serializer.fromJson<String>(json['customerId']),
+      tier: serializer.fromJson<String>(json['tier']),
+      startsAt: serializer.fromJson<DateTime>(json['startsAt']),
+      validUntil: serializer.fromJson<DateTime>(json['validUntil']),
+      sourceRentalId: serializer.fromJson<String?>(json['sourceRentalId']),
+      sourceItemId: serializer.fromJson<String?>(json['sourceItemId']),
+      status: serializer.fromJson<String>(json['status']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'customerId': serializer.toJson<String>(customerId),
+      'tier': serializer.toJson<String>(tier),
+      'startsAt': serializer.toJson<DateTime>(startsAt),
+      'validUntil': serializer.toJson<DateTime>(validUntil),
+      'sourceRentalId': serializer.toJson<String?>(sourceRentalId),
+      'sourceItemId': serializer.toJson<String?>(sourceItemId),
+      'status': serializer.toJson<String>(status),
+    };
+  }
+
+  CustomerSubscriptionRow copyWith({
+    String? id,
+    String? customerId,
+    String? tier,
+    DateTime? startsAt,
+    DateTime? validUntil,
+    Value<String?> sourceRentalId = const Value.absent(),
+    Value<String?> sourceItemId = const Value.absent(),
+    String? status,
+  }) => CustomerSubscriptionRow(
+    id: id ?? this.id,
+    customerId: customerId ?? this.customerId,
+    tier: tier ?? this.tier,
+    startsAt: startsAt ?? this.startsAt,
+    validUntil: validUntil ?? this.validUntil,
+    sourceRentalId: sourceRentalId.present
+        ? sourceRentalId.value
+        : this.sourceRentalId,
+    sourceItemId: sourceItemId.present ? sourceItemId.value : this.sourceItemId,
+    status: status ?? this.status,
+  );
+  CustomerSubscriptionRow copyWithCompanion(CustomerSubscriptionsCompanion data) {
+    return CustomerSubscriptionRow(
+      id: data.id.present ? data.id.value : this.id,
+      customerId: data.customerId.present
+          ? data.customerId.value
+          : this.customerId,
+      tier: data.tier.present ? data.tier.value : this.tier,
+      startsAt: data.startsAt.present ? data.startsAt.value : this.startsAt,
+      validUntil: data.validUntil.present
+          ? data.validUntil.value
+          : this.validUntil,
+      sourceRentalId: data.sourceRentalId.present
+          ? data.sourceRentalId.value
+          : this.sourceRentalId,
+      sourceItemId: data.sourceItemId.present
+          ? data.sourceItemId.value
+          : this.sourceItemId,
+      status: data.status.present ? data.status.value : this.status,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CustomerSubscriptionRow(')
+          ..write('id: $id, ')
+          ..write('customerId: $customerId, ')
+          ..write('tier: $tier, ')
+          ..write('startsAt: $startsAt, ')
+          ..write('validUntil: $validUntil, ')
+          ..write('sourceRentalId: $sourceRentalId, ')
+          ..write('sourceItemId: $sourceItemId, ')
+          ..write('status: $status')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    customerId,
+    tier,
+    startsAt,
+    validUntil,
+    sourceRentalId,
+    sourceItemId,
+    status,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CustomerSubscriptionRow &&
+          other.id == this.id &&
+          other.customerId == this.customerId &&
+          other.tier == this.tier &&
+          other.startsAt == this.startsAt &&
+          other.validUntil == this.validUntil &&
+          other.sourceRentalId == this.sourceRentalId &&
+          other.sourceItemId == this.sourceItemId &&
+          other.status == this.status);
+}
+
+class CustomerSubscriptionsCompanion
+    extends UpdateCompanion<CustomerSubscriptionRow> {
+  final Value<String> id;
+  final Value<String> customerId;
+  final Value<String> tier;
+  final Value<DateTime> startsAt;
+  final Value<DateTime> validUntil;
+  final Value<String?> sourceRentalId;
+  final Value<String?> sourceItemId;
+  final Value<String> status;
+  final Value<int> rowid;
+  const CustomerSubscriptionsCompanion({
+    this.id = const Value.absent(),
+    this.customerId = const Value.absent(),
+    this.tier = const Value.absent(),
+    this.startsAt = const Value.absent(),
+    this.validUntil = const Value.absent(),
+    this.sourceRentalId = const Value.absent(),
+    this.sourceItemId = const Value.absent(),
+    this.status = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CustomerSubscriptionsCompanion.insert({
+    required String id,
+    required String customerId,
+    required String tier,
+    required DateTime startsAt,
+    required DateTime validUntil,
+    this.sourceRentalId = const Value.absent(),
+    this.sourceItemId = const Value.absent(),
+    this.status = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       customerId = Value(customerId),
+       tier = Value(tier),
+       startsAt = Value(startsAt),
+       validUntil = Value(validUntil);
+  static Insertable<CustomerSubscriptionRow> custom({
+    Expression<String>? id,
+    Expression<String>? customerId,
+    Expression<String>? tier,
+    Expression<DateTime>? startsAt,
+    Expression<DateTime>? validUntil,
+    Expression<String>? sourceRentalId,
+    Expression<String>? sourceItemId,
+    Expression<String>? status,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (customerId != null) 'customer_id': customerId,
+      if (tier != null) 'tier': tier,
+      if (startsAt != null) 'starts_at': startsAt,
+      if (validUntil != null) 'valid_until': validUntil,
+      if (sourceRentalId != null) 'source_rental_id': sourceRentalId,
+      if (sourceItemId != null) 'source_item_id': sourceItemId,
+      if (status != null) 'status': status,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CustomerSubscriptionsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? customerId,
+    Value<String>? tier,
+    Value<DateTime>? startsAt,
+    Value<DateTime>? validUntil,
+    Value<String?>? sourceRentalId,
+    Value<String?>? sourceItemId,
+    Value<String>? status,
+    Value<int>? rowid,
+  }) {
+    return CustomerSubscriptionsCompanion(
+      id: id ?? this.id,
+      customerId: customerId ?? this.customerId,
+      tier: tier ?? this.tier,
+      startsAt: startsAt ?? this.startsAt,
+      validUntil: validUntil ?? this.validUntil,
+      sourceRentalId: sourceRentalId ?? this.sourceRentalId,
+      sourceItemId: sourceItemId ?? this.sourceItemId,
+      status: status ?? this.status,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (customerId.present) {
+      map['customer_id'] = Variable<String>(customerId.value);
+    }
+    if (tier.present) {
+      map['tier'] = Variable<String>(tier.value);
+    }
+    if (startsAt.present) {
+      map['starts_at'] = Variable<DateTime>(startsAt.value);
+    }
+    if (validUntil.present) {
+      map['valid_until'] = Variable<DateTime>(validUntil.value);
+    }
+    if (sourceRentalId.present) {
+      map['source_rental_id'] = Variable<String>(sourceRentalId.value);
+    }
+    if (sourceItemId.present) {
+      map['source_item_id'] = Variable<String>(sourceItemId.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CustomerSubscriptionsCompanion(')
+          ..write('id: $id, ')
+          ..write('customerId: $customerId, ')
+          ..write('tier: $tier, ')
+          ..write('startsAt: $startsAt, ')
+          ..write('validUntil: $validUntil, ')
+          ..write('sourceRentalId: $sourceRentalId, ')
+          ..write('sourceItemId: $sourceItemId, ')
+          ..write('status: $status, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -6605,6 +7131,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $MoneyLoanEntriesTable moneyLoanEntries = $MoneyLoanEntriesTable(
     this,
   );
+  late final $CustomerSubscriptionsTable customerSubscriptions =
+      $CustomerSubscriptionsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -6620,6 +7148,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     appMeta,
     moneyLoans,
     moneyLoanEntries,
+    customerSubscriptions,
   ];
 }
 

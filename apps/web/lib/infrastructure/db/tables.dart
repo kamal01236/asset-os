@@ -228,6 +228,25 @@ class MoneyLoans extends Table {
   Set<Column<Object>> get primaryKey => <Column<Object>>{id};
 }
 
+/// Customer-owned subscription periods (not shop-owner Hando plans).
+@DataClassName('CustomerSubscriptionRow')
+class CustomerSubscriptions extends Table {
+  TextColumn get id => text()();
+  TextColumn get customerId => text().references(Customers, #id)();
+  /// `basic` | `standard` | `pro` | `premium`
+  TextColumn get tier => text()();
+  DateTimeColumn get startsAt => dateTime()();
+  DateTimeColumn get validUntil => dateTime()();
+  TextColumn get sourceRentalId => text().nullable().references(Rentals, #id)();
+  TextColumn get sourceItemId =>
+      text().nullable().references(InventoryItems, #id)();
+  /// `active` | `cancelled`
+  TextColumn get status => text().withDefault(const Constant('active'))();
+
+  @override
+  Set<Column<Object>> get primaryKey => <Column<Object>>{id};
+}
+
 /// Dated payments and adjustments on a cash loan.
 @DataClassName('MoneyLoanEntryRow')
 class MoneyLoanEntries extends Table {

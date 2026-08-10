@@ -1026,8 +1026,70 @@
   "commercialStepMembershipRequired": "Membership required",
   "commercialMinPayLabel": "Minimum due now",
   "commercialSecurityRequiredHelper": "Required before this order can be issued",
-  "commercialSubscriptionHint": "Add a membership line or collect security to continue.",
+  "commercialSubscriptionHint": "Add a covering subscription on this order, or collect security when allowed.",
   "commercialSubscriptionSatisfied": "Membership is active for this customer.",
+  "subscriptionTierNone": "None",
+  "subscriptionTierBasic": "Basic",
+  "subscriptionTierStandard": "Standard",
+  "subscriptionTierPro": "Pro",
+  "subscriptionTierPremium": "Premium",
+  "subscriptionPeriodDay": "Day",
+  "subscriptionPeriodWeek": "Week",
+  "subscriptionPeriodMonth": "Month",
+  "subscriptionPeriodYear": "Year",
+  "subscriptionSkuTierLabel": "Subscription tier",
+  "subscriptionPeriodUnitLabel": "Period unit",
+  "subscriptionPeriodCountLabel": "Period count",
+  "minSubscriptionTierLabel": "Requires subscription",
+  "minSubscriptionTierHelper": "Minimum customer tier to issue this resource. None = ungated.",
+  "catalogResourceTypeLabel": "Resource type",
+  "subscriptionChipOk": "{tier} until {date} — OK to issue",
+  "@subscriptionChipOk": {
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "subscriptionChipUncovered": "Customer needs {tier} (or higher) to issue these items.",
+  "@subscriptionChipUncovered": {
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      }
+    }
+  },
+  "subscriptionUpsellLabel": "Add subscription to this order",
+  "subscriptionNamedCustomerRequired": "A named customer with a phone is required for subscription access.",
+  "subscriptionHistoryHeading": "Subscriptions",
+  "subscriptionNoneActive": "No active subscription",
+  "subscriptionStatusCancelled": "Cancelled",
+  "subscriptionStatusExpired": "Expired",
+  "customerSubscriptionMeta": "{tier} · {date}",
+  "@customerSubscriptionMeta": {
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "subscriptionUntilLabel": "{tier} until {date}",
+  "@subscriptionUntilLabel": {
+    "placeholders": {
+      "tier": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "orderPaymentTitle": "Payment",
   "orderPaymentHeading": "Collect payment",
   "orderPaymentSubtitle": "Sold items are due now. Security is held as order advance and applied on return.",

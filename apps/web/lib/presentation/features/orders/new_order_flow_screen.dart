@@ -9,6 +9,8 @@ import '../../../domain/models/entities.dart';
 import '../../../domain/models/unknown_customer.dart';
 import '../../../domain/orders/commercial_policy.dart';
 import '../../../domain/pricing/rental_pricing.dart';
+import '../../../domain/subscriptions/subscription_coverage.dart';
+import '../../../domain/subscriptions/subscription_models.dart';
 import '../../../domain/templates/industry_templates.dart';
 import '../../../application/providers/app_providers.dart';
 import '../../../application/local_repository.dart';
@@ -124,7 +126,9 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
   bool _prefillApplied = false;
   late _OrderPhase _phase;
   Map<ResourceType, CommercialPolicy>? _templateCommercialByType;
-  bool _customerEntitled = false;
+  List<CustomerSubscription> _customerSubscriptions =
+      const <CustomerSubscription>[];
+  int _upsellLineIndex = -1;
   final TextEditingController _payController = TextEditingController();
   final TextEditingController _securityController = TextEditingController();
   final TextEditingController _advanceController = TextEditingController();
@@ -588,12 +592,59 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
     );
   }
 
-  bool _cartHasMembership(List<InventoryItem> catalog) {
-    return cartSatisfiesSubscription(_commercialInputs(catalog));
+  bool _customerCanHoldLedger() {
+    if (_noPhone) {
+      return false;
+    }
+    final Customer? customer = _resolvedCustomer;
+    if (customer != null && isUnknownCustomer(customer)) {
+      return false;
+    }
+    final String? id = customer?.id ?? widget.initialCustomerId;
+    if (id == null ||
+        isUnknownCustomerId(id) ||
+        id == kLegacySelfCustomerId) {
+      return false;
+    }
+    return true;
+  }
+
+  int _customerRank() {
+    return effectiveSubscriptionRank(
+      _customerSubscriptions,
+      DateTime.now(),
+    );
+  }
+
+  Iterable<({ResourceType type, Map<String, Object?> metadata})>
+      _subscriptionViews(List<InventoryItem> catalog) {
+    return _commercialInputs(catalog).map(
+      (CommercialLineInput line) => line.subscriptionView,
+    );
   }
 
   bool _subscriptionSatisfied(List<InventoryItem> catalog) {
-    return _customerEntitled || _cartHasMembership(catalog);
+    return subscriptionCoverageSatisfied(
+      customerRank: _customerRank(),
+      lines: _subscriptionViews(catalog),
+      customerCanHoldLedger: _customerCanHoldLedger(),
+    );
+  }
+
+  bool _shouldShowCommercial(
+    AggregatedOrderCommercial agg,
+    List<InventoryItem> catalog,
+  ) {
+    if (agg.shouldShowCommercialStep) {
+      return true;
+    }
+    final SubscriptionTier min = cartMinSubscriptionTier(
+      _subscriptionViews(catalog),
+    );
+    if (min == SubscriptionTier.none) {
+      return false;
+    }
+    return !_subscriptionSatisfied(catalog);
   }
 
   int _payPaise() => parseRupeesToPaise(_payController.text);
@@ -662,10 +713,27 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
     return 0;
   }
 
-  void _enterCommercialOrSummary(List<InventoryItem> catalog) {
+  Future<void> _enterCommercialOrSummary(List<InventoryItem> catalog) async {
+    await _refreshCustomerSubscriptions();
+    if (!mounted) {
+      return;
+    }
+    _seedUpsellIfNeeded(catalog);
     final AggregatedOrderCommercial agg = _aggregatedCommercial(catalog);
-    if (!agg.shouldShowCommercialStep) {
+    if (!_shouldShowCommercial(agg, catalog)) {
       setState(() => _phase = _OrderPhase.summary);
+      return;
+    }
+    setState(() {
+      _commercialSeeded = false;
+      _seedCommercialFields(agg);
+      _phase = _OrderPhase.commercial;
+    });
+  }
+
+  Future<void> _refreshCustomerSubscriptions() async {
+    if (!_customerCanHoldLedger()) {
+      _customerSubscriptions = const <CustomerSubscription>[];
       return;
     }
     final String? customerId = _resolvedCustomer?.id ??
@@ -674,26 +742,90 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
                 widget.initialCustomerId != kLegacySelfCustomerId
             ? widget.initialCustomerId
             : null);
-    bool entitled = false;
-    if (customerId != null) {
-      final List<Rental> rentals =
-          ref.read(rentalsProvider).valueOrNull ?? const <Rental>[];
-      final List<InventoryItem> inv =
-          ref.read(inventoryProvider).valueOrNull ?? catalog;
-      entitled = customerHasActiveEntitlement(
-        customerOrders:
-            rentals.where((Rental r) => r.customerId == customerId),
-        inventoryById: <String, InventoryItem>{
-          for (final InventoryItem item in inv) item.id: item,
-        },
-        now: DateTime.now(),
-      );
+    if (customerId == null) {
+      _customerSubscriptions = const <CustomerSubscription>[];
+      return;
     }
+    final AsyncValue<List<CustomerSubscription>> cached =
+        ref.read(customerSubscriptionsProvider);
+    if (cached.hasValue) {
+      _customerSubscriptions = (cached.value ?? const <CustomerSubscription>[])
+          .where((CustomerSubscription s) => s.customerId == customerId)
+          .toList(growable: false);
+      return;
+    }
+    _customerSubscriptions = await ref
+        .read(repositoryProvider)
+        .listCustomerSubscriptions(customerId);
+  }
+
+  void _seedUpsellIfNeeded(List<InventoryItem> catalog) {
+    if (!_customerCanHoldLedger()) {
+      return;
+    }
+    if (_subscriptionSatisfied(catalog)) {
+      return;
+    }
+    final SubscriptionTier? needed = requiredUpsellTier(
+      cartMinTier: cartMinSubscriptionTier(_subscriptionViews(catalog)),
+      customerRank: _customerRank(),
+    );
+    if (needed == null || needed == SubscriptionTier.none) {
+      return;
+    }
+    if (cartGrantedSubscriptionRank(_subscriptionViews(catalog)) >=
+        needed.rank) {
+      return;
+    }
+    String? preferredCategory;
+    for (final _OrderLineDraft draft in _lines) {
+      final InventoryItem? item = _itemFor(draft, catalog);
+      if (item == null || isSubscriptionCatalogType(item.defaultItemKind)) {
+        continue;
+      }
+      if (minSubscriptionTierFromMetadata(item.metadata) !=
+          SubscriptionTier.none) {
+        preferredCategory = item.category;
+        break;
+      }
+    }
+    final InventoryItem? sku = cheapestCoveringSubscriptionSku(
+      catalog: catalog,
+      minTier: needed,
+      preferredCategory: preferredCategory,
+    );
+    if (sku == null) {
+      return;
+    }
+    final _OrderLineDraft draft = _OrderLineDraft(itemId: sku.id);
+    _applyFulfillmentDefaults(draft, sku);
+    _lines.add(draft);
+    _upsellLineIndex = _lines.length - 1;
+  }
+
+  void _applyUpsellSku(String itemId, List<InventoryItem> catalog) {
+    InventoryItem? found;
+    for (final InventoryItem item in catalog) {
+      if (item.id == itemId) {
+        found = item;
+        break;
+      }
+    }
+    if (found == null) {
+      return;
+    }
+    final InventoryItem sku = found;
     setState(() {
-      _customerEntitled = entitled;
-      _commercialSeeded = false;
-      _seedCommercialFields(agg);
-      _phase = _OrderPhase.commercial;
+      if (_upsellLineIndex >= 0 && _upsellLineIndex < _lines.length) {
+        final _OrderLineDraft draft = _lines[_upsellLineIndex];
+        draft.itemId = sku.id;
+        _applyFulfillmentDefaults(draft, sku);
+      } else {
+        final _OrderLineDraft draft = _OrderLineDraft(itemId: sku.id);
+        _applyFulfillmentDefaults(draft, sku);
+        _lines.add(draft);
+        _upsellLineIndex = _lines.length - 1;
+      }
     });
   }
 
@@ -946,7 +1078,7 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
     if (!_validateCustomerOrSnack()) {
       return;
     }
-    _enterCommercialOrSummary(catalog);
+    await _enterCommercialOrSummary(catalog);
   }
 
   Future<void> _generateOrder(List<InventoryItem> catalog) async {
@@ -989,7 +1121,7 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
           _aggregatedCommercial(catalog);
       final List<RentalLineInput> lineInputs = _buildLineInputs(catalog);
       final String rentalId;
-      if (commercial.shouldShowCommercialStep ||
+      if (_shouldShowCommercial(commercial, catalog) ||
           _payPaise() > 0 ||
           _securityPaise() > 0 ||
           _advancePaise() > 0) {
@@ -1058,7 +1190,7 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
     final bool formReady = _formReady(inventory);
     final AggregatedOrderCommercial commercial =
         _aggregatedCommercial(inventory);
-    final bool showCommercial = commercial.shouldShowCommercialStep;
+    final bool showCommercial = _shouldShowCommercial(commercial, inventory);
     final int totalSteps = (_skipCustomerStep ? 2 : 3) + (showCommercial ? 1 : 0);
     final int stepCurrent;
     if (onForm) {
@@ -1263,7 +1395,8 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
         const SizedBox(height: 16),
       ],
       if (commercial.showSubscription ||
-          commercial.requireAnyOf.contains(CommercialStep.subscription)) ...<
+          commercial.requireAnyOf.contains(CommercialStep.subscription) ||
+          commercial.needsSubscriptionCoverage) ...<
           Widget>[
         Text(
           l10n.commercialStepMembershipRequired,
@@ -1273,13 +1406,122 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
               ),
         ),
         const SizedBox(height: 8),
-        Text(l10n.commercialSubscriptionHint),
-        if (_subscriptionSatisfied(inventory)) ...<Widget>[
-          const SizedBox(height: 8),
-          Text(l10n.commercialSubscriptionSatisfied),
-        ],
+        ..._buildSubscriptionGate(l10n, inventory, commercial),
       ],
     ];
+  }
+
+  List<Widget> _buildSubscriptionGate(
+    AppLocalizations l10n,
+    List<InventoryItem> inventory,
+    AggregatedOrderCommercial commercial,
+  ) {
+    final SubscriptionTier minTier = commercial.cartMinTier;
+    final CustomerSubscription? active = highestActiveSubscription(
+      _customerSubscriptions,
+      DateTime.now(),
+    );
+    final bool covered = _subscriptionSatisfied(inventory);
+    final List<Widget> out = <Widget>[];
+    if (!_customerCanHoldLedger() && minTier != SubscriptionTier.none) {
+      out.add(
+        Text(
+          l10n.subscriptionNamedCustomerRequired,
+          key: const ValueKey<String>('subscription-named-customer'),
+        ),
+      );
+      return out;
+    }
+    final bool ledgerCovers = minTier == SubscriptionTier.none ||
+        coversSubscriptionTier(
+          minTier: minTier,
+          effectiveRank: _customerRank(),
+        );
+    if (ledgerCovers && active != null) {
+      out.add(
+        InputChip(
+          key: const ValueKey<String>('subscription-ok-chip'),
+          avatar: const Icon(Icons.verified_outlined, size: 18),
+          label: Text(
+            l10n.subscriptionChipOk(
+              localizedSubscriptionTier(l10n, active.tier),
+              formatIndiaDate(active.validUntil),
+            ),
+          ),
+        ),
+      );
+      return out;
+    }
+    if (ledgerCovers && covered) {
+      out.add(Text(l10n.commercialSubscriptionSatisfied));
+      return out;
+    }
+    if (minTier != SubscriptionTier.none) {
+      out.add(
+        Text(
+          l10n.subscriptionChipUncovered(
+            localizedSubscriptionTier(l10n, minTier),
+          ),
+        ),
+      );
+      out.add(const SizedBox(height: 8));
+    }
+    out.add(Text(l10n.commercialSubscriptionHint));
+    final SubscriptionTier? needed = requiredUpsellTier(
+      cartMinTier: minTier == SubscriptionTier.none
+          ? SubscriptionTier.basic
+          : minTier,
+      customerRank: _customerRank(),
+    );
+    if (needed != null && _customerCanHoldLedger()) {
+      final List<InventoryItem> options = inventory
+          .where(
+            (InventoryItem item) =>
+                item.catalogActive &&
+                isSubscriptionCatalogType(item.defaultItemKind) &&
+                (subscriptionTierFromMetadata(
+                          item.metadata,
+                          fallback: SubscriptionTier.basic,
+                        ) ??
+                        SubscriptionTier.basic)
+                    .rank >=
+                    needed.rank,
+          )
+          .toList();
+      if (options.isNotEmpty) {
+        String? selectedId;
+        if (_upsellLineIndex >= 0 && _upsellLineIndex < _lines.length) {
+          selectedId = _lines[_upsellLineIndex].itemId;
+        }
+        out.add(const SizedBox(height: 8));
+        out.add(
+          DropdownButtonFormField<String>(
+            key: const ValueKey<String>('subscription-upsell-sku'),
+            initialValue: selectedId != null &&
+                    options.any((InventoryItem i) => i.id == selectedId)
+                ? selectedId
+                : options.first.id,
+            decoration: InputDecoration(labelText: l10n.subscriptionUpsellLabel),
+            items: options
+                .map(
+                  (InventoryItem item) => DropdownMenuItem<String>(
+                    value: item.id,
+                    child: Text(
+                      '${item.name} · ${localizedSubscriptionTier(l10n, subscriptionTierFromMetadata(item.metadata, fallback: SubscriptionTier.basic) ?? SubscriptionTier.basic)}',
+                    ),
+                  ),
+                )
+                .toList(),
+            onChanged: (String? id) {
+              if (id != null) {
+                _applyUpsellSku(id, inventory);
+              }
+            },
+          ),
+        );
+      }
+    }
+    return out;
   }
 
   List<Widget> _buildSummaryStep(
@@ -1287,7 +1529,28 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
     List<InventoryItem> inventory,
   ) {
     final int total = _orderTotal(inventory);
+    final CustomerSubscription? active = highestActiveSubscription(
+      _customerSubscriptions,
+      DateTime.now(),
+    );
     final List<Widget> billLines = <Widget>[];
+    if (_subscriptionSatisfied(inventory) && active != null) {
+      billLines.add(
+        Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: InputChip(
+            key: const ValueKey<String>('subscription-summary-chip'),
+            avatar: const Icon(Icons.verified_outlined, size: 18),
+            label: Text(
+              l10n.subscriptionChipOk(
+                localizedSubscriptionTier(l10n, active.tier),
+                formatIndiaDate(active.validUntil),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
     for (final _OrderLineDraft draft in _lines) {
       final InventoryItem? item = _itemFor(draft, inventory);
       if (item == null) {

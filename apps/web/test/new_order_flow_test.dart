@@ -10,6 +10,7 @@ import 'package:asset_os/presentation/app_shell.dart';
 import 'package:asset_os/infrastructure/l10n/l10n_ext.dart';
 import 'package:asset_os/domain/models/entities.dart';
 import 'package:asset_os/domain/orders/commercial_policy.dart';
+import 'package:asset_os/domain/subscriptions/subscription_coverage.dart';
 import 'package:asset_os/domain/templates/industry_templates.dart';
 import 'package:asset_os/application/providers/app_providers.dart';
 import 'package:asset_os/application/local_repository.dart';
@@ -643,6 +644,133 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(milliseconds: 1));
   });
+
+  testWidgets('basic customer with basic-gated book shows OK chip', (
+    WidgetTester tester,
+  ) async {
+    final ProviderContainer container = await bootContainer(seedDemo: true);
+    final LocalRepository repo = container.read(repositoryProvider);
+    final Customer customer = (await repo.listCustomers())
+        .firstWhere((Customer c) => c.id == 'CUS-1001');
+    final String planId = await repo.addInventory(
+      name: 'Library membership',
+      category: 'Library',
+      units: 20,
+      billingMode: BillingMode.monthly,
+      rateAmount: 10000,
+      defaultItemKind: ResourceType.membership,
+      requiresUnitIdentity: false,
+      metadata: <String, Object?>{
+        kSubscriptionTierMetadataKey: 'basic',
+        kSubscriptionPeriodUnitMetadataKey: 'month',
+        kSubscriptionPeriodCountMetadataKey: 1,
+      },
+    );
+    await repo.createRental(
+      customer: customer,
+      lines: <RentalLineInput>[
+        RentalLineInput(
+          itemId: planId,
+          instanceName: 'Library membership',
+          shortCode: 'MEM-OK',
+          fulfillment: LineFulfillment.sell,
+          manualSaleAmountPaise: 10000,
+        ),
+      ],
+    );
+    final String bookId = await repo.addInventory(
+      name: 'Gated Novel',
+      category: 'Library',
+      units: 5,
+      billingMode: BillingMode.weekly,
+      rateAmount: 0,
+      defaultItemKind: ResourceType.loan,
+      requiresUnitIdentity: false,
+      metadata: <String, Object?>{
+        kCommercialMetadataKey: kLibraryLoanCommercial.toJson(),
+        kMinSubscriptionTierMetadataKey: 'basic',
+      },
+    );
+
+    tester.view.physicalSize = const Size(800, 1600);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await _pumpFlow(
+      tester,
+      container: container,
+      home: NewOrderFlowScreen(
+        initialCustomerId: 'CUS-1001',
+        initialInventoryItemIds: <String>[bookId],
+      ),
+    );
+    await pumpFrames(tester, frames: 8);
+    await _pressPrimary(tester);
+
+    expect(find.byKey(const ValueKey<String>('subscription-ok-chip')),
+        findsOneWidget);
+    expect(_primaryButton(tester).onPressed, isNotNull);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(milliseconds: 1));
+  }, timeout: const Timeout(Duration(seconds: 45)));
+
+  testWidgets('uncovered customer must add membership SKU for min-tier book', (
+    WidgetTester tester,
+  ) async {
+    final ProviderContainer container = await bootContainer(seedDemo: true);
+    final LocalRepository repo = container.read(repositoryProvider);
+    await repo.addInventory(
+      name: 'Library membership',
+      category: 'Library',
+      units: 20,
+      billingMode: BillingMode.monthly,
+      rateAmount: 10000,
+      defaultItemKind: ResourceType.membership,
+      requiresUnitIdentity: false,
+      metadata: <String, Object?>{
+        kSubscriptionTierMetadataKey: 'basic',
+        kSubscriptionPeriodUnitMetadataKey: 'month',
+        kSubscriptionPeriodCountMetadataKey: 1,
+      },
+    );
+    final String bookId = await repo.addInventory(
+      name: 'Gated Journal',
+      category: 'Library',
+      units: 3,
+      billingMode: BillingMode.weekly,
+      rateAmount: 0,
+      defaultItemKind: ResourceType.loan,
+      requiresUnitIdentity: false,
+      metadata: <String, Object?>{
+        kMinSubscriptionTierMetadataKey: 'basic',
+      },
+    );
+
+    tester.view.physicalSize = const Size(800, 1600);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await _pumpFlow(
+      tester,
+      container: container,
+      home: NewOrderFlowScreen(
+        initialCustomerId: 'CUS-1001',
+        initialInventoryItemIds: <String>[bookId],
+      ),
+    );
+    await pumpFrames(tester, frames: 8);
+    await _pressPrimary(tester);
+
+    expect(find.byKey(const ValueKey<String>('subscription-upsell-sku')),
+        findsOneWidget);
+    expect(find.textContaining('Library membership'), findsWidgets);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(milliseconds: 1));
+  }, timeout: const Timeout(Duration(seconds: 45)));
 
   testWidgets('library loan-only requires membership or security', (
     WidgetTester tester,

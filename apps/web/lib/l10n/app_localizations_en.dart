@@ -1666,6 +1666,86 @@ class AppLocalizationsEn extends AppLocalizations {
       'Membership is active for this customer.';
 
   @override
+  String get subscriptionTierNone => 'None';
+
+  @override
+  String get subscriptionTierBasic => 'Basic';
+
+  @override
+  String get subscriptionTierStandard => 'Standard';
+
+  @override
+  String get subscriptionTierPro => 'Pro';
+
+  @override
+  String get subscriptionTierPremium => 'Premium';
+
+  @override
+  String get subscriptionPeriodDay => 'Day';
+
+  @override
+  String get subscriptionPeriodWeek => 'Week';
+
+  @override
+  String get subscriptionPeriodMonth => 'Month';
+
+  @override
+  String get subscriptionPeriodYear => 'Year';
+
+  @override
+  String get subscriptionSkuTierLabel => 'Subscription tier';
+
+  @override
+  String get subscriptionPeriodUnitLabel => 'Period unit';
+
+  @override
+  String get subscriptionPeriodCountLabel => 'Period count';
+
+  @override
+  String get minSubscriptionTierLabel => 'Requires subscription';
+
+  @override
+  String get minSubscriptionTierHelper =>
+      'Minimum customer tier to issue this resource. None = ungated.';
+
+  @override
+  String get catalogResourceTypeLabel => 'Resource type';
+
+  @override
+  String subscriptionChipOk(String tier, String date) =>
+      '$tier until $date — OK to issue';
+
+  @override
+  String subscriptionChipUncovered(String tier) =>
+      'Customer needs $tier (or higher) to issue these items.';
+
+  @override
+  String get subscriptionUpsellLabel => 'Add subscription to this order';
+
+  @override
+  String get subscriptionNamedCustomerRequired =>
+      'A named customer with a phone is required for subscription access.';
+
+  @override
+  String get subscriptionHistoryHeading => 'Subscriptions';
+
+  @override
+  String get subscriptionNoneActive => 'No active subscription';
+
+  @override
+  String get subscriptionStatusCancelled => 'Cancelled';
+
+  @override
+  String get subscriptionStatusExpired => 'Expired';
+
+  @override
+  String customerSubscriptionMeta(String tier, String date) => '$tier · $date';
+
+  @override
+  String subscriptionUntilLabel(String tier, String date) =>
+      '$tier until $date';
+
+  @override
   String get orderPaymentTitle => 'Payment';
 
   @override

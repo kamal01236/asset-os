@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../infrastructure/db/app_database.dart';
 import '../../domain/home/home_modules.dart';
 import '../../domain/models/entities.dart';
+import '../../domain/subscriptions/subscription_models.dart';
 import '../local_repository.dart';
 import '../../infrastructure/sharing/whatsapp_share.dart';
 import '../../domain/templates/field_defs.dart';
@@ -115,6 +116,19 @@ final moneyLoansForCustomerProvider =
 final depositLedgerProvider =
     StreamProvider.family<List<DepositLedgerEntry>, String>((ref, customerId) {
   return ref.watch(repositoryProvider).watchDepositLedger(customerId);
+});
+
+final customerSubscriptionsProvider =
+    StreamProvider<List<CustomerSubscription>>((ref) {
+  return ref.watch(repositoryProvider).watchCustomerSubscriptions();
+});
+
+final customerSubscriptionsForCustomerProvider =
+    StreamProvider.family<List<CustomerSubscription>, String>(
+        (ref, customerId) {
+  return ref
+      .watch(repositoryProvider)
+      .watchCustomerSubscriptions(customerId: customerId);
 });
 
 /// Bottom-nav tab indices for [currentTabIndexProvider].

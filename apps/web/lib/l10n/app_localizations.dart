@@ -3053,6 +3053,32 @@ abstract class AppLocalizations {
   /// **'Membership is active for this customer.'**
   String get commercialSubscriptionSatisfied;
 
+  String get subscriptionTierNone;
+  String get subscriptionTierBasic;
+  String get subscriptionTierStandard;
+  String get subscriptionTierPro;
+  String get subscriptionTierPremium;
+  String get subscriptionPeriodDay;
+  String get subscriptionPeriodWeek;
+  String get subscriptionPeriodMonth;
+  String get subscriptionPeriodYear;
+  String get subscriptionSkuTierLabel;
+  String get subscriptionPeriodUnitLabel;
+  String get subscriptionPeriodCountLabel;
+  String get minSubscriptionTierLabel;
+  String get minSubscriptionTierHelper;
+  String get catalogResourceTypeLabel;
+  String subscriptionChipOk(String tier, String date);
+  String subscriptionChipUncovered(String tier);
+  String get subscriptionUpsellLabel;
+  String get subscriptionNamedCustomerRequired;
+  String get subscriptionHistoryHeading;
+  String get subscriptionNoneActive;
+  String get subscriptionStatusCancelled;
+  String get subscriptionStatusExpired;
+  String customerSubscriptionMeta(String tier, String date);
+  String subscriptionUntilLabel(String tier, String date);
+
   /// No description provided for @orderPaymentTitle.
   ///
   /// In en, this message translates to:

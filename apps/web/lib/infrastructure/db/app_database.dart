@@ -17,6 +17,7 @@ part 'app_database.g.dart';
     AppMeta,
     MoneyLoans,
     MoneyLoanEntries,
+    CustomerSubscriptions,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -24,7 +25,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 22;
+  int get schemaVersion => 23;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -387,6 +388,9 @@ class AppDatabase extends _$AppDatabase {
         );
         await m.addColumn(rentals, rentals.sellPaidPaise);
         await m.addColumn(rentals, rentals.sellDiscountPaise);
+      }
+      if (from < 23) {
+        await m.createTable(customerSubscriptions);
       }
     },
   );

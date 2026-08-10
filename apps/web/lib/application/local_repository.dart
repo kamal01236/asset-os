@@ -15,6 +15,8 @@ import '../domain/orders/order_payment.dart';
 import '../domain/pricing/rental_pricing.dart';
 import '../domain/reports/report_widgets.dart';
 import '../domain/search/search_scope.dart';
+import '../domain/subscriptions/subscription_coverage.dart';
+import '../domain/subscriptions/subscription_models.dart';
 import '../domain/templates/field_defs.dart';
 import '../domain/templates/industry_templates.dart';
 import '../domain/templates/workflows.dart';
@@ -113,6 +115,8 @@ class LocalRepository {
   static const String snapshotKey = 'asset_os_snapshot_v1';
   static const String _migrationMetaKey = 'prefs_snapshot_migrated_v1';
   static const String industryTemplateMetaKey = 'industry_template_id';
+  static const String _subscriptionBackfillMetaKey =
+      'customer_subscriptions_backfill_v23';
 
   final AppDatabase _db;
   final SharedPreferences _preferences;
@@ -135,6 +139,7 @@ class LocalRepository {
       }
       await ensureUnknownCustomer();
       await ensureEnabledResourceTypes();
+      await ensureCustomerSubscriptionsBackfill();
       return;
     }
 
@@ -146,6 +151,7 @@ class LocalRepository {
       await _preferences.remove(snapshotKey);
       await ensureUnknownCustomer();
       await ensureEnabledResourceTypes();
+      await ensureCustomerSubscriptionsBackfill();
       return;
     }
 
@@ -162,6 +168,7 @@ class LocalRepository {
     await _markMigrationComplete();
     await ensureUnknownCustomer();
     await ensureEnabledResourceTypes();
+    await ensureCustomerSubscriptionsBackfill();
   }
 
   /// Chosen industry template id from first-load onboarding, if any.
@@ -947,6 +954,13 @@ class LocalRepository {
           at: now,
         ),
       );
+      await _grantSubscriptionsFromIssuedLines(
+        customerId: customer.id,
+        rentalId: rentalId,
+        startedAt: now,
+        itemRows: itemRows,
+        fulfillments: lineFulfillments,
+      );
     });
 
     return rentalId;
@@ -998,26 +1012,65 @@ class LocalRepository {
           treatExcessAsDiscount: treatExcessAsDiscount,
         );
       }
+      if (commercial != null) {
+        final int rank = await customerEffectiveSubscriptionRank(customer.id);
+        final bool covered = coversSubscriptionTier(
+          minTier: commercial.cartMinTier,
+          effectiveRank: rank,
+        );
+        commercial_policy.assertCommercialSatisfied(
+          aggregated: commercial,
+          amountReceivedPaise: amountReceivedPaise,
+          securityPaise: securityPaise,
+          subscriptionSatisfied: covered,
+        );
+      }
       return rentalId;
     });
   }
 
-  /// True when [customerId] has a still-valid membership/subscription sell.
-  Future<bool> customerHasActiveEntitlement(
+  /// Max active subscription rank for [customerId] (0 for unknown / none).
+  Future<int> customerEffectiveSubscriptionRank(
     String customerId, {
     DateTime? now,
   }) async {
-    final List<Rental> rentals = await listRentals();
-    final List<InventoryItem> inventory =
-        await listInventory(includeInactive: true);
-    final Map<String, InventoryItem> byId = <String, InventoryItem>{
-      for (final InventoryItem item in inventory) item.id: item,
-    };
-    return commercial_policy.customerHasActiveEntitlement(
-      customerOrders: rentals.where((Rental r) => r.customerId == customerId),
-      inventoryById: byId,
-      now: now ?? DateTime.now(),
+    if (isUnknownCustomerId(customerId)) {
+      return 0;
+    }
+    final List<CustomerSubscription> rows =
+        await listCustomerSubscriptions(customerId);
+    return effectiveSubscriptionRank(rows, now ?? DateTime.now());
+  }
+
+  Stream<List<CustomerSubscription>> watchCustomerSubscriptions({
+    String? customerId,
+  }) {
+    final query = _db.select(_db.customerSubscriptions);
+    if (customerId != null) {
+      query.where((t) => t.customerId.equals(customerId));
+    }
+    query.orderBy([
+      (t) => OrderingTerm.desc(t.validUntil),
+    ]);
+    return query.watch().map(
+      (List<CustomerSubscriptionRow> rows) => rows
+          .map(_mapCustomerSubscription)
+          .toList(growable: false),
     );
+  }
+
+  Future<List<CustomerSubscription>> listCustomerSubscriptions(
+    String? customerId,
+  ) async {
+    final query = _db.select(_db.customerSubscriptions);
+    if (customerId != null) {
+      query.where((t) => t.customerId.equals(customerId));
+    }
+    query.orderBy([
+      (t) => OrderingTerm.desc(t.validUntil),
+    ]);
+    final List<CustomerSubscriptionRow> rows = await query.get();
+    return rows.map(_mapCustomerSubscription).toList(growable: false);
   }
 
   /// Sell line charges due on [rental] (paise).
@@ -3493,6 +3546,189 @@ class LocalRepository {
       balanceAfter: row.balanceAfter,
       note: row.note,
       at: row.at,
+    );
+  }
+
+  CustomerSubscription _mapCustomerSubscription(CustomerSubscriptionRow row) {
+    return CustomerSubscription(
+      id: row.id,
+      customerId: row.customerId,
+      tier: SubscriptionTier.parse(row.tier, fallback: SubscriptionTier.basic),
+      startsAt: row.startsAt,
+      validUntil: row.validUntil,
+      sourceRentalId: row.sourceRentalId,
+      sourceItemId: row.sourceItemId,
+      status: CustomerSubscriptionStatus.parse(row.status),
+    );
+  }
+
+  Future<void> _grantSubscriptionsFromIssuedLines({
+    required String customerId,
+    required String rentalId,
+    required DateTime startedAt,
+    required List<InventoryItemRow> itemRows,
+    required List<LineFulfillment> fulfillments,
+  }) async {
+    if (isUnknownCustomerId(customerId)) {
+      return;
+    }
+    for (var i = 0; i < itemRows.length; i++) {
+      if (i >= fulfillments.length || fulfillments[i] != LineFulfillment.sell) {
+        continue;
+      }
+      final InventoryItemRow row = itemRows[i];
+      final ResourceType type = ResourceType.parse(row.defaultItemKind);
+      if (!isSubscriptionCatalogType(type)) {
+        continue;
+      }
+      final Map<String, Object?> metadata = decodeMetadata(row.metadata);
+      final SubscriptionTier tier = subscriptionTierFromMetadata(
+            metadata,
+            fallback: SubscriptionTier.basic,
+          ) ??
+          SubscriptionTier.basic;
+      final ({SubscriptionPeriodUnit unit, int count}) period =
+          resolveSubscriptionPeriod(
+        metadata: metadata,
+        billingMode: BillingMode.parse(row.billingMode),
+      );
+      await _upsertCustomerSubscription(
+        customerId: customerId,
+        tier: tier,
+        periodUnit: period.unit,
+        periodCount: period.count,
+        startsAt: startedAt,
+        sourceRentalId: rentalId,
+        sourceItemId: row.id,
+      );
+    }
+  }
+
+  Future<void> _upsertCustomerSubscription({
+    required String customerId,
+    required SubscriptionTier tier,
+    required SubscriptionPeriodUnit periodUnit,
+    required int periodCount,
+    required DateTime startsAt,
+    String? sourceRentalId,
+    String? sourceItemId,
+  }) async {
+    final List<CustomerSubscriptionRow> existing =
+        await (_db.select(_db.customerSubscriptions)
+              ..where(
+                (t) =>
+                    t.customerId.equals(customerId) &
+                    t.tier.equals(tier.storageValue) &
+                    t.status.equals(CustomerSubscriptionStatus.active.storageValue),
+              ))
+            .get();
+    CustomerSubscriptionRow? current;
+    for (final CustomerSubscriptionRow row in existing) {
+      if (current == null || row.validUntil.isAfter(current.validUntil)) {
+        current = row;
+      }
+    }
+    if (current != null) {
+      final DateTime nextEnd = renewSubscriptionValidUntil(
+        now: startsAt,
+        currentEnd: current.validUntil,
+        unit: periodUnit,
+        count: periodCount,
+      );
+      await (_db.update(_db.customerSubscriptions)
+            ..where((t) => t.id.equals(current!.id)))
+          .write(
+        CustomerSubscriptionsCompanion(
+          validUntil: Value<DateTime>(nextEnd),
+          sourceRentalId: Value<String?>(sourceRentalId),
+          sourceItemId: Value<String?>(sourceItemId),
+        ),
+      );
+      return;
+    }
+    final DateTime validUntil = addSubscriptionPeriod(
+      startsAt,
+      periodUnit,
+      periodCount,
+    );
+    await _db.into(_db.customerSubscriptions).insert(
+      CustomerSubscriptionsCompanion.insert(
+        id: nextId('CSUB'),
+        customerId: customerId,
+        tier: tier.storageValue,
+        startsAt: startsAt,
+        validUntil: validUntil,
+        sourceRentalId: Value<String?>(sourceRentalId),
+        sourceItemId: Value<String?>(sourceItemId),
+        status: Value<String>(CustomerSubscriptionStatus.active.storageValue),
+      ),
+    );
+  }
+
+  /// One-time backfill of [customer_subscriptions] from historical sell lines.
+  Future<void> ensureCustomerSubscriptionsBackfill() async {
+    final AppMetaRow? flag = await (_db.select(_db.appMeta)
+          ..where((t) => t.key.equals(_subscriptionBackfillMetaKey)))
+        .getSingleOrNull();
+    if (flag?.value == '1') {
+      return;
+    }
+    final List<Rental> rentals = await listRentals();
+    final List<InventoryItem> inventory =
+        await listInventory(includeInactive: true);
+    final Map<String, InventoryItem> byId = <String, InventoryItem>{
+      for (final InventoryItem item in inventory) item.id: item,
+    };
+    for (final Rental rental in rentals) {
+      if (rental.orderStatus == OrderStatus.cancelled) {
+        continue;
+      }
+      if (isUnknownCustomerId(rental.customerId)) {
+        continue;
+      }
+      for (final RentalLine line in rental.lines) {
+        if (!line.isSell) {
+          continue;
+        }
+        final InventoryItem? item = byId[line.itemId];
+        final ResourceType type =
+            item?.defaultItemKind ?? ResourceType.rental;
+        if (!isSubscriptionCatalogType(type)) {
+          continue;
+        }
+        final Map<String, Object?> metadata =
+            item?.metadata ?? const <String, Object?>{};
+        final SubscriptionTier tier = subscriptionTierFromMetadata(
+              metadata,
+              fallback: SubscriptionTier.basic,
+            ) ??
+            SubscriptionTier.basic;
+        final DateTime validUntil = commercial_policy.entitlementValidUntil(
+          startedAt: rental.startedAt,
+          line: line,
+          item: item,
+        );
+        await _db.into(_db.customerSubscriptions).insert(
+          CustomerSubscriptionsCompanion.insert(
+            id: nextId('CSUB'),
+            customerId: rental.customerId,
+            tier: tier.storageValue,
+            startsAt: rental.startedAt,
+            validUntil: validUntil,
+            sourceRentalId: Value<String?>(rental.id),
+            sourceItemId: Value<String?>(line.itemId),
+            status: Value<String>(
+              CustomerSubscriptionStatus.active.storageValue,
+            ),
+          ),
+        );
+      }
+    }
+    await _db.into(_db.appMeta).insertOnConflictUpdate(
+      AppMetaCompanion.insert(
+        key: _subscriptionBackfillMetaKey,
+        value: '1',
+      ),
     );
   }
 

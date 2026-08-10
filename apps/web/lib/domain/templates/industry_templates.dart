@@ -4,6 +4,8 @@ import '../home/home_modules.dart';
 import '../models/entities.dart';
 import '../orders/commercial_policy.dart';
 import '../reports/report_widgets.dart';
+import '../subscriptions/subscription_coverage.dart';
+import '../subscriptions/subscription_models.dart';
 import 'field_defs.dart';
 import 'workflows.dart';
 
@@ -29,6 +31,10 @@ class TemplateInventoryItem {
     this.securityDepositPaise = 0,
     this.commercial,
     this.entitlementDays,
+    this.subscriptionTier,
+    this.subscriptionPeriodUnit,
+    this.subscriptionPeriodCount,
+    this.minSubscriptionTier,
   });
 
   final String name;
@@ -53,6 +59,12 @@ class TemplateInventoryItem {
   final CommercialPolicy? commercial;
   /// Membership validity length (days) stored in catalog metadata.
   final int? entitlementDays;
+  /// SKU tier written for membership / subscription catalog items.
+  final SubscriptionTier? subscriptionTier;
+  final SubscriptionPeriodUnit? subscriptionPeriodUnit;
+  final int? subscriptionPeriodCount;
+  /// Minimum customer tier for non-SKU resources (`none` omitted).
+  final SubscriptionTier? minSubscriptionTier;
 
   /// Catalog metadata written on seed / import.
   Map<String, Object?> get seedMetadata {
@@ -63,7 +75,13 @@ class TemplateInventoryItem {
     if (entitlementDays != null) {
       out[kEntitlementDaysMetadataKey] = entitlementDays;
     }
-    return out;
+    return applySubscriptionCatalogMetadata(
+      out,
+      skuTier: subscriptionTier,
+      periodUnit: subscriptionPeriodUnit,
+      periodCount: subscriptionPeriodCount,
+      minTier: minSubscriptionTier,
+    );
   }
 
   String localizedName(Locale locale) =>
@@ -95,6 +113,10 @@ class TemplateInventoryItem {
       securityDepositPaise: securityDepositPaise,
       commercial: commercial,
       entitlementDays: entitlementDays,
+      subscriptionTier: subscriptionTier,
+      subscriptionPeriodUnit: subscriptionPeriodUnit,
+      subscriptionPeriodCount: subscriptionPeriodCount,
+      minSubscriptionTier: minSubscriptionTier,
     );
   }
 }
@@ -355,6 +377,7 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
         lateFeePerDay: 500, // ₹5/day late only
         defaultItemKind: ResourceType.loan,
         commercial: kLibraryLoanCommercial,
+        minSubscriptionTier: SubscriptionTier.basic,
       ),
       TemplateInventoryItem(
         name: 'Book',
@@ -366,6 +389,7 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
         rateAmount: 0,
         defaultItemKind: ResourceType.loan,
         commercial: kLibraryLoanCommercial,
+        minSubscriptionTier: SubscriptionTier.basic,
       ),
       TemplateInventoryItem(
         name: 'Journal',
@@ -377,6 +401,7 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
         rateAmount: 0,
         defaultItemKind: ResourceType.loan,
         commercial: kLibraryLoanCommercial,
+        minSubscriptionTier: SubscriptionTier.basic,
       ),
       TemplateInventoryItem(
         name: 'Magazine',
@@ -388,6 +413,7 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
         rateAmount: 0,
         defaultItemKind: ResourceType.loan,
         commercial: kLibraryLoanCommercial,
+        minSubscriptionTier: SubscriptionTier.basic,
       ),
       TemplateInventoryItem(
         name: 'Calculator',
@@ -400,6 +426,7 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
         lateFeePerDay: 500,
         defaultItemKind: ResourceType.loan,
         commercial: kLibraryLoanCommercial,
+        minSubscriptionTier: SubscriptionTier.basic,
       ),
       TemplateInventoryItem(
         name: 'Reading seat',
@@ -425,6 +452,9 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
         defaultItemKind: ResourceType.membership,
         requiresUnitIdentity: false,
         entitlementDays: 30,
+        subscriptionTier: SubscriptionTier.basic,
+        subscriptionPeriodUnit: SubscriptionPeriodUnit.month,
+        subscriptionPeriodCount: 1,
       ),
     ],
   ),
@@ -1048,6 +1078,9 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
         defaultItemKind: ResourceType.membership,
         requiresUnitIdentity: false,
         entitlementDays: 30,
+        subscriptionTier: SubscriptionTier.basic,
+        subscriptionPeriodUnit: SubscriptionPeriodUnit.month,
+        subscriptionPeriodCount: 1,
       ),
       TemplateInventoryItem(
         name: 'Steamer Kit',
@@ -1178,6 +1211,9 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
         defaultItemKind: ResourceType.membership,
         requiresUnitIdentity: false,
         entitlementDays: 30,
+        subscriptionTier: SubscriptionTier.standard,
+        subscriptionPeriodUnit: SubscriptionPeriodUnit.month,
+        subscriptionPeriodCount: 1,
       ),
       TemplateInventoryItem(
         name: 'Quarterly Membership',
@@ -1190,6 +1226,9 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
         defaultItemKind: ResourceType.membership,
         requiresUnitIdentity: false,
         entitlementDays: 90,
+        subscriptionTier: SubscriptionTier.standard,
+        subscriptionPeriodUnit: SubscriptionPeriodUnit.month,
+        subscriptionPeriodCount: 3,
       ),
       TemplateInventoryItem(
         name: 'Annual Membership',
@@ -1202,6 +1241,9 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
         defaultItemKind: ResourceType.membership,
         requiresUnitIdentity: false,
         entitlementDays: 365,
+        subscriptionTier: SubscriptionTier.pro,
+        subscriptionPeriodUnit: SubscriptionPeriodUnit.year,
+        subscriptionPeriodCount: 1,
       ),
       TemplateInventoryItem(
         name: 'Day Pass',
@@ -1224,6 +1266,7 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
         rateAmount: 30000, // ₹300/month
         requiresUnitIdentity: false,
         securityDepositPaise: 50000,
+        minSubscriptionTier: SubscriptionTier.standard,
       ),
     ],
   ),
@@ -1312,6 +1355,9 @@ const List<IndustryTemplate> kIndustryTemplates = <IndustryTemplate>[
         defaultItemKind: ResourceType.membership,
         requiresUnitIdentity: false,
         entitlementDays: 30,
+        subscriptionTier: SubscriptionTier.basic,
+        subscriptionPeriodUnit: SubscriptionPeriodUnit.month,
+        subscriptionPeriodCount: 1,
       ),
     ],
   ),

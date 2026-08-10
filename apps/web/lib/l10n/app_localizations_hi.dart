@@ -1659,11 +1659,91 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get commercialSubscriptionHint =>
-      'जारी रखने के लिए सदस्यता लाइन जोड़ें या सिक्योरिटी लें।';
+      'इस ऑर्डर पर कवरिंग सदस्यता जोड़ें, या जहाँ अनुमति हो वहाँ सिक्योरिटी लें।';
 
   @override
   String get commercialSubscriptionSatisfied =>
       'इस ग्राहक की सदस्यता सक्रिय है।';
+
+  @override
+  String get subscriptionTierNone => 'कोई नहीं';
+
+  @override
+  String get subscriptionTierBasic => 'बेसिक';
+
+  @override
+  String get subscriptionTierStandard => 'स्टैंडर्ड';
+
+  @override
+  String get subscriptionTierPro => 'प्रो';
+
+  @override
+  String get subscriptionTierPremium => 'प्रीमियम';
+
+  @override
+  String get subscriptionPeriodDay => 'दिन';
+
+  @override
+  String get subscriptionPeriodWeek => 'सप्ताह';
+
+  @override
+  String get subscriptionPeriodMonth => 'महीना';
+
+  @override
+  String get subscriptionPeriodYear => 'वर्ष';
+
+  @override
+  String get subscriptionSkuTierLabel => 'सदस्यता टियर';
+
+  @override
+  String get subscriptionPeriodUnitLabel => 'अवधि इकाई';
+
+  @override
+  String get subscriptionPeriodCountLabel => 'अवधि संख्या';
+
+  @override
+  String get minSubscriptionTierLabel => 'सदस्यता आवश्यक';
+
+  @override
+  String get minSubscriptionTierHelper =>
+      'यह संसाधन जारी करने के लिए न्यूनतम ग्राहक टियर। कोई नहीं = बिना गेट।';
+
+  @override
+  String get catalogResourceTypeLabel => 'संसाधन प्रकार';
+
+  @override
+  String subscriptionChipOk(String tier, String date) =>
+      '$tier $date तक — जारी कर सकते हैं';
+
+  @override
+  String subscriptionChipUncovered(String tier) =>
+      'इन वस्तुओं के लिए ग्राहक को $tier (या उससे ऊपर) चाहिए।';
+
+  @override
+  String get subscriptionUpsellLabel => 'इस ऑर्डर में सदस्यता जोड़ें';
+
+  @override
+  String get subscriptionNamedCustomerRequired =>
+      'सदस्यता के लिए फ़ोन वाला नामित ग्राहक आवश्यक है।';
+
+  @override
+  String get subscriptionHistoryHeading => 'सदस्यताएँ';
+
+  @override
+  String get subscriptionNoneActive => 'कोई सक्रिय सदस्यता नहीं';
+
+  @override
+  String get subscriptionStatusCancelled => 'रद्द';
+
+  @override
+  String get subscriptionStatusExpired => 'समाप्त';
+
+  @override
+  String customerSubscriptionMeta(String tier, String date) => '$tier · $date';
+
+  @override
+  String subscriptionUntilLabel(String tier, String date) =>
+      '$tier $date तक';
 
   @override
   String get orderPaymentTitle => 'भुगतान';
