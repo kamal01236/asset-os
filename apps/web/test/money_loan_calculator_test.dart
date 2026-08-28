@@ -929,6 +929,124 @@ void main() {
       expect(scenario.remainingPrincipalPaise, 10600000);
     });
 
+    test('update repayment amount date and note recalculates scenario', () async {
+      final LocalRepository repo = await bootRepo();
+      final customer = await ensureCustomer(repo);
+      final String loanId = await repo.createMoneyLoan(
+        customerId: customer.id,
+        direction: MoneyLoanDirection.given,
+        principalPaise: 100000,
+        interestStartedAt: DateTime(2026, 1, 1),
+        rateBps: 0,
+      );
+      final String entryId = await repo.addMoneyLoanEntry(
+        loanId: loanId,
+        entryAt: DateTime(2026, 2, 1),
+        amountPaise: 30000,
+        kind: MoneyLoanEntryKind.repayment,
+        note: 'PAY-OLD',
+      );
+      await repo.updateMoneyLoanEntry(
+        entryId: entryId,
+        entryAt: DateTime(2026, 2, 15),
+        amountPaise: 50000,
+        note: 'pay-new',
+      );
+      final MoneyLoan loan = (await repo.getMoneyLoan(loanId))!;
+      final LoanScenario scenario = computeLoanScenario(
+        loan: loan,
+        now: DateTime(2026, 2, 15),
+      );
+      expect(scenario.pendingPaise, 50000);
+      final LoanTimelineEvent payment = scenario.timeline
+          .lastWhere((LoanTimelineEvent e) => e.kind == LoanTimelineKind.payment);
+      expect(payment.at, DateTime(2026, 2, 15));
+      expect(payment.note, 'PAY-NEW');
+      expect(payment.amountPaise, 50000);
+    });
+
+    test('update disbursement changes principal summary', () async {
+      final LocalRepository repo = await bootRepo();
+      final customer = await ensureCustomer(repo);
+      final String loanId = await repo.createMoneyLoan(
+        customerId: customer.id,
+        direction: MoneyLoanDirection.given,
+        principalPaise: 100000,
+        interestStartedAt: DateTime(2026, 1, 1),
+        rateBps: 0,
+      );
+      final String entryId = await repo.addMoneyLoanPrincipal(
+        loanId: loanId,
+        entryAt: DateTime(2026, 1, 10),
+        amountPaise: 20000,
+        note: 'DISB-OLD',
+      );
+      await repo.updateMoneyLoanEntry(
+        entryId: entryId,
+        amountPaise: 50000,
+        note: 'DISB-NEW',
+      );
+      final MoneyLoan loan = (await repo.getMoneyLoan(loanId))!;
+      expect(
+        computeLoanScenario(loan: loan, now: DateTime(2026, 1, 10))
+            .remainingPrincipalPaise,
+        150000,
+      );
+    });
+
+    test('update repayment with empty ref throws', () async {
+      final LocalRepository repo = await bootRepo();
+      final customer = await ensureCustomer(repo);
+      final String loanId = await repo.createMoneyLoan(
+        customerId: customer.id,
+        direction: MoneyLoanDirection.given,
+        principalPaise: 100000,
+        interestStartedAt: DateTime(2026, 1, 1),
+        rateBps: 0,
+      );
+      final String entryId = await repo.addMoneyLoanEntry(
+        loanId: loanId,
+        entryAt: DateTime(2026, 2, 1),
+        amountPaise: 10000,
+        kind: MoneyLoanEntryKind.repayment,
+        note: 'PAY-001',
+      );
+      expect(
+        () => repo.updateMoneyLoanEntry(
+          entryId: entryId,
+          note: '   ',
+        ),
+        throwsA(isA<ArgumentError>()),
+      );
+    });
+
+    test('update entry on closed loan throws', () async {
+      final LocalRepository repo = await bootRepo();
+      final customer = await ensureCustomer(repo);
+      final String loanId = await repo.createMoneyLoan(
+        customerId: customer.id,
+        direction: MoneyLoanDirection.given,
+        principalPaise: 100000,
+        interestStartedAt: DateTime(2026, 1, 1),
+        rateBps: 0,
+      );
+      final String entryId = await repo.addMoneyLoanEntry(
+        loanId: loanId,
+        entryAt: DateTime(2026, 2, 1),
+        amountPaise: 100000,
+        kind: MoneyLoanEntryKind.repayment,
+        note: 'PAY-FULL',
+      );
+      await repo.closeMoneyLoan(loanId, closedAt: DateTime(2026, 2, 1));
+      expect(
+        () => repo.updateMoneyLoanEntry(
+          entryId: entryId,
+          amountPaise: 50000,
+        ),
+        throwsA(isA<StateError>()),
+      );
+    });
+
     test('legacy interestKind compound maps to onScheduledCycle on create',
         () async {
       final LocalRepository repo = await bootRepo();

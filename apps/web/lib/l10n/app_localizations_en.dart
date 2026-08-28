@@ -2284,6 +2284,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loanSaveEntry => 'Save';
 
   @override
+  String get loanEditPayment => 'Edit payment';
+
+  @override
+  String get loanEditDisbursement => 'Edit principal';
+
+  @override
+  String get loanEditEntryTooltip => 'Edit entry';
+
+  @override
+  String get loanEntryUpdated => 'Entry updated';
+
+  @override
+  String get loanDeleteEntry => 'Delete entry';
+
+  @override
+  String get loanDeleteEntryConfirm =>
+      'Remove this entry from the loan timeline?';
+
+  @override
+  String get loanEntryDeleted => 'Entry removed';
+
+  @override
   String get loanCancel => 'Cancel';
 
   @override

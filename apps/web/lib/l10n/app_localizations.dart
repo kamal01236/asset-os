@@ -3973,6 +3973,48 @@ abstract class AppLocalizations {
   /// **'Save'**
   String get loanSaveEntry;
 
+  /// No description provided for @loanEditPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit payment'**
+  String get loanEditPayment;
+
+  /// No description provided for @loanEditDisbursement.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit principal'**
+  String get loanEditDisbursement;
+
+  /// No description provided for @loanEditEntryTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit entry'**
+  String get loanEditEntryTooltip;
+
+  /// No description provided for @loanEntryUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Entry updated'**
+  String get loanEntryUpdated;
+
+  /// No description provided for @loanDeleteEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete entry'**
+  String get loanDeleteEntry;
+
+  /// No description provided for @loanDeleteEntryConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this entry from the loan timeline?'**
+  String get loanDeleteEntryConfirm;
+
+  /// No description provided for @loanEntryDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Entry removed'**
+  String get loanEntryDeleted;
+
   /// No description provided for @loanCancel.
   ///
   /// In en, this message translates to:

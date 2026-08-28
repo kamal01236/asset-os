@@ -2783,17 +2783,37 @@ class LocalRepository {
     if (nextKind == MoneyLoanEntryKind.adjustment && nextAmount == 0) {
       throw ArgumentError('Adjustment amount cannot be zero');
     }
+    if (nextKind == MoneyLoanEntryKind.capitalization && nextAmount < 0) {
+      throw ArgumentError('Capitalization amount cannot be negative');
+    }
     DateTime at = row.entryAt;
     if (entryAt != null) {
       at = DateTime(entryAt.year, entryAt.month, entryAt.day);
-      final DateTime today = DateTime.now();
-      final DateTime todayOnly = DateTime(today.year, today.month, today.day);
-      if (at.isAfter(todayOnly)) {
-        throw ArgumentError('Entry date cannot be after today');
-      }
+    }
+    final DateTime today = DateTime.now();
+    final DateTime todayOnly = DateTime(today.year, today.month, today.day);
+    if (at.isAfter(todayOnly)) {
+      throw ArgumentError('Entry date cannot be after today');
     }
     String? nextNote = row.note;
-    if (clearNote) {
+    if (nextKind == MoneyLoanEntryKind.repayment ||
+        nextKind == MoneyLoanEntryKind.disbursement) {
+      if (clearNote) {
+        throw ArgumentError('Payment reference is required');
+      }
+      if (note != null) {
+        if (note.trim().isEmpty) {
+          throw ArgumentError('Payment reference is required');
+        }
+        validatePaymentReference(note);
+        nextNote = requirePaymentReference(note);
+      } else if (nextNote == null || nextNote.trim().isEmpty) {
+        throw ArgumentError('Payment reference is required');
+      } else {
+        validatePaymentReference(nextNote);
+        nextNote = requirePaymentReference(nextNote);
+      }
+    } else if (clearNote) {
       nextNote = null;
     } else if (note != null) {
       final String trimmed = note.trim();

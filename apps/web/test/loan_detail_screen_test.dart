@@ -155,4 +155,112 @@ void main() {
 
     await _tearDownDetail(tester);
   });
+
+  testWidgets('pending loan repayment row shows edit affordance', (
+    WidgetTester tester,
+  ) async {
+    final ProviderContainer container = await bootContainer();
+    final LocalRepository repo = container.read(repositoryProvider);
+    final Customer customer = await ensureCustomer(repo);
+
+    tester.view.physicalSize = const Size(900, 1800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final String loanId = await repo.createMoneyLoan(
+      customerId: customer.id,
+      direction: MoneyLoanDirection.given,
+      principalPaise: 100000,
+      interestStartedAt: DateTime(2026, 1, 1),
+      rateBps: 0,
+    );
+    await repo.addMoneyLoanEntry(
+      loanId: loanId,
+      entryAt: DateTime(2026, 2, 1),
+      amountPaise: 25000,
+      kind: MoneyLoanEntryKind.repayment,
+      note: 'PAY-EDIT',
+    );
+
+    await _pumpDetail(tester, container: container, loanId: loanId);
+
+    expect(find.byTooltip('Edit entry'), findsOneWidget);
+
+    await _tearDownDetail(tester);
+  });
+
+  testWidgets('edit sheet opens prefilled for repayment', (
+    WidgetTester tester,
+  ) async {
+    final ProviderContainer container = await bootContainer();
+    final LocalRepository repo = container.read(repositoryProvider);
+    final Customer customer = await ensureCustomer(repo);
+
+    tester.view.physicalSize = const Size(900, 1800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final String loanId = await repo.createMoneyLoan(
+      customerId: customer.id,
+      direction: MoneyLoanDirection.given,
+      principalPaise: 100000,
+      interestStartedAt: DateTime(2026, 1, 1),
+      rateBps: 0,
+    );
+    await repo.addMoneyLoanEntry(
+      loanId: loanId,
+      entryAt: DateTime(2026, 2, 1),
+      amountPaise: 25000,
+      kind: MoneyLoanEntryKind.repayment,
+      note: 'PAY-EDIT',
+    );
+
+    await _pumpDetail(tester, container: container, loanId: loanId);
+
+    await tester.tap(find.byTooltip('Edit entry'));
+    await pumpFrames(tester, frames: 10);
+
+    expect(find.text('Edit payment'), findsOneWidget);
+    expect(find.text('Save'), findsOneWidget);
+    expect(find.text('Delete entry'), findsOneWidget);
+
+    await _tearDownDetail(tester);
+  });
+
+  testWidgets('closed loan hides edit affordance on timeline', (
+    WidgetTester tester,
+  ) async {
+    final ProviderContainer container = await bootContainer();
+    final LocalRepository repo = container.read(repositoryProvider);
+    final Customer customer = await ensureCustomer(repo);
+
+    tester.view.physicalSize = const Size(900, 1800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final String loanId = await repo.createMoneyLoan(
+      customerId: customer.id,
+      direction: MoneyLoanDirection.given,
+      principalPaise: 100000,
+      interestStartedAt: DateTime(2026, 1, 1),
+      rateBps: 0,
+    );
+    await repo.addMoneyLoanEntry(
+      loanId: loanId,
+      entryAt: DateTime(2026, 2, 1),
+      amountPaise: 100000,
+      kind: MoneyLoanEntryKind.repayment,
+      note: 'PAY-FULL',
+    );
+    await repo.closeMoneyLoan(loanId, closedAt: DateTime(2026, 2, 1));
+
+    await _pumpDetail(tester, container: container, loanId: loanId);
+
+    expect(find.byTooltip('Edit entry'), findsNothing);
+
+    await _tearDownDetail(tester);
+  });
 }

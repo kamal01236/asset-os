@@ -2284,6 +2284,28 @@ class AppLocalizationsHi extends AppLocalizations {
   String get loanSaveEntry => 'सहेजें';
 
   @override
+  String get loanEditPayment => 'भुगतान संपादित करें';
+
+  @override
+  String get loanEditDisbursement => 'मूलधन संपादित करें';
+
+  @override
+  String get loanEditEntryTooltip => 'प्रविष्टि संपादित करें';
+
+  @override
+  String get loanEntryUpdated => 'प्रविष्टि अपडेट की गई';
+
+  @override
+  String get loanDeleteEntry => 'प्रविष्टि हटाएँ';
+
+  @override
+  String get loanDeleteEntryConfirm =>
+      'इस प्रविष्टि को कर्ज टाइमलाइन से हटाएँ?';
+
+  @override
+  String get loanEntryDeleted => 'प्रविष्टि हटाई गई';
+
+  @override
   String get loanCancel => 'रद्द';
 
   @override

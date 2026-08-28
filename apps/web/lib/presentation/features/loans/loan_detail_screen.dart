@@ -112,7 +112,16 @@ class _LoanDetailScreenState extends ConsumerState<LoanDetailScreen> {
               ),
               const SizedBox(height: 8),
               ...scenario.timeline.map(
-                (LoanTimelineEvent e) => _TimelineRow(event: e, loan: loan!),
+                (LoanTimelineEvent e) => _TimelineRow(
+                  event: e,
+                  loan: loan!,
+                  onEdit: pending
+                      ? (MoneyLoanEntry entry) => _showCashEntrySheet(
+                            loan: loan!,
+                            existing: entry,
+                          )
+                      : null,
+                ),
               ),
               if (pending) ...<Widget>[
                 const SizedBox(height: 16),
@@ -121,7 +130,7 @@ class _LoanDetailScreenState extends ConsumerState<LoanDetailScreen> {
                   runSpacing: 8,
                   children: <Widget>[
                     FilledButton.tonalIcon(
-                      onPressed: () => _addCashEntry(
+                      onPressed: () => _showCashEntrySheet(
                         loan: loan!,
                         initialKind: MoneyLoanEntryKind.repayment,
                       ),
@@ -129,7 +138,7 @@ class _LoanDetailScreenState extends ConsumerState<LoanDetailScreen> {
                       label: Text(l10n.loanAddPayment),
                     ),
                     FilledButton.tonalIcon(
-                      onPressed: () => _addCashEntry(
+                      onPressed: () => _showCashEntrySheet(
                         loan: loan!,
                         initialKind: MoneyLoanEntryKind.disbursement,
                       ),
@@ -212,20 +221,26 @@ class _LoanDetailScreenState extends ConsumerState<LoanDetailScreen> {
     }
   }
 
-  Future<void> _addCashEntry({
+  Future<void> _showCashEntrySheet({
     required MoneyLoan loan,
-    required MoneyLoanEntryKind initialKind,
+    MoneyLoanEntry? existing,
+    MoneyLoanEntryKind? initialKind,
   }) async {
+    final bool isEdit = existing != null;
     assert(
-      initialKind == MoneyLoanEntryKind.repayment ||
-          initialKind == MoneyLoanEntryKind.disbursement,
+      (existing?.kind ?? initialKind) == MoneyLoanEntryKind.repayment ||
+          (existing?.kind ?? initialKind) == MoneyLoanEntryKind.disbursement,
     );
     final AppLocalizations l10n = context.l10n;
-    final TextEditingController amountCtrl = TextEditingController();
-    final TextEditingController noteCtrl = TextEditingController();
-    DateTime entryAt = DateTime.now();
+    final TextEditingController amountCtrl = TextEditingController(
+      text: existing != null ? paiseToRupeesField(existing.amountPaise) : null,
+    );
+    final TextEditingController noteCtrl = TextEditingController(
+      text: existing?.note,
+    );
+    DateTime entryAt = existing?.entryAt ?? DateTime.now();
     entryAt = DateTime(entryAt.year, entryAt.month, entryAt.day);
-    MoneyLoanEntryKind flow = initialKind;
+    MoneyLoanEntryKind flow = existing?.kind ?? initialKind!;
     final bool? saved = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
@@ -263,42 +278,59 @@ class _LoanDetailScreenState extends ConsumerState<LoanDetailScreen> {
               }();
               final bool amountReady =
                   parseRupeesToPaise(amountCtrl.text) > 0;
+              final String title = isEdit
+                  ? (flow == MoneyLoanEntryKind.disbursement
+                      ? l10n.loanEditDisbursement
+                      : l10n.loanEditPayment)
+                  : (flow == MoneyLoanEntryKind.disbursement
+                      ? l10n.loanAddPrincipal
+                      : l10n.loanAddPayment);
               return Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
                   Text(
-                    flow == MoneyLoanEntryKind.disbursement
-                        ? l10n.loanAddPrincipal
-                        : l10n.loanAddPayment,
+                    title,
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const SizedBox(height: 12),
-                  SegmentedButton<MoneyLoanEntryKind>(
-                    segments: <ButtonSegment<MoneyLoanEntryKind>>[
-                      ButtonSegment<MoneyLoanEntryKind>(
-                        value: MoneyLoanEntryKind.repayment,
-                        label: Text(l10n.loanFlowRepayment),
-                        icon: const Icon(Icons.south_west),
-                      ),
-                      ButtonSegment<MoneyLoanEntryKind>(
-                        value: MoneyLoanEntryKind.disbursement,
-                        label: Text(l10n.loanFlowAddPrincipal),
-                        icon: const Icon(Icons.north_east),
-                      ),
-                    ],
-                    selected: <MoneyLoanEntryKind>{flow},
-                    onSelectionChanged: (Set<MoneyLoanEntryKind> next) {
-                      setModal(() => flow = next.first);
-                    },
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    flowHint,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  if (!isEdit)
+                    SegmentedButton<MoneyLoanEntryKind>(
+                      segments: <ButtonSegment<MoneyLoanEntryKind>>[
+                        ButtonSegment<MoneyLoanEntryKind>(
+                          value: MoneyLoanEntryKind.repayment,
+                          label: Text(l10n.loanFlowRepayment),
+                          icon: const Icon(Icons.south_west),
                         ),
-                  ),
+                        ButtonSegment<MoneyLoanEntryKind>(
+                          value: MoneyLoanEntryKind.disbursement,
+                          label: Text(l10n.loanFlowAddPrincipal),
+                          icon: const Icon(Icons.north_east),
+                        ),
+                      ],
+                      selected: <MoneyLoanEntryKind>{flow},
+                      onSelectionChanged: (Set<MoneyLoanEntryKind> next) {
+                        setModal(() => flow = next.first);
+                      },
+                    )
+                  else
+                    Text(
+                      flowHint,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color:
+                                Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                    ),
+                  if (!isEdit) ...<Widget>[
+                    const SizedBox(height: 8),
+                    Text(
+                      flowHint,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color:
+                                Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                    ),
+                  ],
                   const SizedBox(height: 12),
                   ListTile(
                     contentPadding: EdgeInsets.zero,
@@ -356,6 +388,39 @@ class _LoanDetailScreenState extends ConsumerState<LoanDetailScreen> {
                         : null,
                     child: Text(l10n.loanSaveEntry),
                   ),
+                  if (isEdit) ...<Widget>[
+                    const SizedBox(height: 8),
+                    TextButton(
+                      onPressed: () async {
+                        final bool? confirm = await showDialog<bool>(
+                          context: context,
+                          builder: (BuildContext dialogContext) {
+                            return AlertDialog(
+                              title: Text(l10n.loanDeleteEntry),
+                              content: Text(l10n.loanDeleteEntryConfirm),
+                              actions: <Widget>[
+                                TextButton(
+                                  onPressed: () =>
+                                      Navigator.pop(dialogContext, false),
+                                  child: Text(l10n.loanCancel),
+                                ),
+                                FilledButton(
+                                  onPressed: () =>
+                                      Navigator.pop(dialogContext, true),
+                                  child: Text(l10n.loanDeleteEntry),
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                        if (confirm == true && context.mounted) {
+                          Navigator.pop(sheetContext, false);
+                          await _deleteCashEntry(existing);
+                        }
+                      },
+                      child: Text(l10n.loanDeleteEntry),
+                    ),
+                  ],
                 ],
               );
             },
@@ -373,7 +438,20 @@ class _LoanDetailScreenState extends ConsumerState<LoanDetailScreen> {
     final String note = requirePaymentReference(noteCtrl.text);
     noteCtrl.dispose();
     try {
-      if (flow == MoneyLoanEntryKind.disbursement) {
+      if (isEdit) {
+        await ref.read(repositoryProvider).updateMoneyLoanEntry(
+              entryId: existing.id,
+              entryAt: entryAt,
+              amountPaise: amount,
+              note: note,
+            );
+        if (!mounted) {
+          return;
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.loanEntryUpdated)),
+        );
+      } else if (flow == MoneyLoanEntryKind.disbursement) {
         await ref.read(repositoryProvider).addMoneyLoanPrincipal(
               loanId: widget.loanId,
               entryAt: entryAt,
@@ -389,6 +467,26 @@ class _LoanDetailScreenState extends ConsumerState<LoanDetailScreen> {
               note: note,
             );
       }
+    } catch (e) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$e')),
+      );
+    }
+  }
+
+  Future<void> _deleteCashEntry(MoneyLoanEntry entry) async {
+    final AppLocalizations l10n = context.l10n;
+    try {
+      await ref.read(repositoryProvider).deleteMoneyLoanEntry(entry.id);
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.loanEntryDeleted)),
+      );
     } catch (e) {
       if (!mounted) {
         return;
@@ -791,10 +889,15 @@ class _SetupSummary extends StatelessWidget {
 }
 
 class _TimelineRow extends StatelessWidget {
-  const _TimelineRow({required this.event, required this.loan});
+  const _TimelineRow({
+    required this.event,
+    required this.loan,
+    this.onEdit,
+  });
 
   final LoanTimelineEvent event;
   final MoneyLoan loan;
+  final void Function(MoneyLoanEntry entry)? onEdit;
 
   @override
   Widget build(BuildContext context) {
@@ -860,6 +963,18 @@ class _TimelineRow extends StatelessWidget {
         paymentRef.isNotEmpty &&
         (event.kind == LoanTimelineKind.payment ||
             event.kind == LoanTimelineKind.disbursement);
+    MoneyLoanEntry? editableEntry;
+    if (onEdit != null &&
+        event.entryId != null &&
+        (event.kind == LoanTimelineKind.payment ||
+            event.kind == LoanTimelineKind.disbursement)) {
+      for (final MoneyLoanEntry e in loan.entries) {
+        if (e.id == event.entryId) {
+          editableEntry = e;
+          break;
+        }
+      }
+    }
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
@@ -905,6 +1020,12 @@ class _TimelineRow extends StatelessWidget {
               ],
             ),
           ),
+          if (editableEntry != null)
+            IconButton(
+              tooltip: l10n.loanEditEntryTooltip,
+              icon: const Icon(Icons.edit_outlined, size: 20),
+              onPressed: () => onEdit!(editableEntry!),
+            ),
         ],
       ),
     );
