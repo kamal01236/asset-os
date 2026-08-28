@@ -3889,6 +3889,24 @@ abstract class AppLocalizations {
   /// **'Timeline'**
   String get loanTimelineHeading;
 
+  /// No description provided for @loanShareTimelineTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Share timeline'**
+  String get loanShareTimelineTooltip;
+
+  /// No description provided for @loanShareTimelineSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Timeline image downloaded'**
+  String get loanShareTimelineSuccess;
+
+  /// No description provided for @loanShareTimelineFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not create timeline image'**
+  String get loanShareTimelineFailed;
+
   /// No description provided for @loanAddPayment.
   ///
   /// In en, this message translates to:

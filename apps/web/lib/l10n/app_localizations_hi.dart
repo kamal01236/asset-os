@@ -2241,6 +2241,15 @@ class AppLocalizationsHi extends AppLocalizations {
   String get loanTimelineHeading => 'समयरेखा';
 
   @override
+  String get loanShareTimelineTooltip => 'समयरेखा साझा करें';
+
+  @override
+  String get loanShareTimelineSuccess => 'समयरेखा की छवि डाउनलोड हो गई';
+
+  @override
+  String get loanShareTimelineFailed => 'समयरेखा की छवि नहीं बन सकी';
+
+  @override
   String get loanAddPayment => 'भुगतान जोड़ें';
 
   @override

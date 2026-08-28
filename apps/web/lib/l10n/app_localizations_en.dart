@@ -2241,6 +2241,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loanTimelineHeading => 'Timeline';
 
   @override
+  String get loanShareTimelineTooltip => 'Share timeline';
+
+  @override
+  String get loanShareTimelineSuccess => 'Timeline image downloaded';
+
+  @override
+  String get loanShareTimelineFailed => 'Could not create timeline image';
+
+  @override
   String get loanAddPayment => 'Add payment';
 
   @override
