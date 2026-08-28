@@ -6,6 +6,7 @@ import '../../../infrastructure/l10n/india_date_format.dart';
 import '../../../infrastructure/l10n/l10n_ext.dart';
 import '../../../domain/models/entities.dart';
 import '../../../domain/pricing/rental_pricing.dart';
+import '../../../domain/payments/payment_reference.dart';
 import '../../../application/providers/app_providers.dart';
 import '../../validation/input_formatters.dart';
 import 'loan_create_screen.dart';
@@ -252,6 +253,16 @@ class _LoanDetailScreenState extends ConsumerState<LoanDetailScreen> {
                 MoneyLoanEntryKind.capitalization =>
                   '',
               };
+              final bool refReady = () {
+                try {
+                  validatePaymentReference(noteCtrl.text);
+                  return true;
+                } on ArgumentError {
+                  return false;
+                }
+              }();
+              final bool amountReady =
+                  parseRupeesToPaise(amountCtrl.text) > 0;
               return Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -318,18 +329,31 @@ class _LoanDetailScreenState extends ConsumerState<LoanDetailScreen> {
                       border: const OutlineInputBorder(),
                       prefixText: '₹ ',
                     ),
+                    onChanged: (_) => setModal(() {}),
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: noteCtrl,
+                    maxLength: kPaymentReferenceMaxLength,
+                    textCapitalization: TextCapitalization.characters,
+                    inputFormatters: <TextInputFormatter>[
+                      FilteringTextInputFormatter.allow(
+                        RegExp(r'[A-Za-z0-9_-]'),
+                      ),
+                    ],
                     decoration: InputDecoration(
-                      labelText: l10n.loanNoteOptionalLabel,
+                      labelText: l10n.loanPaymentReferenceLabel,
+                      hintText: l10n.paymentReferenceHint,
                       border: const OutlineInputBorder(),
+                      counterText: '',
                     ),
+                    onChanged: (_) => setModal(() {}),
                   ),
                   const SizedBox(height: 16),
                   FilledButton(
-                    onPressed: () => Navigator.pop(sheetContext, true),
+                    onPressed: refReady && amountReady
+                        ? () => Navigator.pop(sheetContext, true)
+                        : null,
                     child: Text(l10n.loanSaveEntry),
                   ),
                 ],
@@ -346,8 +370,7 @@ class _LoanDetailScreenState extends ConsumerState<LoanDetailScreen> {
     }
     final int amount = parseRupeesToPaise(amountCtrl.text);
     amountCtrl.dispose();
-    final String? note =
-        noteCtrl.text.trim().isEmpty ? null : noteCtrl.text.trim();
+    final String note = requirePaymentReference(noteCtrl.text);
     noteCtrl.dispose();
     try {
       if (flow == MoneyLoanEntryKind.disbursement) {
@@ -832,6 +855,11 @@ class _TimelineRow extends StatelessWidget {
             )
           : l10n.loanTimelinePending(formatIndiaDate(event.at), money),
     };
+    final String? paymentRef = event.note?.trim();
+    final bool showPaymentRef = paymentRef != null &&
+        paymentRef.isNotEmpty &&
+        (event.kind == LoanTimelineKind.payment ||
+            event.kind == LoanTimelineKind.disbursement);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
@@ -854,13 +882,27 @@ class _TimelineRow extends StatelessWidget {
           ),
           const SizedBox(width: 10),
           Expanded(
-            child: Text(
-              text,
-              style: event.kind == LoanTimelineKind.pendingAsOf
-                  ? Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      )
-                  : Theme.of(context).textTheme.bodyMedium,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  text,
+                  style: event.kind == LoanTimelineKind.pendingAsOf
+                      ? Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          )
+                      : Theme.of(context).textTheme.bodyMedium,
+                ),
+                if (showPaymentRef) ...<Widget>[
+                  const SizedBox(height: 2),
+                  Text(
+                    l10n.timelinePaymentRef(paymentRef),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                  ),
+                ],
+              ],
             ),
           ),
         ],

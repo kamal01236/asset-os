@@ -138,6 +138,8 @@ class RentalEvents extends Table {
   TextColumn get title => text()();
   TextColumn get subtitle => text()();
   DateTimeColumn get at => dateTime()();
+  /// Operator payment ref for [TimelineTitleKey.paymentReceived] rows.
+  TextColumn get referenceCode => text().nullable()();
 }
 
 /// Append-only order notes (`general` | `terms` | `measurement`).

@@ -3199,6 +3199,18 @@ abstract class AppLocalizations {
   /// **'Confirm payment'**
   String get paymentConfirmAction;
 
+  /// No description provided for @paymentReferenceLabel.
+  String get paymentReferenceLabel;
+
+  /// No description provided for @paymentReferenceHint.
+  String get paymentReferenceHint;
+
+  /// No description provided for @paymentReferenceRequired.
+  String get paymentReferenceRequired;
+
+  /// No description provided for @timelinePaymentRef.
+  String timelinePaymentRef(String ref);
+
   /// No description provided for @paymentPayAction.
   ///
   /// In en, this message translates to:
@@ -3825,6 +3837,9 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Note (optional)'**
   String get loanNoteOptionalLabel;
+
+  /// No description provided for @loanPaymentReferenceLabel.
+  String get loanPaymentReferenceLabel;
 
   /// No description provided for @loanSaving.
   ///

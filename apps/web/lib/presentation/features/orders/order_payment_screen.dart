@@ -6,6 +6,7 @@ import '../../../infrastructure/l10n/l10n_ext.dart';
 import '../../../domain/models/entities.dart';
 import '../../../domain/orders/commercial_policy.dart';
 import '../../../domain/orders/order_payment.dart';
+import '../../../domain/payments/payment_reference.dart';
 import '../../../domain/pricing/rental_pricing.dart';
 import '../../../domain/templates/industry_templates.dart';
 import '../../../application/providers/app_providers.dart';
@@ -28,6 +29,7 @@ class OrderPaymentScreen extends ConsumerStatefulWidget {
 class _OrderPaymentScreenState extends ConsumerState<OrderPaymentScreen> {
   final TextEditingController _securityController = TextEditingController();
   final TextEditingController _receivedController = TextEditingController();
+  final TextEditingController _referenceController = TextEditingController();
   bool _seeded = false;
   bool _treatExcessAsDiscount = false;
   bool _submitting = false;
@@ -53,6 +55,7 @@ class _OrderPaymentScreenState extends ConsumerState<OrderPaymentScreen> {
   void dispose() {
     _securityController.dispose();
     _receivedController.dispose();
+    _referenceController.dispose();
     super.dispose();
   }
 
@@ -103,10 +106,12 @@ class _OrderPaymentScreenState extends ConsumerState<OrderPaymentScreen> {
     }
     setState(() => _submitting = true);
     try {
+      validatePaymentReference(_referenceController.text);
       await ref.read(repositoryProvider).recordOrderPayment(
             rentalId: rental.id,
             amountReceivedPaise: _receivedPaise(),
             securityPaise: _securityPaise(),
+            referenceCode: requirePaymentReference(_referenceController.text),
             treatExcessAsDiscount: _treatExcessAsDiscount,
           );
       if (!mounted) {
@@ -162,6 +167,7 @@ class _OrderPaymentScreenState extends ConsumerState<OrderPaymentScreen> {
             preview.sellDiscountDelta)
         .clamp(0, sellOutstanding);
     final bool hasExcess = receivedPaise > sellOutstanding + securityPaise;
+    final bool refReady = _referenceController.text.trim().isNotEmpty;
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.orderPaymentTitle)),
@@ -231,6 +237,21 @@ class _OrderPaymentScreenState extends ConsumerState<OrderPaymentScreen> {
             ),
             onChanged: (_) => setState(() {}),
           ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _referenceController,
+            maxLength: kPaymentReferenceMaxLength,
+            textCapitalization: TextCapitalization.characters,
+            inputFormatters: <TextInputFormatter>[
+              FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9_-]')),
+            ],
+            decoration: InputDecoration(
+              labelText: l10n.paymentReferenceLabel,
+              hintText: l10n.paymentReferenceHint,
+              counterText: '',
+            ),
+            onChanged: (_) => setState(() {}),
+          ),
           if (hasExcess) ...<Widget>[
             const SizedBox(height: 8),
             SwitchListTile(
@@ -281,7 +302,7 @@ class _OrderPaymentScreenState extends ConsumerState<OrderPaymentScreen> {
           width: double.infinity,
           height: 48,
           child: FilledButton(
-            onPressed: _submitting ? null : () => _confirm(rental),
+            onPressed: _submitting || !refReady ? null : () => _confirm(rental),
             child: Text(l10n.paymentConfirmAction),
           ),
         ),

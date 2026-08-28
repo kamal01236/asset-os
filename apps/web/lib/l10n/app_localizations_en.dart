@@ -1808,6 +1808,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get paymentConfirmAction => 'Confirm payment';
 
   @override
+  String get paymentReferenceLabel => 'Payment ref';
+
+  @override
+  String get paymentReferenceHint => 'Receipt or UPI id';
+
+  @override
+  String get paymentReferenceRequired => 'Payment reference is required';
+
+  @override
+  String timelinePaymentRef(String ref) {
+    return 'Ref $ref';
+  }
+
+  @override
   String get paymentPayAction => 'Pay';
 
   @override
@@ -2198,6 +2212,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get loanNoteOptionalLabel => 'Note (optional)';
+
+  @override
+  String get loanPaymentReferenceLabel => 'Payment ref';
 
   @override
   String get loanSaving => 'Saving…';

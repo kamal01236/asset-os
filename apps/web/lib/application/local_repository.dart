@@ -12,6 +12,7 @@ import '../domain/models/entities.dart';
 import '../domain/models/unknown_customer.dart';
 import '../domain/orders/commercial_policy.dart' as commercial_policy;
 import '../domain/orders/order_payment.dart';
+import '../domain/payments/payment_reference.dart';
 import '../domain/pricing/rental_pricing.dart';
 import '../domain/reports/report_widgets.dart';
 import '../domain/search/search_scope.dart';
@@ -1007,6 +1008,7 @@ class LocalRepository {
     bool subscriptionSatisfied = false,
     bool minTierCovered = true,
     commercial_policy.AggregatedOrderCommercial? commercial,
+    String? referenceCode,
   }) async {
     if (commercial != null) {
       commercial_policy.assertCommercialSatisfied(
@@ -1016,6 +1018,14 @@ class LocalRepository {
         subscriptionSatisfied: subscriptionSatisfied,
         minTierCovered: minTierCovered,
       );
+    }
+    final bool recordsPayment =
+        amountReceivedPaise > 0 || securityPaise > 0;
+    if (recordsPayment) {
+      if (referenceCode == null || referenceCode.trim().isEmpty) {
+        throw ArgumentError('Payment reference is required');
+      }
+      validatePaymentReference(referenceCode);
     }
     return _db.transaction(() async {
       final String rentalId = await createRental(
@@ -1028,12 +1038,13 @@ class LocalRepository {
         replacedFromRentalId: replacedFromRentalId,
         openEnded: openEnded,
       );
-      if (amountReceivedPaise > 0 || securityPaise > 0) {
+      if (recordsPayment) {
         await recordOrderPayment(
           rentalId: rentalId,
           amountReceivedPaise: amountReceivedPaise,
           securityPaise: securityPaise,
           treatExcessAsDiscount: treatExcessAsDiscount,
+          referenceCode: requirePaymentReference(referenceCode!),
         );
       }
       if (commercial != null) {
@@ -1125,6 +1136,7 @@ class LocalRepository {
     required String rentalId,
     required int amountReceivedPaise,
     required int securityPaise,
+    required String referenceCode,
     bool treatExcessAsDiscount = false,
   }) async {
     if (amountReceivedPaise < 0) {
@@ -1133,6 +1145,8 @@ class LocalRepository {
     if (securityPaise < 0) {
       throw ArgumentError('Security amount cannot be negative');
     }
+    validatePaymentReference(referenceCode);
+    final String normalizedRef = requirePaymentReference(referenceCode);
 
     final DateTime now = DateTime.now();
     return _db.transaction(() async {
@@ -1185,6 +1199,7 @@ class LocalRepository {
           title: TimelineTitleKey.paymentReceived,
           subtitle: subtitle,
           at: now,
+          referenceCode: Value<String?>(normalizedRef),
         ),
       );
 
@@ -2657,13 +2672,26 @@ class LocalRepository {
     if (kind == MoneyLoanEntryKind.capitalization && amountPaise < 0) {
       throw ArgumentError('Capitalization amount cannot be negative');
     }
+    String? storedNote;
+    if (kind == MoneyLoanEntryKind.repayment ||
+        kind == MoneyLoanEntryKind.disbursement) {
+      if (note == null || note.trim().isEmpty) {
+        throw ArgumentError('Payment reference is required');
+      }
+      validatePaymentReference(note);
+      storedNote = requirePaymentReference(note);
+    } else {
+      final String? trimmedNote = note?.trim();
+      storedNote = (trimmedNote == null || trimmedNote.isEmpty)
+          ? null
+          : trimmedNote;
+    }
     final DateTime at = DateTime(entryAt.year, entryAt.month, entryAt.day);
     final DateTime today = DateTime.now();
     final DateTime todayOnly = DateTime(today.year, today.month, today.day);
     if (at.isAfter(todayOnly)) {
       throw ArgumentError('Entry date cannot be after today');
     }
-    final String? trimmedNote = note?.trim();
     final String id = nextId('MLE');
     await _db.into(_db.moneyLoanEntries).insert(
       MoneyLoanEntriesCompanion.insert(
@@ -2672,9 +2700,7 @@ class LocalRepository {
         entryAt: at,
         amountPaise: amountPaise,
         kind: kind.name,
-        note: Value<String?>(
-          (trimmedNote == null || trimmedNote.isEmpty) ? null : trimmedNote,
-        ),
+        note: Value<String?>(storedNote),
       ),
     );
     // Entries are not watched by moneyLoansProvider; nudge the parent row.
@@ -3483,6 +3509,7 @@ class LocalRepository {
               title: event.title,
               subtitle: event.subtitle,
               at: event.at,
+              referenceCode: Value<String?>(event.referenceCode),
             ),
           );
         }
@@ -3849,6 +3876,7 @@ class LocalRepository {
               title: event.title,
               subtitle: event.subtitle,
               at: event.at,
+              referenceCode: event.referenceCode,
             ),
           )
           .toList(),

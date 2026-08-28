@@ -3701,8 +3701,20 @@ class $RentalEventsTable extends RentalEvents
     type: DriftSqlType.dateTime,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _referenceCodeMeta = const VerificationMeta(
+    'referenceCode',
+  );
   @override
-  List<GeneratedColumn> get $columns => [id, rentalId, title, subtitle, at];
+  late final GeneratedColumn<String> referenceCode = GeneratedColumn<String>(
+    'reference_code',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns =>
+      [id, rentalId, title, subtitle, at, referenceCode];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -3747,6 +3759,15 @@ class $RentalEventsTable extends RentalEvents
     } else if (isInserting) {
       context.missing(_atMeta);
     }
+    if (data.containsKey('reference_code')) {
+      context.handle(
+        _referenceCodeMeta,
+        referenceCode.isAcceptableOrUnknown(
+          data['reference_code']!,
+          _referenceCodeMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -3776,6 +3797,10 @@ class $RentalEventsTable extends RentalEvents
         DriftSqlType.dateTime,
         data['${effectivePrefix}at'],
       )!,
+      referenceCode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}reference_code'],
+      ),
     );
   }
 
@@ -3791,12 +3816,14 @@ class RentalEventRow extends DataClass implements Insertable<RentalEventRow> {
   final String title;
   final String subtitle;
   final DateTime at;
+  final String? referenceCode;
   const RentalEventRow({
     required this.id,
     required this.rentalId,
     required this.title,
     required this.subtitle,
     required this.at,
+    this.referenceCode,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -3806,6 +3833,9 @@ class RentalEventRow extends DataClass implements Insertable<RentalEventRow> {
     map['title'] = Variable<String>(title);
     map['subtitle'] = Variable<String>(subtitle);
     map['at'] = Variable<DateTime>(at);
+    if (!nullToAbsent || referenceCode != null) {
+      map['reference_code'] = Variable<String>(referenceCode);
+    }
     return map;
   }
 
@@ -3816,6 +3846,9 @@ class RentalEventRow extends DataClass implements Insertable<RentalEventRow> {
       title: Value(title),
       subtitle: Value(subtitle),
       at: Value(at),
+      referenceCode: referenceCode == null && nullToAbsent
+          ? const Value.absent()
+          : Value(referenceCode),
     );
   }
 
@@ -3830,6 +3863,7 @@ class RentalEventRow extends DataClass implements Insertable<RentalEventRow> {
       title: serializer.fromJson<String>(json['title']),
       subtitle: serializer.fromJson<String>(json['subtitle']),
       at: serializer.fromJson<DateTime>(json['at']),
+      referenceCode: serializer.fromJson<String?>(json['referenceCode']),
     );
   }
   @override
@@ -3841,6 +3875,7 @@ class RentalEventRow extends DataClass implements Insertable<RentalEventRow> {
       'title': serializer.toJson<String>(title),
       'subtitle': serializer.toJson<String>(subtitle),
       'at': serializer.toJson<DateTime>(at),
+      'referenceCode': serializer.toJson<String?>(referenceCode),
     };
   }
 
@@ -3850,12 +3885,16 @@ class RentalEventRow extends DataClass implements Insertable<RentalEventRow> {
     String? title,
     String? subtitle,
     DateTime? at,
+    Value<String?> referenceCode = const Value.absent(),
   }) => RentalEventRow(
     id: id ?? this.id,
     rentalId: rentalId ?? this.rentalId,
     title: title ?? this.title,
     subtitle: subtitle ?? this.subtitle,
     at: at ?? this.at,
+    referenceCode: referenceCode.present
+        ? referenceCode.value
+        : this.referenceCode,
   );
   RentalEventRow copyWithCompanion(RentalEventsCompanion data) {
     return RentalEventRow(
@@ -3864,6 +3903,9 @@ class RentalEventRow extends DataClass implements Insertable<RentalEventRow> {
       title: data.title.present ? data.title.value : this.title,
       subtitle: data.subtitle.present ? data.subtitle.value : this.subtitle,
       at: data.at.present ? data.at.value : this.at,
+      referenceCode: data.referenceCode.present
+          ? data.referenceCode.value
+          : this.referenceCode,
     );
   }
 
@@ -3874,13 +3916,15 @@ class RentalEventRow extends DataClass implements Insertable<RentalEventRow> {
           ..write('rentalId: $rentalId, ')
           ..write('title: $title, ')
           ..write('subtitle: $subtitle, ')
-          ..write('at: $at')
+          ..write('at: $at, ')
+          ..write('referenceCode: $referenceCode')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, rentalId, title, subtitle, at);
+  int get hashCode =>
+      Object.hash(id, rentalId, title, subtitle, at, referenceCode);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -3889,7 +3933,8 @@ class RentalEventRow extends DataClass implements Insertable<RentalEventRow> {
           other.rentalId == this.rentalId &&
           other.title == this.title &&
           other.subtitle == this.subtitle &&
-          other.at == this.at);
+          other.at == this.at &&
+          other.referenceCode == this.referenceCode);
 }
 
 class RentalEventsCompanion extends UpdateCompanion<RentalEventRow> {
@@ -3898,12 +3943,14 @@ class RentalEventsCompanion extends UpdateCompanion<RentalEventRow> {
   final Value<String> title;
   final Value<String> subtitle;
   final Value<DateTime> at;
+  final Value<String?> referenceCode;
   const RentalEventsCompanion({
     this.id = const Value.absent(),
     this.rentalId = const Value.absent(),
     this.title = const Value.absent(),
     this.subtitle = const Value.absent(),
     this.at = const Value.absent(),
+    this.referenceCode = const Value.absent(),
   });
   RentalEventsCompanion.insert({
     this.id = const Value.absent(),
@@ -3911,6 +3958,7 @@ class RentalEventsCompanion extends UpdateCompanion<RentalEventRow> {
     required String title,
     required String subtitle,
     required DateTime at,
+    this.referenceCode = const Value.absent(),
   }) : rentalId = Value(rentalId),
        title = Value(title),
        subtitle = Value(subtitle),
@@ -3921,6 +3969,7 @@ class RentalEventsCompanion extends UpdateCompanion<RentalEventRow> {
     Expression<String>? title,
     Expression<String>? subtitle,
     Expression<DateTime>? at,
+    Expression<String>? referenceCode,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -3928,6 +3977,7 @@ class RentalEventsCompanion extends UpdateCompanion<RentalEventRow> {
       if (title != null) 'title': title,
       if (subtitle != null) 'subtitle': subtitle,
       if (at != null) 'at': at,
+      if (referenceCode != null) 'reference_code': referenceCode,
     });
   }
 
@@ -3937,6 +3987,7 @@ class RentalEventsCompanion extends UpdateCompanion<RentalEventRow> {
     Value<String>? title,
     Value<String>? subtitle,
     Value<DateTime>? at,
+    Value<String?>? referenceCode,
   }) {
     return RentalEventsCompanion(
       id: id ?? this.id,
@@ -3944,6 +3995,7 @@ class RentalEventsCompanion extends UpdateCompanion<RentalEventRow> {
       title: title ?? this.title,
       subtitle: subtitle ?? this.subtitle,
       at: at ?? this.at,
+      referenceCode: referenceCode ?? this.referenceCode,
     );
   }
 
@@ -3965,6 +4017,9 @@ class RentalEventsCompanion extends UpdateCompanion<RentalEventRow> {
     if (at.present) {
       map['at'] = Variable<DateTime>(at.value);
     }
+    if (referenceCode.present) {
+      map['reference_code'] = Variable<String>(referenceCode.value);
+    }
     return map;
   }
 
@@ -3975,7 +4030,8 @@ class RentalEventsCompanion extends UpdateCompanion<RentalEventRow> {
           ..write('rentalId: $rentalId, ')
           ..write('title: $title, ')
           ..write('subtitle: $subtitle, ')
-          ..write('at: $at')
+          ..write('at: $at, ')
+          ..write('referenceCode: $referenceCode')
           ..write(')'))
         .toString();
   }
@@ -8819,6 +8875,7 @@ typedef $$RentalEventsTableCreateCompanionBuilder =
       required String title,
       required String subtitle,
       required DateTime at,
+      Value<String?> referenceCode,
     });
 typedef $$RentalEventsTableUpdateCompanionBuilder =
     RentalEventsCompanion Function({
@@ -8827,6 +8884,7 @@ typedef $$RentalEventsTableUpdateCompanionBuilder =
       Value<String> title,
       Value<String> subtitle,
       Value<DateTime> at,
+      Value<String?> referenceCode,
     });
 
 class $$RentalEventsTableFilterComposer
@@ -8860,6 +8918,11 @@ class $$RentalEventsTableFilterComposer
 
   ColumnFilters<DateTime> get at => $composableBuilder(
     column: $table.at,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get referenceCode => $composableBuilder(
+    column: $table.referenceCode,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -8897,6 +8960,11 @@ class $$RentalEventsTableOrderingComposer
     column: $table.at,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get referenceCode => $composableBuilder(
+    column: $table.referenceCode,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$RentalEventsTableAnnotationComposer
@@ -8922,6 +8990,11 @@ class $$RentalEventsTableAnnotationComposer
 
   GeneratedColumn<DateTime> get at =>
       $composableBuilder(column: $table.at, builder: (column) => column);
+
+  GeneratedColumn<String> get referenceCode => $composableBuilder(
+    column: $table.referenceCode,
+    builder: (column) => column,
+  );
 }
 
 class $$RentalEventsTableTableManager
@@ -8960,12 +9033,14 @@ class $$RentalEventsTableTableManager
                 Value<String> title = const Value.absent(),
                 Value<String> subtitle = const Value.absent(),
                 Value<DateTime> at = const Value.absent(),
+                Value<String?> referenceCode = const Value.absent(),
               }) => RentalEventsCompanion(
                 id: id,
                 rentalId: rentalId,
                 title: title,
                 subtitle: subtitle,
                 at: at,
+                referenceCode: referenceCode,
               ),
           createCompanionCallback:
               ({
@@ -8974,12 +9049,14 @@ class $$RentalEventsTableTableManager
                 required String title,
                 required String subtitle,
                 required DateTime at,
+                Value<String?> referenceCode = const Value.absent(),
               }) => RentalEventsCompanion.insert(
                 id: id,
                 rentalId: rentalId,
                 title: title,
                 subtitle: subtitle,
                 at: at,
+                referenceCode: referenceCode,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))

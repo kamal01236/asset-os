@@ -100,6 +100,17 @@ Future<void> _setKeyedField(
   await _settle(tester, ticks: 4);
 }
 
+Future<void> _setCommercialReference(
+  WidgetTester tester, {
+  String ref = 'REF-1',
+}) async {
+  await _setKeyedField(
+    tester,
+    const ValueKey<String>('commercial-reference-field'),
+    ref,
+  );
+}
+
 Future<void> _continueToSummary(WidgetTester tester) async {
   await _pressPrimary(tester);
   expect(find.text('Order summary'), findsOneWidget);
@@ -816,6 +827,7 @@ void main() {
       const ValueKey<String>('commercial-security-field'),
       '100',
     );
+    await _setCommercialReference(tester);
     expect(_primaryButton(tester).onPressed, isNotNull);
 
     await tester.pumpWidget(const SizedBox.shrink());
@@ -871,6 +883,7 @@ void main() {
       const ValueKey<String>('commercial-security-field'),
       '5000',
     );
+    await _setCommercialReference(tester);
     expect(_primaryButton(tester).onPressed, isNotNull);
 
     await _pressPrimary(tester);

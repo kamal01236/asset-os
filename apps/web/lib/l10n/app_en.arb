@@ -1110,6 +1110,17 @@
   "paymentPreviewAdvance": "Advance to hold",
   "paymentPreviewRemainingSell": "Sell remaining after this payment",
   "paymentConfirmAction": "Confirm payment",
+  "paymentReferenceLabel": "Payment ref",
+  "paymentReferenceHint": "Receipt or UPI id",
+  "paymentReferenceRequired": "Payment reference is required",
+  "timelinePaymentRef": "Ref {ref}",
+  "@timelinePaymentRef": {
+    "placeholders": {
+      "ref": {
+        "type": "String"
+      }
+    }
+  },
   "paymentPayAction": "Pay",
   "paymentAddAdvanceAction": "Add advance",
   "unpaidSellBadge": "Unpaid",
@@ -1482,6 +1493,7 @@
   "loanCapPolicyHintManual": "Unpaid interest is added to principal only when you tap Capitalize interest.",
   "loanRateInvalid": "Enter a valid rate",
   "loanNoteOptionalLabel": "Note (optional)",
+  "loanPaymentReferenceLabel": "Payment ref",
   "loanSaving": "Saving…",
   "loanPendingNowLabel": "Pending now",
   "loanOverpaidNowLabel": "Overpaid now",

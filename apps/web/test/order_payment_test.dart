@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:asset_os/domain/models/entities.dart';
 import 'package:asset_os/domain/orders/commercial_policy.dart';
 import 'package:asset_os/domain/orders/order_payment.dart';
+import 'package:asset_os/infrastructure/l10n/timeline_l10n.dart';
 import 'package:asset_os/application/local_repository.dart';
 
 import 'support/test_harness.dart';
@@ -115,7 +116,7 @@ void main() {
   group('recordOrderPayment', () {
     test('full sell + security on mixed order', () async {
       final LocalRepository repository = await bootRepo();
-      expect(repository.database.schemaVersion, 23);
+      expect(repository.database.schemaVersion, 24);
 
       await repository.addInventory(
         name: 'Novel',
@@ -177,11 +178,17 @@ void main() {
         rentalId: rentalId,
         amountReceivedPaise: 25000,
         securityPaise: 20000,
+        referenceCode: 'UPI-123',
       );
       expect(paid.sellPaidPaise, 5000);
       expect(paid.sellDiscountPaise, 0);
       expect(paid.depositAmount, 20000);
       expect(paid.hasUnpaidSell, isFalse);
+
+      final RentalEvent paymentEvent = paid.timeline.lastWhere(
+        (RentalEvent e) => e.title == TimelineTitleKey.paymentReceived,
+      );
+      expect(paymentEvent.referenceCode, 'UPI-123');
     });
 
     test('partial sell pay records discount and clears unpaid', () async {
@@ -212,6 +219,7 @@ void main() {
         rentalId: rentalId,
         amountReceivedPaise: 7000,
         securityPaise: 0,
+        referenceCode: 'CASH-1',
       );
       expect(paid.sellPaidPaise, 7000);
       expect(paid.sellDiscountPaise, 3000);
@@ -252,6 +260,7 @@ void main() {
         rentalId: rentalId,
         amountReceivedPaise: 100000,
         securityPaise: 100000,
+        referenceCode: 'ADV-001',
       );
       expect(paid.depositAmount, 100000);
       expect(paid.sellPaidPaise, 0);
@@ -368,12 +377,17 @@ void main() {
         amountReceivedPaise: 35000,
         securityPaise: 20000,
         commercial: commercial,
+        referenceCode: 'SETTLE-1',
       );
       final Rental paid = (await repository.listRentals())
           .firstWhere((Rental r) => r.id == rentalId);
       expect(paid.sellPaidPaise, 15000);
       expect(paid.depositAmount, 20000);
       expect(paid.hasUnpaidSell, isFalse);
+      final RentalEvent paymentEvent = paid.timeline.lastWhere(
+        (RentalEvent e) => e.title == TimelineTitleKey.paymentReceived,
+      );
+      expect(paymentEvent.referenceCode, 'SETTLE-1');
     });
   });
 }

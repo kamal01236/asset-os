@@ -70,6 +70,7 @@ void main() {
         loanId: loanId,
         amountPaise: 500000, // ₹5,000
         entryAt: start,
+        note: 'DISB-1',
       );
 
       await _pumpDetail(tester, container: container, loanId: loanId);
@@ -137,6 +138,7 @@ void main() {
       loanId: loanId,
       amountPaise: 500000,
       entryAt: start,
+      note: 'DISB-2',
     );
 
     await _pumpDetail(

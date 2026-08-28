@@ -1808,6 +1808,20 @@ class AppLocalizationsHi extends AppLocalizations {
   String get paymentConfirmAction => 'भुगतान पुष्टि करें';
 
   @override
+  String get paymentReferenceLabel => 'भुगतान ref';
+
+  @override
+  String get paymentReferenceHint => 'रसीद या UPI id';
+
+  @override
+  String get paymentReferenceRequired => 'भुगतान ref आवश्यक है';
+
+  @override
+  String timelinePaymentRef(String ref) {
+    return 'Ref $ref';
+  }
+
+  @override
   String get paymentPayAction => 'भुगतान करें';
 
   @override
@@ -2198,6 +2212,9 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get loanNoteOptionalLabel => 'नोट (वैकल्पिक)';
+
+  @override
+  String get loanPaymentReferenceLabel => 'भुगतान ref';
 
   @override
   String get loanSaving => 'सहेजा जा रहा है…';

@@ -8,6 +8,7 @@ import '../../../infrastructure/l10n/l10n_ext.dart';
 import '../../../domain/models/entities.dart';
 import '../../../domain/models/unknown_customer.dart';
 import '../../../domain/orders/commercial_policy.dart';
+import '../../../domain/payments/payment_reference.dart';
 import '../../../domain/pricing/rental_pricing.dart';
 import '../../../domain/subscriptions/subscription_coverage.dart';
 import '../../../domain/subscriptions/subscription_models.dart';
@@ -132,6 +133,7 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
   final TextEditingController _payController = TextEditingController();
   final TextEditingController _securityController = TextEditingController();
   final TextEditingController _advanceController = TextEditingController();
+  final TextEditingController _referenceController = TextEditingController();
   bool _commercialSeeded = false;
 
   bool get _skipCustomerStep {
@@ -171,6 +173,7 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
     _payController.dispose();
     _securityController.dispose();
     _advanceController.dispose();
+    _referenceController.dispose();
     for (final _OrderLineDraft line in _lines) {
       line.dispose();
     }
@@ -661,6 +664,21 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
 
   int _advancePaise() => parseRupeesToPaise(_advanceController.text);
 
+  bool _settlementCollectsCash(AggregatedOrderCommercial agg) =>
+      _settlementReceivedPaise(agg) > 0 || _settlementSecurityPaise(agg) > 0;
+
+  bool _paymentReferenceReady(AggregatedOrderCommercial agg) {
+    if (!_settlementCollectsCash(agg)) {
+      return true;
+    }
+    try {
+      validatePaymentReference(_referenceController.text);
+      return true;
+    } on ArgumentError {
+      return false;
+    }
+  }
+
   bool _commercialSatisfied(
     AggregatedOrderCommercial agg,
     List<InventoryItem> catalog,
@@ -675,7 +693,7 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
         subscriptionSatisfied: _hasMembershipEntitlement(catalog),
         minTierCovered: _subscriptionSatisfied(catalog),
       );
-      return true;
+      return _paymentReferenceReady(agg);
     } on ArgumentError {
       return false;
     }
@@ -1135,6 +1153,9 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
           subscriptionSatisfied: _hasMembershipEntitlement(catalog),
           minTierCovered: _subscriptionSatisfied(catalog),
           commercial: commercial,
+          referenceCode: _settlementCollectsCash(commercial)
+              ? requirePaymentReference(_referenceController.text)
+              : null,
         );
       } else {
         rentalId = await repository.createRental(
@@ -1409,6 +1430,25 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
         ),
         const SizedBox(height: 8),
         ..._buildSubscriptionGate(l10n, inventory, commercial),
+      ],
+      if (commercial.showPay ||
+          commercial.showSecurity ||
+          commercial.showAdvance) ...<Widget>[
+        TextField(
+          key: const ValueKey<String>('commercial-reference-field'),
+          controller: _referenceController,
+          maxLength: kPaymentReferenceMaxLength,
+          textCapitalization: TextCapitalization.characters,
+          inputFormatters: <TextInputFormatter>[
+            FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9_-]')),
+          ],
+          decoration: InputDecoration(
+            labelText: l10n.paymentReferenceLabel,
+            hintText: l10n.paymentReferenceHint,
+            counterText: '',
+          ),
+          onChanged: (_) => setState(() {}),
+        ),
       ],
     ];
   }

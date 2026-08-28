@@ -1110,6 +1110,17 @@
   "paymentPreviewAdvance": "रखी जाने वाली अग्रिम",
   "paymentPreviewRemainingSell": "इस भुगतान के बाद बिक्री शेष",
   "paymentConfirmAction": "भुगतान पुष्टि करें",
+  "paymentReferenceLabel": "भुगतान ref",
+  "paymentReferenceHint": "रसीद या UPI id",
+  "paymentReferenceRequired": "भुगतान ref आवश्यक है",
+  "timelinePaymentRef": "Ref {ref}",
+  "@timelinePaymentRef": {
+    "placeholders": {
+      "ref": {
+        "type": "String"
+      }
+    }
+  },
   "paymentPayAction": "भुगतान करें",
   "paymentAddAdvanceAction": "अग्रिम जोड़ें",
   "unpaidSellBadge": "बकाया",
@@ -1482,6 +1493,7 @@
   "loanCapPolicyHintManual": "अवैतनिक ब्याज केवल तब मूलधन में जुड़ता है जब आप ब्याज पूंजीकृत करें दबाएँ।",
   "loanRateInvalid": "मान्य दर दर्ज करें",
   "loanNoteOptionalLabel": "नोट (वैकल्पिक)",
+  "loanPaymentReferenceLabel": "भुगतान ref",
   "loanSaving": "सहेजा जा रहा है…",
   "loanPendingNowLabel": "अभी लंबित",
   "loanOverpaidNowLabel": "अभी अधिक भुगतान",

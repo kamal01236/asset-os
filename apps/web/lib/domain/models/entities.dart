@@ -351,22 +351,26 @@ class RentalEvent {
     required this.title,
     required this.subtitle,
     required this.at,
+    this.referenceCode,
   });
 
   final String title;
   final String subtitle;
   final DateTime at;
+  final String? referenceCode;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
     'title': title,
     'subtitle': subtitle,
     'at': at.toIso8601String(),
+    if (referenceCode != null) 'referenceCode': referenceCode,
   };
 
   factory RentalEvent.fromJson(Map<String, dynamic> json) => RentalEvent(
     title: json['title'] as String,
     subtitle: json['subtitle'] as String,
     at: DateTime.parse(json['at'] as String),
+    referenceCode: json['referenceCode'] as String?,
   );
 }
 

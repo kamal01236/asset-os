@@ -687,6 +687,56 @@ void main() {
       );
     });
 
+    test('repayment requires payment reference note', () async {
+      final LocalRepository repo = await bootRepo();
+      final customer = await ensureCustomer(repo);
+      final String loanId = await repo.createMoneyLoan(
+        customerId: customer.id,
+        direction: MoneyLoanDirection.given,
+        principalPaise: 100000,
+        interestStartedAt: DateTime(2026, 1, 1),
+        rateBps: 0,
+      );
+      expect(
+        () => repo.addMoneyLoanEntry(
+          loanId: loanId,
+          entryAt: DateTime(2026, 2, 1),
+          amountPaise: 10000,
+          kind: MoneyLoanEntryKind.repayment,
+        ),
+        throwsA(isA<ArgumentError>()),
+      );
+    });
+
+    test('repayment note surfaces on loan timeline', () async {
+      final LocalRepository repo = await bootRepo();
+      final customer = await ensureCustomer(repo);
+      final String loanId = await repo.createMoneyLoan(
+        customerId: customer.id,
+        direction: MoneyLoanDirection.given,
+        principalPaise: 100000,
+        interestStartedAt: DateTime(2026, 1, 1),
+        rateBps: 0,
+      );
+      await repo.addMoneyLoanEntry(
+        loanId: loanId,
+        entryAt: DateTime(2026, 2, 1),
+        amountPaise: 50000,
+        kind: MoneyLoanEntryKind.repayment,
+        note: 'upi-99',
+      );
+      final MoneyLoan loan = (await repo.getMoneyLoan(loanId))!;
+      final LoanScenario scenario = computeLoanScenario(
+        loan: loan,
+        now: DateTime(2026, 2, 1),
+      );
+      final List<LoanTimelineEvent> payments = scenario.timeline
+          .where((LoanTimelineEvent e) => e.kind == LoanTimelineKind.payment)
+          .toList();
+      expect(payments, isNotEmpty);
+      expect(payments.last.note, 'UPI-99');
+    });
+
     test('adjustment clears remainder then close allowed', () async {
       final LocalRepository repo = await bootRepo();
       final customer = await ensureCustomer(repo);
@@ -704,6 +754,7 @@ void main() {
         entryAt: DateTime(2026, 2, 1),
         amountPaise: 60000,
         kind: MoneyLoanEntryKind.repayment,
+        note: 'PAY-001',
       );
       MoneyLoan? loan = await repo.getMoneyLoan(loanId);
       LoanScenario scenario = computeLoanScenario(
@@ -742,6 +793,7 @@ void main() {
         entryAt: DateTime.now(),
         amountPaise: 100000,
         kind: MoneyLoanEntryKind.repayment,
+        note: 'PAY-002',
       );
       final MoneyLoan loan = (await repo.getMoneyLoan(loanId))!;
       expect(computeLoanScenario(loan: loan).pendingPaise, greaterThan(0));
@@ -783,6 +835,7 @@ void main() {
         entryAt: DateTime.now(),
         amountPaise: 100000,
         kind: MoneyLoanEntryKind.repayment,
+        note: 'PAY-002',
       );
       MoneyLoan loan = (await repo.getMoneyLoan(loanId))!;
       expect(computeLoanScenario(loan: loan).pendingPaise, 0);
@@ -809,6 +862,7 @@ void main() {
         loanId: loanId,
         entryAt: DateTime(2026, 1, 10),
         amountPaise: 40000,
+        note: 'DISB-01',
       );
       MoneyLoan loan = (await repo.getMoneyLoan(loanId))!;
       expect(
@@ -822,6 +876,7 @@ void main() {
         entryAt: DateTime(2026, 1, 15),
         amountPaise: 25000,
         kind: MoneyLoanEntryKind.repayment,
+        note: 'PAY-003',
       );
       loan = (await repo.getMoneyLoan(loanId))!;
       expect(
@@ -898,7 +953,7 @@ void main() {
   group('schema', () {
     test('schemaVersion is 19 with interestAccrual column', () async {
       final LocalRepository repo = await bootRepo();
-      expect(repo.database.schemaVersion, 23);
+      expect(repo.database.schemaVersion, 24);
     });
 
     test('createMoneyLoan defaults prepaymentAllocation to interestThenPrincipal',

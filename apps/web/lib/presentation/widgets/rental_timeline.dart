@@ -27,6 +27,9 @@ class RentalTimeline extends StatelessWidget {
       shrinkWrap: true,
       itemBuilder: (BuildContext context, int index) {
         final RentalEvent event = events[index];
+        final bool isPaymentReceived =
+            event.title == TimelineTitleKey.paymentReceived;
+        final String? ref = event.referenceCode?.trim();
         return Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
@@ -50,6 +53,17 @@ class RentalTimeline extends StatelessWidget {
                       fontWeight: FontWeight.w700,
                     ),
                   ),
+                  if (isPaymentReceived &&
+                      ref != null &&
+                      ref.isNotEmpty) ...<Widget>[
+                    const SizedBox(height: 2),
+                    Text(
+                      l10n.timelinePaymentRef(ref),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 2),
                   Text(localizeTimelineSubtitle(l10n, event.subtitle)),
                   Text(
