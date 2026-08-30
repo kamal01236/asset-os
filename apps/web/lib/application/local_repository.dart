@@ -1022,12 +1022,7 @@ class LocalRepository {
     }
     final bool recordsPayment =
         amountReceivedPaise > 0 || securityPaise > 0;
-    if (recordsPayment) {
-      if (referenceCode == null || referenceCode.trim().isEmpty) {
-        throw ArgumentError('Payment reference is required');
-      }
-      validatePaymentReference(referenceCode);
-    }
+    final String? moneyNote = optionalMoneyNote(referenceCode);
     return _db.transaction(() async {
       final String rentalId = await createRental(
         customer: customer,
@@ -1045,7 +1040,7 @@ class LocalRepository {
           amountReceivedPaise: amountReceivedPaise,
           securityPaise: securityPaise,
           treatExcessAsDiscount: treatExcessAsDiscount,
-          referenceCode: requirePaymentReference(referenceCode!),
+          referenceCode: moneyNote,
         );
       }
       if (commercial != null) {
@@ -1137,7 +1132,7 @@ class LocalRepository {
     required String rentalId,
     required int amountReceivedPaise,
     required int securityPaise,
-    required String referenceCode,
+    String? referenceCode,
     bool treatExcessAsDiscount = false,
   }) async {
     if (amountReceivedPaise < 0) {
@@ -1146,8 +1141,7 @@ class LocalRepository {
     if (securityPaise < 0) {
       throw ArgumentError('Security amount cannot be negative');
     }
-    validatePaymentReference(referenceCode);
-    final String normalizedRef = requirePaymentReference(referenceCode);
+    final String? normalizedRef = optionalMoneyNote(referenceCode);
 
     final DateTime now = DateTime.now();
     return _db.transaction(() async {
@@ -1386,12 +1380,7 @@ class LocalRepository {
     if (lineIds.isEmpty) {
       return null;
     }
-    final String? trimmedNote = note?.trim();
-    if (!meetsMinMeaningfulText(trimmedNote, allowEmpty: true)) {
-      throw ArgumentError(
-        'Note must be at least $kMinMeaningfulTextLength characters when set',
-      );
-    }
+    final String? trimmedNote = optionalMoneyNote(note);
     final DateTime now = DateTime.now();
     final Set<String> wanted = lineIds.toSet();
 
@@ -2076,12 +2065,7 @@ class LocalRepository {
     if (amountKeptPaise < 0 || amountReturnedPaise < 0) {
       throw ArgumentError('Settlement amounts must be non-negative');
     }
-    final String? trimmedNote = note?.trim();
-    if (!meetsMinMeaningfulText(trimmedNote, allowEmpty: true)) {
-      throw ArgumentError(
-        'Note must be at least $kMinMeaningfulTextLength characters when set',
-      );
-    }
+    final String? trimmedNote = optionalMoneyNote(note);
     final DateTime now = DateTime.now();
 
     return _db.transaction(() async {
@@ -2673,20 +2657,7 @@ class LocalRepository {
     if (kind == MoneyLoanEntryKind.capitalization && amountPaise < 0) {
       throw ArgumentError('Capitalization amount cannot be negative');
     }
-    String? storedNote;
-    if (kind == MoneyLoanEntryKind.repayment ||
-        kind == MoneyLoanEntryKind.disbursement) {
-      if (note == null || note.trim().isEmpty) {
-        throw ArgumentError('Payment reference is required');
-      }
-      validatePaymentReference(note);
-      storedNote = requirePaymentReference(note);
-    } else {
-      final String? trimmedNote = note?.trim();
-      storedNote = (trimmedNote == null || trimmedNote.isEmpty)
-          ? null
-          : trimmedNote;
-    }
+    final String? storedNote = optionalMoneyNote(note);
     final DateTime at = DateTime(entryAt.year, entryAt.month, entryAt.day);
     final DateTime today = DateTime.now();
     final DateTime todayOnly = DateTime(today.year, today.month, today.day);
@@ -2797,28 +2768,10 @@ class LocalRepository {
       throw ArgumentError('Entry date cannot be after today');
     }
     String? nextNote = row.note;
-    if (nextKind == MoneyLoanEntryKind.repayment ||
-        nextKind == MoneyLoanEntryKind.disbursement) {
-      if (clearNote) {
-        throw ArgumentError('Payment reference is required');
-      }
-      if (note != null) {
-        if (note.trim().isEmpty) {
-          throw ArgumentError('Payment reference is required');
-        }
-        validatePaymentReference(note);
-        nextNote = requirePaymentReference(note);
-      } else if (nextNote == null || nextNote.trim().isEmpty) {
-        throw ArgumentError('Payment reference is required');
-      } else {
-        validatePaymentReference(nextNote);
-        nextNote = requirePaymentReference(nextNote);
-      }
-    } else if (clearNote) {
+    if (clearNote) {
       nextNote = null;
     } else if (note != null) {
-      final String trimmed = note.trim();
-      nextNote = trimmed.isEmpty ? null : trimmed;
+      nextNote = optionalMoneyNote(note);
     }
     await (_db.update(_db.moneyLoanEntries)..where((t) => t.id.equals(entryId)))
         .write(

@@ -1,31 +1,43 @@
-/// Operator-entered payment reference (orders + loan repayment/disbursement).
-const int kPaymentReferenceMaxLength = 15;
+/// Optional free-text note on transactional money (orders + loan cash entries).
+const int kMoneyNoteMaxLength = 20;
 
-final RegExp _paymentReferencePattern = RegExp(r'^[A-Z0-9_-]+$');
+/// Alias kept for call sites still using the old name.
+const int kPaymentReferenceMaxLength = kMoneyNoteMaxLength;
 
-/// Trims and uppercases [raw] for persistence.
-String normalizePaymentReference(String raw) => raw.trim().toUpperCase();
-
-/// Throws [ArgumentError] when [raw] is empty, too long, or has invalid chars.
-void validatePaymentReference(String raw) {
-  final String normalized = normalizePaymentReference(raw);
-  if (normalized.isEmpty) {
-    throw ArgumentError('Payment reference is required');
+/// Trims [raw]; empty / whitespace-only → `null`. Stored as entered (no uppercase).
+String? normalizeMoneyNote(String? raw) {
+  final String trimmed = raw?.trim() ?? '';
+  if (trimmed.isEmpty) {
+    return null;
   }
-  if (normalized.length > kPaymentReferenceMaxLength) {
-    throw ArgumentError(
-      'Payment reference must be at most $kPaymentReferenceMaxLength characters',
-    );
+  return trimmed;
+}
+
+/// Empty OK; non-empty length must be ≤ [kMoneyNoteMaxLength]. No charset rule.
+void validateMoneyNote(String? raw) {
+  final String? normalized = normalizeMoneyNote(raw);
+  if (normalized == null) {
+    return;
   }
-  if (!_paymentReferencePattern.hasMatch(normalized)) {
+  if (normalized.length > kMoneyNoteMaxLength) {
     throw ArgumentError(
-      'Payment reference may only contain letters, digits, hyphen, and underscore',
+      'Note must be at most $kMoneyNoteMaxLength characters',
     );
   }
 }
 
-/// Validates then returns the normalized reference.
-String requirePaymentReference(String raw) {
-  validatePaymentReference(raw);
-  return normalizePaymentReference(raw);
+/// Validates then returns the normalized note (`null` when empty).
+String? optionalMoneyNote(String? raw) {
+  validateMoneyNote(raw);
+  return normalizeMoneyNote(raw);
 }
+
+/// Trims [raw] for persistence (legacy name; no longer uppercases).
+String normalizePaymentReference(String raw) =>
+    normalizeMoneyNote(raw) ?? '';
+
+/// Validates optional money note (legacy name; empty is allowed).
+void validatePaymentReference(String? raw) => validateMoneyNote(raw);
+
+/// Validates and returns normalized note, or `null` when empty (legacy name).
+String? requirePaymentReference(String? raw) => optionalMoneyNote(raw);

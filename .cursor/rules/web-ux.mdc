@@ -17,3 +17,5 @@ Follow `docs/ux/web-ux-conventions.md` (source of truth). Digest:
 - Appearance: Dark/Light only; default Dark; More-tab segmented toggle; theme-aware colors via ColorScheme (no light-only hardcodes).
 - Forms: items-first New Order (running total; days/amount happy path; Rent/Sell/Job under More options gated by template enabled resource types; do not hide catalog by type), then phone-first customer attach; commercial Pay/Advance/Security step only when cart policy requires or offers it — otherwise generate → order detail and Pay later; skip customer when issuing from a profile; unit identity optional unless catalog requires it.
 - Home defaults: search + KPIs + needsAttention (template presets may add recentActivity / pendingJobs; Quick Actions via Customize Home; FAB for New Order / Return).
+- Money note: optional free text ≤20 on Pay / New Order commercial / loan cash entries / return-cancel; never block settle on empty note.
+- Search: first non-empty trimmed character; no “Type at least N characters” helper under search fields.

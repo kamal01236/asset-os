@@ -968,7 +968,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get returnNoteLabel => 'Note (optional)';
 
   @override
-  String get returnNoteHint => 'At least 3 characters when set';
+  String get returnNoteHint => 'Max 20 characters';
 
   @override
   String get deleteOrderAction => 'Cancel order';
@@ -1813,13 +1813,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get paymentConfirmAction => 'Confirm payment';
 
   @override
-  String get paymentReferenceLabel => 'Payment ref';
+  String get paymentReferenceLabel => 'Note (optional)';
 
   @override
   String get paymentReferenceHint => 'Receipt or UPI id';
 
   @override
-  String get paymentReferenceRequired => 'Payment reference is required';
+  String get paymentReferenceRequired => 'Note must be at most 20 characters';
 
   @override
   String timelinePaymentRef(String ref) {
@@ -2237,7 +2237,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loanNoteOptionalLabel => 'Note (optional)';
 
   @override
-  String get loanPaymentReferenceLabel => 'Payment ref';
+  String get loanPaymentReferenceLabel => 'Note (optional)';
 
   @override
   String get loanSaving => 'Saving…';

@@ -271,6 +271,38 @@ void main() {
     await _tearDownDetail(tester);
   });
 
+  testWidgets('pending loan shows equal-width action labels', (
+    WidgetTester tester,
+  ) async {
+    final ProviderContainer container = await bootContainer();
+    final LocalRepository repo = container.read(repositoryProvider);
+    final Customer customer = await ensureCustomer(repo);
+
+    tester.view.physicalSize = const Size(900, 1800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final String loanId = await repo.createMoneyLoan(
+      customerId: customer.id,
+      direction: MoneyLoanDirection.given,
+      principalPaise: 100000,
+      interestStartedAt: DateTime(2026, 1, 1),
+      rateBps: 0,
+    );
+
+    await _pumpDetail(tester, container: container, loanId: loanId);
+
+    expect(find.text('Add payment'), findsOneWidget);
+    expect(find.text('Add to principal'), findsOneWidget);
+    expect(find.text('Add adjustment'), findsOneWidget);
+    expect(find.text('Keep pending'), findsOneWidget);
+    expect(find.text('Mark closed'), findsOneWidget);
+    expect(find.text('Capitalize interest'), findsNothing);
+
+    await _tearDownDetail(tester);
+  });
+
   testWidgets('timeline heading shows share affordance', (
     WidgetTester tester,
   ) async {

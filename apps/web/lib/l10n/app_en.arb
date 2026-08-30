@@ -620,7 +620,7 @@
     }
   },
   "returnNoteLabel": "Note (optional)",
-  "returnNoteHint": "At least 3 characters when set",
+  "returnNoteHint": "Max 20 characters",
   "deleteOrderAction": "Cancel order",
   "deleteOrderTitle": "Cancel order",
   "confirmDeleteOrderAction": "Cancel order",
@@ -1110,9 +1110,9 @@
   "paymentPreviewAdvance": "Advance to hold",
   "paymentPreviewRemainingSell": "Sell remaining after this payment",
   "paymentConfirmAction": "Confirm payment",
-  "paymentReferenceLabel": "Payment ref",
+  "paymentReferenceLabel": "Note (optional)",
   "paymentReferenceHint": "Receipt or UPI id",
-  "paymentReferenceRequired": "Payment reference is required",
+  "paymentReferenceRequired": "Note must be at most 20 characters",
   "timelinePaymentRef": "Ref {ref}",
   "@timelinePaymentRef": {
     "placeholders": {
@@ -1499,7 +1499,7 @@
   "loanCapPolicyHintManual": "Unpaid interest is added to principal only when you tap Capitalize interest.",
   "loanRateInvalid": "Enter a valid rate",
   "loanNoteOptionalLabel": "Note (optional)",
-  "loanPaymentReferenceLabel": "Payment ref",
+  "loanPaymentReferenceLabel": "Note (optional)",
   "loanSaving": "Saving…",
   "loanPendingNowLabel": "Pending now",
   "loanOverpaidNowLabel": "Overpaid now",

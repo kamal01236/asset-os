@@ -21,6 +21,7 @@ import '../domain/templates/workflows.dart';
 import 'theme/app_theme.dart';
 import 'transactions/transaction_list_item.dart';
 import '../domain/validation/text_rules.dart';
+import '../domain/payments/payment_reference.dart';
 import 'widgets/category_picker_field.dart';
 import 'widgets/dynamic_field_inputs.dart';
 import 'widgets/global_search_typeahead.dart';
@@ -4045,9 +4046,11 @@ Future<bool> _confirmAndReturnRental({
                   const SizedBox(height: 8),
                   TextField(
                     controller: noteController,
+                    maxLength: kMoneyNoteMaxLength,
                     decoration: InputDecoration(
                       labelText: l10n.returnNoteLabel,
                       hintText: l10n.returnNoteHint,
+                      counterText: '',
                     ),
                   ),
                 ],
@@ -4071,19 +4074,11 @@ Future<bool> _confirmAndReturnRental({
 
   final int chargedTotal =
       parseRupeesToPaise(finalAmountController.text).clamp(0, computedTotal);
-  final String note = noteController.text.trim();
+  final String? note = optionalMoneyNote(noteController.text);
   finalAmountController.dispose();
   noteController.dispose();
 
   if (confirmed != true || !context.mounted) {
-    return false;
-  }
-  if (!meetsMinMeaningfulText(note, allowEmpty: true)) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(l10n.minMeaningfulTextError(kMinMeaningfulTextLength)),
-      ),
-    );
     return false;
   }
 
@@ -4093,7 +4088,7 @@ Future<bool> _confirmAndReturnRental({
         rental.id,
         targets.map((RentalLine l) => l.id).toList(),
         chargedTotalPaise: chargedTotal,
-        note: note.isEmpty ? null : note,
+        note: note,
       );
   if (!context.mounted) {
     return result != null;
@@ -4159,9 +4154,11 @@ Future<bool> _confirmAndCancelOrder({
               const SizedBox(height: 8),
               TextField(
                 controller: noteController,
+                maxLength: kMoneyNoteMaxLength,
                 decoration: InputDecoration(
                   labelText: l10n.deleteOrderNoteLabel,
                   hintText: l10n.returnNoteHint,
+                  counterText: '',
                 ),
               ),
             ],
@@ -4183,7 +4180,7 @@ Future<bool> _confirmAndCancelOrder({
 
   final int keptPaise = parseRupeesToPaise(keptController.text);
   final int returnedPaise = parseRupeesToPaise(returnedController.text);
-  final String note = noteController.text.trim();
+  final String? note = optionalMoneyNote(noteController.text);
   keptController.dispose();
   returnedController.dispose();
   noteController.dispose();
@@ -4203,14 +4200,6 @@ Future<bool> _confirmAndCancelOrder({
     );
     return false;
   }
-  if (!meetsMinMeaningfulText(note, allowEmpty: true)) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(l10n.minMeaningfulTextError(kMinMeaningfulTextLength)),
-      ),
-    );
-    return false;
-  }
 
   try {
     final OrderCancelResult? result =
@@ -4218,7 +4207,7 @@ Future<bool> _confirmAndCancelOrder({
               rentalId: rental.id,
               amountKeptPaise: keptPaise,
               amountReturnedPaise: returnedPaise,
-              note: note.isEmpty ? null : note,
+              note: note,
             );
     if (!context.mounted) {
       return result != null;

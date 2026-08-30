@@ -667,18 +667,6 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
   bool _settlementCollectsCash(AggregatedOrderCommercial agg) =>
       _settlementReceivedPaise(agg) > 0 || _settlementSecurityPaise(agg) > 0;
 
-  bool _paymentReferenceReady(AggregatedOrderCommercial agg) {
-    if (!_settlementCollectsCash(agg)) {
-      return true;
-    }
-    try {
-      validatePaymentReference(_referenceController.text);
-      return true;
-    } on ArgumentError {
-      return false;
-    }
-  }
-
   bool _commercialSatisfied(
     AggregatedOrderCommercial agg,
     List<InventoryItem> catalog,
@@ -693,7 +681,8 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
         subscriptionSatisfied: _hasMembershipEntitlement(catalog),
         minTierCovered: _subscriptionSatisfied(catalog),
       );
-      return _paymentReferenceReady(agg);
+      validateMoneyNote(_referenceController.text);
+      return true;
     } on ArgumentError {
       return false;
     }
@@ -1154,7 +1143,7 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
           minTierCovered: _subscriptionSatisfied(catalog),
           commercial: commercial,
           referenceCode: _settlementCollectsCash(commercial)
-              ? requirePaymentReference(_referenceController.text)
+              ? optionalMoneyNote(_referenceController.text)
               : null,
         );
       } else {
@@ -1422,13 +1411,9 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
         TextField(
           key: const ValueKey<String>('commercial-reference-field'),
           controller: _referenceController,
-          maxLength: kPaymentReferenceMaxLength,
-          textCapitalization: TextCapitalization.characters,
-          inputFormatters: <TextInputFormatter>[
-            FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9_-]')),
-          ],
+          maxLength: kMoneyNoteMaxLength,
           decoration: InputDecoration(
-            labelText: l10n.paymentReferenceLabel,
+            labelText: l10n.loanNoteOptionalLabel,
             hintText: l10n.paymentReferenceHint,
             counterText: '',
           ),

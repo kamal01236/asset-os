@@ -921,7 +921,7 @@ void main() {
       );
     });
 
-    test('repayment requires payment reference note', () async {
+    test('repayment allows missing note', () async {
       final LocalRepository repo = await bootRepo();
       final customer = await ensureCustomer(repo);
       final String loanId = await repo.createMoneyLoan(
@@ -931,15 +931,15 @@ void main() {
         interestStartedAt: DateTime(2026, 1, 1),
         rateBps: 0,
       );
-      expect(
-        () => repo.addMoneyLoanEntry(
-          loanId: loanId,
-          entryAt: DateTime(2026, 2, 1),
-          amountPaise: 10000,
-          kind: MoneyLoanEntryKind.repayment,
-        ),
-        throwsA(isA<ArgumentError>()),
+      final String entryId = await repo.addMoneyLoanEntry(
+        loanId: loanId,
+        entryAt: DateTime(2026, 2, 1),
+        amountPaise: 10000,
+        kind: MoneyLoanEntryKind.repayment,
       );
+      expect(entryId, isNotEmpty);
+      final MoneyLoan loan = (await repo.getMoneyLoan(loanId))!;
+      expect(loan.entries.single.note, isNull);
     });
 
     test('repayment note surfaces on loan timeline', () async {
@@ -968,7 +968,7 @@ void main() {
           .where((LoanTimelineEvent e) => e.kind == LoanTimelineKind.payment)
           .toList();
       expect(payments, isNotEmpty);
-      expect(payments.last.note, 'UPI-99');
+      expect(payments.last.note, 'upi-99');
     });
 
     test('adjustment clears remainder then close allowed', () async {
@@ -1195,7 +1195,7 @@ void main() {
       final LoanTimelineEvent payment = scenario.timeline
           .lastWhere((LoanTimelineEvent e) => e.kind == LoanTimelineKind.payment);
       expect(payment.at, DateTime(2026, 2, 15));
-      expect(payment.note, 'PAY-NEW');
+      expect(payment.note, 'pay-new');
       expect(payment.amountPaise, 50000);
     });
 
@@ -1228,7 +1228,32 @@ void main() {
       );
     });
 
-    test('update repayment with empty ref throws', () async {
+    test('update repayment can clear note', () async {
+      final LocalRepository repo = await bootRepo();
+      final customer = await ensureCustomer(repo);
+      final String loanId = await repo.createMoneyLoan(
+        customerId: customer.id,
+        direction: MoneyLoanDirection.given,
+        principalPaise: 100000,
+        interestStartedAt: DateTime(2026, 1, 1),
+        rateBps: 0,
+      );
+      final String entryId = await repo.addMoneyLoanEntry(
+        loanId: loanId,
+        entryAt: DateTime(2026, 2, 1),
+        amountPaise: 10000,
+        kind: MoneyLoanEntryKind.repayment,
+        note: 'PAY-001',
+      );
+      await repo.updateMoneyLoanEntry(
+        entryId: entryId,
+        clearNote: true,
+      );
+      final MoneyLoan loan = (await repo.getMoneyLoan(loanId))!;
+      expect(loan.entries.single.note, isNull);
+    });
+
+    test('update repayment rejects note over 20 chars', () async {
       final LocalRepository repo = await bootRepo();
       final customer = await ensureCustomer(repo);
       final String loanId = await repo.createMoneyLoan(
@@ -1248,7 +1273,7 @@ void main() {
       expect(
         () => repo.updateMoneyLoanEntry(
           entryId: entryId,
-          note: '   ',
+          note: 'ABCDEFGHIJABCDEFGHIJK',
         ),
         throwsA(isA<ArgumentError>()),
       );

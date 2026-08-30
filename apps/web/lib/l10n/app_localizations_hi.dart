@@ -970,7 +970,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get returnNoteLabel => 'नोट (वैकल्पिक)';
 
   @override
-  String get returnNoteHint => 'भरने पर कम से कम 3 अक्षर';
+  String get returnNoteHint => 'अधिकतम 20 अक्षर';
 
   @override
   String get deleteOrderAction => 'ऑर्डर रद्द करें';
@@ -1813,13 +1813,13 @@ class AppLocalizationsHi extends AppLocalizations {
   String get paymentConfirmAction => 'भुगतान पुष्टि करें';
 
   @override
-  String get paymentReferenceLabel => 'भुगतान ref';
+  String get paymentReferenceLabel => 'नोट (वैकल्पिक)';
 
   @override
   String get paymentReferenceHint => 'रसीद या UPI id';
 
   @override
-  String get paymentReferenceRequired => 'भुगतान ref आवश्यक है';
+  String get paymentReferenceRequired => 'नोट अधिकतम 20 अक्षर का होना चाहिए';
 
   @override
   String timelinePaymentRef(String ref) {
@@ -2237,7 +2237,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get loanNoteOptionalLabel => 'नोट (वैकल्पिक)';
 
   @override
-  String get loanPaymentReferenceLabel => 'भुगतान ref';
+  String get loanPaymentReferenceLabel => 'नोट (वैकल्पिक)';
 
   @override
   String get loanSaving => 'सहेजा जा रहा है…';

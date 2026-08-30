@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../infrastructure/l10n/l10n_ext.dart';
@@ -106,12 +105,11 @@ class _OrderPaymentScreenState extends ConsumerState<OrderPaymentScreen> {
     }
     setState(() => _submitting = true);
     try {
-      validatePaymentReference(_referenceController.text);
       await ref.read(repositoryProvider).recordOrderPayment(
             rentalId: rental.id,
             amountReceivedPaise: _receivedPaise(),
             securityPaise: _securityPaise(),
-            referenceCode: requirePaymentReference(_referenceController.text),
+            referenceCode: optionalMoneyNote(_referenceController.text),
             treatExcessAsDiscount: _treatExcessAsDiscount,
           );
       if (!mounted) {
@@ -167,7 +165,6 @@ class _OrderPaymentScreenState extends ConsumerState<OrderPaymentScreen> {
             preview.sellDiscountDelta)
         .clamp(0, sellOutstanding);
     final bool hasExcess = receivedPaise > sellOutstanding + securityPaise;
-    final bool refReady = _referenceController.text.trim().isNotEmpty;
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.orderPaymentTitle)),
@@ -230,13 +227,9 @@ class _OrderPaymentScreenState extends ConsumerState<OrderPaymentScreen> {
           const SizedBox(height: 12),
           TextField(
             controller: _referenceController,
-            maxLength: kPaymentReferenceMaxLength,
-            textCapitalization: TextCapitalization.characters,
-            inputFormatters: <TextInputFormatter>[
-              FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9_-]')),
-            ],
+            maxLength: kMoneyNoteMaxLength,
             decoration: InputDecoration(
-              labelText: l10n.paymentReferenceLabel,
+              labelText: l10n.loanNoteOptionalLabel,
               hintText: l10n.paymentReferenceHint,
               counterText: '',
             ),
@@ -292,7 +285,7 @@ class _OrderPaymentScreenState extends ConsumerState<OrderPaymentScreen> {
           width: double.infinity,
           height: 48,
           child: FilledButton(
-            onPressed: _submitting || !refReady ? null : () => _confirm(rental),
+            onPressed: _submitting ? null : () => _confirm(rental),
             child: Text(l10n.paymentConfirmAction),
           ),
         ),

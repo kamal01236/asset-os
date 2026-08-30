@@ -6,47 +6,59 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:asset_os/domain/payments/payment_reference.dart';
 
 void main() {
-  group('normalizePaymentReference', () {
-    test('trims and uppercases', () {
-      expect(normalizePaymentReference('  upi-123_a  '), 'UPI-123_A');
+  group('normalizeMoneyNote', () {
+    test('trims and preserves case', () {
+      expect(normalizeMoneyNote('  upi-123_a  '), 'upi-123_a');
+      expect(normalizeMoneyNote('Cash receipt'), 'Cash receipt');
+    });
+
+    test('empty becomes null', () {
+      expect(normalizeMoneyNote(null), isNull);
+      expect(normalizeMoneyNote(''), isNull);
+      expect(normalizeMoneyNote('   '), isNull);
     });
   });
 
-  group('validatePaymentReference', () {
-    test('accepts valid refs', () {
-      expect(() => validatePaymentReference('ABC123'), returnsNormally);
-      expect(() => validatePaymentReference('UPI-01_X'), returnsNormally);
+  group('validateMoneyNote', () {
+    test('accepts empty and free text', () {
+      expect(() => validateMoneyNote(null), returnsNormally);
+      expect(() => validateMoneyNote(''), returnsNormally);
+      expect(() => validateMoneyNote('   '), returnsNormally);
+      expect(() => validateMoneyNote('ABC123'), returnsNormally);
+      expect(() => validateMoneyNote('UPI 01'), returnsNormally);
+      expect(() => validateMoneyNote('ref@pay'), returnsNormally);
     });
 
-    test('rejects empty', () {
+    test('accepts max 20 chars', () {
       expect(
-        () => validatePaymentReference('   '),
-        throwsA(isA<ArgumentError>()),
+        () => validateMoneyNote('ABCDEFGHIJABCDEFGHIJ'),
+        returnsNormally,
       );
     });
 
-    test('rejects over 15 chars', () {
+    test('rejects over 20 chars', () {
       expect(
-        () => validatePaymentReference('ABCDEFGHIJKLMNOP'),
-        throwsA(isA<ArgumentError>()),
-      );
-    });
-
-    test('rejects invalid charset', () {
-      expect(
-        () => validatePaymentReference('UPI 123'),
-        throwsA(isA<ArgumentError>()),
-      );
-      expect(
-        () => validatePaymentReference('ref@pay'),
+        () => validateMoneyNote('ABCDEFGHIJABCDEFGHIJK'),
         throwsA(isA<ArgumentError>()),
       );
     });
   });
 
-  group('requirePaymentReference', () {
-    test('returns normalized value', () {
-      expect(requirePaymentReference('txn-9'), 'TXN-9');
+  group('optionalMoneyNote', () {
+    test('returns trimmed note or null', () {
+      expect(optionalMoneyNote('txn-9'), 'txn-9');
+      expect(optionalMoneyNote('  '), isNull);
+    });
+  });
+
+  group('legacy wrappers', () {
+    test('requirePaymentReference is optional', () {
+      expect(requirePaymentReference(null), isNull);
+      expect(requirePaymentReference('txn-9'), 'txn-9');
+    });
+
+    test('normalizePaymentReference preserves case', () {
+      expect(normalizePaymentReference('  upi-123_a  '), 'upi-123_a');
     });
   });
 }

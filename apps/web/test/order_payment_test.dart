@@ -389,5 +389,40 @@ void main() {
       );
       expect(paymentEvent.referenceCode, 'SETTLE-1');
     });
+
+    test('settlement without note records payment', () async {
+      final LocalRepository repository = await bootRepo();
+      await repository.addInventory(
+        name: 'Oil',
+        category: 'Parlour',
+        units: 5,
+        rateAmount: 15000,
+        defaultItemKind: ResourceType.sale,
+        requiresUnitIdentity: false,
+      );
+      final InventoryItem oil = (await repository.listInventory()).single;
+      final Customer customer = await ensureCustomer(repository);
+      final String rentalId = await repository.createOrderWithSettlement(
+        customer: customer,
+        lines: <RentalLineInput>[
+          RentalLineInput(
+            itemId: oil.id,
+            instanceName: 'Oil',
+            shortCode: 'OIL-2',
+            fulfillment: LineFulfillment.sell,
+            manualSaleAmountPaise: 15000,
+          ),
+        ],
+        amountReceivedPaise: 15000,
+        securityPaise: 0,
+      );
+      final Rental paid = (await repository.listRentals())
+          .firstWhere((Rental r) => r.id == rentalId);
+      expect(paid.sellPaidPaise, 15000);
+      final RentalEvent paymentEvent = paid.timeline.lastWhere(
+        (RentalEvent e) => e.title == TimelineTitleKey.paymentReceived,
+      );
+      expect(paymentEvent.referenceCode, isNull);
+    });
   });
 }

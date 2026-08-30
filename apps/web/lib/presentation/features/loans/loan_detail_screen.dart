@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../infrastructure/l10n/india_date_format.dart';
@@ -152,42 +151,84 @@ class _LoanDetailScreenState extends ConsumerState<LoanDetailScreen> {
               ),
               if (pending) ...<Widget>[
                 const SizedBox(height: 16),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
+                Row(
                   children: <Widget>[
-                    FilledButton.tonalIcon(
-                      onPressed: () => _showCashEntrySheet(
-                        loan: loan!,
-                        initialKind: MoneyLoanEntryKind.repayment,
+                    Expanded(
+                      child: FilledButton.tonalIcon(
+                        onPressed: () => _showCashEntrySheet(
+                          loan: loan!,
+                          initialKind: MoneyLoanEntryKind.repayment,
+                        ),
+                        icon: const Icon(Icons.payments_outlined),
+                        label: Text(
+                          l10n.loanAddPayment,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                      icon: const Icon(Icons.payments_outlined),
-                      label: Text(l10n.loanAddPayment),
                     ),
-                    FilledButton.tonalIcon(
-                      onPressed: () => _showCashEntrySheet(
-                        loan: loan!,
-                        initialKind: MoneyLoanEntryKind.disbursement,
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: FilledButton.tonalIcon(
+                        onPressed: () => _showCashEntrySheet(
+                          loan: loan!,
+                          initialKind: MoneyLoanEntryKind.disbursement,
+                        ),
+                        icon: const Icon(Icons.add_card_outlined),
+                        label: Text(
+                          l10n.loanAddPrincipal,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                      icon: const Icon(Icons.add_card_outlined),
-                      label: Text(l10n.loanAddPrincipal),
                     ),
-                    OutlinedButton.icon(
-                      onPressed: _addAdjustment,
-                      icon: const Icon(Icons.tune),
-                      label: Text(l10n.loanAddAdjustment),
-                    ),
-                    if (loan.capitalizationPolicy ==
-                        MoneyCapitalizationPolicy.manual)
-                      FilledButton.icon(
-                        onPressed: scenario.unpaidInterestPaise == 0
-                            ? null
-                            : () => _capitalizeInterest(loan!),
-                        icon: const Icon(Icons.merge_type),
-                        label: Text(l10n.loanCapitalizeInterestAction),
-                      ),
                   ],
                 ),
+                const SizedBox(height: 10),
+                if (loan.capitalizationPolicy ==
+                    MoneyCapitalizationPolicy.manual)
+                  Row(
+                    children: <Widget>[
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: _addAdjustment,
+                          icon: const Icon(Icons.tune),
+                          label: Text(
+                            l10n.loanAddAdjustment,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: FilledButton.icon(
+                          onPressed: scenario.unpaidInterestPaise == 0
+                              ? null
+                              : () => _capitalizeInterest(loan!),
+                          icon: const Icon(Icons.merge_type),
+                          label: Text(
+                            l10n.loanCapitalizeInterestAction,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ),
+                    ],
+                  )
+                else
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: _addAdjustment,
+                      icon: const Icon(Icons.tune),
+                      label: Text(
+                        l10n.loanAddAdjustment,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
                 const SizedBox(height: 16),
                 Row(
                   children: <Widget>[
@@ -331,9 +372,9 @@ class _LoanDetailScreenState extends ConsumerState<LoanDetailScreen> {
                 MoneyLoanEntryKind.capitalization =>
                   '',
               };
-              final bool refReady = () {
+              final bool noteReady = () {
                 try {
-                  validatePaymentReference(noteCtrl.text);
+                  validateMoneyNote(noteCtrl.text);
                   return true;
                 } on ArgumentError {
                   return false;
@@ -422,15 +463,9 @@ class _LoanDetailScreenState extends ConsumerState<LoanDetailScreen> {
                   const SizedBox(height: 12),
                   TextField(
                     controller: noteCtrl,
-                    maxLength: kPaymentReferenceMaxLength,
-                    textCapitalization: TextCapitalization.characters,
-                    inputFormatters: <TextInputFormatter>[
-                      FilteringTextInputFormatter.allow(
-                        RegExp(r'[A-Za-z0-9_-]'),
-                      ),
-                    ],
+                    maxLength: kMoneyNoteMaxLength,
                     decoration: InputDecoration(
-                      labelText: l10n.loanPaymentReferenceLabel,
+                      labelText: l10n.loanNoteOptionalLabel,
                       hintText: l10n.paymentReferenceHint,
                       border: const OutlineInputBorder(),
                       counterText: '',
@@ -439,7 +474,7 @@ class _LoanDetailScreenState extends ConsumerState<LoanDetailScreen> {
                   ),
                   const SizedBox(height: 16),
                   FilledButton(
-                    onPressed: refReady && amountReady
+                    onPressed: noteReady && amountReady
                         ? () => Navigator.pop(sheetContext, true)
                         : null,
                     child: Text(l10n.loanSaveEntry),
@@ -491,7 +526,7 @@ class _LoanDetailScreenState extends ConsumerState<LoanDetailScreen> {
     }
     final int amount = parseRupeesToPaise(amountCtrl.text);
     amountCtrl.dispose();
-    final String note = requirePaymentReference(noteCtrl.text);
+    final String? note = optionalMoneyNote(noteCtrl.text);
     noteCtrl.dispose();
     try {
       if (isEdit) {
@@ -500,6 +535,7 @@ class _LoanDetailScreenState extends ConsumerState<LoanDetailScreen> {
               entryAt: entryAt,
               amountPaise: amount,
               note: note,
+              clearNote: note == null,
             );
         if (!mounted) {
           return;
@@ -610,9 +646,11 @@ class _LoanDetailScreenState extends ConsumerState<LoanDetailScreen> {
                   const SizedBox(height: 12),
                   TextField(
                     controller: noteCtrl,
+                    maxLength: kMoneyNoteMaxLength,
                     decoration: InputDecoration(
                       labelText: l10n.loanNoteOptionalLabel,
                       border: const OutlineInputBorder(),
+                      counterText: '',
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -634,8 +672,7 @@ class _LoanDetailScreenState extends ConsumerState<LoanDetailScreen> {
     }
     final int amount = parseRupeesToPaise(amountCtrl.text);
     amountCtrl.dispose();
-    final String? note =
-        noteCtrl.text.trim().isEmpty ? null : noteCtrl.text.trim();
+    final String? note = optionalMoneyNote(noteCtrl.text);
     noteCtrl.dispose();
     try {
       await ref.read(repositoryProvider).addMoneyLoanEntry(

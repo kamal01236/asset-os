@@ -620,7 +620,7 @@
     }
   },
   "returnNoteLabel": "नोट (वैकल्पिक)",
-  "returnNoteHint": "भरने पर कम से कम 3 अक्षर",
+  "returnNoteHint": "अधिकतम 20 अक्षर",
   "deleteOrderAction": "ऑर्डर रद्द करें",
   "deleteOrderTitle": "ऑर्डर रद्द करें",
   "confirmDeleteOrderAction": "ऑर्डर रद्द करें",
@@ -1110,9 +1110,9 @@
   "paymentPreviewAdvance": "रखी जाने वाली अग्रिम",
   "paymentPreviewRemainingSell": "इस भुगतान के बाद बिक्री शेष",
   "paymentConfirmAction": "भुगतान पुष्टि करें",
-  "paymentReferenceLabel": "भुगतान ref",
+  "paymentReferenceLabel": "नोट (वैकल्पिक)",
   "paymentReferenceHint": "रसीद या UPI id",
-  "paymentReferenceRequired": "भुगतान ref आवश्यक है",
+  "paymentReferenceRequired": "नोट अधिकतम 20 अक्षर का होना चाहिए",
   "timelinePaymentRef": "Ref {ref}",
   "@timelinePaymentRef": {
     "placeholders": {
@@ -1499,7 +1499,7 @@
   "loanCapPolicyHintManual": "अवैतनिक ब्याज केवल तब मूलधन में जुड़ता है जब आप ब्याज पूंजीकृत करें दबाएँ।",
   "loanRateInvalid": "मान्य दर दर्ज करें",
   "loanNoteOptionalLabel": "नोट (वैकल्पिक)",
-  "loanPaymentReferenceLabel": "भुगतान ref",
+  "loanPaymentReferenceLabel": "नोट (वैकल्पिक)",
   "loanSaving": "सहेजा जा रहा है…",
   "loanPendingNowLabel": "अभी लंबित",
   "loanOverpaidNowLabel": "अभी अधिक भुगतान",
