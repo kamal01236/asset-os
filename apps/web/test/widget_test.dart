@@ -288,6 +288,9 @@ void main() {
     String query = '';
     await tester.pumpWidget(
       MaterialApp(
+        locale: const Locale('en'),
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
         home: Scaffold(
           body: StatefulBuilder(
             builder: (BuildContext context, StateSetter setState) {

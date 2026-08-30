@@ -986,6 +986,8 @@ class GlobalActionsButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final AppLocalizations l10n = context.l10n;
     return FloatingActionButton.extended(
+      tooltip: l10n.actionActions,
+      heroTag: 'global-actions-fab',
       onPressed: () {
         showModalBottomSheet<void>(
           context: context,

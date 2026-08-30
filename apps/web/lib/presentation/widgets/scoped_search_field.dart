@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../domain/validation/text_rules.dart';
+import '../../infrastructure/l10n/l10n_ext.dart';
 
 /// Entity kind for a [SearchSuggestion], used by global typeahead navigation.
 enum SearchHitKind { customer, rental, inventory }
@@ -176,6 +177,7 @@ class _ScopedSearchFieldState extends State<ScopedSearchField> {
                 suffixIcon: _controller.text.isNotEmpty
                     ? IconButton(
                         icon: const Icon(Icons.clear),
+                        tooltip: context.l10n.clearSearchTooltip,
                         onPressed: _clearQuery,
                       )
                     : null,

@@ -75,6 +75,21 @@ UI-first conventions for `apps/web` to keep flows fast, clear, and touch-friendl
 - Default is Dark when no preference is stored; choice persists via SharedPreferences.
 - Theme toggle lives on More (beside Language) as a segmented Dark / Light control.
 - Prefer `ColorScheme` / `textTheme` over hardcoded light greys or white fills so both modes stay readable.
+- Do **not** add a third “high contrast” product theme or system-follow for a11y; strengthen ColorScheme / status foreground roles on Light + Dark instead (see Accessibility).
+
+## Accessibility
+Source of truth: [`ADR-007-accessibility.md`](../architecture/decisions/ADR-007-accessibility.md) (WCAG 2.2 Level **AA**, Flutter web).
+
+- **Contrast:** Normal text ≥ 4.5:1, large text / UI ≥ 3:1 on Light and Dark. Keep status **meanings** (Available green, etc.); use contrast-safe chip foregrounds via `AppTheme`, not color-only status.
+- **Name, role, value:** Every interactive control has an accessible name (`tooltip` / `Semantics` / visible label). Icon-only actions require `tooltip` or `Semantics(label:)`.
+- **Keyboard:** Tab to nav, FAB sheet, dialogs, and forms; Escape closes sheets/dialogs; search keeps arrow/Enter/Escape.
+- **Text scale:** Usable at **1.5×**; no clipped primary CTAs on Home / New Order / loan detail.
+- **Not color alone:** Status pills and signed money stay labeled text.
+- **Errors:** Prefer field `errorText` / semantics; snackbars secondary.
+- **l10n:** A11y strings (clear-search, steppers, semantic row hints) in ARB en+hi.
+- **Non-goals:** AAA, system theme, third high-contrast theme, video captions.
+
+Vision hand-waves (“system” theme, vague high-contrast mode, AAA) are **ignored** for engineering—see ADR-007.
 
 ## Localization
 - All user-visible chrome (nav, actions, forms, empty states, status labels, More) is l10n-backed via Flutter gen-l10n (`en` default, `hi` selectable).

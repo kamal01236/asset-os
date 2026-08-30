@@ -237,6 +237,7 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
     }
     return IconButton(
       icon: const Icon(Icons.clear),
+      tooltip: context.l10n.clearSearchTooltip,
       onPressed: () {
         controller.clear();
         onClear();
@@ -2115,7 +2116,7 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
         ),
         IconButton(
           key: ValueKey<String>('qty-dec-$index'),
-          tooltip: l10n.quantityLabel,
+          tooltip: l10n.quantityDecreaseTooltip,
           constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
           onPressed: draft.quantity <= 1
               ? null
@@ -2129,7 +2130,7 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
         ),
         IconButton(
           key: ValueKey<String>('qty-inc-$index'),
-          tooltip: l10n.quantityLabel,
+          tooltip: l10n.quantityIncreaseTooltip,
           constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
           onPressed: draft.quantity >= _kMaxOrderLineQuantity
               ? null

@@ -2546,4 +2546,28 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get amountExceedsMaxCrores => 'अधिकतम 1 लाख करोड़';
+
+  @override
+  String get clearSearchTooltip => 'खोज साफ़ करें';
+
+  @override
+  String get quantityDecreaseTooltip => 'मात्रा घटाएँ';
+
+  @override
+  String get quantityIncreaseTooltip => 'मात्रा बढ़ाएँ';
+
+  @override
+  String loanLedgerRowSemantics(
+    String date,
+    String particulars,
+    String amount,
+    String balance,
+  ) {
+    return '$date, $particulars, राशि $amount, शेष $balance';
+  }
+
+  @override
+  String moneyStackSemantics(String label, String amount) {
+    return '$label, $amount';
+  }
 }

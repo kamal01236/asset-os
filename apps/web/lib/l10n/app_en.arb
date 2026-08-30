@@ -1780,5 +1780,36 @@
       }
     }
   },
-  "amountExceedsMaxCrores": "Maximum is 1 lakh crore"
+  "amountExceedsMaxCrores": "Maximum is 1 lakh crore",
+  "clearSearchTooltip": "Clear search",
+  "quantityDecreaseTooltip": "Decrease quantity",
+  "quantityIncreaseTooltip": "Increase quantity",
+  "loanLedgerRowSemantics": "{date}, {particulars}, amount {amount}, balance {balance}",
+  "@loanLedgerRowSemantics": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "particulars": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      },
+      "balance": {
+        "type": "String"
+      }
+    }
+  },
+  "moneyStackSemantics": "{label}, {amount}",
+  "@moneyStackSemantics": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  }
 }

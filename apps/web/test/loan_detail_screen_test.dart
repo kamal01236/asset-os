@@ -193,6 +193,10 @@ void main() {
     await _pumpDetail(tester, container: container, loanId: loanId);
 
     expect(find.byTooltip('Edit entry'), findsOneWidget);
+    expect(
+      find.bySemanticsLabel(RegExp(r'Edit entry\..*amount.*balance')),
+      findsWidgets,
+    );
 
     await _tearDownDetail(tester);
   });

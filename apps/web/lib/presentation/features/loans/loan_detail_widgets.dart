@@ -601,59 +601,77 @@ class TimelineRow extends StatelessWidget {
       }
     }
 
-    return _LoanLedgerGridRow(
-      dateText: dateText,
-      particulars: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Row(
-            children: <Widget>[
-              Flexible(
-                child: Text(
-                  title,
-                  style: textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
+    final String particularsForSemantics =
+        meta == null ? title : '$title. $meta';
+    final String rowSemantics = l10n.loanLedgerRowSemantics(
+      dateText,
+      particularsForSemantics,
+      amountText,
+      balText,
+    );
+    final String semanticsLabel = editableEntry == null
+        ? rowSemantics
+        : '${l10n.loanEditEntryTooltip}. $rowSemantics';
+
+    return Semantics(
+      container: true,
+      button: editableEntry != null,
+      label: semanticsLabel,
+      excludeSemantics: true,
+      child: _LoanLedgerGridRow(
+        dateText: dateText,
+        particulars: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Row(
+              children: <Widget>[
+                Flexible(
+                  child: Text(
+                    title,
+                    style: textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
-              ),
-              if (editableEntry != null) ...<Widget>[
-                const SizedBox(width: 4),
-                Icon(
-                  Icons.edit_outlined,
-                  size: 16,
+                if (editableEntry != null) ...<Widget>[
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.edit_outlined,
+                    size: 16,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ],
+              ],
+            ),
+            if (meta != null) ...<Widget>[
+              const SizedBox(height: 2),
+              Text(
+                meta,
+                style: textTheme.bodySmall?.copyWith(
                   color: scheme.onSurfaceVariant,
                 ),
-              ],
-            ],
-          ),
-          if (meta != null) ...<Widget>[
-            const SizedBox(height: 2),
-            Text(
-              meta,
-              style: textTheme.bodySmall?.copyWith(
-                color: scheme.onSurfaceVariant,
               ),
-            ),
+            ],
           ],
-        ],
+        ),
+        amountText: amountText,
+        balText: balText,
+        dateStyle: textTheme.labelSmall?.copyWith(
+          color: scheme.onSurfaceVariant,
+          fontFeatures: _kLoanLedgerTabular,
+        ),
+        amountStyle: textTheme.bodyMedium?.copyWith(
+          fontWeight: FontWeight.w700,
+          color: amountColor,
+          fontFeatures: _kLoanLedgerTabular,
+        ),
+        balStyle: textTheme.bodyMedium?.copyWith(
+          color: scheme.onSurfaceVariant,
+          fontFeatures: _kLoanLedgerTabular,
+        ),
+        onTap: editableEntry == null ? null : () => onEdit!(editableEntry!),
+        tapTooltip: editableEntry == null ? null : l10n.loanEditEntryTooltip,
       ),
-      amountText: amountText,
-      balText: balText,
-      dateStyle: textTheme.labelSmall?.copyWith(
-        color: scheme.onSurfaceVariant,
-        fontFeatures: _kLoanLedgerTabular,
-      ),
-      amountStyle: textTheme.bodyMedium?.copyWith(
-        fontWeight: FontWeight.w700,
-        color: amountColor,
-        fontFeatures: _kLoanLedgerTabular,
-      ),
-      balStyle: textTheme.bodyMedium?.copyWith(
-        color: scheme.onSurfaceVariant,
-        fontFeatures: _kLoanLedgerTabular,
-      ),
-      onTap: editableEntry == null ? null : () => onEdit!(editableEntry!),
-      tapTooltip: editableEntry == null ? null : l10n.loanEditEntryTooltip,
     );
   }
 }

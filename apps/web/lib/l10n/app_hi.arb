@@ -1780,5 +1780,36 @@
       }
     }
   },
-  "amountExceedsMaxCrores": "अधिकतम 1 लाख करोड़"
+  "amountExceedsMaxCrores": "अधिकतम 1 लाख करोड़",
+  "clearSearchTooltip": "खोज साफ़ करें",
+  "quantityDecreaseTooltip": "मात्रा घटाएँ",
+  "quantityIncreaseTooltip": "मात्रा बढ़ाएँ",
+  "loanLedgerRowSemantics": "{date}, {particulars}, राशि {amount}, शेष {balance}",
+  "@loanLedgerRowSemantics": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "particulars": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      },
+      "balance": {
+        "type": "String"
+      }
+    }
+  },
+  "moneyStackSemantics": "{label}, {amount}",
+  "@moneyStackSemantics": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  }
 }

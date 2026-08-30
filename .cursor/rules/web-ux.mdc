@@ -14,7 +14,8 @@ Follow `docs/ux/web-ux-conventions.md` (source of truth). Digest:
 - Thumb-zone primary actions; one dominant choice per step; list/status-first (no chart dashboards in MVP).
 - Status colors: Available green, Rented blue, Due Today orange, Overdue red, Archived grey.
 - Offline: subtle non-blocking banner only. More-tab offline toggle is demo/simulation, not product positioning.
-- Appearance: Dark/Light only; default Dark; More-tab segmented toggle; theme-aware colors via ColorScheme (no light-only hardcodes).
+- Appearance: Dark/Light only; default Dark; More-tab segmented toggle; theme-aware colors via ColorScheme (no light-only hardcodes). No system theme; no third high-contrast theme.
+- Accessibility (ADR-007): WCAG 2.2 AA on Light+Dark; contrast-safe status foregrounds (keep meanings); every icon-only control needs tooltip/Semantics label; keyboard Tab + Escape on chrome; usable at 1.5× text scale; a11y strings in ARB en+hi. Not AAA.
 - Forms: items-first New Order (running total; days/amount happy path; Rent/Sell/Job under More options gated by template enabled resource types; do not hide catalog by type), then phone-first customer attach; commercial Pay/Advance/Security step only when cart policy requires or offers it — otherwise generate → order detail and Pay later; skip customer when issuing from a profile; unit identity optional unless catalog requires it.
 - Home defaults: search + KPIs + needsAttention (template presets may add recentActivity / pendingJobs; Quick Actions via Customize Home; FAB for New Order / Return).
 - Money note: optional free text ≤20 on Pay / New Order commercial / loan cash entries / return-cancel; never block settle on empty note.

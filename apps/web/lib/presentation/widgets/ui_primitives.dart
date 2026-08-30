@@ -17,18 +17,27 @@ class StatusPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color color = AppTheme.colorForStatus(status);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        localizedStatusLabel(context.l10n, status),
-        style: Theme.of(context).textTheme.labelMedium?.copyWith(
-          color: color,
-          fontWeight: FontWeight.w700,
+    final Brightness brightness = Theme.of(context).brightness;
+    final Color fill = AppTheme.colorForStatus(status);
+    final Color foreground =
+        AppTheme.foregroundForStatus(status, brightness);
+    final String label = localizedStatusLabel(context.l10n, status);
+    return Semantics(
+      label: label,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: fill.withValues(alpha: 0.14),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: ExcludeSemantics(
+          child: Text(
+            label,
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              color: foreground,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
         ),
       ),
     );
@@ -51,23 +60,31 @@ class OrderStatusPill extends StatelessWidget {
     final AssetStatus display = status == OrderStatus.open && urgency != null
         ? urgency!
         : status.billAssetStatus;
-    final Color color = AppTheme.colorForStatus(display);
+    final Brightness brightness = Theme.of(context).brightness;
+    final Color fill = AppTheme.colorForStatus(display);
+    final Color foreground =
+        AppTheme.foregroundForStatus(display, brightness);
     final String label = status == OrderStatus.open &&
             urgency != null &&
             (urgency == AssetStatus.dueToday || urgency == AssetStatus.overdue)
         ? localizedStatusLabel(context.l10n, urgency!)
         : localizedOrderStatus(context.l10n, status);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        label,
-        style: Theme.of(context).textTheme.labelMedium?.copyWith(
-          color: color,
-          fontWeight: FontWeight.w700,
+    return Semantics(
+      label: label,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: fill.withValues(alpha: 0.14),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: ExcludeSemantics(
+          child: Text(
+            label,
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              color: foreground,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
         ),
       ),
     );
@@ -134,58 +151,77 @@ class ListEntityRow extends StatelessWidget {
     final TextTheme textTheme = Theme.of(context).textTheme;
     final Widget? resolvedPill = pill ??
         (status != null ? StatusPill(status: status!) : null);
+    final StringBuffer semanticLabel = StringBuffer(title);
+    if (secondary != null && secondary!.trim().isNotEmpty) {
+      semanticLabel.write('. ${secondary!.trim()}');
+    }
+    if (tertiary != null && tertiary!.trim().isNotEmpty) {
+      semanticLabel.write('. ${tertiary!.trim()}');
+    }
+    if (status != null) {
+      semanticLabel.write(
+        '. ${localizedStatusLabel(context.l10n, status!)}',
+      );
+    }
 
     return Card(
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              CircleAvatar(
-                backgroundColor: scheme.primaryContainer,
-                child: Icon(leadingIcon),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      title,
-                      style: textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    if (secondary != null && secondary!.trim().isNotEmpty) ...<Widget>[
-                      const SizedBox(height: 4),
-                      Text(
-                        secondary!,
-                        style: textTheme.bodyMedium?.copyWith(
-                          color: scheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                    if (tertiary != null && tertiary!.trim().isNotEmpty) ...<Widget>[
-                      const SizedBox(height: 2),
-                      Text(
-                        tertiary!,
-                        style: textTheme.bodySmall?.copyWith(
-                          color: scheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                    if (resolvedPill != null) ...<Widget>[
-                      const SizedBox(height: 10),
-                      resolvedPill,
-                    ],
-                  ],
+      child: Semantics(
+        button: onTap != null,
+        label: semanticLabel.toString(),
+        excludeSemantics: true,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                CircleAvatar(
+                  backgroundColor: scheme.primaryContainer,
+                  child: Icon(leadingIcon),
                 ),
-              ),
-              if (trailing case final Widget trailingWidget) trailingWidget,
-            ],
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        title,
+                        style: textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      if (secondary != null &&
+                          secondary!.trim().isNotEmpty) ...<Widget>[
+                        const SizedBox(height: 4),
+                        Text(
+                          secondary!,
+                          style: textTheme.bodyMedium?.copyWith(
+                            color: scheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                      if (tertiary != null &&
+                          tertiary!.trim().isNotEmpty) ...<Widget>[
+                        const SizedBox(height: 2),
+                        Text(
+                          tertiary!,
+                          style: textTheme.bodySmall?.copyWith(
+                            color: scheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                      if (resolvedPill != null) ...<Widget>[
+                        const SizedBox(height: 10),
+                        resolvedPill,
+                      ],
+                    ],
+                  ),
+                ),
+                if (trailing case final Widget trailingWidget) trailingWidget,
+              ],
+            ),
           ),
         ),
       ),
@@ -205,20 +241,30 @@ class TierPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final AppLocalizations l10n = context.l10n;
-    final Color color = trusted ? AppTheme.available : AppTheme.archived;
+    final Brightness brightness = Theme.of(context).brightness;
+    final AssetStatus status =
+        trusted ? AssetStatus.available : AssetStatus.archived;
+    final Color fill = AppTheme.colorForStatus(status);
+    final Color foreground =
+        AppTheme.foregroundForStatus(status, brightness);
     final String label =
         trusted ? l10n.customerTrusted : l10n.customerStandard;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        label,
-        style: Theme.of(context).textTheme.labelMedium?.copyWith(
-          color: color,
-          fontWeight: FontWeight.w700,
+    return Semantics(
+      label: label,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: fill.withValues(alpha: 0.14),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: ExcludeSemantics(
+          child: Text(
+            label,
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              color: foreground,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
         ),
       ),
     );
@@ -249,13 +295,15 @@ class MoneyStack extends StatelessWidget {
   Widget build(BuildContext context) {
     final ColorScheme scheme = Theme.of(context).colorScheme;
     final TextTheme textTheme = Theme.of(context).textTheme;
+    final Brightness brightness = Theme.of(context).brightness;
     final FontWeight weight = switch (emphasis) {
       MoneyStackEmphasis.total || MoneyStackEmphasis.due => FontWeight.w800,
       MoneyStackEmphasis.muted => FontWeight.w500,
       MoneyStackEmphasis.normal => FontWeight.w600,
     };
     final Color amountColor = switch (emphasis) {
-      MoneyStackEmphasis.due => AppTheme.overdue,
+      MoneyStackEmphasis.due =>
+        AppTheme.foregroundForStatus(AssetStatus.overdue, brightness),
       MoneyStackEmphasis.muted => scheme.onSurfaceVariant,
       MoneyStackEmphasis.total => scheme.onSurface,
       MoneyStackEmphasis.normal => scheme.onSurface,
@@ -269,23 +317,28 @@ class MoneyStack extends StatelessWidget {
       MoneyStackEmphasis.normal => textTheme.bodyMedium,
     };
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 3),
-      child: Row(
-        children: <Widget>[
-          Expanded(child: Text(label, style: labelStyle)),
-          Text(
-            amount,
-            style: (emphasis == MoneyStackEmphasis.total ||
-                        emphasis == MoneyStackEmphasis.due
-                    ? textTheme.titleSmall
-                    : textTheme.bodyMedium)
-                ?.copyWith(
-              fontWeight: weight,
-              color: amountColor,
-            ),
+    return Semantics(
+      label: context.l10n.moneyStackSemantics(label, amount),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 3),
+        child: ExcludeSemantics(
+          child: Row(
+            children: <Widget>[
+              Expanded(child: Text(label, style: labelStyle)),
+              Text(
+                amount,
+                style: (emphasis == MoneyStackEmphasis.total ||
+                            emphasis == MoneyStackEmphasis.due
+                        ? textTheme.titleSmall
+                        : textTheme.bodyMedium)
+                    ?.copyWith(
+                  fontWeight: weight,
+                  color: amountColor,
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -676,15 +729,22 @@ class OfflineBanner extends StatelessWidget {
     if (!show) {
       return const SizedBox.shrink();
     }
-    return Container(
-      width: double.infinity,
-      color: Theme.of(context).colorScheme.tertiaryContainer,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-      child: Text(
-        context.l10n.offlineBanner,
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-          color: Theme.of(context).colorScheme.onTertiaryContainer,
-          fontWeight: FontWeight.w600,
+    final String message = context.l10n.offlineBanner;
+    return Semantics(
+      liveRegion: true,
+      label: message,
+      child: Container(
+        width: double.infinity,
+        color: Theme.of(context).colorScheme.tertiaryContainer,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        child: ExcludeSemantics(
+          child: Text(
+            message,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.onTertiaryContainer,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ),
       ),
     );

@@ -4529,6 +4529,41 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Maximum is 1 lakh crore'**
   String get amountExceedsMaxCrores;
+
+  /// No description provided for @clearSearchTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear search'**
+  String get clearSearchTooltip;
+
+  /// No description provided for @quantityDecreaseTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Decrease quantity'**
+  String get quantityDecreaseTooltip;
+
+  /// No description provided for @quantityIncreaseTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Increase quantity'**
+  String get quantityIncreaseTooltip;
+
+  /// No description provided for @loanLedgerRowSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'{date}, {particulars}, amount {amount}, balance {balance}'**
+  String loanLedgerRowSemantics(
+    String date,
+    String particulars,
+    String amount,
+    String balance,
+  );
+
+  /// No description provided for @moneyStackSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'{label}, {amount}'**
+  String moneyStackSemantics(String label, String amount);
 }
 
 class _AppLocalizationsDelegate
