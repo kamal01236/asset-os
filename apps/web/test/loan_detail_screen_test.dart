@@ -47,7 +47,7 @@ void main() {
   driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
 
   testWidgets(
-    'summary Principal shows remaining after disbursement and Original when different',
+    'summary shows Total and Pending principal after disbursement',
     (WidgetTester tester) async {
       final ProviderContainer container = await bootContainer();
       final LocalRepository repo = container.read(repositoryProvider);
@@ -75,17 +75,22 @@ void main() {
 
       await _pumpDetail(tester, container: container, loanId: loanId);
 
-      expect(find.text('Principal'), findsOneWidget);
+      expect(find.text('Total principal'), findsOneWidget);
+      expect(find.text('Pending principal'), findsOneWidget);
+      expect(find.text('Total interest'), findsOneWidget);
+      expect(find.text('Pending interest'), findsOneWidget);
+      expect(find.text('Paid'), findsOneWidget);
+      expect(find.text('Adjustments'), findsOneWidget);
       expect(find.text('₹15000'), findsWidgets);
-      expect(find.text('Original principal'), findsOneWidget);
-      expect(find.text('₹10000'), findsOneWidget);
+      expect(find.text('Original principal'), findsNothing);
+      expect(find.text('Principal'), findsNothing);
 
       await _tearDownDetail(tester);
     },
   );
 
   testWidgets(
-    'summary omits Original principal when remaining equals create amount',
+    'summary always shows Total and Pending principal without disbursement',
     (WidgetTester tester) async {
       final ProviderContainer container = await bootContainer();
       final LocalRepository repo = container.read(repositoryProvider);
@@ -106,7 +111,8 @@ void main() {
 
       await _pumpDetail(tester, container: container, loanId: loanId);
 
-      expect(find.text('Principal'), findsOneWidget);
+      expect(find.text('Total principal'), findsOneWidget);
+      expect(find.text('Pending principal'), findsOneWidget);
       expect(find.text('₹2500'), findsWidgets);
       expect(find.text('Original principal'), findsNothing);
 
@@ -114,7 +120,7 @@ void main() {
     },
   );
 
-  testWidgets('HI locale shows प्रारंभिक मूलधन when principal changed', (
+  testWidgets('HI locale shows कुल मूलधन and लंबित मूलधन after disbursement', (
     WidgetTester tester,
   ) async {
     final ProviderContainer container = await bootContainer();
@@ -148,10 +154,12 @@ void main() {
       locale: const Locale('hi'),
     );
 
-    expect(find.text('मूलधन'), findsWidgets);
-    expect(find.text('प्रारंभिक मूलधन'), findsOneWidget);
+    expect(find.text('कुल मूलधन'), findsOneWidget);
+    expect(find.text('लंबित मूलधन'), findsOneWidget);
+    expect(find.text('कुल ब्याज'), findsOneWidget);
+    expect(find.text('लंबित ब्याज'), findsOneWidget);
     expect(find.text('₹15000'), findsWidgets);
-    expect(find.text('₹10000'), findsOneWidget);
+    expect(find.text('प्रारंभिक मूलधन'), findsNothing);
 
     await _tearDownDetail(tester);
   });

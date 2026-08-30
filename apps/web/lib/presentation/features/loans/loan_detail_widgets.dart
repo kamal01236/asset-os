@@ -104,40 +104,38 @@ class CurrentScenarioCard extends StatelessWidget {
             const SizedBox(height: 12),
             loanDetailKv(
               context,
-              l10n.loanPrincipalLabel,
+              l10n.loanTotalPrincipalLabel,
+              formatMoney(
+                scenario.totalPrincipalPaise,
+                currencyCode: loan.currencyCode,
+              ),
+            ),
+            loanDetailKv(
+              context,
+              l10n.loanPendingPrincipalLabel,
               formatMoney(
                 scenario.remainingPrincipalPaise,
                 currencyCode: loan.currencyCode,
               ),
             ),
-            if (scenario.remainingPrincipalPaise != scenario.principalPaise)
-              loanDetailKv(
-                context,
-                l10n.loanOriginalPrincipalLabel,
-                formatMoney(
-                  scenario.principalPaise,
-                  currencyCode: loan.currencyCode,
-                ),
-              ),
             loanDetailKv(
               context,
               scenario.interestAccruedPaise < 0
                   ? l10n.loanReverseInterestToDateLabel
-                  : l10n.loanInterestToDateLabel,
+                  : l10n.loanTotalInterestLabel,
               formatMoney(
                 scenario.interestAccruedPaise,
                 currencyCode: loan.currencyCode,
               ),
             ),
-            if (scenario.unpaidInterestPaise != 0)
-              loanDetailKv(
-                context,
-                l10n.loanUnpaidInterestLabel,
-                formatMoney(
-                  scenario.unpaidInterestPaise,
-                  currencyCode: loan.currencyCode,
-                ),
+            loanDetailKv(
+              context,
+              l10n.loanPendingInterestLabel,
+              formatMoney(
+                scenario.unpaidInterestPaise,
+                currencyCode: loan.currencyCode,
               ),
+            ),
             loanDetailKv(
               context,
               l10n.loanPaidLabel,

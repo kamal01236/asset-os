@@ -655,8 +655,48 @@ void main() {
         now: DateTime(2027, 1, 1),
       );
       expect(after.remainingPrincipalPaise, 15000000);
+      expect(after.totalPrincipalPaise, 15000000);
+      expect(after.principalPaise, 10000000);
       expect(after.unpaidInterestPaise, 1500000);
       expect(after.pendingPaise, 16500000);
+    });
+
+    test('totalPrincipalPaise is create plus disbursements; pending reflects repayments',
+        () {
+      final MoneyLoan loan = _loan(
+        id: 'MLN-total-p',
+        principalPaise: 1000000, // ₹10,000
+        rateBps: 0,
+        ratePeriod: MoneyRatePeriod.monthly,
+        startedAt: DateTime(2026, 1, 1),
+        createdAt: DateTime(2026, 3, 1),
+        entries: <MoneyLoanEntry>[
+          MoneyLoanEntry(
+            id: 'E-disb',
+            loanId: 'MLN-total-p',
+            entryAt: DateTime(2026, 1, 15),
+            amountPaise: 500000, // ₹5,000
+            kind: MoneyLoanEntryKind.disbursement,
+          ),
+          MoneyLoanEntry(
+            id: 'E-pay',
+            loanId: 'MLN-total-p',
+            entryAt: DateTime(2026, 2, 1),
+            amountPaise: 200000, // ₹2,000
+            kind: MoneyLoanEntryKind.repayment,
+          ),
+        ],
+      );
+
+      final LoanScenario scenario = computeLoanScenario(
+        loan: loan,
+        now: DateTime(2026, 3, 1),
+      );
+      expect(scenario.totalPrincipalPaise, 1500000);
+      expect(scenario.principalPaise, 1000000);
+      expect(scenario.remainingPrincipalPaise, 1300000);
+      expect(scenario.totalPaidPaise, 200000);
+      expect(scenario.pendingPaise, 1300000);
     });
 
     test('edit start date changes totals', () {

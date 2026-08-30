@@ -76,6 +76,7 @@ class _WalkPoint {
 class LoanScenario {
   const LoanScenario({
     required this.principalPaise,
+    required this.totalPrincipalPaise,
     required this.interestAccruedPaise,
     required this.totalPaidPaise,
     required this.totalAdjustmentsPaise,
@@ -86,7 +87,10 @@ class LoanScenario {
     required this.timeline,
   });
 
+  /// Create-time principal only (excludes later disbursement entries).
   final int principalPaise;
+  /// Create principal plus all disbursement entry amounts.
+  final int totalPrincipalPaise;
   final int interestAccruedPaise;
   final int totalPaidPaise;
   /// Net adjustments (positive = forgiveness / credit).
@@ -376,18 +380,30 @@ LoanScenario computeLoanScenario({
   final DateTime asOf = resolveLoanAsOf(loan: loan, now: clock);
   final DateTime start = _dateOnly(loan.interestStartedAt);
   final InterestCapitalizationPolicy policy = capitalizationPolicyFor(loan);
+  final List<MoneyLoanEntry> entries = entriesOverride ?? loan.entries;
+
+  final int createPrincipal =
+      loan.principalPaise < 0 ? 0 : loan.principalPaise;
+  int disbursementEntriesPaise = 0;
+  for (final MoneyLoanEntry entry in entries) {
+    if (entry.kind == MoneyLoanEntryKind.disbursement) {
+      disbursementEntriesPaise +=
+          entry.amountPaise < 0 ? 0 : entry.amountPaise;
+    }
+  }
+  final int totalPrincipalPaise = createPrincipal + disbursementEntriesPaise;
 
   final List<_WalkPoint> points = <_WalkPoint>[
     _WalkPoint(
       at: start,
       walkKind: _WalkKind.cash,
       entryKind: MoneyLoanEntryKind.disbursement,
-      amountPaise: loan.principalPaise < 0 ? 0 : loan.principalPaise,
+      amountPaise: createPrincipal,
       isSyntheticPrincipal: true,
     ),
   ];
 
-  for (final MoneyLoanEntry entry in entriesOverride ?? loan.entries) {
+  for (final MoneyLoanEntry entry in entries) {
     points.add(
       _WalkPoint(
         at: _dateOnly(entry.entryAt),
@@ -673,6 +689,7 @@ LoanScenario computeLoanScenario({
 
   return LoanScenario(
     principalPaise: loan.principalPaise,
+    totalPrincipalPaise: totalPrincipalPaise,
     interestAccruedPaise: interestAccrued,
     totalPaidPaise: totalPaid,
     totalAdjustmentsPaise: totalAdjustments,

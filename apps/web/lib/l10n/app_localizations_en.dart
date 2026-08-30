@@ -2089,6 +2089,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loanOriginalPrincipalLabel => 'Original principal';
 
   @override
+  String get loanTotalPrincipalLabel => 'Total principal';
+
+  @override
+  String get loanPendingPrincipalLabel => 'Pending principal';
+
+  @override
   String get loanPrincipalRequired => 'Enter a principal amount';
 
   @override
@@ -2159,6 +2165,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loanUnpaidInterestLabel => 'Unpaid interest';
 
   @override
+  String get loanPendingInterestLabel => 'Pending interest';
+
+  @override
   String get loanPrepaymentAllocationLabel => 'Repayment applies to';
 
   @override
@@ -2227,6 +2236,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get loanInterestToDateLabel => 'Interest to date';
+
+  @override
+  String get loanTotalInterestLabel => 'Total interest';
 
   @override
   String get loanReverseInterestToDateLabel => 'Reverse interest to date';

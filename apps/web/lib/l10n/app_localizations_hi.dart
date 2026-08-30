@@ -2089,6 +2089,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get loanOriginalPrincipalLabel => 'प्रारंभिक मूलधन';
 
   @override
+  String get loanTotalPrincipalLabel => 'कुल मूलधन';
+
+  @override
+  String get loanPendingPrincipalLabel => 'लंबित मूलधन';
+
+  @override
   String get loanPrincipalRequired => 'मूलधन राशि दर्ज करें';
 
   @override
@@ -2159,6 +2165,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get loanUnpaidInterestLabel => 'अवैतनिक ब्याज';
 
   @override
+  String get loanPendingInterestLabel => 'लंबित ब्याज';
+
+  @override
   String get loanPrepaymentAllocationLabel => 'चुकौती लागू होती है';
 
   @override
@@ -2227,6 +2236,9 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get loanInterestToDateLabel => 'अब तक का ब्याज';
+
+  @override
+  String get loanTotalInterestLabel => 'कुल ब्याज';
 
   @override
   String get loanReverseInterestToDateLabel => 'अब तक का उल्टा ब्याज';

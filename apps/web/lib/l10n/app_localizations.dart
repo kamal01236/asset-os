@@ -3604,6 +3604,18 @@ abstract class AppLocalizations {
   /// **'Original principal'**
   String get loanOriginalPrincipalLabel;
 
+  /// No description provided for @loanTotalPrincipalLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Total principal'**
+  String get loanTotalPrincipalLabel;
+
+  /// No description provided for @loanPendingPrincipalLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending principal'**
+  String get loanPendingPrincipalLabel;
+
   /// No description provided for @loanPrincipalRequired.
   ///
   /// In en, this message translates to:
@@ -3742,6 +3754,12 @@ abstract class AppLocalizations {
   /// **'Unpaid interest'**
   String get loanUnpaidInterestLabel;
 
+  /// No description provided for @loanPendingInterestLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending interest'**
+  String get loanPendingInterestLabel;
+
   /// No description provided for @loanPrepaymentAllocationLabel.
   ///
   /// In en, this message translates to:
@@ -3864,6 +3882,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Interest to date'**
   String get loanInterestToDateLabel;
+
+  /// No description provided for @loanTotalInterestLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Total interest'**
+  String get loanTotalInterestLabel;
 
   /// No description provided for @loanReverseInterestToDateLabel.
   ///
