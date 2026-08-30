@@ -1719,5 +1719,6 @@
         "type": "int"
       }
     }
-  }
+  },
+  "amountExceedsMaxCrores": "Maximum is 1 lakh crore"
 }

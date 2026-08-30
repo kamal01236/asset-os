@@ -4251,6 +4251,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Total {amount} across {count} loan(s)'**
   String reportOutstandingLoansTotal(String amount, int count);
+
+  /// No description provided for @amountExceedsMaxCrores.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum is 1 lakh crore'**
+  String get amountExceedsMaxCrores;
 }
 
 class _AppLocalizationsDelegate

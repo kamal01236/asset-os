@@ -2462,4 +2462,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String reportOutstandingLoansTotal(String amount, int count) {
     return 'कुल $amount — $count कर्ज';
   }
+
+  @override
+  String get amountExceedsMaxCrores => 'अधिकतम 1 लाख करोड़';
 }

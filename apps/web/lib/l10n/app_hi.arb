@@ -1719,5 +1719,6 @@
         "type": "int"
       }
     }
-  }
+  },
+  "amountExceedsMaxCrores": "अधिकतम 1 लाख करोड़"
 }

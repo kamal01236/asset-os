@@ -210,31 +210,21 @@ class _OrderPaymentScreenState extends ConsumerState<OrderPaymentScreen> {
             const SizedBox(height: 12),
           ],
           if (showSecurity) ...<Widget>[
-            TextField(
+            MoneyAmountField(
               controller: _securityController,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              inputFormatters: <TextInputFormatter>[
-                FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
-              ],
-              decoration: InputDecoration(
-                labelText: l10n.paymentSecurityLabel,
-                hintText: l10n.paymentSecurityHint,
-                helperText: l10n.paymentSecurityHelper,
-              ),
+              allowDecimal: true,
+              labelText: l10n.paymentSecurityLabel,
+              hintText: l10n.paymentSecurityHint,
+              helperText: l10n.paymentSecurityHelper,
               onChanged: (_) => setState(() {}),
             ),
             const SizedBox(height: 12),
           ],
-          TextField(
+          MoneyAmountField(
             controller: _receivedController,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            inputFormatters: <TextInputFormatter>[
-              FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
-            ],
-            decoration: InputDecoration(
-              labelText: l10n.paymentAmountReceivedLabel,
-              hintText: l10n.paymentAmountReceivedHint,
-            ),
+            allowDecimal: true,
+            labelText: l10n.paymentAmountReceivedLabel,
+            hintText: l10n.paymentAmountReceivedHint,
             onChanged: (_) => setState(() {}),
           ),
           const SizedBox(height: 12),

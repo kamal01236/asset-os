@@ -2401,22 +2401,18 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
                       },
                     ),
                     const SizedBox(height: 8),
-                    TextField(
+                    MoneyAmountField(
                       controller: _rateController,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      decoration: InputDecoration(
-                        labelText: l10n.rateAmountLabel,
-                        hintText: l10n.rateAmountHint,
-                      ),
+                      allowDecimal: true,
+                      labelText: l10n.rateAmountLabel,
+                      hintText: l10n.rateAmountHint,
                     ),
                     const SizedBox(height: 8),
-                    TextField(
+                    MoneyAmountField(
                       controller: _lateFeeController,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      decoration: InputDecoration(
-                        labelText: l10n.lateFeePerDayLabel,
-                        hintText: l10n.lateFeePerDayHint,
-                      ),
+                      allowDecimal: true,
+                      labelText: l10n.lateFeePerDayLabel,
+                      hintText: l10n.lateFeePerDayHint,
                     ),
                     if (catalogSupportsSecurityDeposit(
                       _editKind(
@@ -2428,15 +2424,12 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
                       ),
                     )) ...<Widget>[
                       const SizedBox(height: 8),
-                      TextField(
+                      MoneyAmountField(
                         controller: _securityDepositController,
-                        keyboardType:
-                            const TextInputType.numberWithOptions(decimal: true),
-                        decoration: InputDecoration(
-                          labelText: l10n.securityDepositLabel,
-                          hintText: l10n.securityDepositHint,
-                          helperText: l10n.securityDepositHelper,
-                        ),
+                        allowDecimal: true,
+                        labelText: l10n.securityDepositLabel,
+                        hintText: l10n.securityDepositHint,
+                        helperText: l10n.securityDepositHelper,
                       ),
                     ],
                     const SizedBox(height: 8),
@@ -3232,33 +3225,27 @@ class _AddInventoryFlowScreenState extends ConsumerState<AddInventoryFlowScreen>
             },
           ),
           const SizedBox(height: 8),
-          TextField(
+          MoneyAmountField(
             controller: _rateController,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: InputDecoration(
-              labelText: l10n.rateAmountLabel,
-              hintText: l10n.rateAmountHint,
-            ),
+            allowDecimal: true,
+            labelText: l10n.rateAmountLabel,
+            hintText: l10n.rateAmountHint,
           ),
           const SizedBox(height: 8),
-          TextField(
+          MoneyAmountField(
             controller: _lateFeeController,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: InputDecoration(
-              labelText: l10n.lateFeePerDayLabel,
-              hintText: l10n.lateFeePerDayHint,
-            ),
+            allowDecimal: true,
+            labelText: l10n.lateFeePerDayLabel,
+            hintText: l10n.lateFeePerDayHint,
           ),
           if (catalogSupportsSecurityDeposit(addKind)) ...<Widget>[
             const SizedBox(height: 8),
-            TextField(
+            MoneyAmountField(
               controller: _securityDepositController,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              decoration: InputDecoration(
-                labelText: l10n.securityDepositLabel,
-                hintText: l10n.securityDepositHint,
-                helperText: l10n.securityDepositHelper,
-              ),
+              allowDecimal: true,
+              labelText: l10n.securityDepositLabel,
+              hintText: l10n.securityDepositHint,
+              helperText: l10n.securityDepositHelper,
             ),
           ],
           const SizedBox(height: 8),
@@ -4034,14 +4021,11 @@ Future<bool> _confirmAndReturnRental({
                   const SizedBox(height: 8),
                   Text(l10n.chargeTotalLabel(formatMoney(computedTotal))),
                   const SizedBox(height: 8),
-                  TextField(
+                  MoneyAmountField(
                     controller: finalAmountController,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    decoration: InputDecoration(
-                      labelText: l10n.returnFinalAmountLabel,
-                      hintText: l10n.returnFinalAmountHint,
-                    ),
+                    allowDecimal: true,
+                    labelText: l10n.returnFinalAmountLabel,
+                    hintText: l10n.returnFinalAmountHint,
                     onChanged: (_) => setDialogState(() {}),
                   ),
                   const SizedBox(height: 6),
@@ -4159,24 +4143,18 @@ Future<bool> _confirmAndCancelOrder({
                 ),
               ),
               const SizedBox(height: 8),
-              TextField(
+              MoneyAmountField(
                 controller: keptController,
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
-                decoration: InputDecoration(
-                  labelText: l10n.deleteOrderKeptLabel,
-                  hintText: l10n.depositAmountHint,
-                ),
+                allowDecimal: true,
+                labelText: l10n.deleteOrderKeptLabel,
+                hintText: l10n.depositAmountHint,
               ),
               const SizedBox(height: 8),
-              TextField(
+              MoneyAmountField(
                 controller: returnedController,
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
-                decoration: InputDecoration(
-                  labelText: l10n.deleteOrderReturnedLabel,
-                  hintText: l10n.depositAmountHint,
-                ),
+                allowDecimal: true,
+                labelText: l10n.deleteOrderReturnedLabel,
+                hintText: l10n.depositAmountHint,
               ),
               const SizedBox(height: 8),
               TextField(

@@ -1352,17 +1352,12 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
           ),
         ],
         const SizedBox(height: 8),
-        TextField(
+        MoneyAmountField(
           key: const ValueKey<String>('commercial-pay-field'),
           controller: _payController,
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          inputFormatters: <TextInputFormatter>[
-            FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
-          ],
-          decoration: InputDecoration(
-            labelText: l10n.paymentAmountReceivedLabel,
-            hintText: l10n.paymentAmountReceivedHint,
-          ),
+          allowDecimal: true,
+          labelText: l10n.paymentAmountReceivedLabel,
+          hintText: l10n.paymentAmountReceivedHint,
           onChanged: (_) => setState(() {}),
         ),
         const SizedBox(height: 16),
@@ -1375,17 +1370,12 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
               ),
         ),
         const SizedBox(height: 8),
-        TextField(
+        MoneyAmountField(
           key: const ValueKey<String>('commercial-advance-field'),
           controller: _advanceController,
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          inputFormatters: <TextInputFormatter>[
-            FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
-          ],
-          decoration: InputDecoration(
-            labelText: l10n.paymentSecurityLabel,
-            hintText: l10n.paymentSecurityHint,
-          ),
+          allowDecimal: true,
+          labelText: l10n.paymentSecurityLabel,
+          hintText: l10n.paymentSecurityHint,
           onChanged: (_) => setState(() {}),
         ),
         const SizedBox(height: 16),
@@ -1399,20 +1389,15 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
               ),
         ),
         const SizedBox(height: 8),
-        TextField(
+        MoneyAmountField(
           key: const ValueKey<String>('commercial-security-field'),
           controller: _securityController,
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          inputFormatters: <TextInputFormatter>[
-            FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
-          ],
-          decoration: InputDecoration(
-            labelText: l10n.paymentSecurityLabel,
-            hintText: l10n.paymentSecurityHint,
-            helperText: commercial.requireSecurity
-                ? l10n.commercialSecurityRequiredHelper
-                : l10n.paymentSecurityHelper,
-          ),
+          allowDecimal: true,
+          labelText: l10n.paymentSecurityLabel,
+          hintText: l10n.paymentSecurityHint,
+          helperText: commercial.requireSecurity
+              ? l10n.commercialSecurityRequiredHelper
+              : l10n.paymentSecurityHelper,
           onChanged: (_) => setState(() {}),
         ),
         const SizedBox(height: 16),
@@ -1914,20 +1899,14 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
                 _buildQuantityStepper(l10n, index, selected),
                 const SizedBox(height: 8),
                 if (draft.usesManualAmount) ...<Widget>[
-                  TextField(
+                  MoneyAmountField(
                     controller: draft.saleAmountController,
-                    keyboardType: TextInputType.number,
-                    inputFormatters: <TextInputFormatter>[
-                      kDigitsOnlyInputFormatter,
-                    ],
-                    decoration: InputDecoration(
-                      labelText: draft.isJob
-                          ? l10n.jobAmountLabel
-                          : l10n.saleAmountLabel,
-                      hintText: draft.isJob
-                          ? l10n.jobAmountHint
-                          : l10n.saleAmountHint,
-                    ),
+                    labelText: draft.isJob
+                        ? l10n.jobAmountLabel
+                        : l10n.saleAmountLabel,
+                    hintText: draft.isJob
+                        ? l10n.jobAmountHint
+                        : l10n.saleAmountHint,
                     onChanged: (_) => setState(() {}),
                   ),
                   if (_saleAmountPaise(draft) > 0) ...<Widget>[
@@ -1944,16 +1923,10 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
                   ],
                 ] else ...<Widget>[
                   if (selected.allowsDynamicPricing) ...<Widget>[
-                    TextField(
+                    MoneyAmountField(
                       controller: draft.rateController,
-                      keyboardType: TextInputType.number,
-                      inputFormatters: <TextInputFormatter>[
-                        kDigitsOnlyInputFormatter,
-                      ],
-                      decoration: InputDecoration(
-                        labelText: l10n.orderLineRateLabel,
-                        hintText: l10n.orderLineRateHint,
-                      ),
+                      labelText: l10n.orderLineRateLabel,
+                      hintText: l10n.orderLineRateHint,
                       onChanged: (_) => setState(() {}),
                     ),
                     const SizedBox(height: 8),

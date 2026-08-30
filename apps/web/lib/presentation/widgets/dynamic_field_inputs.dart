@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../../infrastructure/l10n/l10n_ext.dart';
 import '../../domain/pricing/rental_pricing.dart';
 import '../../domain/templates/field_defs.dart';
+import 'money_amount_field.dart';
 
 /// Controllers + values for dynamic [FieldDef] inputs on add/edit resource.
 class DynamicFieldEditors {
@@ -143,13 +144,10 @@ Widget _fieldInput({
         },
       );
     case FieldValueType.money:
-      return TextField(
+      return MoneyAmountField(
         controller: editors._controller(field.id),
-        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-        decoration: InputDecoration(labelText: label),
-        inputFormatters: <TextInputFormatter>[
-          FilteringTextInputFormatter.allow(RegExp(r'[\d.]')),
-        ],
+        allowDecimal: true,
+        labelText: label,
       );
     case FieldValueType.number:
       return TextField(

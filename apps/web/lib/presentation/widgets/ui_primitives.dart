@@ -5,6 +5,8 @@ import '../../domain/models/entities.dart';
 import '../../domain/pricing/rental_pricing.dart';
 import '../theme/app_theme.dart';
 
+export 'money_amount_field.dart';
+
 class StatusPill extends StatelessWidget {
   const StatusPill({
     required this.status,

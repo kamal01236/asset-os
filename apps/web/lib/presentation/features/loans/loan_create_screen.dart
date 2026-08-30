@@ -410,15 +410,10 @@ class _LoanCreateScreenState extends ConsumerState<LoanCreateScreen> {
             },
           ),
           const SizedBox(height: 16),
-          TextField(
+          MoneyAmountField(
             controller: _principalCtrl,
-            keyboardType: TextInputType.number,
-            inputFormatters: <TextInputFormatter>[kDigitsOnlyInputFormatter],
-            decoration: InputDecoration(
-              labelText: l10n.loanPrincipalLabel,
-              border: const OutlineInputBorder(),
-              prefixText: '₹ ',
-            ),
+            labelText: l10n.loanPrincipalLabel,
+            border: const OutlineInputBorder(),
           ),
           const SizedBox(height: 16),
           ListTile(

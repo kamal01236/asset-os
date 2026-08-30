@@ -38,6 +38,7 @@ UI-first conventions for `apps/web` to keep flows fast, clear, and touch-friendl
 - Minimal required fields first; advanced details collapsed by default. Unit identity fields are optional unless the catalog item requires them; otherwise short codes auto-assign at submit (optional “Add unit labels”).
 - Auto-detect existing customer by phone when attaching the customer (at end of a blank order, or when issued from a customer).
 - Free-text identity/note fields (customer name, item name, category, instance name, SELF nickname, notes when non-empty) require at least 3 characters; search runs only at ≥3 chars (Home/global = all entities; Resources tab = resources; Customers tab = customers + order nicknames).
+- **Money entry fields** (`MoneyAmountField`) show a live amount-in-words helper in the current app locale (EN or HI), using the Indian numbering scale (thousand / lakh / crore). Inputs are capped at **1 lakh crore**; overflow shows a short localized message instead of words.
 
 ## Order bills and deposit
 - Transactions tab lists a merged chronological feed of orders and loans (type badge on each row). Filter chips **All / Orders / Loans** appear when both kinds are relevant; Home KPI filters (Active / Due today / Overdue) still narrow to matching open orders. Orders retain bill semantics on detail; the list row is lightweight (party, status, amount, date).

@@ -9,7 +9,7 @@ import '../../../domain/pricing/rental_pricing.dart';
 import '../../../domain/payments/payment_reference.dart';
 import '../../../application/providers/app_providers.dart';
 import '../../../infrastructure/sharing/loan_timeline_share.dart';
-import '../../validation/input_formatters.dart';
+import '../../widgets/money_amount_field.dart';
 import 'loan_create_screen.dart';
 import 'loan_detail_widgets.dart';
 import 'loan_timeline_share_snapshot.dart';
@@ -414,17 +414,10 @@ class _LoanDetailScreenState extends ConsumerState<LoanDetailScreen> {
                       }
                     },
                   ),
-                  TextField(
+                  MoneyAmountField(
                     controller: amountCtrl,
-                    keyboardType: TextInputType.number,
-                    inputFormatters: <TextInputFormatter>[
-                      kDigitsOnlyInputFormatter,
-                    ],
-                    decoration: InputDecoration(
-                      labelText: l10n.loanPaymentAmountLabel,
-                      border: const OutlineInputBorder(),
-                      prefixText: '₹ ',
-                    ),
+                    labelText: l10n.loanPaymentAmountLabel,
+                    border: const OutlineInputBorder(),
                     onChanged: (_) => setModal(() {}),
                   ),
                   const SizedBox(height: 12),
@@ -608,20 +601,12 @@ class _LoanDetailScreenState extends ConsumerState<LoanDetailScreen> {
                       }
                     },
                   ),
-                  TextField(
+                  MoneyAmountField(
                     controller: amountCtrl,
-                    keyboardType: const TextInputType.numberWithOptions(
-                      signed: true,
-                    ),
-                    inputFormatters: <TextInputFormatter>[
-                      kSignedDigitsInputFormatter,
-                    ],
-                    decoration: InputDecoration(
-                      labelText: l10n.loanAdjustmentAmountLabel,
-                      border: const OutlineInputBorder(),
-                      prefixText: '₹ ',
-                      helperText: l10n.loanAdjustmentHint,
-                    ),
+                    allowSigned: true,
+                    labelText: l10n.loanAdjustmentAmountLabel,
+                    border: const OutlineInputBorder(),
+                    helperText: l10n.loanAdjustmentHint,
                   ),
                   const SizedBox(height: 12),
                   TextField(
