@@ -4168,22 +4168,24 @@ abstract class AppLocalizations {
   /// No description provided for @loanTimelineInterestSegment.
   ///
   /// In en, this message translates to:
-  /// **'Interest on {principal} ({from}–{to}) → {amount}'**
+  /// **'Interest on {principal} ({from}–{to} · {days} days) → {amount}'**
   String loanTimelineInterestSegment(
     String principal,
     String from,
     String to,
+    int days,
     String amount,
   );
 
   /// No description provided for @loanTimelineReverseInterestSegment.
   ///
   /// In en, this message translates to:
-  /// **'Reverse interest on credit {principal} ({from}–{to}) → {amount}'**
+  /// **'Reverse interest on credit {principal} ({from}–{to} · {days} days) → {amount}'**
   String loanTimelineReverseInterestSegment(
     String principal,
     String from,
     String to,
+    int days,
     String amount,
   );
 

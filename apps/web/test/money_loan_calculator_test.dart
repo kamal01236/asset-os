@@ -4,6 +4,8 @@ library;
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:asset_os/application/local_repository.dart';
+import 'package:asset_os/domain/pricing/rental_pricing.dart';
+import 'package:asset_os/l10n/app_localizations_en.dart';
 
 import 'support/test_harness.dart';
 
@@ -523,6 +525,53 @@ void main() {
       expect(segments[0].amountPaise, 300000);
       expect(segments[1].amountPaise, 210000);
       expect(segments[2].amountPaise, -30000);
+    });
+
+    test('interest segment day span matches calendarDaysBetween and l10n', () {
+      final MoneyLoan loan = _loan(
+        id: 'MLN-days',
+        principalPaise: 1000000,
+        rateBps: 1200,
+        ratePeriod: MoneyRatePeriod.yearly,
+        startedAt: DateTime(2026, 1, 1),
+        capitalizationPolicy: MoneyCapitalizationPolicy.never,
+        createdAt: DateTime(2026, 2, 1),
+      );
+
+      final LoanScenario asOf = computeLoanScenario(
+        loan: loan,
+        now: DateTime(2026, 2, 1),
+      );
+
+      final LoanTimelineEvent segment = asOf.timeline.firstWhere(
+        (LoanTimelineEvent e) => e.kind == LoanTimelineKind.interestSegment,
+      );
+      expect(segment.from, DateTime(2026, 1, 1));
+      expect(segment.through, DateTime(2026, 2, 1));
+      final int days = calendarDaysBetween(segment.from!, segment.through!);
+      expect(days, 31);
+
+      final AppLocalizationsEn l10n = AppLocalizationsEn();
+      expect(
+        l10n.loanTimelineInterestSegment(
+          '₹10,000',
+          '01/01/2026',
+          '01/02/2026',
+          days,
+          '₹100',
+        ),
+        'Interest on ₹10,000 (01/01/2026–01/02/2026 · 31 days) → ₹100',
+      );
+      expect(
+        l10n.loanTimelineReverseInterestSegment(
+          '₹1,000',
+          '01/07/2026',
+          '01/10/2026',
+          92,
+          '₹30',
+        ),
+        'Reverse interest on credit ₹1,000 (01/07/2026–01/10/2026 · 92 days) → ₹30',
+      );
     });
 
     test('entry dated before start participates', () {

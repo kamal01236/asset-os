@@ -270,6 +270,9 @@ class TimelineRow extends StatelessWidget {
       event.amountPaise,
       currencyCode: loan.currencyCode,
     );
+    final DateTime interestFrom = event.from ?? event.at;
+    final DateTime interestThrough = event.through ?? event.at;
+    final int interestDays = calendarDaysBetween(interestFrom, interestThrough);
     final String text = switch (event.kind) {
       LoanTimelineKind.interestSegment => event.amountPaise < 0
           ? l10n.loanTimelineReverseInterestSegment(
@@ -277,8 +280,9 @@ class TimelineRow extends StatelessWidget {
                 event.principalBasisPaise ?? 0,
                 currencyCode: loan.currencyCode,
               ),
-              formatIndiaDate(event.from ?? event.at),
-              formatIndiaDate(event.through ?? event.at),
+              formatIndiaDate(interestFrom),
+              formatIndiaDate(interestThrough),
+              interestDays,
               money,
             )
           : l10n.loanTimelineInterestSegment(
@@ -286,8 +290,9 @@ class TimelineRow extends StatelessWidget {
                 event.principalBasisPaise ?? 0,
                 currencyCode: loan.currencyCode,
               ),
-              formatIndiaDate(event.from ?? event.at),
-              formatIndiaDate(event.through ?? event.at),
+              formatIndiaDate(interestFrom),
+              formatIndiaDate(interestThrough),
+              interestDays,
               money,
             ),
       LoanTimelineKind.interestCapitalized =>

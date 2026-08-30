@@ -1590,7 +1590,7 @@
       }
     }
   },
-  "loanTimelineInterestSegment": "{principal} पर ब्याज ({from}–{to}) → {amount}",
+  "loanTimelineInterestSegment": "{principal} पर ब्याज ({from}–{to} · {days} दिन) → {amount}",
   "@loanTimelineInterestSegment": {
     "placeholders": {
       "principal": {
@@ -1602,12 +1602,15 @@
       "to": {
         "type": "String"
       },
+      "days": {
+        "type": "int"
+      },
       "amount": {
         "type": "String"
       }
     }
   },
-  "loanTimelineReverseInterestSegment": "क्रेडिट {principal} पर उल्टा ब्याज ({from}–{to}) → {amount}",
+  "loanTimelineReverseInterestSegment": "क्रेडिट {principal} पर उल्टा ब्याज ({from}–{to} · {days} दिन) → {amount}",
   "@loanTimelineReverseInterestSegment": {
     "placeholders": {
       "principal": {
@@ -1618,6 +1621,9 @@
       },
       "to": {
         "type": "String"
+      },
+      "days": {
+        "type": "int"
       },
       "amount": {
         "type": "String"

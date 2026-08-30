@@ -2397,9 +2397,10 @@ class AppLocalizationsHi extends AppLocalizations {
     String principal,
     String from,
     String to,
+    int days,
     String amount,
   ) {
-    return '$principal पर ब्याज ($from–$to) → $amount';
+    return '$principal पर ब्याज ($from–$to · $days दिन) → $amount';
   }
 
   @override
@@ -2407,9 +2408,10 @@ class AppLocalizationsHi extends AppLocalizations {
     String principal,
     String from,
     String to,
+    int days,
     String amount,
   ) {
-    return 'क्रेडिट $principal पर उल्टा ब्याज ($from–$to) → $amount';
+    return 'क्रेडिट $principal पर उल्टा ब्याज ($from–$to · $days दिन) → $amount';
   }
 
   @override

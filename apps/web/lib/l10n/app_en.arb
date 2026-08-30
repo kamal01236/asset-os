@@ -1590,7 +1590,7 @@
       }
     }
   },
-  "loanTimelineInterestSegment": "Interest on {principal} ({from}–{to}) → {amount}",
+  "loanTimelineInterestSegment": "Interest on {principal} ({from}–{to} · {days} days) → {amount}",
   "@loanTimelineInterestSegment": {
     "placeholders": {
       "principal": {
@@ -1602,12 +1602,15 @@
       "to": {
         "type": "String"
       },
+      "days": {
+        "type": "int"
+      },
       "amount": {
         "type": "String"
       }
     }
   },
-  "loanTimelineReverseInterestSegment": "Reverse interest on credit {principal} ({from}–{to}) → {amount}",
+  "loanTimelineReverseInterestSegment": "Reverse interest on credit {principal} ({from}–{to} · {days} days) → {amount}",
   "@loanTimelineReverseInterestSegment": {
     "placeholders": {
       "principal": {
@@ -1618,6 +1621,9 @@
       },
       "to": {
         "type": "String"
+      },
+      "days": {
+        "type": "int"
       },
       "amount": {
         "type": "String"

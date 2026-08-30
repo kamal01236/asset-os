@@ -2396,9 +2396,10 @@ class AppLocalizationsEn extends AppLocalizations {
     String principal,
     String from,
     String to,
+    int days,
     String amount,
   ) {
-    return 'Interest on $principal ($from–$to) → $amount';
+    return 'Interest on $principal ($from–$to · $days days) → $amount';
   }
 
   @override
@@ -2406,9 +2407,10 @@ class AppLocalizationsEn extends AppLocalizations {
     String principal,
     String from,
     String to,
+    int days,
     String amount,
   ) {
-    return 'Reverse interest on credit $principal ($from–$to) → $amount';
+    return 'Reverse interest on credit $principal ($from–$to · $days days) → $amount';
   }
 
   @override
