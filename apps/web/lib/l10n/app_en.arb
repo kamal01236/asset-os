@@ -1524,6 +1524,7 @@
       }
     }
   },
+  "loanLedgerHeaderDate": "Date",
   "loanLedgerHeaderParticulars": "Particulars",
   "loanLedgerHeaderAmount": "Amount",
   "loanLedgerHeaderBal": "Bal",

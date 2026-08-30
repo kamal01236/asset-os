@@ -76,10 +76,16 @@ void main() {
     expect(find.text(kAppDisplayName), findsOneWidget);
     expect(find.text(customer.name), findsWidgets);
     expect(find.text('Timeline'), findsOneWidget);
+    expect(find.text('Date'), findsOneWidget);
     expect(find.text('Particulars'), findsOneWidget);
+    expect(find.text('Amount'), findsOneWidget);
+    expect(find.text('Bal'), findsOneWidget);
     expect(find.text('Payment'), findsOneWidget);
     expect(find.textContaining('PAY-SNAP'), findsOneWidget);
-    expect(find.textContaining('Bal '), findsWidgets);
+    expect(find.text('+₹1000'), findsOneWidget);
+    expect(find.text('−₹250'), findsOneWidget);
+    expect(find.text('₹1000'), findsWidgets);
+    expect(find.text('₹750'), findsWidgets);
     expect(find.byIcon(Icons.edit_outlined), findsNothing);
 
     await tester.pumpWidget(const SizedBox.shrink());

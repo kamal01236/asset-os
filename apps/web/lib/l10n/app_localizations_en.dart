@@ -2293,6 +2293,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get loanLedgerHeaderDate => 'Date';
+
+  @override
   String get loanLedgerHeaderParticulars => 'Particulars';
 
   @override

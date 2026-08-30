@@ -254,6 +254,13 @@ class SetupSummary extends StatelessWidget {
 DateTime _loanLedgerDateOnly(DateTime value) =>
     DateTime(value.year, value.month, value.day);
 
+const double _kLoanLedgerDateWidth = 72;
+const double _kLoanLedgerMoneyWidth = 92;
+
+const List<FontFeature> _kLoanLedgerTabular = <FontFeature>[
+  FontFeature.tabularFigures(),
+];
+
 /// Signed money for ledger amount column (+ / − prefix).
 String loanLedgerSignedAmount(int signedPaise, {String currencyCode = 'INR'}) {
   final String money = formatMoney(
@@ -281,7 +288,7 @@ int loanLedgerSignedAmountPaise(LoanTimelineEvent event) {
   };
 }
 
-/// Column hint + day-grouped body rows + pending footer for loan timeline.
+/// Column hint + body rows + pending footer for loan timeline.
 List<Widget> buildLoanLedgerTimeline({
   required MoneyLoan loan,
   required LoanScenario scenario,
@@ -300,17 +307,16 @@ List<Widget> buildLoanLedgerTimeline({
   final List<Widget> children = <Widget>[
     const LoanLedgerColumnHeader(),
   ];
-  DateTime? currentDay;
+  DateTime? previousDay;
   for (final LoanTimelineEvent event in body) {
     final DateTime day = _loanLedgerDateOnly(event.at);
-    if (currentDay == null || currentDay != day) {
-      currentDay = day;
-      children.add(LoanLedgerDayHeader(date: day));
-    }
+    final bool showDate = previousDay == null || previousDay != day;
+    previousDay = day;
     children.add(
       TimelineRow(
         event: event,
         loan: loan,
+        dateText: showDate ? formatIndiaDate(day) : '',
         onEdit: onEdit,
       ),
     );
@@ -326,6 +332,98 @@ List<Widget> buildLoanLedgerTimeline({
   return children;
 }
 
+class _LoanLedgerGridRow extends StatelessWidget {
+  const _LoanLedgerGridRow({
+    required this.dateText,
+    required this.particulars,
+    required this.amountText,
+    required this.balText,
+    this.dateStyle,
+    this.amountStyle,
+    this.balStyle,
+    this.onTap,
+    this.tapTooltip,
+  });
+
+  final String dateText;
+  final Widget particulars;
+  final String amountText;
+  final String balText;
+  final TextStyle? dateStyle;
+  final TextStyle? amountStyle;
+  final TextStyle? balStyle;
+  final VoidCallback? onTap;
+  final String? tapTooltip;
+
+  Widget _fixedColumn({
+    required double width,
+    required String text,
+    required TextStyle? style,
+    required Alignment alignment,
+  }) {
+    if (text.isEmpty) {
+      return SizedBox(width: width);
+    }
+    return SizedBox(
+      width: width,
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        alignment: alignment,
+        child: Text(text, style: style),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ColorScheme scheme = Theme.of(context).colorScheme;
+    Widget row = Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          _fixedColumn(
+            width: _kLoanLedgerDateWidth,
+            text: dateText,
+            style: dateStyle,
+            alignment: Alignment.centerLeft,
+          ),
+          Expanded(child: particulars),
+          _fixedColumn(
+            width: _kLoanLedgerMoneyWidth,
+            text: amountText,
+            style: amountStyle,
+            alignment: Alignment.centerRight,
+          ),
+          _fixedColumn(
+            width: _kLoanLedgerMoneyWidth,
+            text: balText,
+            style: balStyle,
+            alignment: Alignment.centerRight,
+          ),
+        ],
+      ),
+    );
+    if (onTap != null) {
+      row = Material(
+        type: MaterialType.transparency,
+        child: InkWell(onTap: onTap, child: row),
+      );
+    }
+    if (tapTooltip != null) {
+      row = Tooltip(message: tapTooltip!, child: row);
+    }
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(color: scheme.outlineVariant, width: 0.5),
+        ),
+      ),
+      child: row,
+    );
+  }
+}
+
 class LoanLedgerColumnHeader extends StatelessWidget {
   const LoanLedgerColumnHeader({super.key});
 
@@ -336,44 +434,16 @@ class LoanLedgerColumnHeader extends StatelessWidget {
     final TextStyle? style = Theme.of(context).textTheme.labelSmall?.copyWith(
           color: scheme.onSurfaceVariant,
           fontWeight: FontWeight.w600,
+          fontFeatures: _kLoanLedgerTabular,
         );
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
-      child: Row(
-        children: <Widget>[
-          Expanded(child: Text(l10n.loanLedgerHeaderParticulars, style: style)),
-          Text(l10n.loanLedgerHeaderAmount, style: style),
-          const SizedBox(width: 12),
-          SizedBox(
-            width: 88,
-            child: Text(
-              l10n.loanLedgerHeaderBal,
-              style: style,
-              textAlign: TextAlign.end,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class LoanLedgerDayHeader extends StatelessWidget {
-  const LoanLedgerDayHeader({required this.date, super.key});
-
-  final DateTime date;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 10, bottom: 4),
-      child: Text(
-        formatIndiaDate(date),
-        style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-      ),
+    return _LoanLedgerGridRow(
+      dateText: l10n.loanLedgerHeaderDate,
+      particulars: Text(l10n.loanLedgerHeaderParticulars, style: style),
+      amountText: l10n.loanLedgerHeaderAmount,
+      balText: l10n.loanLedgerHeaderBal,
+      dateStyle: style,
+      amountStyle: style,
+      balStyle: style,
     );
   }
 }
@@ -391,50 +461,45 @@ class LoanLedgerPendingFooter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final AppLocalizations l10n = context.l10n;
+    final ColorScheme scheme = Theme.of(context).colorScheme;
+    final TextStyle? emphasis = Theme.of(context).textTheme.titleSmall?.copyWith(
+          fontWeight: FontWeight.w800,
+          fontFeatures: _kLoanLedgerTabular,
+        );
     final String label = event.amountPaise < 0
         ? l10n.loanOverpaidNowLabel
         : l10n.loanPendingNowLabel;
-    final String money = formatMoney(
-      event.amountPaise,
-      currencyCode: loan.currencyCode,
-    );
-    return Padding(
-      padding: const EdgeInsets.only(top: 12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.baseline,
-        textBaseline: TextBaseline.alphabetic,
-        children: <Widget>[
-          Expanded(
-            child: Text(
-              label,
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
-            ),
-          ),
-          Text(
-            money,
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
-          ),
-        ],
+    return _LoanLedgerGridRow(
+      dateText: '',
+      particulars: Text(label, style: emphasis),
+      amountText: '',
+      balText: formatMoney(
+        event.amountPaise,
+        currencyCode: loan.currencyCode,
       ),
+      dateStyle: Theme.of(context).textTheme.labelSmall?.copyWith(
+            color: scheme.onSurfaceVariant,
+            fontFeatures: _kLoanLedgerTabular,
+          ),
+      amountStyle: emphasis,
+      balStyle: emphasis,
     );
   }
 }
 
-/// Passbook-style ledger row: title / meta / signed amount / running Bal.
+/// Passbook-style ledger row: Date | Particulars | Amount | Bal.
 class TimelineRow extends StatelessWidget {
   const TimelineRow({
     required this.event,
     required this.loan,
+    required this.dateText,
     this.onEdit,
     super.key,
   });
 
   final LoanTimelineEvent event;
   final MoneyLoan loan;
+  final String dateText;
   final void Function(MoneyLoanEntry entry)? onEdit;
 
   @override
@@ -463,7 +528,7 @@ class TimelineRow extends StatelessWidget {
       metaParts.add(
         l10n.loanLedgerMetaOnPrincipal(
           formatMoney(
-            event.principalBasisPaise ?? 0,
+            (event.principalBasisPaise ?? 0).abs(),
             currencyCode: loan.currencyCode,
           ),
           formatIndiaDate(interestFrom),
@@ -503,8 +568,7 @@ class TimelineRow extends StatelessWidget {
         );
       }
     }
-    final String? meta =
-        metaParts.isEmpty ? null : metaParts.join(' · ');
+    final String? meta = metaParts.isEmpty ? null : metaParts.join(' · ');
 
     final int signedPaise = loanLedgerSignedAmountPaise(event);
     final String amountText = loanLedgerSignedAmount(
@@ -517,13 +581,11 @@ class TimelineRow extends StatelessWidget {
             ? scheme.error
             : scheme.onSurface;
 
-    final String? balText = event.balanceAfterPaise == null
-        ? null
-        : l10n.loanLedgerBalanceLabel(
-            formatMoney(
-              event.balanceAfterPaise!,
-              currencyCode: loan.currencyCode,
-            ),
+    final String balText = event.balanceAfterPaise == null
+        ? ''
+        : formatMoney(
+            event.balanceAfterPaise!,
+            currencyCode: loan.currencyCode,
           );
 
     MoneyLoanEntry? editableEntry;
@@ -539,63 +601,59 @@ class TimelineRow extends StatelessWidget {
       }
     }
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
+    return _LoanLedgerGridRow(
+      dateText: dateText,
+      particulars: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(
+          Row(
+            children: <Widget>[
+              Flexible(
+                child: Text(
                   title,
                   style: textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                if (meta != null) ...<Widget>[
-                  const SizedBox(height: 2),
-                  Text(
-                    meta,
-                    style: textTheme.bodySmall?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: <Widget>[
-              Text(
-                amountText,
-                style: textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: amountColor,
-                ),
               ),
-              if (balText != null) ...<Widget>[
-                const SizedBox(height: 2),
-                Text(
-                  balText,
-                  style: textTheme.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
+              if (editableEntry != null) ...<Widget>[
+                const SizedBox(width: 4),
+                Icon(
+                  Icons.edit_outlined,
+                  size: 16,
+                  color: scheme.onSurfaceVariant,
                 ),
               ],
             ],
           ),
-          if (editableEntry != null)
-            IconButton(
-              tooltip: l10n.loanEditEntryTooltip,
-              icon: const Icon(Icons.edit_outlined, size: 20),
-              onPressed: () => onEdit!(editableEntry!),
+          if (meta != null) ...<Widget>[
+            const SizedBox(height: 2),
+            Text(
+              meta,
+              style: textTheme.bodySmall?.copyWith(
+                color: scheme.onSurfaceVariant,
+              ),
             ),
+          ],
         ],
       ),
+      amountText: amountText,
+      balText: balText,
+      dateStyle: textTheme.labelSmall?.copyWith(
+        color: scheme.onSurfaceVariant,
+        fontFeatures: _kLoanLedgerTabular,
+      ),
+      amountStyle: textTheme.bodyMedium?.copyWith(
+        fontWeight: FontWeight.w700,
+        color: amountColor,
+        fontFeatures: _kLoanLedgerTabular,
+      ),
+      balStyle: textTheme.bodyMedium?.copyWith(
+        color: scheme.onSurfaceVariant,
+        fontFeatures: _kLoanLedgerTabular,
+      ),
+      onTap: editableEntry == null ? null : () => onEdit!(editableEntry!),
+      tapTooltip: editableEntry == null ? null : l10n.loanEditEntryTooltip,
     );
   }
 }

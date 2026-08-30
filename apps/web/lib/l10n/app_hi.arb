@@ -1524,6 +1524,7 @@
       }
     }
   },
+  "loanLedgerHeaderDate": "तिथि",
   "loanLedgerHeaderParticulars": "विवरण",
   "loanLedgerHeaderAmount": "राशि",
   "loanLedgerHeaderBal": "शेष",

@@ -329,14 +329,19 @@ void main() {
 
     await _pumpDetail(tester, container: container, loanId: loanId);
 
+    expect(find.text('Date'), findsOneWidget);
     expect(find.text('Particulars'), findsOneWidget);
     expect(find.text('Amount'), findsOneWidget);
+    expect(find.text('Bal'), findsOneWidget);
     expect(find.text('Principal'), findsOneWidget);
     expect(find.text('Payment'), findsOneWidget);
+    expect(find.text('01/01/2026'), findsWidgets);
+    expect(find.text('01/02/2026'), findsOneWidget);
     expect(find.text('+₹1000'), findsOneWidget);
     expect(find.text('−₹250'), findsOneWidget);
-    expect(find.text('Bal ₹1000'), findsOneWidget);
-    expect(find.text('Bal ₹750'), findsOneWidget);
+    expect(find.text('₹1000'), findsWidgets);
+    expect(find.text('₹750'), findsWidgets);
+    expect(find.text('Bal ₹1000'), findsNothing);
     expect(find.text('Pending now'), findsWidgets);
     expect(find.textContaining('LEDGER-PAY'), findsOneWidget);
 

@@ -4118,6 +4118,12 @@ abstract class AppLocalizations {
   /// **'Bal {amount}'**
   String loanLedgerBalanceLabel(String amount);
 
+  /// No description provided for @loanLedgerHeaderDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get loanLedgerHeaderDate;
+
   /// No description provided for @loanLedgerHeaderParticulars.
   ///
   /// In en, this message translates to:

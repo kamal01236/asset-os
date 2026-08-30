@@ -2293,6 +2293,9 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
+  String get loanLedgerHeaderDate => 'तिथि';
+
+  @override
   String get loanLedgerHeaderParticulars => 'विवरण';
 
   @override
