@@ -495,6 +495,14 @@ class _LoanCreateScreenState extends ConsumerState<LoanCreateScreen> {
                       child: Text(l10n.loanRateMonthly),
                     ),
                     DropdownMenuItem<MoneyRatePeriod>(
+                      value: MoneyRatePeriod.quarterly,
+                      child: Text(l10n.loanRateQuarterly),
+                    ),
+                    DropdownMenuItem<MoneyRatePeriod>(
+                      value: MoneyRatePeriod.halfYearly,
+                      child: Text(l10n.loanRateHalfYearly),
+                    ),
+                    DropdownMenuItem<MoneyRatePeriod>(
                       value: MoneyRatePeriod.yearly,
                       child: Text(l10n.loanRateYearly),
                     ),
@@ -606,6 +614,10 @@ class _LoanCreateScreenState extends ConsumerState<LoanCreateScreen> {
                 DropdownMenuItem<MoneyCapitalizationCycle>(
                   value: MoneyCapitalizationCycle.quarterly,
                   child: Text(l10n.loanCapCycleQuarterly),
+                ),
+                DropdownMenuItem<MoneyCapitalizationCycle>(
+                  value: MoneyCapitalizationCycle.halfYearly,
+                  child: Text(l10n.loanCapCycleHalfYearly),
                 ),
                 DropdownMenuItem<MoneyCapitalizationCycle>(
                   value: MoneyCapitalizationCycle.yearly,

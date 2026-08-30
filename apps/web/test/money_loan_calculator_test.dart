@@ -135,6 +135,62 @@ void main() {
         closeTo(15 / 365, 1e-9),
       );
     });
+
+    test('quarterly three months is 1.0', () {
+      expect(
+        accrualFraction(
+          from: DateTime(2026, 1, 1),
+          to: DateTime(2026, 4, 1),
+          ratePeriod: MoneyRatePeriod.quarterly,
+        ),
+        1.0,
+      );
+    });
+
+    test('halfYearly six months is 1.0', () {
+      expect(
+        accrualFraction(
+          from: DateTime(2026, 1, 1),
+          to: DateTime(2026, 7, 1),
+          ratePeriod: MoneyRatePeriod.halfYearly,
+        ),
+        1.0,
+      );
+    });
+  });
+
+  group('nextInterestPeriodEnd', () {
+    test('quarterly is +3 months', () {
+      expect(
+        nextInterestPeriodEnd(
+          DateTime(2026, 1, 1),
+          MoneyRatePeriod.quarterly,
+        ),
+        DateTime(2026, 4, 1),
+      );
+    });
+
+    test('halfYearly is +6 months', () {
+      expect(
+        nextInterestPeriodEnd(
+          DateTime(2026, 1, 1),
+          MoneyRatePeriod.halfYearly,
+        ),
+        DateTime(2026, 7, 1),
+      );
+    });
+  });
+
+  group('nextCapitalizationCycleEnd', () {
+    test('halfYearly is +6 months', () {
+      expect(
+        nextCapitalizationCycleEnd(
+          DateTime(2026, 1, 1),
+          MoneyCapitalizationCycle.halfYearly,
+        ),
+        DateTime(2026, 7, 1),
+      );
+    });
   });
 
   group('capitalization policies', () {
@@ -294,6 +350,8 @@ void main() {
       expect(caps.last.at, DateTime(2026, 7, 1));
       expect(asOfOct.remainingPrincipalPaise, lessThan(0));
       expect(asOfOct.unpaidInterestPaise, lessThan(0));
+      expect(asOfOct.reversePendingInterestPaise, -asOfOct.unpaidInterestPaise);
+      expect(asOfOct.pendingInterestPaise, 0);
     });
 
     test('onLoanClosure: capitalize at close', () {
@@ -449,6 +507,10 @@ void main() {
       expect(asOfOct.remainingPrincipalPaise, -1000000);
       expect(asOfOct.unpaidInterestPaise, 480000);
       expect(asOfOct.interestAccruedPaise, 480000);
+      expect(asOfOct.positiveInterestAccruedPaise, 510000);
+      expect(asOfOct.reverseInterestAccruedPaise, 30000);
+      expect(asOfOct.pendingInterestPaise, 480000);
+      expect(asOfOct.reversePendingInterestPaise, 0);
       expect(asOfOct.pendingPaise, -520000);
       expect(asOfOct.totalPaidPaise, 11000000);
 
@@ -1231,6 +1293,41 @@ void main() {
       expect(loan.interestAccrual, MoneyInterestAccrual.daily365);
     });
 
+    test('createMoneyLoan persists halfYearly rate and cap cycle', () async {
+      final LocalRepository repo = await bootRepo();
+      final customer = await ensureCustomer(repo);
+      final String loanId = await repo.createMoneyLoan(
+        customerId: customer.id,
+        direction: MoneyLoanDirection.given,
+        principalPaise: 100000,
+        interestStartedAt: DateTime(2026, 1, 1),
+        ratePeriod: MoneyRatePeriod.halfYearly,
+        capitalizationPolicy: MoneyCapitalizationPolicy.onScheduledCycle,
+        capitalizationCycle: MoneyCapitalizationCycle.halfYearly,
+      );
+      final MoneyLoan loan = (await repo.getMoneyLoan(loanId))!;
+      expect(loan.ratePeriod, MoneyRatePeriod.halfYearly);
+      expect(loan.capitalizationCycle, MoneyCapitalizationCycle.halfYearly);
+    });
+
+    test('createMoneyLoan persists quarterly ratePeriod', () async {
+      final LocalRepository repo = await bootRepo();
+      final customer = await ensureCustomer(repo);
+      final String loanId = await repo.createMoneyLoan(
+        customerId: customer.id,
+        direction: MoneyLoanDirection.given,
+        principalPaise: 100000,
+        interestStartedAt: DateTime(2026, 1, 1),
+        ratePeriod: MoneyRatePeriod.quarterly,
+      );
+      final MoneyLoan loan = (await repo.getMoneyLoan(loanId))!;
+      expect(loan.ratePeriod, MoneyRatePeriod.quarterly);
+      expect(
+        loan.capitalizationCycle,
+        MoneyCapitalizationCycle.quarterly,
+      );
+    });
+
     test('legacy rate_period daily reads as yearly + daily365', () async {
       final LocalRepository repo = await bootRepo();
       final customer = await ensureCustomer(repo);
@@ -1259,6 +1356,28 @@ void main() {
       expect(
         MoneyPrepaymentAllocation.parse('principalOnly'),
         MoneyPrepaymentAllocation.principalOnly,
+      );
+    });
+
+    test('MoneyRatePeriod.parse reads quarterly and halfYearly', () {
+      expect(MoneyRatePeriod.parse('quarterly'), MoneyRatePeriod.quarterly);
+      expect(MoneyRatePeriod.parse('halfYearly'), MoneyRatePeriod.halfYearly);
+      expect(MoneyRatePeriod.parse('unknown'), MoneyRatePeriod.monthly);
+    });
+
+    test('MoneyCapitalizationCycle.parse and fromRatePeriod cover halfYearly',
+        () {
+      expect(
+        MoneyCapitalizationCycle.parse('halfYearly'),
+        MoneyCapitalizationCycle.halfYearly,
+      );
+      expect(
+        MoneyCapitalizationCycle.fromRatePeriod(MoneyRatePeriod.quarterly),
+        MoneyCapitalizationCycle.quarterly,
+      );
+      expect(
+        MoneyCapitalizationCycle.fromRatePeriod(MoneyRatePeriod.halfYearly),
+        MoneyCapitalizationCycle.halfYearly,
       );
     });
   });

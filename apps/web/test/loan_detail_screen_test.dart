@@ -77,8 +77,8 @@ void main() {
 
       expect(find.text('Total principal'), findsOneWidget);
       expect(find.text('Pending principal'), findsOneWidget);
-      expect(find.text('Total interest'), findsOneWidget);
-      expect(find.text('Pending interest'), findsOneWidget);
+      expect(find.text('Total interest'), findsNothing);
+      expect(find.text('Pending interest'), findsNothing);
       expect(find.text('Paid'), findsOneWidget);
       expect(find.text('Adjustments'), findsOneWidget);
       expect(find.text('₹15000'), findsWidgets);
@@ -156,8 +156,8 @@ void main() {
 
     expect(find.text('कुल मूलधन'), findsOneWidget);
     expect(find.text('लंबित मूलधन'), findsOneWidget);
-    expect(find.text('कुल ब्याज'), findsOneWidget);
-    expect(find.text('लंबित ब्याज'), findsOneWidget);
+    expect(find.text('कुल ब्याज'), findsNothing);
+    expect(find.text('लंबित ब्याज'), findsNothing);
     expect(find.text('₹15000'), findsWidgets);
     expect(find.text('प्रारंभिक मूलधन'), findsNothing);
 

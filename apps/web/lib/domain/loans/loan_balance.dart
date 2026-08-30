@@ -78,6 +78,8 @@ class LoanScenario {
     required this.principalPaise,
     required this.totalPrincipalPaise,
     required this.interestAccruedPaise,
+    required this.positiveInterestAccruedPaise,
+    required this.reverseInterestAccruedPaise,
     required this.totalPaidPaise,
     required this.totalAdjustmentsPaise,
     required this.pendingPaise,
@@ -91,27 +93,79 @@ class LoanScenario {
   final int principalPaise;
   /// Create principal plus all disbursement entry amounts.
   final int totalPrincipalPaise;
+  /// Net interest accrued (positive − reverse).
   final int interestAccruedPaise;
+  /// Sum of positive accrual segments (≥ 0).
+  final int positiveInterestAccruedPaise;
+  /// Sum of absolute reverse accrual segments (≥ 0).
+  final int reverseInterestAccruedPaise;
   final int totalPaidPaise;
   /// Net adjustments (positive = forgiveness / credit).
   final int totalAdjustmentsPaise;
   final int pendingPaise;
   final int remainingPrincipalPaise;
+  /// Signed unpaid interest (ledger truth).
   final int unpaidInterestPaise;
   final DateTime asOf;
   final List<LoanTimelineEvent> timeline;
+
+  /// Positive unpaid interest owed (≥ 0).
+  int get pendingInterestPaise =>
+      unpaidInterestPaise > 0 ? unpaidInterestPaise : 0;
+
+  /// Absolute reverse unpaid interest credit (≥ 0).
+  int get reversePendingInterestPaise =>
+      unpaidInterestPaise < 0 ? -unpaidInterestPaise : 0;
 }
 
 DateTime _dateOnly(DateTime value) =>
     DateTime(value.year, value.month, value.day);
 
+int _calendarMonthsBetween(DateTime start, DateTime end) {
+  int months = (end.year - start.year) * 12 + (end.month - start.month);
+  if (end.day < start.day) {
+    months -= 1;
+  }
+  return months;
+}
+
+int _ratePeriodMonths(MoneyRatePeriod ratePeriod) {
+  return switch (ratePeriod) {
+    MoneyRatePeriod.monthly => 1,
+    MoneyRatePeriod.quarterly => 3,
+    MoneyRatePeriod.halfYearly => 6,
+    MoneyRatePeriod.yearly => 12,
+  };
+}
+
+/// Calendar months / [periodMonths], mirroring yearly (months / 12).
+///
+/// Partial first month falls back to days / period-days.
+double _calendarMonthFraction({
+  required DateTime start,
+  required DateTime end,
+  required DateTime boundary,
+  required int periodMonths,
+  required bool clampToPeriod,
+}) {
+  final int months = _calendarMonthsBetween(start, end);
+  if (months <= 0) {
+    final int periodDays = calendarDaysBetween(start, boundary);
+    final int elapsed = calendarDaysBetween(start, end);
+    if (periodDays <= 0) {
+      return 0.0;
+    }
+    final double fraction = elapsed / periodDays;
+    return clampToPeriod ? fraction.clamp(0.0, 1.0) : fraction;
+  }
+  final double fraction = months / periodMonths.toDouble();
+  return clampToPeriod ? fraction.clamp(0.0, 1.0) : fraction;
+}
+
 /// Next period anniversary after [from] for [ratePeriod].
 DateTime nextInterestPeriodEnd(DateTime from, MoneyRatePeriod ratePeriod) {
   final DateTime start = _dateOnly(from);
-  return switch (ratePeriod) {
-    MoneyRatePeriod.monthly => addCalendarMonths(start, 1),
-    MoneyRatePeriod.yearly => addCalendarMonths(start, 12),
-  };
+  return addCalendarMonths(start, _ratePeriodMonths(ratePeriod));
 }
 
 /// Next capitalization cycle anniversary after [from].
@@ -123,14 +177,16 @@ DateTime nextCapitalizationCycleEnd(
   return switch (cycle) {
     MoneyCapitalizationCycle.monthly => addCalendarMonths(start, 1),
     MoneyCapitalizationCycle.quarterly => addCalendarMonths(start, 3),
+    MoneyCapitalizationCycle.halfYearly => addCalendarMonths(start, 6),
     MoneyCapitalizationCycle.yearly => addCalendarMonths(start, 12),
   };
 }
 
 /// Fraction of one interest period elapsed from [periodStart] to [at].
 ///
-/// Yearly: calendar months / 12 (6 months → 0.5). Partial first month falls
-/// back to days / year length. Monthly: days / days-in-period.
+/// Yearly / half-yearly / quarterly: calendar months / 12, 6, or 3.
+/// Partial first month falls back to days / period length. Monthly: days /
+/// days-in-period.
 double periodElapsedFraction({
   required DateTime periodStart,
   required DateTime at,
@@ -145,20 +201,15 @@ double periodElapsedFraction({
   }
   switch (ratePeriod) {
     case MoneyRatePeriod.yearly:
-      int months =
-          (end.year - start.year) * 12 + (end.month - start.month);
-      if (end.day < start.day) {
-        months -= 1;
-      }
-      if (months <= 0) {
-        final int yearDays = calendarDaysBetween(start, boundary);
-        final int elapsed = calendarDaysBetween(start, end);
-        if (yearDays <= 0) {
-          return 0.0;
-        }
-        return (elapsed / yearDays).clamp(0.0, 1.0);
-      }
-      return (months / 12.0).clamp(0.0, 1.0);
+    case MoneyRatePeriod.halfYearly:
+    case MoneyRatePeriod.quarterly:
+      return _calendarMonthFraction(
+        start: start,
+        end: end,
+        boundary: boundary,
+        periodMonths: _ratePeriodMonths(ratePeriod),
+        clampToPeriod: true,
+      );
     case MoneyRatePeriod.monthly:
       final int periodDays = calendarDaysBetween(start, boundary);
       final int elapsed = calendarDaysBetween(start, end);
@@ -172,8 +223,8 @@ double periodElapsedFraction({
 /// Accrual fraction of rate periods between arbitrary [from] and [to].
 ///
 /// [MoneyInterestAccrual.daily365] uses calendar days / 365 against the stored
-/// rate. Calendar accrual: yearly uses whole calendar months / 12; monthly
-/// walks month boundaries from [from].
+/// rate. Calendar accrual: yearly / half-yearly / quarterly use whole calendar
+/// months / 12, 6, or 3; monthly walks month boundaries from [from].
 double accrualFraction({
   required DateTime from,
   required DateTime to,
@@ -190,22 +241,15 @@ double accrualFraction({
   }
   switch (ratePeriod) {
     case MoneyRatePeriod.yearly:
-      int months =
-          (end.year - start.year) * 12 + (end.month - start.month);
-      if (end.day < start.day) {
-        months -= 1;
-      }
-      if (months <= 0) {
-        final DateTime yearEnd =
-            nextInterestPeriodEnd(start, MoneyRatePeriod.yearly);
-        final int yearDays = calendarDaysBetween(start, yearEnd);
-        final int elapsed = calendarDaysBetween(start, end);
-        if (yearDays <= 0) {
-          return 0.0;
-        }
-        return elapsed / yearDays;
-      }
-      return months / 12.0;
+    case MoneyRatePeriod.halfYearly:
+    case MoneyRatePeriod.quarterly:
+      return _calendarMonthFraction(
+        start: start,
+        end: end,
+        boundary: nextInterestPeriodEnd(start, ratePeriod),
+        periodMonths: _ratePeriodMonths(ratePeriod),
+        clampToPeriod: false,
+      );
     case MoneyRatePeriod.monthly:
       double fraction = 0.0;
       DateTime cursor = start;
@@ -479,6 +523,8 @@ LoanScenario computeLoanScenario({
 
   final LedgerState state = LedgerState();
   int interestAccrued = 0;
+  int positiveInterestAccrued = 0;
+  int reverseInterestAccrued = 0;
   int totalPaid = 0;
   int totalAdjustments = 0;
   DateTime? cursor;
@@ -503,6 +549,11 @@ LoanScenario computeLoanScenario({
         interestAccrual: loan.interestAccrual,
       );
       if (interest != 0) {
+        if (interest > 0) {
+          positiveInterestAccrued += interest;
+        } else {
+          reverseInterestAccrued += -interest;
+        }
         interestAccrued += interest;
         state.unpaidInterest += interest;
         timeline.add(
@@ -691,6 +742,8 @@ LoanScenario computeLoanScenario({
     principalPaise: loan.principalPaise,
     totalPrincipalPaise: totalPrincipalPaise,
     interestAccruedPaise: interestAccrued,
+    positiveInterestAccruedPaise: positiveInterestAccrued,
+    reverseInterestAccruedPaise: reverseInterestAccrued,
     totalPaidPaise: totalPaid,
     totalAdjustmentsPaise: totalAdjustments,
     pendingPaise: pending,

@@ -2149,6 +2149,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loanCapCycleQuarterly => 'Quarterly';
 
   @override
+  String get loanCapCycleHalfYearly => 'Half-yearly';
+
+  @override
   String get loanCapCycleYearly => 'Yearly';
 
   @override
@@ -2188,6 +2191,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get loanRateMonthly => 'Monthly';
+
+  @override
+  String get loanRateQuarterly => 'Quarterly';
+
+  @override
+  String get loanRateHalfYearly => 'Half-yearly';
 
   @override
   String get loanRateYearly => 'Yearly';
@@ -2242,6 +2251,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get loanReverseInterestToDateLabel => 'Reverse interest to date';
+
+  @override
+  String get loanReversePendingInterestLabel => 'Reverse pending interest';
 
   @override
   String get loanPaidLabel => 'Paid';

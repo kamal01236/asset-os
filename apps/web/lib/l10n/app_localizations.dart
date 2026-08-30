@@ -3724,6 +3724,12 @@ abstract class AppLocalizations {
   /// **'Quarterly'**
   String get loanCapCycleQuarterly;
 
+  /// No description provided for @loanCapCycleHalfYearly.
+  ///
+  /// In en, this message translates to:
+  /// **'Half-yearly'**
+  String get loanCapCycleHalfYearly;
+
   /// No description provided for @loanCapCycleYearly.
   ///
   /// In en, this message translates to:
@@ -3801,6 +3807,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Monthly'**
   String get loanRateMonthly;
+
+  /// No description provided for @loanRateQuarterly.
+  ///
+  /// In en, this message translates to:
+  /// **'Quarterly'**
+  String get loanRateQuarterly;
+
+  /// No description provided for @loanRateHalfYearly.
+  ///
+  /// In en, this message translates to:
+  /// **'Half-yearly'**
+  String get loanRateHalfYearly;
 
   /// No description provided for @loanRateYearly.
   ///
@@ -3894,6 +3912,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Reverse interest to date'**
   String get loanReverseInterestToDateLabel;
+
+  /// No description provided for @loanReversePendingInterestLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Reverse pending interest'**
+  String get loanReversePendingInterestLabel;
 
   /// No description provided for @loanPaidLabel.
   ///

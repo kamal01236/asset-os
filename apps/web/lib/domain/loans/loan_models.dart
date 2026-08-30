@@ -32,11 +32,19 @@ enum MoneyInterestKind {
 /// Legacy stored `daily` migrates to [yearly] with [MoneyInterestAccrual.daily365].
 enum MoneyRatePeriod {
   monthly,
+  quarterly,
+  halfYearly,
   yearly;
 
   static MoneyRatePeriod parse(String? raw) {
     if (raw == MoneyRatePeriod.yearly.name || raw == 'daily') {
       return MoneyRatePeriod.yearly;
+    }
+    if (raw == MoneyRatePeriod.quarterly.name) {
+      return MoneyRatePeriod.quarterly;
+    }
+    if (raw == MoneyRatePeriod.halfYearly.name) {
+      return MoneyRatePeriod.halfYearly;
     }
     return MoneyRatePeriod.monthly;
   }
@@ -44,7 +52,8 @@ enum MoneyRatePeriod {
 
 /// How elapsed time is converted into a rate-period fraction.
 ///
-/// [calendar] uses monthly/yearly calendar logic from [MoneyRatePeriod].
+/// [calendar] uses monthly/quarterly/half-yearly/yearly calendar logic
+/// from [MoneyRatePeriod].
 /// [daily365] uses ACT/365 (`days / 365`) against the stored rate.
 enum MoneyInterestAccrual {
   calendar,
@@ -106,11 +115,15 @@ enum MoneyCapitalizationPolicy {
 enum MoneyCapitalizationCycle {
   monthly,
   quarterly,
+  halfYearly,
   yearly;
 
   static MoneyCapitalizationCycle parse(String? raw) {
     if (raw == MoneyCapitalizationCycle.quarterly.name) {
       return MoneyCapitalizationCycle.quarterly;
+    }
+    if (raw == MoneyCapitalizationCycle.halfYearly.name) {
+      return MoneyCapitalizationCycle.halfYearly;
     }
     if (raw == MoneyCapitalizationCycle.yearly.name) {
       return MoneyCapitalizationCycle.yearly;
@@ -122,6 +135,8 @@ enum MoneyCapitalizationCycle {
   static MoneyCapitalizationCycle fromRatePeriod(MoneyRatePeriod period) {
     return switch (period) {
       MoneyRatePeriod.yearly => MoneyCapitalizationCycle.yearly,
+      MoneyRatePeriod.halfYearly => MoneyCapitalizationCycle.halfYearly,
+      MoneyRatePeriod.quarterly => MoneyCapitalizationCycle.quarterly,
       MoneyRatePeriod.monthly => MoneyCapitalizationCycle.monthly,
     };
   }

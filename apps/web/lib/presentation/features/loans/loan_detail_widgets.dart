@@ -118,24 +118,42 @@ class CurrentScenarioCard extends StatelessWidget {
                 currencyCode: loan.currencyCode,
               ),
             ),
-            loanDetailKv(
-              context,
-              scenario.interestAccruedPaise < 0
-                  ? l10n.loanReverseInterestToDateLabel
-                  : l10n.loanTotalInterestLabel,
-              formatMoney(
-                scenario.interestAccruedPaise,
-                currencyCode: loan.currencyCode,
+            if (scenario.positiveInterestAccruedPaise > 0)
+              loanDetailKv(
+                context,
+                l10n.loanTotalInterestLabel,
+                formatMoney(
+                  scenario.positiveInterestAccruedPaise,
+                  currencyCode: loan.currencyCode,
+                ),
               ),
-            ),
-            loanDetailKv(
-              context,
-              l10n.loanPendingInterestLabel,
-              formatMoney(
-                scenario.unpaidInterestPaise,
-                currencyCode: loan.currencyCode,
+            if (scenario.reverseInterestAccruedPaise > 0)
+              loanDetailKv(
+                context,
+                l10n.loanReverseInterestToDateLabel,
+                formatMoney(
+                  scenario.reverseInterestAccruedPaise,
+                  currencyCode: loan.currencyCode,
+                ),
               ),
-            ),
+            if (scenario.pendingInterestPaise > 0)
+              loanDetailKv(
+                context,
+                l10n.loanPendingInterestLabel,
+                formatMoney(
+                  scenario.pendingInterestPaise,
+                  currencyCode: loan.currencyCode,
+                ),
+              ),
+            if (scenario.reversePendingInterestPaise > 0)
+              loanDetailKv(
+                context,
+                l10n.loanReversePendingInterestLabel,
+                formatMoney(
+                  scenario.reversePendingInterestPaise,
+                  currencyCode: loan.currencyCode,
+                ),
+              ),
             loanDetailKv(
               context,
               l10n.loanPaidLabel,
@@ -167,6 +185,8 @@ class SetupSummary extends StatelessWidget {
     final double ratePct = loan.rateBps / 100.0;
     final String periodBase = switch (loan.ratePeriod) {
       MoneyRatePeriod.monthly => l10n.loanRateMonthly,
+      MoneyRatePeriod.quarterly => l10n.loanRateQuarterly,
+      MoneyRatePeriod.halfYearly => l10n.loanRateHalfYearly,
       MoneyRatePeriod.yearly => l10n.loanRateYearly,
     };
     final String period =

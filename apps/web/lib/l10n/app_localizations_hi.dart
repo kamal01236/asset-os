@@ -2149,6 +2149,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get loanCapCycleQuarterly => 'तिमाही';
 
   @override
+  String get loanCapCycleHalfYearly => 'अर्धवार्षिक';
+
+  @override
   String get loanCapCycleYearly => 'वार्षिक';
 
   @override
@@ -2188,6 +2191,12 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get loanRateMonthly => 'मासिक';
+
+  @override
+  String get loanRateQuarterly => 'तिमाही';
+
+  @override
+  String get loanRateHalfYearly => 'अर्धवार्षिक';
 
   @override
   String get loanRateYearly => 'वार्षिक';
@@ -2242,6 +2251,9 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get loanReverseInterestToDateLabel => 'अब तक का उल्टा ब्याज';
+
+  @override
+  String get loanReversePendingInterestLabel => 'लंबित उल्टा ब्याज';
 
   @override
   String get loanPaidLabel => 'भुगतान';

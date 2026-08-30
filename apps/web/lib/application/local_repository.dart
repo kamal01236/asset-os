@@ -33,6 +33,7 @@ export '../domain/loans/loan_balance.dart'
         accrualFraction,
         signedInterestPaise,
         nextInterestPeriodEnd,
+        nextCapitalizationCycleEnd,
         LoanScenario,
         LoanTimelineEvent,
         LoanTimelineKind;
