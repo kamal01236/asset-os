@@ -527,7 +527,7 @@ void main() {
       expect(segments[2].amountPaise, -30000);
     });
 
-    test('interest segment day span matches calendarDaysBetween and l10n', () {
+    test('interest segment day span matches calendarDaysBetween', () {
       final MoneyLoan loan = _loan(
         id: 'MLN-days',
         principalPaise: 1000000,
@@ -550,28 +550,111 @@ void main() {
       expect(segment.through, DateTime(2026, 2, 1));
       final int days = calendarDaysBetween(segment.from!, segment.through!);
       expect(days, 31);
+      expect(segment.amountPaise, 10000);
+      expect(segment.principalBasisPaise, 1000000);
+      expect(segment.balanceAfterPaise, 1010000);
 
       final AppLocalizationsEn l10n = AppLocalizationsEn();
+      expect(l10n.loanLedgerInterest, 'Interest');
+      expect(l10n.loanLedgerReverseInterest, 'Reverse interest');
       expect(
-        l10n.loanTimelineInterestSegment(
-          '₹10,000',
+        l10n.loanLedgerMetaOnPrincipal(
+          '₹10000',
           '01/01/2026',
           '01/02/2026',
           days,
-          '₹100',
         ),
-        'Interest on ₹10,000 (01/01/2026–01/02/2026 · 31 days) → ₹100',
+        'on ₹10000 · 01/01/2026–01/02/2026 · 31 days',
       );
-      expect(
-        l10n.loanTimelineReverseInterestSegment(
-          '₹1,000',
-          '01/07/2026',
-          '01/10/2026',
-          92,
-          '₹30',
-        ),
-        'Reverse interest on credit ₹1,000 (01/07/2026–01/10/2026 · 92 days) → ₹30',
+    });
+
+    test('balanceAfterPaise tracks outstanding after each event', () {
+      final MoneyLoan loan = _loan(
+        id: 'MLN-bal',
+        principalPaise: 1000000,
+        rateBps: 1200,
+        ratePeriod: MoneyRatePeriod.yearly,
+        startedAt: DateTime(2026, 1, 1),
+        capitalizationPolicy: MoneyCapitalizationPolicy.never,
+        createdAt: DateTime(2026, 3, 1),
+        entries: <MoneyLoanEntry>[
+          MoneyLoanEntry(
+            id: 'E-pay',
+            loanId: 'MLN-bal',
+            entryAt: DateTime(2026, 2, 1),
+            amountPaise: 300000,
+            kind: MoneyLoanEntryKind.repayment,
+          ),
+        ],
       );
+
+      final LoanScenario scenario = computeLoanScenario(
+        loan: loan,
+        now: DateTime(2026, 2, 1),
+      );
+
+      final LoanTimelineEvent principal = scenario.timeline.firstWhere(
+        (LoanTimelineEvent e) => e.kind == LoanTimelineKind.disbursement,
+      );
+      expect(principal.amountPaise, 1000000);
+      expect(principal.balanceAfterPaise, 1000000);
+
+      final LoanTimelineEvent interest = scenario.timeline.firstWhere(
+        (LoanTimelineEvent e) => e.kind == LoanTimelineKind.interestSegment,
+      );
+      expect(interest.amountPaise, 10000);
+      expect(interest.balanceAfterPaise, 1010000);
+
+      final LoanTimelineEvent payment = scenario.timeline.firstWhere(
+        (LoanTimelineEvent e) => e.kind == LoanTimelineKind.payment,
+      );
+      expect(payment.amountPaise, 300000);
+      expect(payment.balanceAfterPaise, 710000);
+      expect(scenario.pendingPaise, 710000);
+
+      final LoanTimelineEvent pending = scenario.timeline.lastWhere(
+        (LoanTimelineEvent e) => e.kind == LoanTimelineKind.pendingAsOf,
+      );
+      expect(pending.amountPaise, 710000);
+      expect(pending.balanceAfterPaise, 710000);
+    });
+
+    test('balanceAfterPaise follows overpay outstanding', () {
+      final MoneyLoan loan = _loan(
+        id: 'MLN-over',
+        principalPaise: 1000000,
+        rateBps: 0,
+        ratePeriod: MoneyRatePeriod.yearly,
+        startedAt: DateTime(2026, 1, 1),
+        capitalizationPolicy: MoneyCapitalizationPolicy.never,
+        createdAt: DateTime(2026, 2, 1),
+        entries: <MoneyLoanEntry>[
+          MoneyLoanEntry(
+            id: 'E-over',
+            loanId: 'MLN-over',
+            entryAt: DateTime(2026, 1, 15),
+            amountPaise: 1500000,
+            kind: MoneyLoanEntryKind.repayment,
+          ),
+        ],
+      );
+
+      final LoanScenario scenario = computeLoanScenario(
+        loan: loan,
+        now: DateTime(2026, 2, 1),
+      );
+      expect(scenario.pendingPaise, -500000);
+
+      final LoanTimelineEvent payment = scenario.timeline.firstWhere(
+        (LoanTimelineEvent e) => e.kind == LoanTimelineKind.payment,
+      );
+      expect(payment.balanceAfterPaise, -500000);
+
+      final LoanTimelineEvent pending = scenario.timeline.lastWhere(
+        (LoanTimelineEvent e) => e.kind == LoanTimelineKind.pendingAsOf,
+      );
+      expect(pending.balanceAfterPaise, -500000);
+      expect(pending.amountPaise, pending.balanceAfterPaise);
     });
 
     test('entry dated before start participates', () {

@@ -76,9 +76,10 @@ class _LoanDetailScreenState extends ConsumerState<LoanDetailScreen> {
             break;
           }
         }
+        final MoneyLoan currentLoan = loan;
         final LoanScenario scenario =
-            computeLoanScenario(loan: loan, now: DateTime.now());
-        final bool pending = loan.status == MoneyLoanStatus.pending;
+            computeLoanScenario(loan: currentLoan, now: DateTime.now());
+        final bool pending = currentLoan.status == MoneyLoanStatus.pending;
 
         return Scaffold(
           appBar: AppBar(
@@ -139,17 +140,15 @@ class _LoanDetailScreenState extends ConsumerState<LoanDetailScreen> {
                 ],
               ),
               const SizedBox(height: 8),
-              ...scenario.timeline.map(
-                (LoanTimelineEvent e) => TimelineRow(
-                  event: e,
-                  loan: loan!,
-                  onEdit: pending
-                      ? (MoneyLoanEntry entry) => _showCashEntrySheet(
-                            loan: loan!,
-                            existing: entry,
-                          )
-                      : null,
-                ),
+              ...buildLoanLedgerTimeline(
+                loan: currentLoan,
+                scenario: scenario,
+                onEdit: pending
+                    ? (MoneyLoanEntry entry) => _showCashEntrySheet(
+                          loan: currentLoan,
+                          existing: entry,
+                        )
+                    : null,
               ),
               if (pending) ...<Widget>[
                 const SizedBox(height: 16),

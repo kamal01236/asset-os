@@ -1712,12 +1712,14 @@ class AppLocalizationsHi extends AppLocalizations {
   String get catalogResourceTypeLabel => 'संसाधन प्रकार';
 
   @override
-  String subscriptionChipOk(String tier, String date) =>
-      '$tier $date तक — जारी कर सकते हैं';
+  String subscriptionChipOk(String tier, String date) {
+    return '$tier $date तक — जारी कर सकते हैं';
+  }
 
   @override
-  String subscriptionChipUncovered(String tier) =>
-      'इन वस्तुओं के लिए ग्राहक को $tier (या उससे ऊपर) चाहिए।';
+  String subscriptionChipUncovered(String tier) {
+    return 'इन वस्तुओं के लिए ग्राहक को $tier (या उससे ऊपर) चाहिए।';
+  }
 
   @override
   String get subscriptionUpsellLabel => 'इस ऑर्डर में सदस्यता जोड़ें';
@@ -1739,11 +1741,14 @@ class AppLocalizationsHi extends AppLocalizations {
   String get subscriptionStatusExpired => 'समाप्त';
 
   @override
-  String customerSubscriptionMeta(String tier, String date) => '$tier · $date';
+  String customerSubscriptionMeta(String tier, String date) {
+    return '$tier · $date';
+  }
 
   @override
-  String subscriptionUntilLabel(String tier, String date) =>
-      '$tier $date तक';
+  String subscriptionUntilLabel(String tier, String date) {
+    return '$tier $date तक';
+  }
 
   @override
   String get orderPaymentTitle => 'भुगतान';
@@ -2263,6 +2268,53 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get loanTimelineHeading => 'समयरेखा';
+
+  @override
+  String get loanLedgerInterest => 'ब्याज';
+
+  @override
+  String get loanLedgerReverseInterest => 'उल्टा ब्याज';
+
+  @override
+  String get loanLedgerPayment => 'भुगतान';
+
+  @override
+  String get loanLedgerPrincipal => 'मूलधन';
+
+  @override
+  String get loanLedgerAdjustment => 'समायोजन';
+
+  @override
+  String get loanLedgerCapitalized => 'पूंजीकृत';
+
+  @override
+  String loanLedgerBalanceLabel(String amount) {
+    return 'शेष $amount';
+  }
+
+  @override
+  String get loanLedgerHeaderParticulars => 'विवरण';
+
+  @override
+  String get loanLedgerHeaderAmount => 'राशि';
+
+  @override
+  String get loanLedgerHeaderBal => 'शेष';
+
+  @override
+  String loanLedgerMetaOnPrincipal(
+    String principal,
+    String from,
+    String to,
+    int days,
+  ) {
+    return '$principal पर · $from–$to · $days दिन';
+  }
+
+  @override
+  String loanLedgerMetaToInterestPrincipal(String interest, String principal) {
+    return 'ब्याज $interest · मूलधन $principal';
+  }
 
   @override
   String get loanShareTimelineTooltip => 'समयरेखा साझा करें';

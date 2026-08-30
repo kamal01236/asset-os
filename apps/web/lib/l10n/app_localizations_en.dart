@@ -1659,7 +1659,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get commercialSubscriptionHint =>
-      'Add a membership line or collect security to continue.';
+      'Add a covering subscription on this order, or collect security when allowed.';
 
   @override
   String get commercialSubscriptionSatisfied =>
@@ -1712,12 +1712,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get catalogResourceTypeLabel => 'Resource type';
 
   @override
-  String subscriptionChipOk(String tier, String date) =>
-      '$tier until $date — OK to issue';
+  String subscriptionChipOk(String tier, String date) {
+    return '$tier until $date — OK to issue';
+  }
 
   @override
-  String subscriptionChipUncovered(String tier) =>
-      'Customer needs $tier (or higher) to issue these items.';
+  String subscriptionChipUncovered(String tier) {
+    return 'Customer needs $tier (or higher) to issue these items.';
+  }
 
   @override
   String get subscriptionUpsellLabel => 'Add subscription to this order';
@@ -1739,11 +1741,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get subscriptionStatusExpired => 'Expired';
 
   @override
-  String customerSubscriptionMeta(String tier, String date) => '$tier · $date';
+  String customerSubscriptionMeta(String tier, String date) {
+    return '$tier · $date';
+  }
 
   @override
-  String subscriptionUntilLabel(String tier, String date) =>
-      '$tier until $date';
+  String subscriptionUntilLabel(String tier, String date) {
+    return '$tier until $date';
+  }
 
   @override
   String get orderPaymentTitle => 'Payment';
@@ -2263,6 +2268,53 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get loanTimelineHeading => 'Timeline';
+
+  @override
+  String get loanLedgerInterest => 'Interest';
+
+  @override
+  String get loanLedgerReverseInterest => 'Reverse interest';
+
+  @override
+  String get loanLedgerPayment => 'Payment';
+
+  @override
+  String get loanLedgerPrincipal => 'Principal';
+
+  @override
+  String get loanLedgerAdjustment => 'Adjustment';
+
+  @override
+  String get loanLedgerCapitalized => 'Capitalized';
+
+  @override
+  String loanLedgerBalanceLabel(String amount) {
+    return 'Bal $amount';
+  }
+
+  @override
+  String get loanLedgerHeaderParticulars => 'Particulars';
+
+  @override
+  String get loanLedgerHeaderAmount => 'Amount';
+
+  @override
+  String get loanLedgerHeaderBal => 'Bal';
+
+  @override
+  String loanLedgerMetaOnPrincipal(
+    String principal,
+    String from,
+    String to,
+    int days,
+  ) {
+    return 'on $principal · $from–$to · $days days';
+  }
+
+  @override
+  String loanLedgerMetaToInterestPrincipal(String interest, String principal) {
+    return 'to interest $interest · to principal $principal';
+  }
 
   @override
   String get loanShareTimelineTooltip => 'Share timeline';

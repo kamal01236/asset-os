@@ -92,12 +92,9 @@ class LoanTimelineShareSnapshot extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 8),
-              ...scenario.timeline.map(
-                (LoanTimelineEvent e) => TimelineRow(
-                  event: e,
-                  loan: loan,
-                  onEdit: null,
-                ),
+              ...buildLoanLedgerTimeline(
+                loan: loan,
+                scenario: scenario,
               ),
             ],
           ),

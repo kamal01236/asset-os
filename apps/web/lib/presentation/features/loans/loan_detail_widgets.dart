@@ -251,6 +251,180 @@ class SetupSummary extends StatelessWidget {
   }
 }
 
+DateTime _loanLedgerDateOnly(DateTime value) =>
+    DateTime(value.year, value.month, value.day);
+
+/// Signed money for ledger amount column (+ / − prefix).
+String loanLedgerSignedAmount(int signedPaise, {String currencyCode = 'INR'}) {
+  final String money = formatMoney(
+    signedPaise.abs(),
+    currencyCode: currencyCode,
+  );
+  if (signedPaise > 0) {
+    return '+$money';
+  }
+  if (signedPaise < 0) {
+    return '−$money';
+  }
+  return money;
+}
+
+/// Effect of [event] on outstanding for the amount column.
+int loanLedgerSignedAmountPaise(LoanTimelineEvent event) {
+  return switch (event.kind) {
+    LoanTimelineKind.interestSegment => event.amountPaise,
+    LoanTimelineKind.interestCapitalized => event.amountPaise,
+    LoanTimelineKind.payment => -event.amountPaise,
+    LoanTimelineKind.disbursement => event.amountPaise,
+    LoanTimelineKind.adjustment => -event.amountPaise,
+    LoanTimelineKind.pendingAsOf => event.amountPaise,
+  };
+}
+
+/// Column hint + day-grouped body rows + pending footer for loan timeline.
+List<Widget> buildLoanLedgerTimeline({
+  required MoneyLoan loan,
+  required LoanScenario scenario,
+  void Function(MoneyLoanEntry entry)? onEdit,
+}) {
+  final List<LoanTimelineEvent> body = <LoanTimelineEvent>[];
+  LoanTimelineEvent? pending;
+  for (final LoanTimelineEvent event in scenario.timeline) {
+    if (event.kind == LoanTimelineKind.pendingAsOf) {
+      pending = event;
+    } else {
+      body.add(event);
+    }
+  }
+
+  final List<Widget> children = <Widget>[
+    const LoanLedgerColumnHeader(),
+  ];
+  DateTime? currentDay;
+  for (final LoanTimelineEvent event in body) {
+    final DateTime day = _loanLedgerDateOnly(event.at);
+    if (currentDay == null || currentDay != day) {
+      currentDay = day;
+      children.add(LoanLedgerDayHeader(date: day));
+    }
+    children.add(
+      TimelineRow(
+        event: event,
+        loan: loan,
+        onEdit: onEdit,
+      ),
+    );
+  }
+  if (pending != null) {
+    children.add(
+      LoanLedgerPendingFooter(
+        event: pending,
+        loan: loan,
+      ),
+    );
+  }
+  return children;
+}
+
+class LoanLedgerColumnHeader extends StatelessWidget {
+  const LoanLedgerColumnHeader({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final AppLocalizations l10n = context.l10n;
+    final ColorScheme scheme = Theme.of(context).colorScheme;
+    final TextStyle? style = Theme.of(context).textTheme.labelSmall?.copyWith(
+          color: scheme.onSurfaceVariant,
+          fontWeight: FontWeight.w600,
+        );
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        children: <Widget>[
+          Expanded(child: Text(l10n.loanLedgerHeaderParticulars, style: style)),
+          Text(l10n.loanLedgerHeaderAmount, style: style),
+          const SizedBox(width: 12),
+          SizedBox(
+            width: 88,
+            child: Text(
+              l10n.loanLedgerHeaderBal,
+              style: style,
+              textAlign: TextAlign.end,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class LoanLedgerDayHeader extends StatelessWidget {
+  const LoanLedgerDayHeader({required this.date, super.key});
+
+  final DateTime date;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 10, bottom: 4),
+      child: Text(
+        formatIndiaDate(date),
+        style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+      ),
+    );
+  }
+}
+
+class LoanLedgerPendingFooter extends StatelessWidget {
+  const LoanLedgerPendingFooter({
+    required this.event,
+    required this.loan,
+    super.key,
+  });
+
+  final LoanTimelineEvent event;
+  final MoneyLoan loan;
+
+  @override
+  Widget build(BuildContext context) {
+    final AppLocalizations l10n = context.l10n;
+    final String label = event.amountPaise < 0
+        ? l10n.loanOverpaidNowLabel
+        : l10n.loanPendingNowLabel;
+    final String money = formatMoney(
+      event.amountPaise,
+      currencyCode: loan.currencyCode,
+    );
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.baseline,
+        textBaseline: TextBaseline.alphabetic,
+        children: <Widget>[
+          Expanded(
+            child: Text(
+              label,
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+            ),
+          ),
+          Text(
+            money,
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Passbook-style ledger row: title / meta / signed amount / running Bal.
 class TimelineRow extends StatelessWidget {
   const TimelineRow({
     required this.event,
@@ -266,72 +440,92 @@ class TimelineRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final AppLocalizations l10n = context.l10n;
-    final String money = formatMoney(
-      event.amountPaise,
+    final ColorScheme scheme = Theme.of(context).colorScheme;
+    final TextTheme textTheme = Theme.of(context).textTheme;
+
+    final String title = switch (event.kind) {
+      LoanTimelineKind.interestSegment => event.amountPaise < 0
+          ? l10n.loanLedgerReverseInterest
+          : l10n.loanLedgerInterest,
+      LoanTimelineKind.interestCapitalized => l10n.loanLedgerCapitalized,
+      LoanTimelineKind.payment => l10n.loanLedgerPayment,
+      LoanTimelineKind.disbursement => l10n.loanLedgerPrincipal,
+      LoanTimelineKind.adjustment => l10n.loanLedgerAdjustment,
+      LoanTimelineKind.pendingAsOf => event.amountPaise < 0
+          ? l10n.loanOverpaidNowLabel
+          : l10n.loanPendingNowLabel,
+    };
+
+    final List<String> metaParts = <String>[];
+    if (event.kind == LoanTimelineKind.interestSegment) {
+      final DateTime interestFrom = event.from ?? event.at;
+      final DateTime interestThrough = event.through ?? event.at;
+      metaParts.add(
+        l10n.loanLedgerMetaOnPrincipal(
+          formatMoney(
+            event.principalBasisPaise ?? 0,
+            currencyCode: loan.currencyCode,
+          ),
+          formatIndiaDate(interestFrom),
+          formatIndiaDate(interestThrough),
+          calendarDaysBetween(interestFrom, interestThrough),
+        ),
+      );
+    } else if (event.kind == LoanTimelineKind.payment) {
+      final String? ref = event.note?.trim();
+      if (ref != null && ref.isNotEmpty) {
+        metaParts.add(l10n.timelinePaymentRef(ref));
+      }
+      if (event.toInterestPaise > 0) {
+        metaParts.add(
+          l10n.loanLedgerMetaToInterestPrincipal(
+            formatMoney(
+              event.toInterestPaise,
+              currencyCode: loan.currencyCode,
+            ),
+            formatMoney(
+              event.toPrincipalPaise,
+              currencyCode: loan.currencyCode,
+            ),
+          ),
+        );
+      }
+    } else {
+      final String? note = event.note?.trim();
+      if (note != null &&
+          note.isNotEmpty &&
+          (event.kind == LoanTimelineKind.disbursement ||
+              event.kind == LoanTimelineKind.adjustment)) {
+        metaParts.add(
+          event.kind == LoanTimelineKind.disbursement
+              ? l10n.timelinePaymentRef(note)
+              : note,
+        );
+      }
+    }
+    final String? meta =
+        metaParts.isEmpty ? null : metaParts.join(' · ');
+
+    final int signedPaise = loanLedgerSignedAmountPaise(event);
+    final String amountText = loanLedgerSignedAmount(
+      signedPaise,
       currencyCode: loan.currencyCode,
     );
-    final DateTime interestFrom = event.from ?? event.at;
-    final DateTime interestThrough = event.through ?? event.at;
-    final int interestDays = calendarDaysBetween(interestFrom, interestThrough);
-    final String text = switch (event.kind) {
-      LoanTimelineKind.interestSegment => event.amountPaise < 0
-          ? l10n.loanTimelineReverseInterestSegment(
-              formatMoney(
-                event.principalBasisPaise ?? 0,
-                currencyCode: loan.currencyCode,
-              ),
-              formatIndiaDate(interestFrom),
-              formatIndiaDate(interestThrough),
-              interestDays,
-              money,
-            )
-          : l10n.loanTimelineInterestSegment(
-              formatMoney(
-                event.principalBasisPaise ?? 0,
-                currencyCode: loan.currencyCode,
-              ),
-              formatIndiaDate(interestFrom),
-              formatIndiaDate(interestThrough),
-              interestDays,
-              money,
+    final Color amountColor = signedPaise > 0
+        ? scheme.tertiary
+        : signedPaise < 0
+            ? scheme.error
+            : scheme.onSurface;
+
+    final String? balText = event.balanceAfterPaise == null
+        ? null
+        : l10n.loanLedgerBalanceLabel(
+            formatMoney(
+              event.balanceAfterPaise!,
+              currencyCode: loan.currencyCode,
             ),
-      LoanTimelineKind.interestCapitalized =>
-        l10n.loanTimelineInterestCapitalized(
-          formatIndiaDate(event.at),
-          money,
-        ),
-      LoanTimelineKind.payment => event.toInterestPaise > 0
-          ? l10n.loanTimelinePaymentSplit(
-              formatIndiaDate(event.at),
-              money,
-              formatMoney(event.toInterestPaise, currencyCode: loan.currencyCode),
-              formatMoney(event.toPrincipalPaise, currencyCode: loan.currencyCode),
-            )
-          : l10n.loanTimelinePayment(
-              formatIndiaDate(event.at),
-              money,
-              formatMoney(event.toPrincipalPaise, currencyCode: loan.currencyCode),
-            ),
-      LoanTimelineKind.disbursement => l10n.loanTimelineDisbursement(
-          formatIndiaDate(event.at),
-          money,
-        ),
-      LoanTimelineKind.adjustment => l10n.loanTimelineAdjustment(
-          formatIndiaDate(event.at),
-          money,
-        ),
-      LoanTimelineKind.pendingAsOf => event.amountPaise < 0
-          ? l10n.loanTimelinePendingOverpaid(
-              formatIndiaDate(event.at),
-              money,
-            )
-          : l10n.loanTimelinePending(formatIndiaDate(event.at), money),
-    };
-    final String? paymentRef = event.note?.trim();
-    final bool showPaymentRef = paymentRef != null &&
-        paymentRef.isNotEmpty &&
-        (event.kind == LoanTimelineKind.payment ||
-            event.kind == LoanTimelineKind.disbursement);
+          );
+
     MoneyLoanEntry? editableEntry;
     if (onEdit != null &&
         event.entryId != null &&
@@ -350,44 +544,49 @@ class TimelineRow extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Icon(
-            switch (event.kind) {
-              LoanTimelineKind.interestSegment => event.amountPaise < 0
-                  ? Icons.trending_down
-                  : Icons.trending_up,
-              LoanTimelineKind.interestCapitalized => Icons.merge_type,
-              LoanTimelineKind.payment => Icons.payments_outlined,
-              LoanTimelineKind.disbursement => Icons.add_card_outlined,
-              LoanTimelineKind.adjustment => Icons.tune,
-              LoanTimelineKind.pendingAsOf => Icons.pending_actions_outlined,
-            },
-            size: 18,
-            color: Theme.of(context).colorScheme.primary,
-          ),
-          const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 Text(
-                  text,
-                  style: event.kind == LoanTimelineKind.pendingAsOf
-                      ? Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          )
-                      : Theme.of(context).textTheme.bodyMedium,
+                  title,
+                  style: textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-                if (showPaymentRef) ...<Widget>[
+                if (meta != null) ...<Widget>[
                   const SizedBox(height: 2),
                   Text(
-                    l10n.timelinePaymentRef(paymentRef),
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
+                    meta,
+                    style: textTheme.bodySmall?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ],
             ),
+          ),
+          const SizedBox(width: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: <Widget>[
+              Text(
+                amountText,
+                style: textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: amountColor,
+                ),
+              ),
+              if (balText != null) ...<Widget>[
+                const SizedBox(height: 2),
+                Text(
+                  balText,
+                  style: textTheme.bodySmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ],
           ),
           if (editableEntry != null)
             IconButton(

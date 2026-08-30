@@ -3044,7 +3044,7 @@ abstract class AppLocalizations {
   /// No description provided for @commercialSubscriptionHint.
   ///
   /// In en, this message translates to:
-  /// **'Add a membership line or collect security to continue.'**
+  /// **'Add a covering subscription on this order, or collect security when allowed.'**
   String get commercialSubscriptionHint;
 
   /// No description provided for @commercialSubscriptionSatisfied.
@@ -3053,30 +3053,154 @@ abstract class AppLocalizations {
   /// **'Membership is active for this customer.'**
   String get commercialSubscriptionSatisfied;
 
+  /// No description provided for @subscriptionTierNone.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
   String get subscriptionTierNone;
+
+  /// No description provided for @subscriptionTierBasic.
+  ///
+  /// In en, this message translates to:
+  /// **'Basic'**
   String get subscriptionTierBasic;
+
+  /// No description provided for @subscriptionTierStandard.
+  ///
+  /// In en, this message translates to:
+  /// **'Standard'**
   String get subscriptionTierStandard;
+
+  /// No description provided for @subscriptionTierPro.
+  ///
+  /// In en, this message translates to:
+  /// **'Pro'**
   String get subscriptionTierPro;
+
+  /// No description provided for @subscriptionTierPremium.
+  ///
+  /// In en, this message translates to:
+  /// **'Premium'**
   String get subscriptionTierPremium;
+
+  /// No description provided for @subscriptionPeriodDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Day'**
   String get subscriptionPeriodDay;
+
+  /// No description provided for @subscriptionPeriodWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Week'**
   String get subscriptionPeriodWeek;
+
+  /// No description provided for @subscriptionPeriodMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Month'**
   String get subscriptionPeriodMonth;
+
+  /// No description provided for @subscriptionPeriodYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Year'**
   String get subscriptionPeriodYear;
+
+  /// No description provided for @subscriptionSkuTierLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscription tier'**
   String get subscriptionSkuTierLabel;
+
+  /// No description provided for @subscriptionPeriodUnitLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Period unit'**
   String get subscriptionPeriodUnitLabel;
+
+  /// No description provided for @subscriptionPeriodCountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Period count'**
   String get subscriptionPeriodCountLabel;
+
+  /// No description provided for @minSubscriptionTierLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Requires subscription'**
   String get minSubscriptionTierLabel;
+
+  /// No description provided for @minSubscriptionTierHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimum customer tier to issue this resource. None = ungated.'**
   String get minSubscriptionTierHelper;
+
+  /// No description provided for @catalogResourceTypeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Resource type'**
   String get catalogResourceTypeLabel;
+
+  /// No description provided for @subscriptionChipOk.
+  ///
+  /// In en, this message translates to:
+  /// **'{tier} until {date} — OK to issue'**
   String subscriptionChipOk(String tier, String date);
+
+  /// No description provided for @subscriptionChipUncovered.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer needs {tier} (or higher) to issue these items.'**
   String subscriptionChipUncovered(String tier);
+
+  /// No description provided for @subscriptionUpsellLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Add subscription to this order'**
   String get subscriptionUpsellLabel;
+
+  /// No description provided for @subscriptionNamedCustomerRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'A named customer with a phone is required for subscription access.'**
   String get subscriptionNamedCustomerRequired;
+
+  /// No description provided for @subscriptionHistoryHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscriptions'**
   String get subscriptionHistoryHeading;
+
+  /// No description provided for @subscriptionNoneActive.
+  ///
+  /// In en, this message translates to:
+  /// **'No active subscription'**
   String get subscriptionNoneActive;
+
+  /// No description provided for @subscriptionStatusCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
   String get subscriptionStatusCancelled;
+
+  /// No description provided for @subscriptionStatusExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
   String get subscriptionStatusExpired;
+
+  /// No description provided for @customerSubscriptionMeta.
+  ///
+  /// In en, this message translates to:
+  /// **'{tier} · {date}'**
   String customerSubscriptionMeta(String tier, String date);
+
+  /// No description provided for @subscriptionUntilLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{tier} until {date}'**
   String subscriptionUntilLabel(String tier, String date);
 
   /// No description provided for @orderPaymentTitle.
@@ -3200,15 +3324,27 @@ abstract class AppLocalizations {
   String get paymentConfirmAction;
 
   /// No description provided for @paymentReferenceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment ref'**
   String get paymentReferenceLabel;
 
   /// No description provided for @paymentReferenceHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipt or UPI id'**
   String get paymentReferenceHint;
 
   /// No description provided for @paymentReferenceRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment reference is required'**
   String get paymentReferenceRequired;
 
   /// No description provided for @timelinePaymentRef.
+  ///
+  /// In en, this message translates to:
+  /// **'Ref {ref}'**
   String timelinePaymentRef(String ref);
 
   /// No description provided for @paymentPayAction.
@@ -3875,6 +4011,9 @@ abstract class AppLocalizations {
   String get loanNoteOptionalLabel;
 
   /// No description provided for @loanPaymentReferenceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment ref'**
   String get loanPaymentReferenceLabel;
 
   /// No description provided for @loanSaving.
@@ -3936,6 +4075,83 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Timeline'**
   String get loanTimelineHeading;
+
+  /// No description provided for @loanLedgerInterest.
+  ///
+  /// In en, this message translates to:
+  /// **'Interest'**
+  String get loanLedgerInterest;
+
+  /// No description provided for @loanLedgerReverseInterest.
+  ///
+  /// In en, this message translates to:
+  /// **'Reverse interest'**
+  String get loanLedgerReverseInterest;
+
+  /// No description provided for @loanLedgerPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment'**
+  String get loanLedgerPayment;
+
+  /// No description provided for @loanLedgerPrincipal.
+  ///
+  /// In en, this message translates to:
+  /// **'Principal'**
+  String get loanLedgerPrincipal;
+
+  /// No description provided for @loanLedgerAdjustment.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjustment'**
+  String get loanLedgerAdjustment;
+
+  /// No description provided for @loanLedgerCapitalized.
+  ///
+  /// In en, this message translates to:
+  /// **'Capitalized'**
+  String get loanLedgerCapitalized;
+
+  /// No description provided for @loanLedgerBalanceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Bal {amount}'**
+  String loanLedgerBalanceLabel(String amount);
+
+  /// No description provided for @loanLedgerHeaderParticulars.
+  ///
+  /// In en, this message translates to:
+  /// **'Particulars'**
+  String get loanLedgerHeaderParticulars;
+
+  /// No description provided for @loanLedgerHeaderAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount'**
+  String get loanLedgerHeaderAmount;
+
+  /// No description provided for @loanLedgerHeaderBal.
+  ///
+  /// In en, this message translates to:
+  /// **'Bal'**
+  String get loanLedgerHeaderBal;
+
+  /// No description provided for @loanLedgerMetaOnPrincipal.
+  ///
+  /// In en, this message translates to:
+  /// **'on {principal} · {from}–{to} · {days} days'**
+  String loanLedgerMetaOnPrincipal(
+    String principal,
+    String from,
+    String to,
+    int days,
+  );
+
+  /// No description provided for @loanLedgerMetaToInterestPrincipal.
+  ///
+  /// In en, this message translates to:
+  /// **'to interest {interest} · to principal {principal}'**
+  String loanLedgerMetaToInterestPrincipal(String interest, String principal);
 
   /// No description provided for @loanShareTimelineTooltip.
   ///

@@ -1510,6 +1510,51 @@
   "loanPaidLabel": "भुगतान",
   "loanAdjustmentsLabel": "समायोजन",
   "loanTimelineHeading": "समयरेखा",
+  "loanLedgerInterest": "ब्याज",
+  "loanLedgerReverseInterest": "उल्टा ब्याज",
+  "loanLedgerPayment": "भुगतान",
+  "loanLedgerPrincipal": "मूलधन",
+  "loanLedgerAdjustment": "समायोजन",
+  "loanLedgerCapitalized": "पूंजीकृत",
+  "loanLedgerBalanceLabel": "शेष {amount}",
+  "@loanLedgerBalanceLabel": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "loanLedgerHeaderParticulars": "विवरण",
+  "loanLedgerHeaderAmount": "राशि",
+  "loanLedgerHeaderBal": "शेष",
+  "loanLedgerMetaOnPrincipal": "{principal} पर · {from}–{to} · {days} दिन",
+  "@loanLedgerMetaOnPrincipal": {
+    "placeholders": {
+      "principal": {
+        "type": "String"
+      },
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      },
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "loanLedgerMetaToInterestPrincipal": "ब्याज {interest} · मूलधन {principal}",
+  "@loanLedgerMetaToInterestPrincipal": {
+    "placeholders": {
+      "interest": {
+        "type": "String"
+      },
+      "principal": {
+        "type": "String"
+      }
+    }
+  },
   "loanShareTimelineTooltip": "समयरेखा साझा करें",
   "loanShareTimelineSuccess": "समयरेखा की छवि डाउनलोड हो गई",
   "loanShareTimelineFailed": "समयरेखा की छवि नहीं बन सकी",

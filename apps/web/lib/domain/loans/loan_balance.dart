@@ -27,6 +27,7 @@ class LoanTimelineEvent {
     this.note,
     this.entryId,
     this.principalBasisPaise,
+    this.balanceAfterPaise,
   });
 
   final LoanTimelineKind kind;
@@ -41,6 +42,8 @@ class LoanTimelineEvent {
   final String? entryId;
   /// Signed balance used as the interest basis for a segment.
   final int? principalBasisPaise;
+  /// Outstanding ([LedgerState.outstanding]) after this event is applied.
+  final int? balanceAfterPaise;
 }
 
 enum _WalkKind {
@@ -564,6 +567,7 @@ LoanScenario computeLoanScenario({
             at: to,
             amountPaise: interest,
             principalBasisPaise: state.balance,
+            balanceAfterPaise: state.outstanding,
           ),
         );
       }
@@ -590,6 +594,7 @@ LoanScenario computeLoanScenario({
         kind: LoanTimelineKind.interestCapitalized,
         at: at,
         amountPaise: amount,
+        balanceAfterPaise: state.outstanding,
       ),
     );
   }
@@ -647,6 +652,7 @@ LoanScenario computeLoanScenario({
           toPrincipalPaise: toPrincipal,
           note: point.note,
           entryId: point.entryId,
+          balanceAfterPaise: state.outstanding,
         ),
       );
       return;
@@ -676,6 +682,7 @@ LoanScenario computeLoanScenario({
           toPrincipalPaise: add,
           note: point.note,
           entryId: point.entryId,
+          balanceAfterPaise: state.outstanding,
         ),
       );
       return;
@@ -705,6 +712,7 @@ LoanScenario computeLoanScenario({
         toPrincipalPaise: point.amountPaise,
         note: point.note,
         entryId: point.entryId,
+        balanceAfterPaise: state.outstanding,
       ),
     );
   }
@@ -735,6 +743,7 @@ LoanScenario computeLoanScenario({
       kind: LoanTimelineKind.pendingAsOf,
       at: asOf,
       amountPaise: pending,
+      balanceAfterPaise: pending,
     ),
   );
 

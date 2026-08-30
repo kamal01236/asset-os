@@ -1510,6 +1510,51 @@
   "loanPaidLabel": "Paid",
   "loanAdjustmentsLabel": "Adjustments",
   "loanTimelineHeading": "Timeline",
+  "loanLedgerInterest": "Interest",
+  "loanLedgerReverseInterest": "Reverse interest",
+  "loanLedgerPayment": "Payment",
+  "loanLedgerPrincipal": "Principal",
+  "loanLedgerAdjustment": "Adjustment",
+  "loanLedgerCapitalized": "Capitalized",
+  "loanLedgerBalanceLabel": "Bal {amount}",
+  "@loanLedgerBalanceLabel": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "loanLedgerHeaderParticulars": "Particulars",
+  "loanLedgerHeaderAmount": "Amount",
+  "loanLedgerHeaderBal": "Bal",
+  "loanLedgerMetaOnPrincipal": "on {principal} · {from}–{to} · {days} days",
+  "@loanLedgerMetaOnPrincipal": {
+    "placeholders": {
+      "principal": {
+        "type": "String"
+      },
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      },
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "loanLedgerMetaToInterestPrincipal": "to interest {interest} · to principal {principal}",
+  "@loanLedgerMetaToInterestPrincipal": {
+    "placeholders": {
+      "interest": {
+        "type": "String"
+      },
+      "principal": {
+        "type": "String"
+      }
+    }
+  },
   "loanShareTimelineTooltip": "Share timeline",
   "loanShareTimelineSuccess": "Timeline image downloaded",
   "loanShareTimelineFailed": "Could not create timeline image",

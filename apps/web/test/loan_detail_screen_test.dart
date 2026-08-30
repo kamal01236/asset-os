@@ -83,7 +83,6 @@ void main() {
       expect(find.text('Adjustments'), findsOneWidget);
       expect(find.text('₹15000'), findsWidgets);
       expect(find.text('Original principal'), findsNothing);
-      expect(find.text('Principal'), findsNothing);
 
       await _tearDownDetail(tester);
     },
@@ -297,6 +296,49 @@ void main() {
     expect(find.text('Timeline'), findsOneWidget);
     expect(find.byTooltip('Share timeline'), findsOneWidget);
     expect(find.byIcon(Icons.share_outlined), findsOneWidget);
+
+    await _tearDownDetail(tester);
+  });
+
+  testWidgets('ledger timeline shows amount and Bal for seeded loan', (
+    WidgetTester tester,
+  ) async {
+    final ProviderContainer container = await bootContainer();
+    final LocalRepository repo = container.read(repositoryProvider);
+    final Customer customer = await ensureCustomer(repo);
+
+    tester.view.physicalSize = const Size(900, 1800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final String loanId = await repo.createMoneyLoan(
+      customerId: customer.id,
+      direction: MoneyLoanDirection.given,
+      principalPaise: 100000,
+      interestStartedAt: DateTime(2026, 1, 1),
+      rateBps: 0,
+    );
+    await repo.addMoneyLoanEntry(
+      loanId: loanId,
+      entryAt: DateTime(2026, 2, 1),
+      amountPaise: 25000,
+      kind: MoneyLoanEntryKind.repayment,
+      note: 'LEDGER-PAY',
+    );
+
+    await _pumpDetail(tester, container: container, loanId: loanId);
+
+    expect(find.text('Particulars'), findsOneWidget);
+    expect(find.text('Amount'), findsOneWidget);
+    expect(find.text('Principal'), findsOneWidget);
+    expect(find.text('Payment'), findsOneWidget);
+    expect(find.text('+₹1000'), findsOneWidget);
+    expect(find.text('−₹250'), findsOneWidget);
+    expect(find.text('Bal ₹1000'), findsOneWidget);
+    expect(find.text('Bal ₹750'), findsOneWidget);
+    expect(find.text('Pending now'), findsWidgets);
+    expect(find.textContaining('LEDGER-PAY'), findsOneWidget);
 
     await _tearDownDetail(tester);
   });

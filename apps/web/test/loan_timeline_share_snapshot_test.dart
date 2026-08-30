@@ -76,7 +76,10 @@ void main() {
     expect(find.text(kAppDisplayName), findsOneWidget);
     expect(find.text(customer.name), findsWidgets);
     expect(find.text('Timeline'), findsOneWidget);
+    expect(find.text('Particulars'), findsOneWidget);
+    expect(find.text('Payment'), findsOneWidget);
     expect(find.textContaining('PAY-SNAP'), findsOneWidget);
+    expect(find.textContaining('Bal '), findsWidgets);
     expect(find.byIcon(Icons.edit_outlined), findsNothing);
 
     await tester.pumpWidget(const SizedBox.shrink());
