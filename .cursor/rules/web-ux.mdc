@@ -8,15 +8,15 @@ alwaysApply: false
 
 Follow `docs/ux/web-ux-conventions.md` (source of truth). Digest:
 
-- Bottom nav has 5 stable tabs: Home, Transactions, Resources, Customers, More. Do not add/remove tabs without updating that doc.
+- Operator UX: attention/lists over charts; progressive disclosure; thumb-zone CTAs (bottom nav, FAB sheet, detail bars).
+- Feedback ladder: snackbar = soft success/validation; dialog = money/destructive settle; sheet = choose action / search. Errors: explain · suggest next · preserve input · no stack traces.
+- Bottom nav: Home, Transactions, Resources, Customers, More. Do not add/remove tabs without updating the conventions doc.
 - Transactions = Orders + cash Loans in the UI only; keep rentals and money_loans engines separate.
-- Global actions always include Search, New Order, Return, Add Resource, Scan.
-- Thumb-zone primary actions; one dominant choice per step; list/status-first (no chart dashboards in MVP).
-- Status colors: Available green, Rented blue, Due Today orange, Overdue red, Archived grey.
-- Offline: subtle non-blocking banner only. More-tab offline toggle is demo/simulation, not product positioning.
-- Appearance: Dark/Light only; default Dark; More-tab segmented toggle; theme-aware colors via ColorScheme (no light-only hardcodes). No system theme; no third high-contrast theme.
-- Accessibility (ADR-007): WCAG 2.2 AA on Light+Dark; contrast-safe status foregrounds (keep meanings); every icon-only control needs tooltip/Semantics label; keyboard Tab + Escape on chrome; usable at 1.5× text scale; a11y strings in ARB en+hi. Not AAA.
-- Forms: items-first New Order (running total; days/amount happy path; Rent/Sell/Job under More options gated by template enabled resource types; do not hide catalog by type), then phone-first customer attach; commercial Pay/Advance/Security step only when cart policy requires or offers it — otherwise generate → order detail and Pay later; skip customer when issuing from a profile; unit identity optional unless catalog requires it.
-- Home defaults: search + KPIs + needsAttention (template presets may add recentActivity / pendingJobs; Quick Actions via Customize Home; FAB for New Order / Return).
-- Money note: optional free text ≤20 on Pay / New Order commercial / loan cash entries / return-cancel; never block settle on empty note.
-- Search: first non-empty trimmed character; no “Type at least N characters” helper under search fields.
+- FAB always includes Search, New Order, Return, Add Resource, Scan. Search = Home typeahead + FAB modal (not a route).
+- Status colors: Available green, Rented blue, Due Today orange, Overdue red, Archived grey. Customer Trusted/Standard use `TierPill` (never status pills); subscription = compact meta.
+- Offline: subtle non-blocking banner only; never gate workflows. More-tab offline toggle is demo only.
+- Appearance: Dark/Light only; default Dark; More segmented toggle; M3 seed `#006D77` via `AppTheme`; ColorScheme over light-only hardcodes. No system theme / third high-contrast theme. A11y: ADR-007 (WCAG 2.2 AA).
+- Home defaults: search + KPIs + needsAttention (Customize Home for optional modules; FAB for New Order / Return).
+- Forms: items-first New Order; commercial step only when policy requires/offers; money notes never block settle; return/cancel = confirm dialogs.
+- Money note: optional free text ≤20 (`kMoneyNoteMaxLength`) on Pay / New Order commercial / loan create & cash entries / return-cancel.
+- Search: first non-empty trimmed character (`kMinMeaningfulTextLength = 1`); no min-length helper under search fields. Order notes (append-only) still ≥3.

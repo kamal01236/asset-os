@@ -10,6 +10,7 @@ import '../../../domain/pricing/rental_pricing.dart';
 import '../../../application/providers/app_providers.dart';
 import '../../../application/local_repository.dart';
 import '../../validation/input_formatters.dart';
+import '../../../domain/payments/payment_reference.dart';
 import '../../../domain/validation/text_rules.dart';
 import '../../widgets/ui_primitives.dart';
 import 'loan_detail_screen.dart';
@@ -685,10 +686,12 @@ class _LoanCreateScreenState extends ConsumerState<LoanCreateScreen> {
           const SizedBox(height: 16),
           TextField(
             controller: _noteCtrl,
-            maxLines: 2,
+            maxLength: kMoneyNoteMaxLength,
             decoration: InputDecoration(
               labelText: l10n.loanNoteOptionalLabel,
+              hintText: l10n.paymentReferenceHint,
               border: const OutlineInputBorder(),
+              counterText: '',
             ),
           ),
           const SizedBox(height: 24),
@@ -731,12 +734,12 @@ class _LoanCreateScreenState extends ConsumerState<LoanCreateScreen> {
       return;
     }
     final int rateBps = (ratePct * 100).round();
-    final String? note = _noteCtrl.text.trim().isEmpty
-        ? null
-        : _noteCtrl.text.trim();
-    if (note != null && !meetsMinMeaningfulText(note)) {
+    final String? note;
+    try {
+      note = optionalMoneyNote(_noteCtrl.text);
+    } on ArgumentError catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.minMeaningfulTextError(kMinMeaningfulTextLength))),
+        SnackBar(content: Text('${e.message}')),
       );
       return;
     }
