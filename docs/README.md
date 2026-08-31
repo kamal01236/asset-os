@@ -14,6 +14,7 @@ Index for Hando (Asset Handover Platform) documentation.
 8. **[Web UX Conventions](ux/web-ux-conventions.md)** — touch-friendly interaction rules, status semantics, and shell contracts
 9. **[Phase 5 Extension Stubs](ux/phase5-extension-stubs.md)** — lightweight stubs for voice, templates, and AI suggestions
 10. **[Test Suites](engineering/test-suites.md)** — tagged unit/widget/integration suites and dependency → suite map
+11. **[Schema Migrations](engineering/schema-migrations.md)** — Drift baseline v24, legacy vs forward upgrades, and migration checklist
 
 ## Document conventions
 

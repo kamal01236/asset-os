@@ -37,4 +37,5 @@ In `apps/web`:
 ## Related
 
 - [Complete Idea Summary §9 / §14](../../vision/complete-idea-summary.md)
+- [Schema migrations](../../engineering/schema-migrations.md) — baseline v24, incremental upgrades
 - [ADR-001: Flutter Web Client](ADR-001-mobile-stack.md)
