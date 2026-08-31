@@ -114,7 +114,7 @@ class CurrentScenarioCard extends StatelessWidget {
               context,
               l10n.loanPendingPrincipalLabel,
               formatMoney(
-                scenario.remainingPrincipalPaise,
+                scenario.displayPendingPrincipalPaise,
                 currencyCode: loan.currencyCode,
               ),
             ),
@@ -136,12 +136,12 @@ class CurrentScenarioCard extends StatelessWidget {
                   currencyCode: loan.currencyCode,
                 ),
               ),
-            if (scenario.pendingInterestPaise > 0)
+            if (scenario.displayPendingInterestPaise > 0)
               loanDetailKv(
                 context,
                 l10n.loanPendingInterestLabel,
                 formatMoney(
-                  scenario.pendingInterestPaise,
+                  scenario.displayPendingInterestPaise,
                   currencyCode: loan.currencyCode,
                 ),
               ),

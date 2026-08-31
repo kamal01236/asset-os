@@ -225,6 +225,9 @@ void main() {
       expect(mid.remainingPrincipalPaise, 7000000);
       expect(mid.unpaidInterestPaise, 510000);
       expect(mid.pendingPaise, 7510000);
+      expect(mid.overpayCreditAppliedToInterestPaise, 0);
+      expect(mid.displayPendingPrincipalPaise, mid.remainingPrincipalPaise);
+      expect(mid.displayPendingInterestPaise, mid.pendingInterestPaise);
       expect(
         mid.timeline.where(
           (LoanTimelineEvent e) =>
@@ -515,6 +518,10 @@ void main() {
       expect(asOfOct.reversePendingInterestPaise, 0);
       expect(asOfOct.pendingPaise, -520000);
       expect(asOfOct.totalPaidPaise, 11000000);
+      expect(asOfOct.overpayCreditAppliedToInterestPaise, 480000);
+      expect(asOfOct.displayPendingInterestPaise, 0);
+      expect(asOfOct.displayPendingPrincipalPaise, -520000);
+      expect(asOfOct.displayPendingPrincipalPaise, asOfOct.pendingPaise);
 
       final List<LoanTimelineEvent> segments = asOfOct.timeline
           .where(
@@ -1324,6 +1331,73 @@ void main() {
         MoneyCapitalizationPolicy.onScheduledCycle,
       );
       expect(loan.capitalizationCycle, MoneyCapitalizationCycle.yearly);
+    });
+  });
+
+  group('LoanScenario display netting', () {
+    test('overpay with positive unpaid interest nets to interest-first breakdown', () {
+      final LoanScenario scenario = LoanScenario(
+        principalPaise: 10000000,
+        totalPrincipalPaise: 10000000,
+        interestAccruedPaise: 1061303,
+        positiveInterestAccruedPaise: 1061303,
+        reverseInterestAccruedPaise: 0,
+        totalPaidPaise: 11051000,
+        totalAdjustmentsPaise: 0,
+        pendingPaise: 10303,
+        remainingPrincipalPaise: -1051000,
+        unpaidInterestPaise: 1061303,
+        asOf: DateTime(2026, 10, 1),
+        timeline: <LoanTimelineEvent>[],
+      );
+
+      expect(scenario.overpayCreditAppliedToInterestPaise, 1051000);
+      expect(scenario.displayPendingPrincipalPaise, 0);
+      expect(scenario.displayPendingInterestPaise, 10303);
+      expect(scenario.displayPendingInterestPaise, scenario.pendingPaise);
+    });
+
+    test('overpay exceeding positive interest leaves true credit on principal', () {
+      final LoanScenario scenario = LoanScenario(
+        principalPaise: 10000000,
+        totalPrincipalPaise: 10000000,
+        interestAccruedPaise: 480000,
+        positiveInterestAccruedPaise: 510000,
+        reverseInterestAccruedPaise: 30000,
+        totalPaidPaise: 11000000,
+        totalAdjustmentsPaise: 0,
+        pendingPaise: -520000,
+        remainingPrincipalPaise: -1000000,
+        unpaidInterestPaise: 480000,
+        asOf: DateTime(2026, 10, 1),
+        timeline: <LoanTimelineEvent>[],
+      );
+
+      expect(scenario.overpayCreditAppliedToInterestPaise, 480000);
+      expect(scenario.displayPendingInterestPaise, 0);
+      expect(scenario.displayPendingPrincipalPaise, -520000);
+      expect(scenario.displayPendingPrincipalPaise, scenario.pendingPaise);
+    });
+
+    test('normal loan keeps display getters aligned with ledger buckets', () {
+      final LoanScenario scenario = LoanScenario(
+        principalPaise: 10000000,
+        totalPrincipalPaise: 10000000,
+        interestAccruedPaise: 510000,
+        positiveInterestAccruedPaise: 510000,
+        reverseInterestAccruedPaise: 0,
+        totalPaidPaise: 3000000,
+        totalAdjustmentsPaise: 0,
+        pendingPaise: 7510000,
+        remainingPrincipalPaise: 7000000,
+        unpaidInterestPaise: 510000,
+        asOf: DateTime(2026, 7, 1),
+        timeline: <LoanTimelineEvent>[],
+      );
+
+      expect(scenario.overpayCreditAppliedToInterestPaise, 0);
+      expect(scenario.displayPendingPrincipalPaise, scenario.remainingPrincipalPaise);
+      expect(scenario.displayPendingInterestPaise, scenario.pendingInterestPaise);
     });
   });
 

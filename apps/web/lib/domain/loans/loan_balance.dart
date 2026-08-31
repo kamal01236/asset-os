@@ -119,6 +119,29 @@ class LoanScenario {
   /// Absolute reverse unpaid interest credit (≥ 0).
   int get reversePendingInterestPaise =>
       unpaidInterestPaise < 0 ? -unpaidInterestPaise : 0;
+
+  /// Principal overpay applied toward positive unpaid interest for display (≥ 0).
+  ///
+  /// Raw [remainingPrincipalPaise] / [unpaidInterestPaise] are ledger truth for
+  /// timeline math; display getters below align the breakdown with the
+  /// interest-first mental model when principal is overpaid but interest is owed.
+  int get overpayCreditAppliedToInterestPaise {
+    if (remainingPrincipalPaise >= 0 || unpaidInterestPaise <= 0) {
+      return 0;
+    }
+    final int overpayPaise = -remainingPrincipalPaise;
+    return overpayPaise < unpaidInterestPaise ? overpayPaise : unpaidInterestPaise;
+  }
+
+  /// Pending principal for operator breakdown (0 until interest cleared, then negative if credit remains).
+  int get displayPendingPrincipalPaise =>
+      remainingPrincipalPaise + overpayCreditAppliedToInterestPaise;
+
+  /// Pending interest for operator breakdown (≥ 0; nets principal overpay first).
+  int get displayPendingInterestPaise =>
+      unpaidInterestPaise > 0
+          ? unpaidInterestPaise - overpayCreditAppliedToInterestPaise
+          : 0;
 }
 
 DateTime _dateOnly(DateTime value) =>
