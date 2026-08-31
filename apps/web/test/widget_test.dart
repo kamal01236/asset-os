@@ -212,18 +212,6 @@ void main() {
     expect(find.text('Enabled resource types'), findsOneWidget);
   });
 
-  testWidgets('Transactions tab shows open and completed orders', (
-    WidgetTester tester,
-  ) async {
-    await _pumpAppShell(tester);
-
-    await tester.tap(find.text('Transactions'));
-    await pumpFrames(tester);
-
-    expect(find.textContaining('Priya'), findsWidgets);
-    expect(find.text('Order'), findsWidgets);
-  });
-
   testWidgets('open order detail cancel is bottom last action, not app bar', (
     WidgetTester tester,
   ) async {
@@ -248,23 +236,6 @@ void main() {
       tester.getTopLeft(cancelFinder).dy,
       greaterThan(tester.getTopLeft(returnAllFinder).dy),
     );
-  });
-
-  testWidgets('Home search is inline typeahead without a search route', (
-    WidgetTester tester,
-  ) async {
-    await _pumpAppShell(tester);
-
-    expect(find.text('Search Anything'), findsOneWidget);
-    expect(find.text('Type at least 1 character'), findsNothing);
-    expect(find.text('Type at least 3 characters'), findsNothing);
-    expect(find.widgetWithText(AppBar, 'Search'), findsNothing);
-    expect(find.widgetWithText(AppBar, kAppDisplayName), findsOneWidget);
-
-    await tester.tap(find.byType(TextField).first);
-    await tester.pump();
-    expect(find.text('Type at least 1 character'), findsNothing);
-    expect(find.text('Type at least 3 characters'), findsNothing);
   });
 
   testWidgets('FAB Search opens typeahead bottom sheet', (

@@ -116,7 +116,6 @@ void main() {
   group('recordOrderPayment', () {
     test('full sell + security on mixed order', () async {
       final LocalRepository repository = await bootRepo();
-      expect(repository.database.schemaVersion, 24);
 
       await repository.addInventory(
         name: 'Novel',

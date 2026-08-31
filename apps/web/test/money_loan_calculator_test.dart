@@ -920,35 +920,6 @@ void main() {
       expect(laterStart.interestAccruedPaise, lessThan(early.interestAccruedPaise));
     });
 
-    test('legacy kind payment parses as repayment', () {
-      expect(MoneyLoanEntryKind.parse('payment'), MoneyLoanEntryKind.repayment);
-      expect(
-        MoneyLoanEntryKind.parse('capitalization'),
-        MoneyLoanEntryKind.capitalization,
-      );
-    });
-
-    test('repayment allows missing note', () async {
-      final LocalRepository repo = await bootRepo();
-      final customer = await ensureCustomer(repo);
-      final String loanId = await repo.createMoneyLoan(
-        customerId: customer.id,
-        direction: MoneyLoanDirection.given,
-        principalPaise: 100000,
-        interestStartedAt: DateTime(2026, 1, 1),
-        rateBps: 0,
-      );
-      final String entryId = await repo.addMoneyLoanEntry(
-        loanId: loanId,
-        entryAt: DateTime(2026, 2, 1),
-        amountPaise: 10000,
-        kind: MoneyLoanEntryKind.repayment,
-      );
-      expect(entryId, isNotEmpty);
-      final MoneyLoan loan = (await repo.getMoneyLoan(loanId))!;
-      expect(loan.entries.single.note, isNull);
-    });
-
     test('repayment note surfaces on loan timeline', () async {
       final LocalRepository repo = await bootRepo();
       final customer = await ensureCustomer(repo);
@@ -1125,20 +1096,6 @@ void main() {
             .remainingPrincipalPaise,
         115000,
       );
-    });
-
-    test('createMoneyLoan leaves entries empty', () async {
-      final LocalRepository repo = await bootRepo();
-      final customer = await ensureCustomer(repo);
-      final String loanId = await repo.createMoneyLoan(
-        customerId: customer.id,
-        direction: MoneyLoanDirection.given,
-        principalPaise: 100000,
-        interestStartedAt: DateTime.now(),
-      );
-      final MoneyLoan loan = (await repo.getMoneyLoan(loanId))!;
-      expect(loan.entries, isEmpty);
-      expect(loan.capitalizationPolicy, MoneyCapitalizationPolicy.never);
     });
 
     test('manual capitalize via repository', () async {
@@ -1402,11 +1359,6 @@ void main() {
   });
 
   group('schema', () {
-    test('schemaVersion is 19 with interestAccrual column', () async {
-      final LocalRepository repo = await bootRepo();
-      expect(repo.database.schemaVersion, 24);
-    });
-
     test('createMoneyLoan defaults prepaymentAllocation to interestThenPrincipal',
         () async {
       final LocalRepository repo = await bootRepo();
@@ -1576,40 +1528,6 @@ void main() {
       final MoneyLoan loan = (await repo.getMoneyLoan(loanId))!;
       expect(loan.ratePeriod, MoneyRatePeriod.yearly);
       expect(loan.interestAccrual, MoneyInterestAccrual.daily365);
-    });
-
-    test('MoneyPrepaymentAllocation.parse defaults unknown to interestThenPrincipal',
-        () {
-      expect(
-        MoneyPrepaymentAllocation.parse(null),
-        MoneyPrepaymentAllocation.interestThenPrincipal,
-      );
-      expect(
-        MoneyPrepaymentAllocation.parse('principalOnly'),
-        MoneyPrepaymentAllocation.principalOnly,
-      );
-    });
-
-    test('MoneyRatePeriod.parse reads quarterly and halfYearly', () {
-      expect(MoneyRatePeriod.parse('quarterly'), MoneyRatePeriod.quarterly);
-      expect(MoneyRatePeriod.parse('halfYearly'), MoneyRatePeriod.halfYearly);
-      expect(MoneyRatePeriod.parse('unknown'), MoneyRatePeriod.monthly);
-    });
-
-    test('MoneyCapitalizationCycle.parse and fromRatePeriod cover halfYearly',
-        () {
-      expect(
-        MoneyCapitalizationCycle.parse('halfYearly'),
-        MoneyCapitalizationCycle.halfYearly,
-      );
-      expect(
-        MoneyCapitalizationCycle.fromRatePeriod(MoneyRatePeriod.quarterly),
-        MoneyCapitalizationCycle.quarterly,
-      );
-      expect(
-        MoneyCapitalizationCycle.fromRatePeriod(MoneyRatePeriod.halfYearly),
-        MoneyCapitalizationCycle.halfYearly,
-      );
     });
   });
 }

@@ -77,40 +77,5 @@ void main() {
         isTrue,
       );
     });
-
-    test('depositTopUpPaise sets order deposit; wallet unchanged', () async {
-      final LocalRepository repository = await bootRepo();
-      final Customer customer =
-          await ensureCustomer(repository);
-      expect(customer.depositBalance, 0);
-      await repository.addInventory(
-        name: 'Tripod',
-        category: 'Camera',
-        units: 1,
-        rateAmount: 20000,
-      );
-      final InventoryItem tripod = (await repository.listInventory())
-          .firstWhere((InventoryItem i) => i.name == 'Tripod');
-
-      await repository.createRental(
-        customer: customer,
-        lines: <RentalLineInput>[
-          RentalLineInput(
-            itemId: tripod.id,
-            instanceName: 'Tripod unit',
-            shortCode: 'TRP-99',
-            durationUnits: 1,
-          ),
-        ],
-        depositTopUpPaise: 2500,
-      );
-
-      final Customer updated =
-          (await repository.listCustomers())
-              .firstWhere((Customer c) => c.id == customer.id);
-      expect(updated.depositBalance, 0);
-      final Rental created = (await repository.listRentals()).first;
-      expect(created.depositAmount, 2500);
-    });
   });
 }

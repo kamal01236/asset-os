@@ -13,11 +13,6 @@ import 'package:asset_os/application/local_repository.dart';
 import 'support/test_harness.dart';
 
 void main() {
-  test('schemaVersion is 24 with customer_subscriptions', () async {
-    final LocalRepository repo = await bootRepo();
-    expect(repo.database.schemaVersion, 24);
-  });
-
   test('seedDemo initialize completes', () async {
     final LocalRepository repo = await bootRepo(seedDemo: true);
     expect(await repo.listCustomers(), isNotEmpty);

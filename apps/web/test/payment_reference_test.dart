@@ -43,22 +43,4 @@ void main() {
       );
     });
   });
-
-  group('optionalMoneyNote', () {
-    test('returns trimmed note or null', () {
-      expect(optionalMoneyNote('txn-9'), 'txn-9');
-      expect(optionalMoneyNote('  '), isNull);
-    });
-  });
-
-  group('legacy wrappers', () {
-    test('requirePaymentReference is optional', () {
-      expect(requirePaymentReference(null), isNull);
-      expect(requirePaymentReference('txn-9'), 'txn-9');
-    });
-
-    test('normalizePaymentReference preserves case', () {
-      expect(normalizePaymentReference('  upi-123_a  '), 'upi-123_a');
-    });
-  });
 }

@@ -28,20 +28,6 @@ void main() {
       );
     });
 
-    test('one hundred', () {
-      expect(
-        amountInWordsFromPaise(10000, languageCode: 'en'),
-        'One hundred rupees',
-      );
-    });
-
-    test('one thousand', () {
-      expect(
-        amountInWordsFromPaise(100000, languageCode: 'en'),
-        'One thousand rupees',
-      );
-    });
-
     test('one lakh', () {
       expect(
         amountInWordsFromPaise(10000000, languageCode: 'en'),

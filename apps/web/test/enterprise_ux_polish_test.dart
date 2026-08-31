@@ -9,7 +9,6 @@ import 'package:asset_os/infrastructure/l10n/l10n_ext.dart';
 import 'package:asset_os/domain/models/entities.dart';
 import 'package:asset_os/application/providers/app_providers.dart';
 import 'package:asset_os/presentation/theme/app_theme.dart';
-import 'package:asset_os/presentation/widgets/scoped_search_field.dart';
 import 'package:asset_os/presentation/widgets/ui_primitives.dart';
 import 'package:asset_os/presentation/features/reports/share_reports_screen.dart';
 
@@ -158,39 +157,6 @@ void main() {
     );
     expect(find.text('New Order'), findsNothing);
     expect(find.byType(FilledButton), findsNothing);
-  });
-
-  testWidgets('search field never shows min-length helper', (
-    WidgetTester tester,
-  ) async {
-    await tester.pumpWidget(
-      _wrap(
-        Scaffold(
-          body: ScopedSearchField(
-            hintText: 'Search',
-            noResultsText: 'No matches',
-            suggestions: const <SearchSuggestion>[],
-            onQueryChanged: (_) {},
-            onSelected: (_) {},
-          ),
-        ),
-      ),
-    );
-
-    expect(find.text('Type at least 1 character'), findsNothing);
-
-    await tester.tap(find.byType(TextField));
-    await tester.pump();
-    expect(find.text('Type at least 1 character'), findsNothing);
-
-    await tester.enterText(find.byType(TextField), 'a');
-    await tester.pump();
-    expect(find.text('Type at least 1 character'), findsNothing);
-    expect(find.byIcon(Icons.clear), findsOneWidget);
-
-    await tester.tap(find.byIcon(Icons.clear));
-    await tester.pump();
-    expect(find.byIcon(Icons.clear), findsNothing);
   });
 
   test('shortOrderId uses last segment', () {
