@@ -1811,5 +1811,62 @@
         "type": "String"
       }
     }
-  }
+  },
+  "backupRestoreTitle": "Backup & Restore",
+  "backupRestoreSubtitle": "Save all your data to a file, or restore it from a backup",
+  "backupExportSectionTitle": "Export a backup",
+  "backupExportSectionBody": "Save customers, resources, orders, loans and settings to a single file you can keep safe.",
+  "backupExportAction": "Export backup",
+  "backupExporting": "Preparing backup…",
+  "backupExportSuccess": "Backup saved",
+  "backupExportError": "Couldn't create the backup. Please try again.",
+  "backupRestoreSectionTitle": "Restore from a backup",
+  "backupRestoreSectionBody": "Load a backup file to replace the data on this device. Your current data will be overwritten.",
+  "backupRestoreAction": "Restore from backup",
+  "backupRestoring": "Restoring backup…",
+  "backupRestoreSuccess": "Backup restored",
+  "backupRestoreConfirmTitle": "Replace all data?",
+  "backupRestoreConfirmBody": "Restoring replaces the current {appName} data on this device with the backup. This can't be undone.",
+  "@backupRestoreConfirmBody": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "backupRestoreConfirmAction": "Replace data",
+  "backupRestoreNoFile": "No file selected.",
+  "backupRestoreErrorInvalid": "That file isn't a valid {appName} backup.",
+  "@backupRestoreErrorInvalid": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "backupRestoreErrorFormatVersion": "This backup was made with a different version of {appName}. Update the app and try again.",
+  "@backupRestoreErrorFormatVersion": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "backupRestoreErrorSchemaTooNew": "This backup is from a newer version of {appName}. Update the app, then restore.",
+  "@backupRestoreErrorSchemaTooNew": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "backupLastExported": "Last backup: {date}",
+  "@backupLastExported": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "backupNeverExported": "No backups yet on this device"
 }

@@ -1,8 +1,18 @@
+import 'dart:convert';
+
 import 'package:drift/drift.dart';
 import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../infrastructure/db/app_database.dart';
+import 'providers/app_providers.dart'
+    show
+        kLocalePrefsKey,
+        kThemeModePrefsKey,
+        kPreferredModePrefsKey,
+        kOwnerWhatsAppPhoneKey,
+        kOwnerWhatsAppCountryCodeKey;
+import '../domain/config/app_branding.dart';
 import '../domain/home/home_modules.dart';
 import '../domain/inventory/unit_code_pool.dart';
 import '../infrastructure/l10n/timeline_l10n.dart';
@@ -109,6 +119,61 @@ String _nextStamp() {
 
 /// Human-readable unique id, e.g. `INV-1710000000000-1`.
 String nextId(String prefix) => '$prefix-${_nextStamp()}';
+
+/// Envelope format version for local backup JSON. Bump on breaking layout changes.
+const int kBackupFormatVersion = 1;
+
+/// SharedPreferences keys captured in a backup and restored verbatim.
+///
+/// Kept in sync with [app_providers.dart] / the domain template files. The
+/// industry template id lives in the `appMeta` table, so it round-trips with
+/// the table export rather than here.
+const List<String> kBackupPreferenceKeys = <String>[
+  kLocalePrefsKey,
+  kThemeModePrefsKey,
+  kPreferredModePrefsKey,
+  kOwnerWhatsAppPhoneKey,
+  kOwnerWhatsAppCountryCodeKey,
+  kEnabledResourceTypesPrefsKey,
+  kActiveWorkflowIdPrefsKey,
+  kExtraFieldIdsPrefsKey,
+  kReportWidgetsPrefsKey,
+  kHomeModulesPrefsKey,
+  kHomeModulesCustomizedKey,
+];
+
+/// Why a restore was rejected; the presentation layer maps these to l10n copy.
+enum BackupRestoreError {
+  /// The file was not valid JSON or not a backup envelope.
+  invalidFormat,
+
+  /// `formatVersion` is missing or not [kBackupFormatVersion].
+  unsupportedFormatVersion,
+
+  /// Backup was written by a newer app schema than this build understands.
+  schemaTooNew,
+}
+
+/// Thrown by [LocalRepository.importBackupJson] when a restore cannot proceed.
+///
+/// Carries a machine-readable [error] (localized by the UI) plus optional
+/// [detail] values so the presentation layer can build a precise message.
+class BackupRestoreException implements Exception {
+  const BackupRestoreException(
+    this.error, {
+    this.backupSchemaVersion,
+    this.currentSchemaVersion,
+  });
+
+  final BackupRestoreError error;
+  final int? backupSchemaVersion;
+  final int? currentSchemaVersion;
+
+  @override
+  String toString() =>
+      'BackupRestoreException($error, backup=$backupSchemaVersion, '
+      'current=$currentSchemaVersion)';
+}
 
 /// Drift-backed facade preserving the UI call surface from the prefs era.
 class LocalRepository {
@@ -3867,6 +3932,280 @@ class LocalRepository {
           )
           .toList(),
     );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Local backup / restore / export (Track 1)
+  // ---------------------------------------------------------------------------
+
+  /// AppMeta key recording when the last backup was exported (ISO-8601 UTC).
+  static const String lastBackupExportedAtMetaKey = 'last_backup_exported_at';
+
+  /// Reads the last-export timestamp from [AppMeta], or null if never exported.
+  Future<DateTime?> lastBackupExportedAt() async {
+    final AppMetaRow? row = await (_db.select(_db.appMeta)
+          ..where((t) => t.key.equals(lastBackupExportedAtMetaKey)))
+        .getSingleOrNull();
+    final String? raw = row?.value.trim();
+    if (raw == null || raw.isEmpty) {
+      return null;
+    }
+    return DateTime.tryParse(raw)?.toLocal();
+  }
+
+  /// Serializes the full local database (all 11 tables) plus the known
+  /// SharedPreferences keys into a versioned JSON envelope.
+  ///
+  /// Records the export time in [AppMeta] under [lastBackupExportedAtMetaKey]
+  /// before serializing so the stamp is part of the produced backup.
+  Future<String> exportBackupJson({DateTime? now}) async {
+    final DateTime exportedAt = (now ?? DateTime.now()).toUtc();
+    await _db.into(_db.appMeta).insertOnConflictUpdate(
+          AppMetaCompanion.insert(
+            key: lastBackupExportedAtMetaKey,
+            value: exportedAt.toIso8601String(),
+          ),
+        );
+
+    final Map<String, List<Map<String, dynamic>>> tables =
+        <String, List<Map<String, dynamic>>>{
+      'customers': (await _db.select(_db.customers).get())
+          .map((CustomerRow r) => r.toJson())
+          .toList(),
+      'inventoryItems': (await _db.select(_db.inventoryItems).get())
+          .map((InventoryItemRow r) => r.toJson())
+          .toList(),
+      'rentals': (await _db.select(_db.rentals).get())
+          .map((RentalRow r) => r.toJson())
+          .toList(),
+      'rentalItems': (await _db.select(_db.rentalItems).get())
+          .map((RentalItemRow r) => r.toJson())
+          .toList(),
+      'rentalEvents': (await _db.select(_db.rentalEvents).get())
+          .map((RentalEventRow r) => r.toJson())
+          .toList(),
+      'rentalNotes': (await _db.select(_db.rentalNotes).get())
+          .map((RentalNoteRow r) => r.toJson())
+          .toList(),
+      'depositLedger': (await _db.select(_db.depositLedger).get())
+          .map((DepositLedgerRow r) => r.toJson())
+          .toList(),
+      'moneyLoans': (await _db.select(_db.moneyLoans).get())
+          .map((MoneyLoanRow r) => r.toJson())
+          .toList(),
+      'moneyLoanEntries': (await _db.select(_db.moneyLoanEntries).get())
+          .map((MoneyLoanEntryRow r) => r.toJson())
+          .toList(),
+      'customerSubscriptions':
+          (await _db.select(_db.customerSubscriptions).get())
+              .map((CustomerSubscriptionRow r) => r.toJson())
+              .toList(),
+      'appMeta': (await _db.select(_db.appMeta).get())
+          .map((AppMetaRow r) => r.toJson())
+          .toList(),
+    };
+
+    final Map<String, Object?> preferences = <String, Object?>{};
+    for (final String key in kBackupPreferenceKeys) {
+      final Object? value = _preferences.get(key);
+      if (value != null) {
+        preferences[key] = value;
+      }
+    }
+
+    final Map<String, Object?> envelope = <String, Object?>{
+      'formatVersion': kBackupFormatVersion,
+      'appSchemaVersion': kSchemaBaselineVersion,
+      'appName': kAppDisplayName,
+      'exportedAt': exportedAt.toIso8601String(),
+      'tables': tables,
+      'preferences': preferences,
+    };
+
+    return const JsonEncoder.withIndent('  ').convert(envelope);
+  }
+
+  /// Restores a backup produced by [exportBackupJson].
+  ///
+  /// Guards: rejects a malformed envelope, a `formatVersion` other than
+  /// [kBackupFormatVersion], or an `appSchemaVersion` newer than this build's
+  /// [kSchemaBaselineVersion] (the app must be updated first). When
+  /// [replaceExisting] is true every table is wiped and re-inserted inside a
+  /// single Drift transaction; the known preference keys are rewritten to match
+  /// the backup. [replaceExisting] false is reserved for a future merge mode
+  /// and currently rejects (only full replace is supported).
+  Future<void> importBackupJson(
+    String json, {
+    required bool replaceExisting,
+  }) async {
+    final Object? decoded;
+    try {
+      decoded = jsonDecode(json);
+    } on FormatException {
+      throw const BackupRestoreException(BackupRestoreError.invalidFormat);
+    }
+    if (decoded is! Map<String, dynamic>) {
+      throw const BackupRestoreException(BackupRestoreError.invalidFormat);
+    }
+    final Map<String, dynamic> envelope = decoded;
+
+    final Object? formatVersion = envelope['formatVersion'];
+    if (formatVersion is! int) {
+      throw const BackupRestoreException(BackupRestoreError.invalidFormat);
+    }
+    if (formatVersion != kBackupFormatVersion) {
+      throw BackupRestoreException(
+        BackupRestoreError.unsupportedFormatVersion,
+        backupSchemaVersion: envelope['appSchemaVersion'] as int?,
+        currentSchemaVersion: kSchemaBaselineVersion,
+      );
+    }
+
+    final Object? schemaVersion = envelope['appSchemaVersion'];
+    if (schemaVersion is! int) {
+      throw const BackupRestoreException(BackupRestoreError.invalidFormat);
+    }
+    if (schemaVersion > kSchemaBaselineVersion) {
+      throw BackupRestoreException(
+        BackupRestoreError.schemaTooNew,
+        backupSchemaVersion: schemaVersion,
+        currentSchemaVersion: kSchemaBaselineVersion,
+      );
+    }
+
+    final Object? tablesRaw = envelope['tables'];
+    if (tablesRaw is! Map<String, dynamic>) {
+      throw const BackupRestoreException(BackupRestoreError.invalidFormat);
+    }
+    final Map<String, dynamic> tables = tablesRaw;
+
+    if (!replaceExisting) {
+      // Merge mode is not implemented yet; refuse rather than partially apply.
+      throw const BackupRestoreException(BackupRestoreError.invalidFormat);
+    }
+
+    List<Map<String, dynamic>> rowsFor(String key) {
+      final Object? raw = tables[key];
+      if (raw == null) {
+        return const <Map<String, dynamic>>[];
+      }
+      if (raw is! List) {
+        throw const BackupRestoreException(BackupRestoreError.invalidFormat);
+      }
+      return raw
+          .map((Object? e) => (e as Map).cast<String, dynamic>())
+          .toList();
+    }
+
+    final List<Map<String, dynamic>> customers = rowsFor('customers');
+    final List<Map<String, dynamic>> inventoryItems = rowsFor('inventoryItems');
+    final List<Map<String, dynamic>> rentals = rowsFor('rentals');
+    final List<Map<String, dynamic>> rentalItems = rowsFor('rentalItems');
+    final List<Map<String, dynamic>> rentalEvents = rowsFor('rentalEvents');
+    final List<Map<String, dynamic>> rentalNotes = rowsFor('rentalNotes');
+    final List<Map<String, dynamic>> depositLedger = rowsFor('depositLedger');
+    final List<Map<String, dynamic>> moneyLoans = rowsFor('moneyLoans');
+    final List<Map<String, dynamic>> moneyLoanEntries =
+        rowsFor('moneyLoanEntries');
+    final List<Map<String, dynamic>> customerSubscriptions =
+        rowsFor('customerSubscriptions');
+    final List<Map<String, dynamic>> appMeta = rowsFor('appMeta');
+
+    try {
+      await _db.transaction(() async {
+        // Delete children before parents to respect FK references.
+        await _db.delete(_db.rentalNotes).go();
+        await _db.delete(_db.rentalEvents).go();
+        await _db.delete(_db.depositLedger).go();
+        await _db.delete(_db.customerSubscriptions).go();
+        await _db.delete(_db.moneyLoanEntries).go();
+        await _db.delete(_db.moneyLoans).go();
+        await _db.delete(_db.rentalItems).go();
+        await _db.delete(_db.rentals).go();
+        await _db.delete(_db.inventoryItems).go();
+        await _db.delete(_db.customers).go();
+        await _db.delete(_db.appMeta).go();
+
+        // Insert parents before children (reverse of the delete order).
+        for (final Map<String, dynamic> j in customers) {
+          await _db.into(_db.customers).insert(CustomerRow.fromJson(j));
+        }
+        for (final Map<String, dynamic> j in inventoryItems) {
+          await _db
+              .into(_db.inventoryItems)
+              .insert(InventoryItemRow.fromJson(j));
+        }
+        for (final Map<String, dynamic> j in rentals) {
+          await _db.into(_db.rentals).insert(RentalRow.fromJson(j));
+        }
+        for (final Map<String, dynamic> j in rentalItems) {
+          await _db.into(_db.rentalItems).insert(RentalItemRow.fromJson(j));
+        }
+        for (final Map<String, dynamic> j in rentalEvents) {
+          await _db.into(_db.rentalEvents).insert(RentalEventRow.fromJson(j));
+        }
+        for (final Map<String, dynamic> j in rentalNotes) {
+          await _db.into(_db.rentalNotes).insert(RentalNoteRow.fromJson(j));
+        }
+        for (final Map<String, dynamic> j in depositLedger) {
+          await _db.into(_db.depositLedger).insert(DepositLedgerRow.fromJson(j));
+        }
+        for (final Map<String, dynamic> j in moneyLoans) {
+          await _db.into(_db.moneyLoans).insert(MoneyLoanRow.fromJson(j));
+        }
+        for (final Map<String, dynamic> j in moneyLoanEntries) {
+          await _db
+              .into(_db.moneyLoanEntries)
+              .insert(MoneyLoanEntryRow.fromJson(j));
+        }
+        for (final Map<String, dynamic> j in customerSubscriptions) {
+          await _db
+              .into(_db.customerSubscriptions)
+              .insert(CustomerSubscriptionRow.fromJson(j));
+        }
+        for (final Map<String, dynamic> j in appMeta) {
+          await _db.into(_db.appMeta).insert(AppMetaRow.fromJson(j));
+        }
+      });
+    } on BackupRestoreException {
+      rethrow;
+    } catch (_) {
+      // Any decode/insert failure means the payload was not a valid backup.
+      throw const BackupRestoreException(BackupRestoreError.invalidFormat);
+    }
+
+    await _restorePreferences(envelope['preferences']);
+  }
+
+  /// Rewrites the known preference keys to match [raw]; keys absent from the
+  /// backup are removed so preferences mirror the restored snapshot exactly.
+  Future<void> _restorePreferences(Object? raw) async {
+    final Map<String, dynamic> prefs = raw is Map<String, dynamic>
+        ? raw
+        : const <String, dynamic>{};
+    for (final String key in kBackupPreferenceKeys) {
+      if (!prefs.containsKey(key)) {
+        await _preferences.remove(key);
+        continue;
+      }
+      final Object? value = prefs[key];
+      if (value is bool) {
+        await _preferences.setBool(key, value);
+      } else if (value is int) {
+        await _preferences.setInt(key, value);
+      } else if (value is double) {
+        await _preferences.setDouble(key, value);
+      } else if (value is String) {
+        await _preferences.setString(key, value);
+      } else if (value is List) {
+        await _preferences.setStringList(
+          key,
+          value.map((Object? e) => e.toString()).toList(),
+        );
+      } else {
+        await _preferences.remove(key);
+      }
+    }
   }
 }
 

@@ -36,6 +36,7 @@ import 'features/orders/new_order_flow_screen.dart';
 import 'features/orders/order_payment_screen.dart';
 import 'features/orders/rental_detail_nav.dart';
 import 'features/reports/share_reports_screen.dart';
+import 'features/settings/backup_restore_screen.dart';
 import 'features/templates/business_templates_screen.dart';
 import 'features/templates/enabled_resource_types_screen.dart';
 import 'features/transactions/transactions_screen.dart';
@@ -906,6 +907,20 @@ class MoreScreen extends ConsumerWidget {
           onTap: () {
             Navigator.of(context).push(
               MaterialPageRoute<void>(builder: (_) => const ShareReportsScreen()),
+            );
+          },
+        ),
+        const SizedBox(height: 10),
+        EntityCard(
+          title: l10n.backupRestoreTitle,
+          subtitle: l10n.backupRestoreSubtitle,
+          leadingIcon: Icons.backup_outlined,
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const BackupRestoreScreen(),
+              ),
             );
           },
         ),

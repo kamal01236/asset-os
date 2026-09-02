@@ -2570,4 +2570,84 @@ class AppLocalizationsHi extends AppLocalizations {
   String moneyStackSemantics(String label, String amount) {
     return '$label, $amount';
   }
+
+  @override
+  String get backupRestoreTitle => 'बैकअप और रिस्टोर';
+
+  @override
+  String get backupRestoreSubtitle =>
+      'अपना सारा डेटा एक फ़ाइल में सहेजें, या बैकअप से वापस लाएँ';
+
+  @override
+  String get backupExportSectionTitle => 'बैकअप एक्सपोर्ट करें';
+
+  @override
+  String get backupExportSectionBody =>
+      'ग्राहक, संसाधन, ऑर्डर, उधार और सेटिंग्स को एक ही फ़ाइल में सहेजें जिसे आप सुरक्षित रख सकें.';
+
+  @override
+  String get backupExportAction => 'बैकअप एक्सपोर्ट करें';
+
+  @override
+  String get backupExporting => 'बैकअप तैयार हो रहा है…';
+
+  @override
+  String get backupExportSuccess => 'बैकअप सहेजा गया';
+
+  @override
+  String get backupExportError =>
+      'बैकअप नहीं बन सका. कृपया फिर से प्रयास करें.';
+
+  @override
+  String get backupRestoreSectionTitle => 'बैकअप से रिस्टोर करें';
+
+  @override
+  String get backupRestoreSectionBody =>
+      'इस डिवाइस का डेटा बदलने के लिए बैकअप फ़ाइल लोड करें. आपका मौजूदा डेटा बदल दिया जाएगा.';
+
+  @override
+  String get backupRestoreAction => 'बैकअप से रिस्टोर करें';
+
+  @override
+  String get backupRestoring => 'बैकअप रिस्टोर हो रहा है…';
+
+  @override
+  String get backupRestoreSuccess => 'बैकअप रिस्टोर हो गया';
+
+  @override
+  String get backupRestoreConfirmTitle => 'सारा डेटा बदलें?';
+
+  @override
+  String backupRestoreConfirmBody(String appName) {
+    return 'रिस्टोर करने पर इस डिवाइस का मौजूदा $appName डेटा बैकअप से बदल जाएगा. इसे पूर्ववत नहीं किया जा सकता.';
+  }
+
+  @override
+  String get backupRestoreConfirmAction => 'डेटा बदलें';
+
+  @override
+  String get backupRestoreNoFile => 'कोई फ़ाइल नहीं चुनी गई.';
+
+  @override
+  String backupRestoreErrorInvalid(String appName) {
+    return 'यह फ़ाइल एक मान्य $appName बैकअप नहीं है.';
+  }
+
+  @override
+  String backupRestoreErrorFormatVersion(String appName) {
+    return 'यह बैकअप $appName के किसी अलग वर्शन से बना है. ऐप अपडेट करें और फिर से प्रयास करें.';
+  }
+
+  @override
+  String backupRestoreErrorSchemaTooNew(String appName) {
+    return 'यह बैकअप $appName के नए वर्शन से है. पहले ऐप अपडेट करें, फिर रिस्टोर करें.';
+  }
+
+  @override
+  String backupLastExported(String date) {
+    return 'आखिरी बैकअप: $date';
+  }
+
+  @override
+  String get backupNeverExported => 'इस डिवाइस पर अभी तक कोई बैकअप नहीं';
 }

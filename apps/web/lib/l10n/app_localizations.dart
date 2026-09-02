@@ -1810,7 +1810,7 @@ abstract class AppLocalizations {
   /// No description provided for @returnNoteHint.
   ///
   /// In en, this message translates to:
-  /// **'At least 3 characters when set'**
+  /// **'Max 20 characters'**
   String get returnNoteHint;
 
   /// No description provided for @deleteOrderAction.
@@ -3326,7 +3326,7 @@ abstract class AppLocalizations {
   /// No description provided for @paymentReferenceLabel.
   ///
   /// In en, this message translates to:
-  /// **'Payment ref'**
+  /// **'Note (optional)'**
   String get paymentReferenceLabel;
 
   /// No description provided for @paymentReferenceHint.
@@ -3338,7 +3338,7 @@ abstract class AppLocalizations {
   /// No description provided for @paymentReferenceRequired.
   ///
   /// In en, this message translates to:
-  /// **'Payment reference is required'**
+  /// **'Note must be at most 20 characters'**
   String get paymentReferenceRequired;
 
   /// No description provided for @timelinePaymentRef.
@@ -4013,7 +4013,7 @@ abstract class AppLocalizations {
   /// No description provided for @loanPaymentReferenceLabel.
   ///
   /// In en, this message translates to:
-  /// **'Payment ref'**
+  /// **'Note (optional)'**
   String get loanPaymentReferenceLabel;
 
   /// No description provided for @loanSaving.
@@ -4564,6 +4564,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{label}, {amount}'**
   String moneyStackSemantics(String label, String amount);
+
+  /// No description provided for @backupRestoreTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup & Restore'**
+  String get backupRestoreTitle;
+
+  /// No description provided for @backupRestoreSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Save all your data to a file, or restore it from a backup'**
+  String get backupRestoreSubtitle;
+
+  /// No description provided for @backupExportSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Export a backup'**
+  String get backupExportSectionTitle;
+
+  /// No description provided for @backupExportSectionBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Save customers, resources, orders, loans and settings to a single file you can keep safe.'**
+  String get backupExportSectionBody;
+
+  /// No description provided for @backupExportAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Export backup'**
+  String get backupExportAction;
+
+  /// No description provided for @backupExporting.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing backup…'**
+  String get backupExporting;
+
+  /// No description provided for @backupExportSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup saved'**
+  String get backupExportSuccess;
+
+  /// No description provided for @backupExportError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t create the backup. Please try again.'**
+  String get backupExportError;
+
+  /// No description provided for @backupRestoreSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore from a backup'**
+  String get backupRestoreSectionTitle;
+
+  /// No description provided for @backupRestoreSectionBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Load a backup file to replace the data on this device. Your current data will be overwritten.'**
+  String get backupRestoreSectionBody;
+
+  /// No description provided for @backupRestoreAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore from backup'**
+  String get backupRestoreAction;
+
+  /// No description provided for @backupRestoring.
+  ///
+  /// In en, this message translates to:
+  /// **'Restoring backup…'**
+  String get backupRestoring;
+
+  /// No description provided for @backupRestoreSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup restored'**
+  String get backupRestoreSuccess;
+
+  /// No description provided for @backupRestoreConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace all data?'**
+  String get backupRestoreConfirmTitle;
+
+  /// No description provided for @backupRestoreConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Restoring replaces the current {appName} data on this device with the backup. This can\'t be undone.'**
+  String backupRestoreConfirmBody(String appName);
+
+  /// No description provided for @backupRestoreConfirmAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace data'**
+  String get backupRestoreConfirmAction;
+
+  /// No description provided for @backupRestoreNoFile.
+  ///
+  /// In en, this message translates to:
+  /// **'No file selected.'**
+  String get backupRestoreNoFile;
+
+  /// No description provided for @backupRestoreErrorInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'That file isn\'t a valid {appName} backup.'**
+  String backupRestoreErrorInvalid(String appName);
+
+  /// No description provided for @backupRestoreErrorFormatVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'This backup was made with a different version of {appName}. Update the app and try again.'**
+  String backupRestoreErrorFormatVersion(String appName);
+
+  /// No description provided for @backupRestoreErrorSchemaTooNew.
+  ///
+  /// In en, this message translates to:
+  /// **'This backup is from a newer version of {appName}. Update the app, then restore.'**
+  String backupRestoreErrorSchemaTooNew(String appName);
+
+  /// No description provided for @backupLastExported.
+  ///
+  /// In en, this message translates to:
+  /// **'Last backup: {date}'**
+  String backupLastExported(String date);
+
+  /// No description provided for @backupNeverExported.
+  ///
+  /// In en, this message translates to:
+  /// **'No backups yet on this device'**
+  String get backupNeverExported;
 }
 
 class _AppLocalizationsDelegate

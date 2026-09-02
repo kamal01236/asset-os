@@ -3713,8 +3713,14 @@ class $RentalEventsTable extends RentalEvents
     requiredDuringInsert: false,
   );
   @override
-  List<GeneratedColumn> get $columns =>
-      [id, rentalId, title, subtitle, at, referenceCode];
+  List<GeneratedColumn> get $columns => [
+    id,
+    rentalId,
+    title,
+    subtitle,
+    at,
+    referenceCode,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -3816,6 +3822,8 @@ class RentalEventRow extends DataClass implements Insertable<RentalEventRow> {
   final String title;
   final String subtitle;
   final DateTime at;
+
+  /// Operator payment ref for [TimelineTitleKey.paymentReceived] rows.
   final String? referenceCode;
   const RentalEventRow({
     required this.id,
@@ -5662,7 +5670,8 @@ class MoneyLoanRow extends DataClass implements Insertable<MoneyLoanRow> {
   /// Rate in basis points (100 bps = 1%).
   final int rateBps;
 
-  /// Rate period: `monthly` | `yearly` (legacy `daily` migrated to yearly).
+  /// Rate period: `monthly` | `quarterly` | `halfYearly` | `yearly`
+  /// (legacy `daily` migrated to yearly).
   final String ratePeriod;
 
   /// Accrual basis: `calendar` | `daily365` (ACT/365).
@@ -5672,7 +5681,8 @@ class MoneyLoanRow extends DataClass implements Insertable<MoneyLoanRow> {
   /// `onLoanClosure` | `manual`
   final String capitalizationPolicy;
 
-  /// `monthly` | `quarterly` | `yearly` (when policy is onScheduledCycle)
+  /// `monthly` | `quarterly` | `halfYearly` | `yearly` (when policy is
+  /// onScheduledCycle)
   final String capitalizationCycle;
 
   /// Date money was first given / interest clock start.
@@ -6825,7 +6835,10 @@ class $CustomerSubscriptionsTable extends CustomerSubscriptions
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  CustomerSubscriptionRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+  CustomerSubscriptionRow map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return CustomerSubscriptionRow(
       id: attachedDatabase.typeMapping.read(
@@ -6859,8 +6872,7 @@ class $CustomerSubscriptionsTable extends CustomerSubscriptions
       status: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}status'],
-      ) ??
-          'active',
+      )!,
     );
   }
 
@@ -6874,11 +6886,15 @@ class CustomerSubscriptionRow extends DataClass
     implements Insertable<CustomerSubscriptionRow> {
   final String id;
   final String customerId;
+
+  /// `basic` | `standard` | `pro` | `premium`
   final String tier;
   final DateTime startsAt;
   final DateTime validUntil;
   final String? sourceRentalId;
   final String? sourceItemId;
+
+  /// `active` | `cancelled`
   final String status;
   const CustomerSubscriptionRow({
     required this.id,
@@ -6977,7 +6993,9 @@ class CustomerSubscriptionRow extends DataClass
     sourceItemId: sourceItemId.present ? sourceItemId.value : this.sourceItemId,
     status: status ?? this.status,
   );
-  CustomerSubscriptionRow copyWithCompanion(CustomerSubscriptionsCompanion data) {
+  CustomerSubscriptionRow copyWithCompanion(
+    CustomerSubscriptionsCompanion data,
+  ) {
     return CustomerSubscriptionRow(
       id: data.id.present ? data.id.value : this.id,
       customerId: data.customerId.present
@@ -10402,6 +10420,290 @@ typedef $$MoneyLoanEntriesTableProcessedTableManager =
       MoneyLoanEntryRow,
       PrefetchHooks Function()
     >;
+typedef $$CustomerSubscriptionsTableCreateCompanionBuilder =
+    CustomerSubscriptionsCompanion Function({
+      required String id,
+      required String customerId,
+      required String tier,
+      required DateTime startsAt,
+      required DateTime validUntil,
+      Value<String?> sourceRentalId,
+      Value<String?> sourceItemId,
+      Value<String> status,
+      Value<int> rowid,
+    });
+typedef $$CustomerSubscriptionsTableUpdateCompanionBuilder =
+    CustomerSubscriptionsCompanion Function({
+      Value<String> id,
+      Value<String> customerId,
+      Value<String> tier,
+      Value<DateTime> startsAt,
+      Value<DateTime> validUntil,
+      Value<String?> sourceRentalId,
+      Value<String?> sourceItemId,
+      Value<String> status,
+      Value<int> rowid,
+    });
+
+class $$CustomerSubscriptionsTableFilterComposer
+    extends Composer<_$AppDatabase, $CustomerSubscriptionsTable> {
+  $$CustomerSubscriptionsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get customerId => $composableBuilder(
+    column: $table.customerId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tier => $composableBuilder(
+    column: $table.tier,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get startsAt => $composableBuilder(
+    column: $table.startsAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get validUntil => $composableBuilder(
+    column: $table.validUntil,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sourceRentalId => $composableBuilder(
+    column: $table.sourceRentalId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sourceItemId => $composableBuilder(
+    column: $table.sourceItemId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$CustomerSubscriptionsTableOrderingComposer
+    extends Composer<_$AppDatabase, $CustomerSubscriptionsTable> {
+  $$CustomerSubscriptionsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get customerId => $composableBuilder(
+    column: $table.customerId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get tier => $composableBuilder(
+    column: $table.tier,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get startsAt => $composableBuilder(
+    column: $table.startsAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get validUntil => $composableBuilder(
+    column: $table.validUntil,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sourceRentalId => $composableBuilder(
+    column: $table.sourceRentalId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sourceItemId => $composableBuilder(
+    column: $table.sourceItemId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$CustomerSubscriptionsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CustomerSubscriptionsTable> {
+  $$CustomerSubscriptionsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get customerId => $composableBuilder(
+    column: $table.customerId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get tier =>
+      $composableBuilder(column: $table.tier, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get startsAt =>
+      $composableBuilder(column: $table.startsAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get validUntil => $composableBuilder(
+    column: $table.validUntil,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get sourceRentalId => $composableBuilder(
+    column: $table.sourceRentalId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get sourceItemId => $composableBuilder(
+    column: $table.sourceItemId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+}
+
+class $$CustomerSubscriptionsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $CustomerSubscriptionsTable,
+          CustomerSubscriptionRow,
+          $$CustomerSubscriptionsTableFilterComposer,
+          $$CustomerSubscriptionsTableOrderingComposer,
+          $$CustomerSubscriptionsTableAnnotationComposer,
+          $$CustomerSubscriptionsTableCreateCompanionBuilder,
+          $$CustomerSubscriptionsTableUpdateCompanionBuilder,
+          (
+            CustomerSubscriptionRow,
+            BaseReferences<
+              _$AppDatabase,
+              $CustomerSubscriptionsTable,
+              CustomerSubscriptionRow
+            >,
+          ),
+          CustomerSubscriptionRow,
+          PrefetchHooks Function()
+        > {
+  $$CustomerSubscriptionsTableTableManager(
+    _$AppDatabase db,
+    $CustomerSubscriptionsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CustomerSubscriptionsTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$CustomerSubscriptionsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$CustomerSubscriptionsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> customerId = const Value.absent(),
+                Value<String> tier = const Value.absent(),
+                Value<DateTime> startsAt = const Value.absent(),
+                Value<DateTime> validUntil = const Value.absent(),
+                Value<String?> sourceRentalId = const Value.absent(),
+                Value<String?> sourceItemId = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CustomerSubscriptionsCompanion(
+                id: id,
+                customerId: customerId,
+                tier: tier,
+                startsAt: startsAt,
+                validUntil: validUntil,
+                sourceRentalId: sourceRentalId,
+                sourceItemId: sourceItemId,
+                status: status,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String customerId,
+                required String tier,
+                required DateTime startsAt,
+                required DateTime validUntil,
+                Value<String?> sourceRentalId = const Value.absent(),
+                Value<String?> sourceItemId = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CustomerSubscriptionsCompanion.insert(
+                id: id,
+                customerId: customerId,
+                tier: tier,
+                startsAt: startsAt,
+                validUntil: validUntil,
+                sourceRentalId: sourceRentalId,
+                sourceItemId: sourceItemId,
+                status: status,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$CustomerSubscriptionsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $CustomerSubscriptionsTable,
+      CustomerSubscriptionRow,
+      $$CustomerSubscriptionsTableFilterComposer,
+      $$CustomerSubscriptionsTableOrderingComposer,
+      $$CustomerSubscriptionsTableAnnotationComposer,
+      $$CustomerSubscriptionsTableCreateCompanionBuilder,
+      $$CustomerSubscriptionsTableUpdateCompanionBuilder,
+      (
+        CustomerSubscriptionRow,
+        BaseReferences<
+          _$AppDatabase,
+          $CustomerSubscriptionsTable,
+          CustomerSubscriptionRow
+        >,
+      ),
+      CustomerSubscriptionRow,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -10426,4 +10728,6 @@ class $AppDatabaseManager {
       $$MoneyLoansTableTableManager(_db, _db.moneyLoans);
   $$MoneyLoanEntriesTableTableManager get moneyLoanEntries =>
       $$MoneyLoanEntriesTableTableManager(_db, _db.moneyLoanEntries);
+  $$CustomerSubscriptionsTableTableManager get customerSubscriptions =>
+      $$CustomerSubscriptionsTableTableManager(_db, _db.customerSubscriptions);
 }

@@ -2570,4 +2570,84 @@ class AppLocalizationsEn extends AppLocalizations {
   String moneyStackSemantics(String label, String amount) {
     return '$label, $amount';
   }
+
+  @override
+  String get backupRestoreTitle => 'Backup & Restore';
+
+  @override
+  String get backupRestoreSubtitle =>
+      'Save all your data to a file, or restore it from a backup';
+
+  @override
+  String get backupExportSectionTitle => 'Export a backup';
+
+  @override
+  String get backupExportSectionBody =>
+      'Save customers, resources, orders, loans and settings to a single file you can keep safe.';
+
+  @override
+  String get backupExportAction => 'Export backup';
+
+  @override
+  String get backupExporting => 'Preparing backup…';
+
+  @override
+  String get backupExportSuccess => 'Backup saved';
+
+  @override
+  String get backupExportError =>
+      'Couldn\'t create the backup. Please try again.';
+
+  @override
+  String get backupRestoreSectionTitle => 'Restore from a backup';
+
+  @override
+  String get backupRestoreSectionBody =>
+      'Load a backup file to replace the data on this device. Your current data will be overwritten.';
+
+  @override
+  String get backupRestoreAction => 'Restore from backup';
+
+  @override
+  String get backupRestoring => 'Restoring backup…';
+
+  @override
+  String get backupRestoreSuccess => 'Backup restored';
+
+  @override
+  String get backupRestoreConfirmTitle => 'Replace all data?';
+
+  @override
+  String backupRestoreConfirmBody(String appName) {
+    return 'Restoring replaces the current $appName data on this device with the backup. This can\'t be undone.';
+  }
+
+  @override
+  String get backupRestoreConfirmAction => 'Replace data';
+
+  @override
+  String get backupRestoreNoFile => 'No file selected.';
+
+  @override
+  String backupRestoreErrorInvalid(String appName) {
+    return 'That file isn\'t a valid $appName backup.';
+  }
+
+  @override
+  String backupRestoreErrorFormatVersion(String appName) {
+    return 'This backup was made with a different version of $appName. Update the app and try again.';
+  }
+
+  @override
+  String backupRestoreErrorSchemaTooNew(String appName) {
+    return 'This backup is from a newer version of $appName. Update the app, then restore.';
+  }
+
+  @override
+  String backupLastExported(String date) {
+    return 'Last backup: $date';
+  }
+
+  @override
+  String get backupNeverExported => 'No backups yet on this device';
 }

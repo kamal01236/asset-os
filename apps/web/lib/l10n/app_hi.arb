@@ -1811,5 +1811,62 @@
         "type": "String"
       }
     }
-  }
+  },
+  "backupRestoreTitle": "बैकअप और रिस्टोर",
+  "backupRestoreSubtitle": "अपना सारा डेटा एक फ़ाइल में सहेजें, या बैकअप से वापस लाएँ",
+  "backupExportSectionTitle": "बैकअप एक्सपोर्ट करें",
+  "backupExportSectionBody": "ग्राहक, संसाधन, ऑर्डर, उधार और सेटिंग्स को एक ही फ़ाइल में सहेजें जिसे आप सुरक्षित रख सकें.",
+  "backupExportAction": "बैकअप एक्सपोर्ट करें",
+  "backupExporting": "बैकअप तैयार हो रहा है…",
+  "backupExportSuccess": "बैकअप सहेजा गया",
+  "backupExportError": "बैकअप नहीं बन सका. कृपया फिर से प्रयास करें.",
+  "backupRestoreSectionTitle": "बैकअप से रिस्टोर करें",
+  "backupRestoreSectionBody": "इस डिवाइस का डेटा बदलने के लिए बैकअप फ़ाइल लोड करें. आपका मौजूदा डेटा बदल दिया जाएगा.",
+  "backupRestoreAction": "बैकअप से रिस्टोर करें",
+  "backupRestoring": "बैकअप रिस्टोर हो रहा है…",
+  "backupRestoreSuccess": "बैकअप रिस्टोर हो गया",
+  "backupRestoreConfirmTitle": "सारा डेटा बदलें?",
+  "backupRestoreConfirmBody": "रिस्टोर करने पर इस डिवाइस का मौजूदा {appName} डेटा बैकअप से बदल जाएगा. इसे पूर्ववत नहीं किया जा सकता.",
+  "@backupRestoreConfirmBody": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "backupRestoreConfirmAction": "डेटा बदलें",
+  "backupRestoreNoFile": "कोई फ़ाइल नहीं चुनी गई.",
+  "backupRestoreErrorInvalid": "यह फ़ाइल एक मान्य {appName} बैकअप नहीं है.",
+  "@backupRestoreErrorInvalid": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "backupRestoreErrorFormatVersion": "यह बैकअप {appName} के किसी अलग वर्शन से बना है. ऐप अपडेट करें और फिर से प्रयास करें.",
+  "@backupRestoreErrorFormatVersion": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "backupRestoreErrorSchemaTooNew": "यह बैकअप {appName} के नए वर्शन से है. पहले ऐप अपडेट करें, फिर रिस्टोर करें.",
+  "@backupRestoreErrorSchemaTooNew": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "backupLastExported": "आखिरी बैकअप: {date}",
+  "@backupLastExported": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "backupNeverExported": "इस डिवाइस पर अभी तक कोई बैकअप नहीं"
 }
