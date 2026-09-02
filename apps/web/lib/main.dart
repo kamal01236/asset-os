@@ -5,14 +5,18 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'presentation/app_shell.dart';
 import 'domain/config/app_branding.dart';
 import 'infrastructure/db/app_database.dart';
-import 'infrastructure/l10n/l10n_ext.dart';
+import 'l10n/app_localizations.dart';
+import 'infrastructure/notifications/local_notifications.dart';
 import 'application/providers/app_providers.dart';
 import 'application/local_repository.dart';
+import 'application/reminders/reminder_scheduler.dart';
+import 'application/reminders/reminder_settings.dart';
 import 'presentation/theme/app_theme.dart';
 import 'presentation/features/onboarding/onboarding_wizard_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await initLocalNotifications();
   final SharedPreferences preferences = await SharedPreferences.getInstance();
   final AppDatabase database = AppDatabase();
   final LocalRepository repository = await bootstrapRepository(
@@ -21,6 +25,22 @@ Future<void> main() async {
     seedDemo: false,
   );
   final bool needsOnboarding = await repository.needsIndustryOnboarding();
+
+  if (!needsOnboarding) {
+    final ReminderSettings settings =
+        ReminderSettings.fromPreferences(preferences);
+    final AppLocalizations l10n = lookupAppLocalizations(
+      LocaleNotifier.supportedLanguageCodes.contains(
+        preferences.getString(kLocalePrefsKey),
+      )
+          ? Locale(preferences.getString(kLocalePrefsKey)!)
+          : const Locale('en'),
+    );
+    await ReminderScheduler(repository).refreshScheduledReminders(
+      settings: settings,
+      l10n: l10n,
+    );
+  }
 
   runApp(
     ProviderScope(

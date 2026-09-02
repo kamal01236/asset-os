@@ -2650,4 +2650,100 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get backupNeverExported => 'इस डिवाइस पर अभी तक कोई बैकअप नहीं';
+
+  @override
+  String get remindersTitle => 'रिमाइंडर';
+
+  @override
+  String remindersSubtitle(String appName) {
+    return 'इस डिवाइस पर आपके लिए दैनिक डाइजेस्ट अलर्ट। वेब पर $appName खोलने पर बैनर दिखता है। ग्राहक संदेश मैन्युअल रहते हैं।';
+  }
+
+  @override
+  String get remindersEnabledLabel => 'रिमाइंडर चालू करें';
+
+  @override
+  String get remindersEnabledHelp =>
+      'देय ऑर्डर, कम स्टॉक और लोन की सूचना आपको — ग्राहकों को नहीं।';
+
+  @override
+  String get remindersTimeLabel => 'दैनिक डाइजेस्ट का समय';
+
+  @override
+  String get remindersDueTomorrowLabel => 'कल देय';
+
+  @override
+  String get remindersDueTodayLabel => 'आज देय';
+
+  @override
+  String get remindersOverdueLabel => 'ओवरड्यू ऑर्डर';
+
+  @override
+  String get remindersLowStockLabel => 'कम स्टॉक';
+
+  @override
+  String get remindersLoansDueLabel => 'देय लोन';
+
+  @override
+  String get remindersLowStockThresholdLabel => 'कम-स्टॉक सीमा';
+
+  @override
+  String get remindersLowStockThresholdHelp =>
+      'जब उपलब्ध यूनिट इस संख्या या उससे कम हों (0 = स्टॉक खत्म)।';
+
+  @override
+  String get remindersPermissionTitle => 'नोटिफिकेशन की अनुमति';
+
+  @override
+  String get remindersPermissionBody =>
+      'रिमाइंडर दिखाने के लिए Android को अनुमति चाहिए।';
+
+  @override
+  String get remindersPermissionAction => 'नोटिफिकेशन की अनुमति दें';
+
+  @override
+  String get remindersPermissionDenied =>
+      'नोटिफिकेशन बंद हैं। रिमाइंडर के लिए सिस्टम सेटिंग में चालू करें।';
+
+  @override
+  String get remindersSaved => 'रिमाइंडर सेटिंग सेव हो गई';
+
+  @override
+  String get reminderDigestTitle => 'आज के रिमाइंडर';
+
+  @override
+  String reminderDigestBody(
+    int dueTomorrowCount,
+    int dueTodayCount,
+    int overdueCount,
+    int lowStockCount,
+    int loanDueCount,
+    String dueTomorrowNames,
+    String dueTodayNames,
+    String overdueNames,
+    String lowStockNames,
+    String loanDueNames,
+  ) {
+    return 'कल देय: $dueTomorrowCount ($dueTomorrowNames). आज देय: $dueTodayCount ($dueTodayNames). ओवरड्यू: $overdueCount ($overdueNames). कम स्टॉक: $lowStockCount ($lowStockNames). देय लोन: $loanDueCount ($loanDueNames).';
+  }
+
+  @override
+  String get reminderOverduePingTitle => 'ओवरड्यू ऑर्डर';
+
+  @override
+  String reminderOverduePingBody(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ऑर्डर ओवरड्यू हैं',
+      one: '1 ऑर्डर ओवरड्यू है',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get reminderDigestBannerAction => 'देखें';
+
+  @override
+  String get reminderDigestBannerDismiss => 'बंद करें';
 }

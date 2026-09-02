@@ -2650,4 +2650,100 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get backupNeverExported => 'No backups yet on this device';
+
+  @override
+  String get remindersTitle => 'Reminders';
+
+  @override
+  String remindersSubtitle(String appName) {
+    return 'Daily digest alerts for you on this device. On web, a banner appears when you open $appName. Customer messages stay manual.';
+  }
+
+  @override
+  String get remindersEnabledLabel => 'Enable reminders';
+
+  @override
+  String get remindersEnabledHelp =>
+      'Notify you about due orders, low stock, and loans — not your customers.';
+
+  @override
+  String get remindersTimeLabel => 'Daily digest time';
+
+  @override
+  String get remindersDueTomorrowLabel => 'Due tomorrow';
+
+  @override
+  String get remindersDueTodayLabel => 'Due today';
+
+  @override
+  String get remindersOverdueLabel => 'Overdue orders';
+
+  @override
+  String get remindersLowStockLabel => 'Low stock';
+
+  @override
+  String get remindersLoansDueLabel => 'Due loans';
+
+  @override
+  String get remindersLowStockThresholdLabel => 'Low-stock threshold';
+
+  @override
+  String get remindersLowStockThresholdHelp =>
+      'Alert when available units are at or below this number (0 = out of stock).';
+
+  @override
+  String get remindersPermissionTitle => 'Allow notifications';
+
+  @override
+  String get remindersPermissionBody =>
+      'Android needs permission to show reminder alerts.';
+
+  @override
+  String get remindersPermissionAction => 'Allow notifications';
+
+  @override
+  String get remindersPermissionDenied =>
+      'Notifications are off. Enable them in system settings to get reminders.';
+
+  @override
+  String get remindersSaved => 'Reminder settings saved';
+
+  @override
+  String get reminderDigestTitle => 'Today\'s reminders';
+
+  @override
+  String reminderDigestBody(
+    int dueTomorrowCount,
+    int dueTodayCount,
+    int overdueCount,
+    int lowStockCount,
+    int loanDueCount,
+    String dueTomorrowNames,
+    String dueTodayNames,
+    String overdueNames,
+    String lowStockNames,
+    String loanDueNames,
+  ) {
+    return 'Due tomorrow: $dueTomorrowCount ($dueTomorrowNames). Due today: $dueTodayCount ($dueTodayNames). Overdue: $overdueCount ($overdueNames). Low stock: $lowStockCount ($lowStockNames). Loans due: $loanDueCount ($loanDueNames).';
+  }
+
+  @override
+  String get reminderOverduePingTitle => 'Overdue orders';
+
+  @override
+  String reminderOverduePingBody(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count orders are overdue',
+      one: '1 order is overdue',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get reminderDigestBannerAction => 'View';
+
+  @override
+  String get reminderDigestBannerDismiss => 'Dismiss';
 }

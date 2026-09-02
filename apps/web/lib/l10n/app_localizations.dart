@@ -4696,6 +4696,155 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No backups yet on this device'**
   String get backupNeverExported;
+
+  /// No description provided for @remindersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminders'**
+  String get remindersTitle;
+
+  /// No description provided for @remindersSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily digest alerts for you on this device. On web, a banner appears when you open {appName}. Customer messages stay manual.'**
+  String remindersSubtitle(String appName);
+
+  /// No description provided for @remindersEnabledLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable reminders'**
+  String get remindersEnabledLabel;
+
+  /// No description provided for @remindersEnabledHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Notify you about due orders, low stock, and loans — not your customers.'**
+  String get remindersEnabledHelp;
+
+  /// No description provided for @remindersTimeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily digest time'**
+  String get remindersTimeLabel;
+
+  /// No description provided for @remindersDueTomorrowLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Due tomorrow'**
+  String get remindersDueTomorrowLabel;
+
+  /// No description provided for @remindersDueTodayLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Due today'**
+  String get remindersDueTodayLabel;
+
+  /// No description provided for @remindersOverdueLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Overdue orders'**
+  String get remindersOverdueLabel;
+
+  /// No description provided for @remindersLowStockLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Low stock'**
+  String get remindersLowStockLabel;
+
+  /// No description provided for @remindersLoansDueLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Due loans'**
+  String get remindersLoansDueLabel;
+
+  /// No description provided for @remindersLowStockThresholdLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Low-stock threshold'**
+  String get remindersLowStockThresholdLabel;
+
+  /// No description provided for @remindersLowStockThresholdHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Alert when available units are at or below this number (0 = out of stock).'**
+  String get remindersLowStockThresholdHelp;
+
+  /// No description provided for @remindersPermissionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow notifications'**
+  String get remindersPermissionTitle;
+
+  /// No description provided for @remindersPermissionBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Android needs permission to show reminder alerts.'**
+  String get remindersPermissionBody;
+
+  /// No description provided for @remindersPermissionAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow notifications'**
+  String get remindersPermissionAction;
+
+  /// No description provided for @remindersPermissionDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications are off. Enable them in system settings to get reminders.'**
+  String get remindersPermissionDenied;
+
+  /// No description provided for @remindersSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminder settings saved'**
+  String get remindersSaved;
+
+  /// No description provided for @reminderDigestTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s reminders'**
+  String get reminderDigestTitle;
+
+  /// No description provided for @reminderDigestBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Due tomorrow: {dueTomorrowCount} ({dueTomorrowNames}). Due today: {dueTodayCount} ({dueTodayNames}). Overdue: {overdueCount} ({overdueNames}). Low stock: {lowStockCount} ({lowStockNames}). Loans due: {loanDueCount} ({loanDueNames}).'**
+  String reminderDigestBody(
+    int dueTomorrowCount,
+    int dueTodayCount,
+    int overdueCount,
+    int lowStockCount,
+    int loanDueCount,
+    String dueTomorrowNames,
+    String dueTodayNames,
+    String overdueNames,
+    String lowStockNames,
+    String loanDueNames,
+  );
+
+  /// No description provided for @reminderOverduePingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Overdue orders'**
+  String get reminderOverduePingTitle;
+
+  /// No description provided for @reminderOverduePingBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 order is overdue} other{{count} orders are overdue}}'**
+  String reminderOverduePingBody(int count);
+
+  /// No description provided for @reminderDigestBannerAction.
+  ///
+  /// In en, this message translates to:
+  /// **'View'**
+  String get reminderDigestBannerAction;
+
+  /// No description provided for @reminderDigestBannerDismiss.
+  ///
+  /// In en, this message translates to:
+  /// **'Dismiss'**
+  String get reminderDigestBannerDismiss;
 }
 
 class _AppLocalizationsDelegate

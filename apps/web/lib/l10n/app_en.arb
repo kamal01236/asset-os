@@ -1868,5 +1868,54 @@
       }
     }
   },
-  "backupNeverExported": "No backups yet on this device"
+  "backupNeverExported": "No backups yet on this device",
+  "remindersTitle": "Reminders",
+  "remindersSubtitle": "Daily digest alerts for you on this device. On web, a banner appears when you open {appName}. Customer messages stay manual.",
+  "@remindersSubtitle": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "remindersEnabledLabel": "Enable reminders",
+  "remindersEnabledHelp": "Notify you about due orders, low stock, and loans — not your customers.",
+  "remindersTimeLabel": "Daily digest time",
+  "remindersDueTomorrowLabel": "Due tomorrow",
+  "remindersDueTodayLabel": "Due today",
+  "remindersOverdueLabel": "Overdue orders",
+  "remindersLowStockLabel": "Low stock",
+  "remindersLoansDueLabel": "Due loans",
+  "remindersLowStockThresholdLabel": "Low-stock threshold",
+  "remindersLowStockThresholdHelp": "Alert when available units are at or below this number (0 = out of stock).",
+  "remindersPermissionTitle": "Allow notifications",
+  "remindersPermissionBody": "Android needs permission to show reminder alerts.",
+  "remindersPermissionAction": "Allow notifications",
+  "remindersPermissionDenied": "Notifications are off. Enable them in system settings to get reminders.",
+  "remindersSaved": "Reminder settings saved",
+  "reminderDigestTitle": "Today's reminders",
+  "reminderDigestBody": "Due tomorrow: {dueTomorrowCount} ({dueTomorrowNames}). Due today: {dueTodayCount} ({dueTodayNames}). Overdue: {overdueCount} ({overdueNames}). Low stock: {lowStockCount} ({lowStockNames}). Loans due: {loanDueCount} ({loanDueNames}).",
+  "@reminderDigestBody": {
+    "placeholders": {
+      "dueTomorrowCount": { "type": "int" },
+      "dueTodayCount": { "type": "int" },
+      "overdueCount": { "type": "int" },
+      "lowStockCount": { "type": "int" },
+      "loanDueCount": { "type": "int" },
+      "dueTomorrowNames": { "type": "String" },
+      "dueTodayNames": { "type": "String" },
+      "overdueNames": { "type": "String" },
+      "lowStockNames": { "type": "String" },
+      "loanDueNames": { "type": "String" }
+    }
+  },
+  "reminderOverduePingTitle": "Overdue orders",
+  "reminderOverduePingBody": "{count, plural, one{1 order is overdue} other{{count} orders are overdue}}",
+  "@reminderOverduePingBody": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "reminderDigestBannerAction": "View",
+  "reminderDigestBannerDismiss": "Dismiss"
 }

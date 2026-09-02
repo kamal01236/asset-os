@@ -32,6 +32,9 @@ import '../domain/templates/field_defs.dart';
 import '../domain/templates/industry_templates.dart';
 import '../domain/templates/workflows.dart';
 import '../domain/validation/text_rules.dart';
+import '../domain/reminders/reminder_evaluator.dart';
+import '../domain/reminders/reminder_models.dart';
+import 'reminders/reminder_settings.dart';
 export '../domain/inventory/unit_code_pool.dart'
     show generateUnitPool, normalizeUnitCodePrefix, UnitOccupancyRow;
 export '../domain/loans/loan_models.dart';
@@ -3932,6 +3935,50 @@ class LocalRepository {
           )
           .toList(),
     );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Local reminders (Track 2)
+  // ---------------------------------------------------------------------------
+
+  /// Evaluated reminder candidates filtered by [settings] or current prefs.
+  Future<List<ReminderCandidate>> listReminderCandidates({
+    DateTime? asOf,
+    ReminderSettings? settings,
+  }) async {
+    final DateTime now = asOf ?? DateTime.now();
+    final ReminderSettings effective =
+        settings ?? ReminderSettings.fromPreferences(_preferences);
+    final List<Rental> rentals = await watchRentals().first;
+    final List<InventoryItem> inventory = await watchInventory().first;
+    final List<MoneyLoan> loans = await watchMoneyLoans().first;
+    final List<Customer> customers = await watchCustomers().first;
+
+    final List<ReminderCandidate> all = <ReminderCandidate>[
+      ...evaluateOrderReminders(rentals, customers, now),
+      ...evaluateLowStock(inventory, effective.lowStockThreshold),
+      ...evaluateLoanReminders(loans, customers, now),
+    ];
+    return filterByReminderSettings(all, effective.filter);
+  }
+
+  /// Reads a string value from [AppMeta], or null when missing.
+  Future<String?> appMetaValue(String key) async {
+    final AppMetaRow? row = await (_db.select(_db.appMeta)
+          ..where((t) => t.key.equals(key)))
+        .getSingleOrNull();
+    final String? raw = row?.value.trim();
+    if (raw == null || raw.isEmpty) {
+      return null;
+    }
+    return raw;
+  }
+
+  /// Upserts a string value in [AppMeta].
+  Future<void> setAppMetaValue(String key, String value) async {
+    await _db.into(_db.appMeta).insertOnConflictUpdate(
+          AppMetaCompanion.insert(key: key, value: value),
+        );
   }
 
   // ---------------------------------------------------------------------------

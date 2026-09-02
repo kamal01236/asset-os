@@ -1868,5 +1868,54 @@
       }
     }
   },
-  "backupNeverExported": "इस डिवाइस पर अभी तक कोई बैकअप नहीं"
+  "backupNeverExported": "इस डिवाइस पर अभी तक कोई बैकअप नहीं",
+  "remindersTitle": "रिमाइंडर",
+  "remindersSubtitle": "इस डिवाइस पर आपके लिए दैनिक डाइजेस्ट अलर्ट। वेब पर {appName} खोलने पर बैनर दिखता है। ग्राहक संदेश मैन्युअल रहते हैं।",
+  "@remindersSubtitle": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "remindersEnabledLabel": "रिमाइंडर चालू करें",
+  "remindersEnabledHelp": "देय ऑर्डर, कम स्टॉक और लोन की सूचना आपको — ग्राहकों को नहीं।",
+  "remindersTimeLabel": "दैनिक डाइजेस्ट का समय",
+  "remindersDueTomorrowLabel": "कल देय",
+  "remindersDueTodayLabel": "आज देय",
+  "remindersOverdueLabel": "ओवरड्यू ऑर्डर",
+  "remindersLowStockLabel": "कम स्टॉक",
+  "remindersLoansDueLabel": "देय लोन",
+  "remindersLowStockThresholdLabel": "कम-स्टॉक सीमा",
+  "remindersLowStockThresholdHelp": "जब उपलब्ध यूनिट इस संख्या या उससे कम हों (0 = स्टॉक खत्म)।",
+  "remindersPermissionTitle": "नोटिफिकेशन की अनुमति",
+  "remindersPermissionBody": "रिमाइंडर दिखाने के लिए Android को अनुमति चाहिए।",
+  "remindersPermissionAction": "नोटिफिकेशन की अनुमति दें",
+  "remindersPermissionDenied": "नोटिफिकेशन बंद हैं। रिमाइंडर के लिए सिस्टम सेटिंग में चालू करें।",
+  "remindersSaved": "रिमाइंडर सेटिंग सेव हो गई",
+  "reminderDigestTitle": "आज के रिमाइंडर",
+  "reminderDigestBody": "कल देय: {dueTomorrowCount} ({dueTomorrowNames}). आज देय: {dueTodayCount} ({dueTodayNames}). ओवरड्यू: {overdueCount} ({overdueNames}). कम स्टॉक: {lowStockCount} ({lowStockNames}). देय लोन: {loanDueCount} ({loanDueNames}).",
+  "@reminderDigestBody": {
+    "placeholders": {
+      "dueTomorrowCount": { "type": "int" },
+      "dueTodayCount": { "type": "int" },
+      "overdueCount": { "type": "int" },
+      "lowStockCount": { "type": "int" },
+      "loanDueCount": { "type": "int" },
+      "dueTomorrowNames": { "type": "String" },
+      "dueTodayNames": { "type": "String" },
+      "overdueNames": { "type": "String" },
+      "lowStockNames": { "type": "String" },
+      "loanDueNames": { "type": "String" }
+    }
+  },
+  "reminderOverduePingTitle": "ओवरड्यू ऑर्डर",
+  "reminderOverduePingBody": "{count, plural, one{1 ऑर्डर ओवरड्यू है} other{{count} ऑर्डर ओवरड्यू हैं}}",
+  "@reminderOverduePingBody": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "reminderDigestBannerAction": "देखें",
+  "reminderDigestBannerDismiss": "बंद करें"
 }

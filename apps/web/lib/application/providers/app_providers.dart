@@ -7,6 +7,7 @@ import '../../domain/home/home_modules.dart';
 import '../../domain/models/entities.dart';
 import '../../domain/subscriptions/subscription_models.dart';
 import '../local_repository.dart';
+import '../reminders/reminder_settings.dart';
 import '../../infrastructure/sharing/whatsapp_share.dart';
 import '../../domain/templates/field_defs.dart';
 import '../../domain/templates/industry_templates.dart';
@@ -250,6 +251,36 @@ class ThemeModeNotifier extends StateNotifier<ThemeMode> {
       kThemeModePrefsKey,
       mode == ThemeMode.light ? 'light' : 'dark',
     );
+  }
+}
+
+/// Persisted reminder notification settings.
+final reminderSettingsProvider =
+    StateNotifierProvider<ReminderSettingsNotifier, ReminderSettings>((ref) {
+  return ReminderSettingsNotifier(ref.watch(sharedPreferencesProvider));
+});
+
+class ReminderSettingsNotifier extends StateNotifier<ReminderSettings> {
+  ReminderSettingsNotifier(this._preferences)
+      : super(ReminderSettings.fromPreferences(_preferences));
+
+  final SharedPreferences _preferences;
+
+  Future<void> update(ReminderSettings settings) async {
+    state = settings;
+    await settings.persist(_preferences);
+  }
+
+  Future<void> setEnabled(bool enabled) async {
+    await update(state.copyWith(enabled: enabled));
+  }
+
+  Future<void> setTime({required int hour, required int minute}) async {
+    await update(state.copyWith(hour: hour, minute: minute));
+  }
+
+  Future<void> setLowStockThreshold(int threshold) async {
+    await update(state.copyWith(lowStockThreshold: threshold.clamp(0, 5)));
   }
 }
 

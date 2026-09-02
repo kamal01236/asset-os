@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -15,6 +18,7 @@ import '../domain/subscriptions/subscription_coverage.dart';
 import '../domain/subscriptions/subscription_models.dart';
 import '../application/providers/app_providers.dart';
 import '../application/local_repository.dart';
+import '../application/reminders/reminder_scheduler.dart';
 import '../domain/search/search_scope.dart';
 import '../domain/templates/field_defs.dart';
 import '../domain/templates/workflows.dart';
@@ -25,6 +29,7 @@ import '../domain/payments/payment_reference.dart';
 import 'widgets/category_picker_field.dart';
 import 'widgets/dynamic_field_inputs.dart';
 import 'widgets/global_search_typeahead.dart';
+import 'widgets/reminder_digest_banner.dart';
 import 'widgets/rental_timeline.dart';
 import 'widgets/scoped_search_field.dart';
 import 'widgets/subscription_catalog_fields.dart';
@@ -37,6 +42,7 @@ import 'features/orders/order_payment_screen.dart';
 import 'features/orders/rental_detail_nav.dart';
 import 'features/reports/share_reports_screen.dart';
 import 'features/settings/backup_restore_screen.dart';
+import 'features/settings/reminders_screen.dart';
 import 'features/templates/business_templates_screen.dart';
 import 'features/templates/enabled_resource_types_screen.dart';
 import 'features/transactions/transactions_screen.dart';
@@ -52,11 +58,69 @@ void ensureRentalDetailNavRegistered() {
   );
 }
 
-class AppShell extends ConsumerWidget {
+class AppShell extends ConsumerStatefulWidget {
   const AppShell({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AppShell> createState() => _AppShellState();
+}
+
+class _AppShellState extends ConsumerState<AppShell>
+    with WidgetsBindingObserver {
+  bool _lifecycleWorkRunning = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(_onAppResumed());
+    });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      unawaited(_onAppResumed());
+    }
+  }
+
+  Future<void> _onAppResumed() async {
+    if (_lifecycleWorkRunning || !mounted) {
+      return;
+    }
+    _lifecycleWorkRunning = true;
+    try {
+      await ref.read(repositoryProvider).autoVacateOverdueRentals();
+      if (!mounted) {
+        return;
+      }
+      final ReminderScheduler scheduler =
+          ReminderScheduler(ref.read(repositoryProvider));
+      await scheduler.refreshScheduledReminders(
+        settings: ref.read(reminderSettingsProvider),
+        l10n: context.l10n,
+      );
+      if (mounted) {
+        setState(() {});
+      }
+    } finally {
+      _lifecycleWorkRunning = false;
+    }
+  }
+
+  void _openReminderDigestTarget() {
+    ref.read(currentTabIndexProvider.notifier).state = kTabIndexHome;
+  }
+
+  @override
+  Widget build(BuildContext context) {
     ensureRentalDetailNavRegistered();
     final AppLocalizations l10n = context.l10n;
     final int tabIndex = ref.watch(currentTabIndexProvider);
@@ -89,6 +153,8 @@ class AppShell extends ConsumerWidget {
       body: Column(
         children: <Widget>[
           OfflineBanner(show: offlineMode),
+          if (kIsWeb)
+            ReminderDigestBanner(onView: _openReminderDigestTarget),
           Expanded(
             child: IndexedStack(
               index: tabIndex,
@@ -907,6 +973,20 @@ class MoreScreen extends ConsumerWidget {
           onTap: () {
             Navigator.of(context).push(
               MaterialPageRoute<void>(builder: (_) => const ShareReportsScreen()),
+            );
+          },
+        ),
+        const SizedBox(height: 10),
+        EntityCard(
+          title: l10n.remindersTitle,
+          subtitle: l10n.remindersSubtitle(kAppDisplayName),
+          leadingIcon: Icons.notifications_outlined,
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const RemindersScreen(),
+              ),
             );
           },
         ),
