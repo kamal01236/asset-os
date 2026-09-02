@@ -4,8 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../infrastructure/l10n/india_date_format.dart';
 import '../../infrastructure/l10n/l10n_ext.dart';
 import '../../domain/models/entities.dart';
-import '../../domain/pricing/rental_pricing.dart';
 import '../../application/providers/app_providers.dart';
+import '../privacy/privacy_display.dart';
 import '../../application/local_repository.dart';
 import '../../domain/search/search_scope.dart';
 import '../../domain/validation/text_rules.dart';
@@ -93,13 +93,14 @@ class _GlobalSearchTypeaheadState extends ConsumerState<GlobalSearchTypeahead> {
     final AppLocalizations l10n = context.l10n;
     setState(() {
       _results = results;
-      _suggestions = _buildSuggestions(l10n, results);
+      _suggestions = _buildSuggestions(l10n, results, ref);
     });
   }
 
   List<SearchSuggestion> _buildSuggestions(
     AppLocalizations l10n,
     SearchResults results,
+    WidgetRef ref,
   ) {
     final List<SearchSuggestion> out = <SearchSuggestion>[];
     for (final Customer customer in results.customers) {
@@ -107,7 +108,8 @@ class _GlobalSearchTypeaheadState extends ConsumerState<GlobalSearchTypeahead> {
         SearchSuggestion(
           id: customer.id,
           title: customer.name,
-          subtitle: '${l10n.searchSectionCustomers} · ${customer.phone}',
+          subtitle:
+              '${l10n.searchSectionCustomers} · ${displayPhone(context, ref, customer.phone)}',
           leadingIcon: Icons.person_outline,
           kind: SearchHitKind.customer,
         ),
@@ -119,7 +121,7 @@ class _GlobalSearchTypeaheadState extends ConsumerState<GlobalSearchTypeahead> {
           id: rental.id,
           title: _rentalLinesLabel(rental),
           subtitle:
-              '${l10n.searchSectionCurrentRentals} · ${_rentalAmountSubtitle(l10n, rental)}',
+              '${l10n.searchSectionCurrentRentals} · ${_rentalAmountSubtitle(context, ref, l10n, rental)}',
           leadingIcon: Icons.assignment_outlined,
           kind: SearchHitKind.rental,
         ),
@@ -131,7 +133,7 @@ class _GlobalSearchTypeaheadState extends ConsumerState<GlobalSearchTypeahead> {
           id: rental.id,
           title: _rentalLinesLabel(rental),
           subtitle:
-              '${l10n.searchSectionPreviousRentals} · ${_previousRentalSubtitle(l10n, rental)}',
+              '${l10n.searchSectionPreviousRentals} · ${_previousRentalSubtitle(context, ref, l10n, rental)}',
           leadingIcon: Icons.history,
           kind: SearchHitKind.rental,
         ),
@@ -206,21 +208,32 @@ String _rentalLinesLabel(Rental rental) {
   return source.map((RentalLine line) => line.displayLabel).join(', ');
 }
 
-String _rentalAmountSubtitle(AppLocalizations l10n, Rental rental) {
+String _rentalAmountSubtitle(
+  BuildContext context,
+  WidgetRef ref,
+  AppLocalizations l10n,
+  Rental rental,
+) {
   final DateTime now = DateTime.now();
-  final String amount = formatMoney(rental.totalAmountAsOf(now));
+  final String amount =
+      displayMoney(context, ref, rental.totalAmountAsOf(now));
   if (rental.isOpenEnded) {
     return l10n.rentalAmountOpenEnded(amount);
   }
   return l10n.rentalAmountSubtitle(formatIndiaDate(rental.dueAt!), amount);
 }
 
-String _previousRentalSubtitle(AppLocalizations l10n, Rental rental) {
+String _previousRentalSubtitle(
+  BuildContext context,
+  WidgetRef ref,
+  AppLocalizations l10n,
+  Rental rental,
+) {
   final String returned = l10n.returnedDate(
     formatIndiaDate(rental.returnedAt ?? rental.dueAt ?? rental.startedAt),
   );
   if (rental.depositApplied > 0) {
-    return '$returned · ${l10n.depositAppliedLabel(formatMoney(rental.depositApplied))}';
+    return '$returned · ${l10n.depositAppliedLabel(displayMoney(context, ref, rental.depositApplied))}';
   }
   return returned;
 }

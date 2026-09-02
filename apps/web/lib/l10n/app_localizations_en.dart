@@ -2930,4 +2930,182 @@ class AppLocalizationsEn extends AppLocalizations {
   String onboardingVerificationSettingsHint(String appName) {
     return 'Configure handover checks anytime under More → Verification in $appName.';
   }
+
+  @override
+  String get exportReportCsv => 'Export CSV';
+
+  @override
+  String get exportReportExcel => 'Export Excel';
+
+  @override
+  String get downloadReportPdf => 'Download PDF';
+
+  @override
+  String get reportExportSuccess => 'Report file saved.';
+
+  @override
+  String get reportExportError => 'Could not export report. Try again.';
+
+  @override
+  String get privacySettingsTitle => 'Privacy & Data';
+
+  @override
+  String get privacySettingsCardSubtitle =>
+      'App lock, display privacy, photo retention';
+
+  @override
+  String privacySettingsSubtitle(String appName) {
+    return 'Control how $appName protects your data on this device.';
+  }
+
+  @override
+  String get privacySettingsSaved => 'Privacy settings saved.';
+
+  @override
+  String get appLockEnabledTitle => 'App lock';
+
+  @override
+  String get appLockEnabledSubtitle => 'Require a PIN when opening the app';
+
+  @override
+  String get appLockSetPinFirst => 'Set a PIN before enabling app lock.';
+
+  @override
+  String get appLockPinSectionTitle => 'App lock PIN';
+
+  @override
+  String get appLockPinLabel => 'PIN (4–6 digits)';
+
+  @override
+  String get appLockPinConfirmLabel => 'Confirm PIN';
+
+  @override
+  String get appLockPinHelper => 'Separate from handover verification PIN.';
+
+  @override
+  String get appLockPinInvalid => 'Enter 4–6 digits.';
+
+  @override
+  String get appLockPinMismatch => 'PINs do not match.';
+
+  @override
+  String get appLockBiometricTitle => 'Biometric unlock';
+
+  @override
+  String get appLockBiometricSubtitle =>
+      'Use fingerprint or face on this device';
+
+  @override
+  String get appLockBiometricWebNote =>
+      'Biometrics are not available on web — use your PIN.';
+
+  @override
+  String get appLockBiometricUnavailable =>
+      'Biometrics not available on this device.';
+
+  @override
+  String get appLockBiometricReason => 'Unlock Hando';
+
+  @override
+  String get appLockTitle => 'Enter PIN';
+
+  @override
+  String get appLockSubtitle => 'Your app is locked for privacy.';
+
+  @override
+  String get appLockWrongPin => 'Wrong PIN. Try again.';
+
+  @override
+  String get appLockUnlockAction => 'Unlock';
+
+  @override
+  String get appLockUseBiometric => 'Use biometrics';
+
+  @override
+  String get hidePricesTitle => 'Hide prices';
+
+  @override
+  String get hidePricesSubtitle => 'Mask money amounts in lists and details';
+
+  @override
+  String get hidePhoneNumbersTitle => 'Hide phone numbers';
+
+  @override
+  String get hidePhoneNumbersSubtitle =>
+      'Mask customer phone numbers in the UI';
+
+  @override
+  String get mediaRetentionTitle => 'Photo retention';
+
+  @override
+  String get mediaRetentionSubtitle =>
+      'Evidence photos older than this are deleted automatically.';
+
+  @override
+  String get mediaRetentionForever => 'Keep forever';
+
+  @override
+  String mediaRetentionDaysLabel(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days days',
+      one: '1 day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get mediaRetentionCleanupAction => 'Run cleanup now';
+
+  @override
+  String get mediaRetentionConfirmTitle => 'Delete old photos?';
+
+  @override
+  String mediaRetentionConfirmBody(int days) {
+    return 'Photos older than $days days will be permanently removed from this device.';
+  }
+
+  @override
+  String get mediaRetentionConfirmAction => 'Delete';
+
+  @override
+  String mediaRetentionPurgeSuccess(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count photos removed.',
+      one: '1 photo removed.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get mediaRetentionPurgeError => 'Could not run cleanup. Try again.';
+
+  @override
+  String get analyticsDisabledTitle => 'Disable analytics';
+
+  @override
+  String analyticsDisabledSubtitle(String appName) {
+    return '$appName does not send cloud analytics today — this toggle records your preference.';
+  }
+
+  @override
+  String get aboutSectionTitle => 'About';
+
+  @override
+  String get aboutAppVersionLabel => 'App version';
+
+  @override
+  String get aboutDbSchemaLabel => 'Database schema';
+
+  @override
+  String get aboutAppNameLabel => 'App';
+
+  @override
+  String get maskedMoneySemanticLabel => 'Amount hidden for privacy';
+
+  @override
+  String get maskedPhoneSemanticLabel => 'Phone number hidden for privacy';
 }

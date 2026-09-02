@@ -5163,6 +5163,306 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Configure handover checks anytime under More → Verification in {appName}.'**
   String onboardingVerificationSettingsHint(String appName);
+
+  /// No description provided for @exportReportCsv.
+  ///
+  /// In en, this message translates to:
+  /// **'Export CSV'**
+  String get exportReportCsv;
+
+  /// No description provided for @exportReportExcel.
+  ///
+  /// In en, this message translates to:
+  /// **'Export Excel'**
+  String get exportReportExcel;
+
+  /// No description provided for @downloadReportPdf.
+  ///
+  /// In en, this message translates to:
+  /// **'Download PDF'**
+  String get downloadReportPdf;
+
+  /// No description provided for @reportExportSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Report file saved.'**
+  String get reportExportSuccess;
+
+  /// No description provided for @reportExportError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not export report. Try again.'**
+  String get reportExportError;
+
+  /// No description provided for @privacySettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy & Data'**
+  String get privacySettingsTitle;
+
+  /// No description provided for @privacySettingsCardSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'App lock, display privacy, photo retention'**
+  String get privacySettingsCardSubtitle;
+
+  /// No description provided for @privacySettingsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Control how {appName} protects your data on this device.'**
+  String privacySettingsSubtitle(String appName);
+
+  /// No description provided for @privacySettingsSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy settings saved.'**
+  String get privacySettingsSaved;
+
+  /// No description provided for @appLockEnabledTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'App lock'**
+  String get appLockEnabledTitle;
+
+  /// No description provided for @appLockEnabledSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Require a PIN when opening the app'**
+  String get appLockEnabledSubtitle;
+
+  /// No description provided for @appLockSetPinFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Set a PIN before enabling app lock.'**
+  String get appLockSetPinFirst;
+
+  /// No description provided for @appLockPinSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'App lock PIN'**
+  String get appLockPinSectionTitle;
+
+  /// No description provided for @appLockPinLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'PIN (4–6 digits)'**
+  String get appLockPinLabel;
+
+  /// No description provided for @appLockPinConfirmLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm PIN'**
+  String get appLockPinConfirmLabel;
+
+  /// No description provided for @appLockPinHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Separate from handover verification PIN.'**
+  String get appLockPinHelper;
+
+  /// No description provided for @appLockPinInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter 4–6 digits.'**
+  String get appLockPinInvalid;
+
+  /// No description provided for @appLockPinMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'PINs do not match.'**
+  String get appLockPinMismatch;
+
+  /// No description provided for @appLockBiometricTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Biometric unlock'**
+  String get appLockBiometricTitle;
+
+  /// No description provided for @appLockBiometricSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Use fingerprint or face on this device'**
+  String get appLockBiometricSubtitle;
+
+  /// No description provided for @appLockBiometricWebNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Biometrics are not available on web — use your PIN.'**
+  String get appLockBiometricWebNote;
+
+  /// No description provided for @appLockBiometricUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Biometrics not available on this device.'**
+  String get appLockBiometricUnavailable;
+
+  /// No description provided for @appLockBiometricReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock Hando'**
+  String get appLockBiometricReason;
+
+  /// No description provided for @appLockTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter PIN'**
+  String get appLockTitle;
+
+  /// No description provided for @appLockSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your app is locked for privacy.'**
+  String get appLockSubtitle;
+
+  /// No description provided for @appLockWrongPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Wrong PIN. Try again.'**
+  String get appLockWrongPin;
+
+  /// No description provided for @appLockUnlockAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock'**
+  String get appLockUnlockAction;
+
+  /// No description provided for @appLockUseBiometric.
+  ///
+  /// In en, this message translates to:
+  /// **'Use biometrics'**
+  String get appLockUseBiometric;
+
+  /// No description provided for @hidePricesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide prices'**
+  String get hidePricesTitle;
+
+  /// No description provided for @hidePricesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Mask money amounts in lists and details'**
+  String get hidePricesSubtitle;
+
+  /// No description provided for @hidePhoneNumbersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide phone numbers'**
+  String get hidePhoneNumbersTitle;
+
+  /// No description provided for @hidePhoneNumbersSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Mask customer phone numbers in the UI'**
+  String get hidePhoneNumbersSubtitle;
+
+  /// No description provided for @mediaRetentionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo retention'**
+  String get mediaRetentionTitle;
+
+  /// No description provided for @mediaRetentionSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Evidence photos older than this are deleted automatically.'**
+  String get mediaRetentionSubtitle;
+
+  /// No description provided for @mediaRetentionForever.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep forever'**
+  String get mediaRetentionForever;
+
+  /// No description provided for @mediaRetentionDaysLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, one{1 day} other{{days} days}}'**
+  String mediaRetentionDaysLabel(int days);
+
+  /// No description provided for @mediaRetentionCleanupAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Run cleanup now'**
+  String get mediaRetentionCleanupAction;
+
+  /// No description provided for @mediaRetentionConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete old photos?'**
+  String get mediaRetentionConfirmTitle;
+
+  /// No description provided for @mediaRetentionConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Photos older than {days} days will be permanently removed from this device.'**
+  String mediaRetentionConfirmBody(int days);
+
+  /// No description provided for @mediaRetentionConfirmAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get mediaRetentionConfirmAction;
+
+  /// No description provided for @mediaRetentionPurgeSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 photo removed.} other{{count} photos removed.}}'**
+  String mediaRetentionPurgeSuccess(int count);
+
+  /// No description provided for @mediaRetentionPurgeError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not run cleanup. Try again.'**
+  String get mediaRetentionPurgeError;
+
+  /// No description provided for @analyticsDisabledTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Disable analytics'**
+  String get analyticsDisabledTitle;
+
+  /// No description provided for @analyticsDisabledSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{appName} does not send cloud analytics today — this toggle records your preference.'**
+  String analyticsDisabledSubtitle(String appName);
+
+  /// No description provided for @aboutSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get aboutSectionTitle;
+
+  /// No description provided for @aboutAppVersionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'App version'**
+  String get aboutAppVersionLabel;
+
+  /// No description provided for @aboutDbSchemaLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Database schema'**
+  String get aboutDbSchemaLabel;
+
+  /// No description provided for @aboutAppNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'App'**
+  String get aboutAppNameLabel;
+
+  /// No description provided for @maskedMoneySemanticLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount hidden for privacy'**
+  String get maskedMoneySemanticLabel;
+
+  /// No description provided for @maskedPhoneSemanticLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone number hidden for privacy'**
+  String get maskedPhoneSemanticLabel;
 }
 
 class _AppLocalizationsDelegate

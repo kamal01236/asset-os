@@ -1991,5 +1991,70 @@
   "onboardingVerificationSettingsHint": "Configure handover checks anytime under More → Verification in {appName}.",
   "@onboardingVerificationSettingsHint": {
     "placeholders": { "appName": { "type": "String" } }
-  }
+  },
+  "exportReportCsv": "Export CSV",
+  "exportReportExcel": "Export Excel",
+  "downloadReportPdf": "Download PDF",
+  "reportExportSuccess": "Report file saved.",
+  "reportExportError": "Could not export report. Try again.",
+  "privacySettingsTitle": "Privacy & Data",
+  "privacySettingsCardSubtitle": "App lock, display privacy, photo retention",
+  "privacySettingsSubtitle": "Control how {appName} protects your data on this device.",
+  "@privacySettingsSubtitle": {
+    "placeholders": { "appName": { "type": "String" } }
+  },
+  "privacySettingsSaved": "Privacy settings saved.",
+  "appLockEnabledTitle": "App lock",
+  "appLockEnabledSubtitle": "Require a PIN when opening the app",
+  "appLockSetPinFirst": "Set a PIN before enabling app lock.",
+  "appLockPinSectionTitle": "App lock PIN",
+  "appLockPinLabel": "PIN (4–6 digits)",
+  "appLockPinConfirmLabel": "Confirm PIN",
+  "appLockPinHelper": "Separate from handover verification PIN.",
+  "appLockPinInvalid": "Enter 4–6 digits.",
+  "appLockPinMismatch": "PINs do not match.",
+  "appLockBiometricTitle": "Biometric unlock",
+  "appLockBiometricSubtitle": "Use fingerprint or face on this device",
+  "appLockBiometricWebNote": "Biometrics are not available on web — use your PIN.",
+  "appLockBiometricUnavailable": "Biometrics not available on this device.",
+  "appLockBiometricReason": "Unlock Hando",
+  "appLockTitle": "Enter PIN",
+  "appLockSubtitle": "Your app is locked for privacy.",
+  "appLockWrongPin": "Wrong PIN. Try again.",
+  "appLockUnlockAction": "Unlock",
+  "appLockUseBiometric": "Use biometrics",
+  "hidePricesTitle": "Hide prices",
+  "hidePricesSubtitle": "Mask money amounts in lists and details",
+  "hidePhoneNumbersTitle": "Hide phone numbers",
+  "hidePhoneNumbersSubtitle": "Mask customer phone numbers in the UI",
+  "mediaRetentionTitle": "Photo retention",
+  "mediaRetentionSubtitle": "Evidence photos older than this are deleted automatically.",
+  "mediaRetentionForever": "Keep forever",
+  "mediaRetentionDaysLabel": "{days, plural, one{1 day} other{{days} days}}",
+  "@mediaRetentionDaysLabel": {
+    "placeholders": { "days": { "type": "int" } }
+  },
+  "mediaRetentionCleanupAction": "Run cleanup now",
+  "mediaRetentionConfirmTitle": "Delete old photos?",
+  "mediaRetentionConfirmBody": "Photos older than {days} days will be permanently removed from this device.",
+  "@mediaRetentionConfirmBody": {
+    "placeholders": { "days": { "type": "int" } }
+  },
+  "mediaRetentionConfirmAction": "Delete",
+  "mediaRetentionPurgeSuccess": "{count, plural, one{1 photo removed.} other{{count} photos removed.}}",
+  "@mediaRetentionPurgeSuccess": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "mediaRetentionPurgeError": "Could not run cleanup. Try again.",
+  "analyticsDisabledTitle": "Disable analytics",
+  "analyticsDisabledSubtitle": "{appName} does not send cloud analytics today — this toggle records your preference.",
+  "@analyticsDisabledSubtitle": {
+    "placeholders": { "appName": { "type": "String" } }
+  },
+  "aboutSectionTitle": "About",
+  "aboutAppVersionLabel": "App version",
+  "aboutDbSchemaLabel": "Database schema",
+  "aboutAppNameLabel": "App",
+  "maskedMoneySemanticLabel": "Amount hidden for privacy",
+  "maskedPhoneSemanticLabel": "Phone number hidden for privacy"
 }

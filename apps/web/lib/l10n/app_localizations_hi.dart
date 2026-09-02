@@ -2926,4 +2926,181 @@ class AppLocalizationsHi extends AppLocalizations {
   String onboardingVerificationSettingsHint(String appName) {
     return '$appName में More → Verification से कभी भी हैंडओवर सेट करें।';
   }
+
+  @override
+  String get exportReportCsv => 'CSV निर्यात';
+
+  @override
+  String get exportReportExcel => 'Excel निर्यात';
+
+  @override
+  String get downloadReportPdf => 'PDF डाउनलोड';
+
+  @override
+  String get reportExportSuccess => 'रिपोर्ट फ़ाइल सहेजी गई।';
+
+  @override
+  String get reportExportError =>
+      'रिपोर्ट निर्यात नहीं हो सकी। फिर कोशिश करें।';
+
+  @override
+  String get privacySettingsTitle => 'गोपनीयता और डेटा';
+
+  @override
+  String get privacySettingsCardSubtitle =>
+      'ऐप लॉक, प्रदर्शन गोपनीयता, फ़ोटो अवधारण';
+
+  @override
+  String privacySettingsSubtitle(String appName) {
+    return 'नियंत्रित करें कि $appName इस डिवाइस पर आपका डेटा कैसे सुरक्षित रखे।';
+  }
+
+  @override
+  String get privacySettingsSaved => 'गोपनीयता सेटिंग सहेजी गई।';
+
+  @override
+  String get appLockEnabledTitle => 'ऐप लॉक';
+
+  @override
+  String get appLockEnabledSubtitle => 'ऐप खोलते समय PIN चाहिए';
+
+  @override
+  String get appLockSetPinFirst => 'ऐप लॉक चालू करने से पहले PIN सेट करें।';
+
+  @override
+  String get appLockPinSectionTitle => 'ऐप लॉक PIN';
+
+  @override
+  String get appLockPinLabel => 'PIN (4–6 अंक)';
+
+  @override
+  String get appLockPinConfirmLabel => 'PIN की पुष्टि';
+
+  @override
+  String get appLockPinHelper => 'हैंडओवर सत्यापन PIN से अलग।';
+
+  @override
+  String get appLockPinInvalid => '4–6 अंक दर्ज करें।';
+
+  @override
+  String get appLockPinMismatch => 'PIN मेल नहीं खाते।';
+
+  @override
+  String get appLockBiometricTitle => 'बायोमेट्रिक अनलॉक';
+
+  @override
+  String get appLockBiometricSubtitle => 'इस डिवाइस पर फिंगरप्रिंट या चेहरा';
+
+  @override
+  String get appLockBiometricWebNote =>
+      'वेब पर बायोमेट्रिक उपलब्ध नहीं — PIN उपयोग करें।';
+
+  @override
+  String get appLockBiometricUnavailable =>
+      'इस डिवाइस पर बायोमेट्रिक उपलब्ध नहीं।';
+
+  @override
+  String get appLockBiometricReason => 'Hando अनलॉक करें';
+
+  @override
+  String get appLockTitle => 'PIN दर्ज करें';
+
+  @override
+  String get appLockSubtitle => 'आपकी गोपनीयता के लिए ऐप लॉक है।';
+
+  @override
+  String get appLockWrongPin => 'गलत PIN। फिर कोशिश करें।';
+
+  @override
+  String get appLockUnlockAction => 'अनलॉक';
+
+  @override
+  String get appLockUseBiometric => 'बायोमेट्रिक उपयोग करें';
+
+  @override
+  String get hidePricesTitle => 'कीमतें छिपाएँ';
+
+  @override
+  String get hidePricesSubtitle => 'सूचियों और विवरण में राशि छिपाएँ';
+
+  @override
+  String get hidePhoneNumbersTitle => 'फ़ोन नंबर छिपाएँ';
+
+  @override
+  String get hidePhoneNumbersSubtitle => 'UI में ग्राहक फ़ोन नंबर छिपाएँ';
+
+  @override
+  String get mediaRetentionTitle => 'फ़ोटो अवधारण';
+
+  @override
+  String get mediaRetentionSubtitle =>
+      'इससे पुरानी साक्ष्य फ़ोटो स्वचालित रूप से हटाई जाती हैं।';
+
+  @override
+  String get mediaRetentionForever => 'हमेशा रखें';
+
+  @override
+  String mediaRetentionDaysLabel(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days दिन',
+      one: '1 दिन',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get mediaRetentionCleanupAction => 'अभी सफ़ाई चलाएँ';
+
+  @override
+  String get mediaRetentionConfirmTitle => 'पुरानी फ़ोटो हटाएँ?';
+
+  @override
+  String mediaRetentionConfirmBody(int days) {
+    return '$days दिन से पुरानी फ़ोटो इस डिवाइस से स्थायी रूप से हटा दी जाएँगी।';
+  }
+
+  @override
+  String get mediaRetentionConfirmAction => 'हटाएँ';
+
+  @override
+  String mediaRetentionPurgeSuccess(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count फ़ोटो हटाई गईं।',
+      one: '1 फ़ोटो हटाई गई।',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get mediaRetentionPurgeError => 'सफ़ाई नहीं चल सकी। फिर कोशिश करें।';
+
+  @override
+  String get analyticsDisabledTitle => 'एनालिटिक्स बंद';
+
+  @override
+  String analyticsDisabledSubtitle(String appName) {
+    return '$appName अभी क्लाउड एनालिटिक्स नहीं भेजता — यह टॉगल आपकी पसंद रखता है।';
+  }
+
+  @override
+  String get aboutSectionTitle => 'जानकारी';
+
+  @override
+  String get aboutAppVersionLabel => 'ऐप संस्करण';
+
+  @override
+  String get aboutDbSchemaLabel => 'डेटाबेस स्कीमा';
+
+  @override
+  String get aboutAppNameLabel => 'ऐप';
+
+  @override
+  String get maskedMoneySemanticLabel => 'गोपनीयता के लिए राशि छिपी';
+
+  @override
+  String get maskedPhoneSemanticLabel => 'गोपनीयता के लिए फ़ोन नंबर छिपा';
 }

@@ -9,6 +9,7 @@ import '../../transactions/transaction_list_item.dart';
 import '../../../domain/validation/text_rules.dart';
 import '../../widgets/scoped_search_field.dart';
 import '../../widgets/ui_primitives.dart';
+import '../../privacy/privacy_display.dart';
 import '../loans/loan_create_screen.dart';
 import '../loans/loan_detail_screen.dart';
 import '../orders/new_order_flow_screen.dart';
@@ -345,7 +346,7 @@ String _homeFilterLabel(AppLocalizations l10n, RentalsListFilter filter) {
   }
 }
 
-class _TransactionRow extends StatelessWidget {
+class _TransactionRow extends ConsumerWidget {
   const _TransactionRow({
     required this.item,
     required this.customersById,
@@ -357,7 +358,7 @@ class _TransactionRow extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final AppLocalizations l10n = context.l10n;
     final DateTime now = DateTime.now();
     final String typeLabel = item.kind == TransactionKind.order
@@ -384,7 +385,9 @@ class _TransactionRow extends StatelessWidget {
       tertiary: formatIndiaDate(item.activityAt),
       pill: _TypeBadge(label: typeLabel),
       trailing: Text(
-        item.amountLabel(now: now),
+        ref.watch(privacySettingsProvider).hidePrices
+            ? kMaskedMoneyDisplay
+            : item.amountLabel(now: now),
         style: Theme.of(context).textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.w700,
             ),

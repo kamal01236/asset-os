@@ -113,6 +113,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
       final ReminderSettings reminderSettings =
           ref.read(reminderSettingsProvider.notifier).reloadFromPreferences();
       ref.read(verificationSettingsProvider.notifier).reloadFromPreferences();
+      ref.read(privacySettingsProvider.notifier).reloadFromPreferences();
       await ReminderScheduler(ref.read(repositoryProvider))
           .refreshScheduledReminders(settings: reminderSettings, l10n: l10n);
       messenger.showSnackBar(

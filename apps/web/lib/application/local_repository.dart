@@ -36,6 +36,7 @@ import '../domain/reminders/reminder_evaluator.dart';
 import '../domain/reminders/reminder_models.dart';
 import 'reminders/reminder_settings.dart';
 import 'verification/verification_settings.dart';
+import 'privacy/privacy_settings.dart';
 import '../infrastructure/media/media_store.dart';
 import '../domain/verification/verification_models.dart';
 export '../domain/inventory/unit_code_pool.dart'
@@ -160,6 +161,13 @@ const List<String> kBackupPreferenceKeys = <String>[
   kHandoverPinKey,
   kConditionModeKey,
   kChecklistItemsKey,
+  kAppLockEnabledKey,
+  kAppLockPinKey,
+  kAppLockBiometricKey,
+  kHidePricesKey,
+  kHidePhoneNumbersKey,
+  kMediaRetentionDaysKey,
+  kAnalyticsDisabledKey,
 ];
 
 /// Why a restore was rejected; the presentation layer maps these to l10n copy.
@@ -209,6 +217,9 @@ class LocalRepository {
   final SharedPreferences _preferences;
 
   AppDatabase get database => _db;
+
+  /// Current Drift schema version (for About / backup envelope).
+  int get appSchemaVersion => kSchemaBaselineVersion;
 
   /// Open DB, migrate SharedPreferences snapshot once, or seed demo data.
   ///
@@ -4063,6 +4074,24 @@ class LocalRepository {
     await deleteImage(row.id);
     await (_db.delete(_db.mediaAttachments)..where((t) => t.id.equals(id)))
         .go();
+  }
+
+  /// Deletes evidence photos older than [retentionDays]. Returns count removed.
+  /// When [retentionDays] is 0, retention is disabled and nothing is deleted.
+  Future<int> purgeExpiredMedia({required int retentionDays}) async {
+    if (retentionDays <= 0) {
+      return 0;
+    }
+    final DateTime cutoff =
+        DateTime.now().subtract(Duration(days: retentionDays));
+    final List<MediaAttachmentRow> rows =
+        await (_db.select(_db.mediaAttachments)
+              ..where((t) => t.createdAt.isSmallerThanValue(cutoff)))
+            .get();
+    for (final MediaAttachmentRow row in rows) {
+      await deleteMedia(row.id);
+    }
+    return rows.length;
   }
 
   Future<Uint8List?> readMediaBytes(String mediaId) async {

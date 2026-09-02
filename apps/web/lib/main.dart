@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'presentation/app_shell.dart';
+import 'presentation/widgets/app_lock_gate.dart';
 import 'domain/config/app_branding.dart';
 import 'infrastructure/db/app_database.dart';
 import 'l10n/app_localizations.dart';
@@ -74,7 +75,7 @@ class MainApp extends ConsumerWidget {
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       home: needsOnboarding
           ? const OnboardingWizardScreen()
-          : const AppShell(),
+          : const AppLockGate(child: AppShell()),
     );
   }
 }

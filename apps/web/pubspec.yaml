@@ -26,6 +26,12 @@ dependencies:
   sqlite3: ^2.7.0
   url_launcher: ^6.3.1
   web: ^1.1.1
+  csv: ^6.0.0
+  excel: ^4.0.6
+  pdf: ^3.11.1
+  printing: ^5.13.4
+  local_auth: ^2.3.0
+  package_info_plus: ^8.1.2
 
 dev_dependencies:
   flutter_test:

@@ -9,6 +9,11 @@ import '../../../application/providers/app_providers.dart';
 import '../../../application/reports/report_builder.dart';
 import '../../../application/reports/report_document.dart';
 import '../../../domain/reports/report_models.dart';
+import '../../../domain/config/app_branding.dart';
+import '../../../application/reports/report_csv_exporter.dart';
+import '../../../application/reports/report_pdf_exporter.dart';
+import '../../../application/reports/report_xlsx_exporter.dart';
+import '../../../infrastructure/sharing/report_file_export.dart';
 import '../../../infrastructure/sharing/whatsapp_share.dart';
 import 'report_print.dart';
 
@@ -26,6 +31,7 @@ class _ShareReportsScreenState extends ConsumerState<ShareReportsScreen> {
   DateTime? _customStart;
   DateTime? _customEnd;
   bool _sharing = false;
+  bool _exporting = false;
 
   @override
   Widget build(BuildContext context) {
@@ -266,6 +272,41 @@ class _ShareReportsScreenState extends ConsumerState<ShareReportsScreen> {
               ),
             ],
           ),
+          const SizedBox(height: 8),
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: loading || document == null || _exporting
+                      ? null
+                      : () => _exportCsv(document),
+                  icon: const Icon(Icons.table_chart_outlined),
+                  label: Text(l10n.exportReportCsv),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: loading || document == null || _exporting
+                      ? null
+                      : () => _exportXlsx(document),
+                  icon: const Icon(Icons.grid_on_outlined),
+                  label: Text(l10n.exportReportExcel),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: loading || document == null || _exporting
+                  ? null
+                  : () => _exportPdf(document),
+              icon: const Icon(Icons.picture_as_pdf_outlined),
+              label: Text(l10n.downloadReportPdf),
+            ),
+          ),
         ],
         ),
       ),
@@ -294,6 +335,90 @@ class _ShareReportsScreenState extends ConsumerState<ShareReportsScreen> {
         _customEnd = picked;
       }
     });
+  }
+
+  static String _fileStamp(DateTime now) {
+    String two(int v) => v.toString().padLeft(2, '0');
+    return '${now.year}${two(now.month)}${two(now.day)}'
+        '-${two(now.hour)}${two(now.minute)}${two(now.second)}';
+  }
+
+  String _reportFilename(String typeSlug, String extension) {
+    final String stamp = _fileStamp(DateTime.now());
+    return '${kAppDisplayName.toLowerCase()}-report-$typeSlug-$stamp.$extension';
+  }
+
+  String _typeSlug(ReportType type) {
+    return switch (type) {
+      ReportType.summary => 'summary',
+      ReportType.customerWise => 'customer',
+      ReportType.inventoryWise => 'resources',
+      ReportType.unitOccupancy => 'occupancy',
+    };
+  }
+
+  Future<void> _exportCsv(ReportDocument document) async {
+    await _runExport(
+      () async {
+        final String csv = exportReportCsv(document);
+        await saveReportText(
+          csv,
+          _reportFilename(_typeSlug(_type), 'csv'),
+        );
+      },
+    );
+  }
+
+  Future<void> _exportXlsx(ReportDocument document) async {
+    await _runExport(
+      () async {
+        await saveReportFile(
+          exportReportXlsx(document),
+          _reportFilename(_typeSlug(_type), 'xlsx'),
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        );
+      },
+    );
+  }
+
+  Future<void> _exportPdf(ReportDocument document) async {
+    await _runExport(
+      () async {
+        await saveReportFile(
+          await exportReportPdf(document),
+          _reportFilename(_typeSlug(_type), 'pdf'),
+          'application/pdf',
+        );
+      },
+    );
+  }
+
+  Future<void> _runExport(Future<void> Function() action) async {
+    if (_exporting) {
+      return;
+    }
+    final AppLocalizations l10n = context.l10n;
+    setState(() => _exporting = true);
+    try {
+      await action();
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.reportExportSuccess)),
+      );
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.reportExportError)),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _exporting = false);
+      }
+    }
   }
 
   Future<void> _share(String preview, OwnerWhatsAppSettings whatsApp) async {

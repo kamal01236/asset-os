@@ -10,6 +10,7 @@ import 'package:asset_os/application/local_repository.dart';
 import 'package:asset_os/application/providers/app_providers.dart';
 import 'package:asset_os/application/reminders/reminder_settings.dart';
 import 'package:asset_os/application/verification/verification_settings.dart';
+import 'package:asset_os/application/privacy/privacy_settings.dart';
 import 'package:asset_os/domain/verification/verification_models.dart';
 import 'package:asset_os/infrastructure/db/app_database.dart';
 
@@ -84,6 +85,10 @@ void main() {
       );
       await prefs.setString(kHandoverPinKey, '4321');
       await prefs.setString(kConditionModeKey, ConditionMode.standard.name);
+      await prefs.setBool(kAppLockEnabledKey, true);
+      await prefs.setString(kAppLockPinKey, '5678');
+      await prefs.setBool(kHidePricesKey, true);
+      await prefs.setInt(kMediaRetentionDaysKey, 45);
 
       await repository.attachMedia(
         'rental',

@@ -5,10 +5,10 @@ import '../../../infrastructure/l10n/india_date_format.dart';
 import '../../../infrastructure/l10n/l10n_ext.dart';
 import '../../../domain/models/entities.dart';
 import '../../../domain/models/unknown_customer.dart';
-import '../../../domain/pricing/rental_pricing.dart';
 import '../../../application/providers/app_providers.dart';
 import '../../widgets/global_search_typeahead.dart';
 import '../../widgets/ui_primitives.dart';
+import '../../privacy/privacy_display.dart';
 import '../loans/loan_detail_screen.dart';
 import '../loans/loans_list_screen.dart';
 import '../../../domain/loans/loan_due.dart';
@@ -279,7 +279,7 @@ class HomeKpisSection extends StatelessWidget {
   }
 }
 
-class HomeFilterResultsSection extends StatelessWidget {
+class HomeFilterResultsSection extends ConsumerWidget {
   const HomeFilterResultsSection({
     required this.filter,
     required this.inventory,
@@ -304,7 +304,7 @@ class HomeFilterResultsSection extends StatelessWidget {
   final VoidCallback onAddInventory;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final AppLocalizations l10n = context.l10n;
     final DateTime now = DateTime.now();
     final String filterLabel = _filterLabel(l10n, filter);
@@ -347,13 +347,13 @@ class HomeFilterResultsSection extends StatelessWidget {
             onPressed: onNewRental,
           )
         else
-          ..._rentalCards(context, matched, customers, onOpenRental),
+          ..._rentalCards(context, ref, matched, customers, onOpenRental),
       ],
     );
   }
 }
 
-class HomeNeedsAttentionSection extends StatelessWidget {
+class HomeNeedsAttentionSection extends ConsumerWidget {
   const HomeNeedsAttentionSection({
     required this.rentals,
     required this.customers,
@@ -366,7 +366,7 @@ class HomeNeedsAttentionSection extends StatelessWidget {
   final ValueChanged<Rental> onOpenRental;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final AppLocalizations l10n = context.l10n;
     final DateTime now = DateTime.now();
     final List<ReminderCandidate> attentionCandidates = evaluateOrderReminders(
@@ -414,13 +414,13 @@ class HomeNeedsAttentionSection extends StatelessWidget {
             message: l10n.needsAttentionEmptySubtitle,
           )
         else
-          ..._rentalCards(context, limited, customers, onOpenRental),
+          ..._rentalCards(context, ref, limited, customers, onOpenRental),
       ],
     );
   }
 }
 
-class HomePendingJobsSection extends StatelessWidget {
+class HomePendingJobsSection extends ConsumerWidget {
   const HomePendingJobsSection({
     required this.rentals,
     required this.customers,
@@ -433,7 +433,7 @@ class HomePendingJobsSection extends StatelessWidget {
   final ValueChanged<Rental> onOpenRental;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final AppLocalizations l10n = context.l10n;
     final List<Rental> pending = rentals
         .where((Rental rental) => rental.hasPendingJobs)
@@ -456,13 +456,13 @@ class HomePendingJobsSection extends StatelessWidget {
             message: l10n.pendingJobsEmptySubtitle,
           )
         else
-          ..._rentalCards(context, limited, customers, onOpenRental),
+          ..._rentalCards(context, ref, limited, customers, onOpenRental),
       ],
     );
   }
 }
 
-class HomePendingLoansSection extends StatelessWidget {
+class HomePendingLoansSection extends ConsumerWidget {
   const HomePendingLoansSection({
     required this.moneyLoans,
     required this.customers,
@@ -473,7 +473,7 @@ class HomePendingLoansSection extends StatelessWidget {
   final List<Customer> customers;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final AppLocalizations l10n = context.l10n;
     final DateTime now = DateTime.now();
     final Map<String, Customer> byId = <String, Customer>{
@@ -527,7 +527,7 @@ class HomePendingLoansSection extends StatelessWidget {
               child: EntityCard(
                 title: customer?.name ?? loan.customerId,
                 subtitle:
-                    '$direction · ${formatMoney(scenario.pendingPaise, currencyCode: loan.currencyCode)}',
+                    '$direction · ${displayMoney(context, ref, scenario.pendingPaise, currencyCode: loan.currencyCode)}',
                 leadingIcon: Icons.account_balance_wallet_outlined,
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () {
@@ -545,7 +545,7 @@ class HomePendingLoansSection extends StatelessWidget {
   }
 }
 
-class HomeDueLoansSection extends StatelessWidget {
+class HomeDueLoansSection extends ConsumerWidget {
   const HomeDueLoansSection({
     required this.moneyLoans,
     required this.customers,
@@ -556,7 +556,7 @@ class HomeDueLoansSection extends StatelessWidget {
   final List<Customer> customers;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final AppLocalizations l10n = context.l10n;
     final DateTime now = DateTime.now();
     final Map<String, Customer> byId = <String, Customer>{
@@ -593,7 +593,9 @@ class HomeDueLoansSection extends StatelessWidget {
               padding: const EdgeInsets.only(bottom: 8),
               child: EntityCard(
                 title: customer?.name ?? loan.customerId,
-                subtitle: formatMoney(
+                subtitle: displayMoney(
+                  context,
+                  ref,
                   scenario.pendingPaise,
                   currencyCode: loan.currencyCode,
                 ),
@@ -665,7 +667,7 @@ class HomeQuickActionsSection extends StatelessWidget {
   }
 }
 
-class HomeRecentActivitySection extends StatelessWidget {
+class HomeRecentActivitySection extends ConsumerWidget {
   const HomeRecentActivitySection({
     required this.rentals,
     required this.customers,
@@ -678,7 +680,7 @@ class HomeRecentActivitySection extends StatelessWidget {
   final ValueChanged<Rental> onOpenRental;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final AppLocalizations l10n = context.l10n;
     final List<Rental> recent = List<Rental>.from(rentals)
       ..sort((Rental a, Rental b) {
@@ -706,7 +708,7 @@ class HomeRecentActivitySection extends StatelessWidget {
             ),
           )
         else
-          ..._rentalCards(context, limited, customers, onOpenRental),
+          ..._rentalCards(context, ref, limited, customers, onOpenRental),
       ],
     );
   }
@@ -757,6 +759,7 @@ String _filterLabel(AppLocalizations l10n, HomeFilter filter) {
 
 List<Widget> _rentalCards(
   BuildContext context,
+  WidgetRef ref,
   List<Rental> rentals,
   List<Customer> customers,
   ValueChanged<Rental> onOpenRental,
@@ -783,7 +786,7 @@ List<Widget> _rentalCards(
       EntityCard(
         title: _attentionTitle(l10n, rental),
         subtitle:
-            '${rentalPartyLabel(customer, rental)} · ${_rentalAmountSubtitle(l10n, rental)}',
+            '${rentalPartyLabel(customer, rental)} · ${_rentalAmountSubtitle(context, ref, l10n, rental)}',
         leadingIcon: Icons.assignment_outlined,
         status: rental.statusFor(now),
         trailing: const Icon(Icons.chevron_right),
@@ -855,9 +858,15 @@ String _attentionTitle(AppLocalizations l10n, Rental rental) {
   return _rentalLinesLabel(rental);
 }
 
-String _rentalAmountSubtitle(AppLocalizations l10n, Rental rental) {
+String _rentalAmountSubtitle(
+  BuildContext context,
+  WidgetRef ref,
+  AppLocalizations l10n,
+  Rental rental,
+) {
   final DateTime now = DateTime.now();
-  final String amount = formatMoney(rental.totalAmountAsOf(now));
+  final String amount =
+      displayMoney(context, ref, rental.totalAmountAsOf(now));
   if (rental.isOpenEnded) {
     return l10n.rentalAmountOpenEnded(amount);
   }

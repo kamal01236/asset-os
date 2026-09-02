@@ -19,6 +19,7 @@ import '../domain/subscriptions/subscription_models.dart';
 import '../domain/verification/verification_models.dart';
 import '../application/providers/app_providers.dart';
 import '../application/local_repository.dart';
+import '../application/privacy/media_retention_service.dart';
 import '../application/reminders/reminder_scheduler.dart';
 import '../domain/search/search_scope.dart';
 import '../domain/templates/field_defs.dart';
@@ -31,6 +32,7 @@ import 'widgets/category_picker_field.dart';
 import 'widgets/dynamic_field_inputs.dart';
 import 'widgets/global_search_typeahead.dart';
 import 'widgets/reminder_digest_banner.dart';
+import 'privacy/privacy_display.dart';
 import 'widgets/rental_timeline.dart';
 import 'widgets/scoped_search_field.dart';
 import 'widgets/subscription_catalog_fields.dart';
@@ -44,6 +46,7 @@ import 'features/orders/rental_detail_nav.dart';
 import 'features/reports/share_reports_screen.dart';
 import 'features/orders/return_verification_sheet.dart';
 import 'features/settings/verification_settings_screen.dart';
+import 'features/settings/privacy_settings_screen.dart';
 import 'features/settings/backup_restore_screen.dart';
 import 'features/settings/reminders_screen.dart';
 import 'features/templates/business_templates_screen.dart';
@@ -110,6 +113,12 @@ class _AppShellState extends ConsumerState<AppShell>
         settings: ref.read(reminderSettingsProvider),
         l10n: context.l10n,
       );
+      final int retentionDays =
+          ref.read(privacySettingsProvider).mediaRetentionDays;
+      if (retentionDays > 0) {
+        await MediaRetentionService(ref.read(repositoryProvider))
+            .purgeExpired(retentionDays: retentionDays);
+      }
       if (mounted) {
         setState(() {});
       }
@@ -681,7 +690,9 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                     secondary: stockMeta,
                     tertiary: l10n.inventoryRateSubtitle(
                       localizedBillingMode(l10n, item.billingMode),
-                      formatMoney(
+                      displayMoney(
+                        context,
+                        ref,
                         item.rateAmount,
                         currencyCode: item.currencyCode,
                       ),
@@ -760,7 +771,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
             (Customer customer) => SearchSuggestion(
               id: customer.id,
               title: customer.name,
-              subtitle: customer.phone,
+              subtitle: displayPhone(context, ref, customer.phone),
               leadingIcon: Icons.person_outline,
             ),
           )
@@ -837,7 +848,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
             padding: const EdgeInsets.only(bottom: 10),
             child: ListEntityRow(
               title: customer.name,
-              secondary: customer.phone,
+              secondary: displayPhone(context, ref, customer.phone),
               tertiary: activeSub == null
                   ? null
                   : l10n.customerSubscriptionMeta(
@@ -853,7 +864,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                     Padding(
                       padding: const EdgeInsets.only(right: 4),
                       child: Text(
-                        formatMoney(balance.netPaise),
+                        displayMoney(context, ref, balance.netPaise),
                         style: Theme.of(context).textTheme.titleSmall?.copyWith(
                           color: netColor,
                           fontWeight: FontWeight.w700,
@@ -1003,6 +1014,20 @@ class MoreScreen extends ConsumerWidget {
             Navigator.of(context).push(
               MaterialPageRoute<void>(
                 builder: (_) => const VerificationSettingsScreen(),
+              ),
+            );
+          },
+        ),
+        const SizedBox(height: 10),
+        EntityCard(
+          title: l10n.privacySettingsTitle,
+          subtitle: l10n.privacySettingsCardSubtitle,
+          leadingIcon: Icons.privacy_tip_outlined,
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const PrivacySettingsScreen(),
               ),
             );
           },
@@ -1353,8 +1378,11 @@ class _RentalDetailScreenState extends ConsumerState<RentalDetailScreen> {
           ListEntityRow(
             title: rentalPartyLabel(customer, rental),
             secondary: rental.nickname?.trim().isNotEmpty == true
-                ? l10n.rentalNicknameSubtitle(customer.name, customer.phone)
-                : l10n.phoneLabel(customer.phone),
+                ? l10n.rentalNicknameSubtitle(
+                    customer.name,
+                    displayPhone(context, ref, customer.phone),
+                  )
+                : l10n.phoneLabel(displayPhone(context, ref, customer.phone)),
             leadingIcon: Icons.person_outline,
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
@@ -1773,13 +1801,15 @@ class _RentalDetailScreenState extends ConsumerState<RentalDetailScreen> {
                   Text(
                     l10n.inventoryRateSubtitle(
                       localizedBillingMode(l10n, rental.billingMode),
-                      formatMoney(rental.rateAmount),
+                      displayMoney(context, ref, rental.rateAmount),
                     ),
                   ),
                   const SizedBox(height: 8),
                   MoneyStack(
                     label: l10n.moneyLabelBase,
-                    amount: formatMoney(
+                    amount: displayMoney(
+                      context,
+                      ref,
                       rental.isOpenEnded && rental.isActive
                           ? totalShown
                           : rental.baseAmount,
@@ -1788,16 +1818,18 @@ class _RentalDetailScreenState extends ConsumerState<RentalDetailScreen> {
                   if (lateShown > 0)
                     MoneyStack(
                       label: l10n.moneyLabelLate,
-                      amount: formatMoney(lateShown),
+                      amount: displayMoney(context, ref, lateShown),
                     ),
                   MoneyStack(
                     label: l10n.moneyLabelTotal,
-                    amount: formatMoney(totalShown),
+                    amount: displayMoney(context, ref, totalShown),
                     emphasis: MoneyStackEmphasis.total,
                   ),
                   MoneyStack(
                     label: l10n.moneyLabelDeposit,
-                    amount: formatMoney(
+                    amount: displayMoney(
+                      context,
+                      ref,
                       rental.isActive
                           ? rental.depositRemaining
                           : rental.depositAmount,
@@ -1807,25 +1839,25 @@ class _RentalDetailScreenState extends ConsumerState<RentalDetailScreen> {
                   if (rental.sellDuePaise > 0) ...<Widget>[
                     MoneyStack(
                       label: l10n.paymentMinSoldLabel,
-                      amount: formatMoney(rental.sellDuePaise),
+                      amount: displayMoney(context, ref, rental.sellDuePaise),
                       emphasis: MoneyStackEmphasis.muted,
                     ),
                     if (rental.sellPaidPaise > 0)
                       MoneyStack(
                         label: l10n.paymentSellPaidLabel,
-                        amount: formatMoney(rental.sellPaidPaise),
+                        amount: displayMoney(context, ref, rental.sellPaidPaise),
                         emphasis: MoneyStackEmphasis.muted,
                       ),
                     if (rental.sellDiscountPaise > 0)
                       MoneyStack(
                         label: l10n.paymentSellDiscountLabel,
-                        amount: formatMoney(rental.sellDiscountPaise),
+                        amount: displayMoney(context, ref, rental.sellDiscountPaise),
                         emphasis: MoneyStackEmphasis.muted,
                       ),
                     if (rental.hasUnpaidSell)
                       MoneyStack(
                         label: l10n.paymentSellOutstandingLabel,
-                        amount: formatMoney(rental.sellOutstandingPaise),
+                        amount: displayMoney(context, ref, rental.sellOutstandingPaise),
                         emphasis: MoneyStackEmphasis.due,
                       ),
                   ],
@@ -1883,12 +1915,12 @@ class _RentalDetailScreenState extends ConsumerState<RentalDetailScreen> {
                     if (rental.depositApplied > 0)
                       MoneyStack(
                         label: l10n.moneyLabelDeposit,
-                        amount: formatMoney(rental.depositApplied),
+                        amount: displayMoney(context, ref, rental.depositApplied),
                         emphasis: MoneyStackEmphasis.muted,
                       ),
                     MoneyStack(
                       label: l10n.moneyLabelNetDue,
-                      amount: formatMoney(rental.amountDueAfterDeposit),
+                      amount: displayMoney(context, ref, rental.amountDueAfterDeposit),
                       emphasis: rental.amountDueAfterDeposit > 0
                           ? MoneyStackEmphasis.due
                           : MoneyStackEmphasis.normal,
@@ -2700,9 +2732,9 @@ class _InventoryDetailScreenState extends ConsumerState<InventoryDetailScreen> {
                         title: Text(l10n.pricingSectionTitle),
                         subtitle: Text(
                           '${localizedBillingMode(l10n, item.billingMode)} · '
-                          '${formatMoney(item.rateAmount, currencyCode: item.currencyCode)}'
-                          '${item.lateFeePerDay > 0 ? ' · ${formatMoney(item.lateFeePerDay)}/day late' : ''}'
-                          '${item.securityDepositPaise > 0 ? ' · ${l10n.securityDepositShort(formatMoney(item.securityDepositPaise))}' : ''}'
+                          '${displayMoney(context, ref, item.rateAmount, currencyCode: item.currencyCode)}'
+                          '${item.lateFeePerDay > 0 ? ' · ${displayMoney(context, ref, item.lateFeePerDay)}/day late' : ''}'
+                          '${item.securityDepositPaise > 0 ? ' · ${l10n.securityDepositShort(displayMoney(context, ref, item.securityDepositPaise))}' : ''}'
                           '${item.dueDateOptional ? ' · ${l10n.openEndedLabel}' : ''}',
                         ),
                       ),
@@ -2879,7 +2911,7 @@ class CustomerDetailScreen extends ConsumerWidget {
         children: <Widget>[
           ListEntityRow(
             title: customer.name,
-            secondary: customer.phone,
+            secondary: displayPhone(context, ref, customer.phone),
             leadingIcon: Icons.person_outline,
             pill: TierPill(trusted: customer.isTrusted),
           ),
@@ -2900,13 +2932,13 @@ class CustomerDetailScreen extends ConsumerWidget {
                   _balanceLabeledRow(
                     context,
                     label: l10n.balanceAdvanceLabel,
-                    amount: formatMoney(balance.advancePaise),
+                    amount: displayMoney(context, ref, balance.advancePaise),
                   ),
                   const SizedBox(height: 6),
                   _balanceLabeledRow(
                     context,
                     label: l10n.balancePendingLabel,
-                    amount: formatMoney(balance.pendingPaise),
+                    amount: displayMoney(context, ref, balance.pendingPaise),
                   ),
                   if (balance.openItemsCount > 0) ...<Widget>[
                     const SizedBox(height: 2),
@@ -2926,7 +2958,7 @@ class CustomerDetailScreen extends ConsumerWidget {
                     label: balance.netPaise < 0
                         ? l10n.balanceCreditLabel
                         : l10n.balanceNetLabel,
-                    amount: formatMoney(balance.netPaise),
+                    amount: displayMoney(context, ref, balance.netPaise),
                     emphasize: balance.netPaise != 0,
                   ),
                 ],
@@ -3174,10 +3206,12 @@ class ReturnFlowScreen extends ConsumerWidget {
                         title: _rentalLinesLabel(rental),
                         subtitle: <String>[
                           rental.isOpenEnded
-                              ? l10n.rentalAmountOpenEnded(formatMoney(total))
+                              ? l10n.rentalAmountOpenEnded(
+                                  displayMoney(context, ref, total),
+                                )
                               : l10n.rentalAmountSubtitle(
                                   formatIndiaDate(rental.dueAt!),
-                                  formatMoney(total),
+                                  displayMoney(context, ref, total),
                                 ),
                           if (rental.isOpenEnded) l10n.accruedAmountHint,
                           if (openBit.isNotEmpty) openBit,

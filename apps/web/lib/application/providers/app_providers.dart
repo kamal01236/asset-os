@@ -9,6 +9,7 @@ import '../../domain/subscriptions/subscription_models.dart';
 import '../local_repository.dart';
 import '../reminders/reminder_settings.dart';
 import '../verification/verification_settings.dart';
+import '../privacy/privacy_settings.dart';
 import '../../domain/verification/verification_models.dart';
 import '../../infrastructure/sharing/whatsapp_share.dart';
 import '../../domain/templates/field_defs.dart';
@@ -570,6 +571,28 @@ class OwnerWhatsAppNotifier extends StateNotifier<OwnerWhatsAppSettings> {
     );
     await _preferences.setString(kOwnerWhatsAppPhoneKey, digits);
     await _preferences.setString(kOwnerWhatsAppCountryCodeKey, resolvedCc);
+  }
+}
+
+final privacySettingsProvider =
+    StateNotifierProvider<PrivacySettingsNotifier, PrivacySettings>((ref) {
+  return PrivacySettingsNotifier(ref.watch(sharedPreferencesProvider));
+});
+
+class PrivacySettingsNotifier extends StateNotifier<PrivacySettings> {
+  PrivacySettingsNotifier(this._preferences)
+      : super(PrivacySettings.fromPreferences(_preferences));
+
+  final SharedPreferences _preferences;
+
+  Future<void> update(PrivacySettings settings) async {
+    state = settings;
+    await settings.persist(_preferences);
+  }
+
+  PrivacySettings reloadFromPreferences() {
+    state = PrivacySettings.fromPreferences(_preferences);
+    return state;
   }
 }
 
