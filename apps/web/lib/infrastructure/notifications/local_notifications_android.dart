@@ -30,7 +30,7 @@ Future<void> initLocalNotifications() async {
   }
   tz_data.initializeTimeZones();
   const AndroidInitializationSettings androidSettings =
-      AndroidInitializationSettings('@mipmap/ic_launcher');
+      AndroidInitializationSettings('@drawable/ic_notification');
   const InitializationSettings settings = InitializationSettings(
     android: androidSettings,
   );
