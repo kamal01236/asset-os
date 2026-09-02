@@ -1917,5 +1917,79 @@
     }
   },
   "reminderDigestBannerAction": "View",
-  "reminderDigestBannerDismiss": "Dismiss"
+  "reminderDigestBannerDismiss": "Dismiss",
+  "backupMediaNote": "Photo files on this device are not included in the JSON file — only attachment metadata is saved. Re-attach photos after restore if needed.",
+  "verificationSettingsTitle": "Verification",
+  "verificationSettingsSubtitle": "Configure handover checks and return condition capture for {appName}.",
+  "@verificationSettingsSubtitle": {
+    "placeholders": { "appName": { "type": "String" } }
+  },
+  "verificationSettingsCardSubtitle": "Handover checks and return condition modes",
+  "verificationSettingsOperatorNote": "Operator-only settings. Customer SMS verification is not included — use offline codes or manual confirmation.",
+  "verificationSettingsSaved": "Verification settings saved",
+  "verificationHandoverEnabledTitle": "Handover verification",
+  "verificationHandoverEnabledSubtitle": "Require a check before generating a new order",
+  "verificationHandoverMethodTitle": "Handover method",
+  "verificationMethodManual": "Manual acknowledge",
+  "verificationMethodPin": "Operator PIN",
+  "verificationMethodOtpDisplay": "Offline code (show customer)",
+  "verificationMethodPhoto": "Photo evidence",
+  "verificationMethodChecklist": "Checklist",
+  "verificationPinLabel": "Handover PIN",
+  "verificationPinHelper": "Stored on this device only — not a security boundary",
+  "verificationConditionModeTitle": "Return condition mode",
+  "verificationConditionBasic": "Basic",
+  "verificationConditionStandard": "Standard",
+  "verificationConditionAdvanced": "Advanced",
+  "verificationConditionBasicBody": "Disposition only — no extra condition capture",
+  "verificationConditionStandardBody": "Optional condition notes and one photo before settlement",
+  "verificationConditionAdvancedBody": "Required checklist and up to three photos before settlement",
+  "verificationChecklistTitle": "Checklist items",
+  "verificationChecklistItemLabel": "Item {index}",
+  "@verificationChecklistItemLabel": {
+    "placeholders": { "index": { "type": "int" } }
+  },
+  "verificationChecklistAdd": "Add item",
+  "verificationChecklistScratches": "No major scratches",
+  "verificationChecklistMissingParts": "No missing parts",
+  "verificationChecklistPowersOn": "Powers on / works",
+  "handoverVerificationTitle": "Handover verification",
+  "handoverVerificationIncomplete": "Complete handover verification to continue",
+  "handoverManualAck": "Handover acknowledged",
+  "handoverPinPrompt": "Enter your operator PIN to confirm handover",
+  "handoverPinFieldLabel": "PIN",
+  "handoverOtpPrompt": "Ask the customer to confirm this code",
+  "handoverOtpConfirm": "Customer confirmed the code",
+  "handoverPhotoPrompt": "Take or attach a photo of items at handover",
+  "handoverPhotoAction": "Add photo",
+  "handoverChecklistPrompt": "Confirm item condition at handover",
+  "returnConditionTitle": "Return condition",
+  "returnConditionLostTitle": "Lost item condition",
+  "returnConditionNoteLabel": "Condition notes (optional)",
+  "returnConditionAddPhoto": "Photos ({current} of {max})",
+  "@returnConditionAddPhoto": {
+    "placeholders": {
+      "current": { "type": "int" },
+      "max": { "type": "int" }
+    }
+  },
+  "returnConditionChecklistHeading": "Condition checklist",
+  "returnEvidenceHeading": "Evidence photos",
+  "timelineTitleHandoverVerified": "Handover verified",
+  "timelineTitleConditionRecorded": "Condition recorded",
+  "timelineSubtitleHandoverVerified": "Method: {method}",
+  "@timelineSubtitleHandoverVerified": {
+    "placeholders": { "method": { "type": "String" } }
+  },
+  "timelineSubtitleHandoverVerifiedGeneric": "Handover verification completed",
+  "timelineSubtitleConditionRecorded": "Notes: {note}",
+  "@timelineSubtitleConditionRecorded": {
+    "placeholders": { "note": { "type": "String" } }
+  },
+  "timelineSubtitleConditionRecordedGeneric": "Return condition captured",
+  "onboardingVerificationCopy": "Owner verification uses offline codes during handover — no SMS required.",
+  "onboardingVerificationSettingsHint": "Configure handover checks anytime under More → Verification in {appName}.",
+  "@onboardingVerificationSettingsHint": {
+    "placeholders": { "appName": { "type": "String" } }
+  }
 }

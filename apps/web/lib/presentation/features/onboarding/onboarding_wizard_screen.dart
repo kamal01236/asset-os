@@ -420,17 +420,13 @@ class _WhatsAppStep extends StatelessWidget {
           onChanged: onChanged,
         ),
         const SizedBox(height: 16),
-        TextField(
-          enabled: false,
-          decoration: InputDecoration(
-            labelText: l10n.onboardingWhatsAppOtpLabel,
-            hintText: l10n.onboardingWhatsAppOtpHint,
-            border: const OutlineInputBorder(),
-          ),
-        ),
-        const SizedBox(height: 10),
         Text(
-          l10n.onboardingWhatsAppOtpLater,
+          l10n.onboardingVerificationCopy,
+          style: theme.textTheme.bodyMedium,
+        ),
+        const SizedBox(height: 8),
+        Text(
+          l10n.onboardingVerificationSettingsHint(kAppDisplayName),
           style: theme.textTheme.bodySmall?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),

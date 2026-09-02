@@ -8,7 +8,7 @@ import 'tables.dart';
 part 'app_database.g.dart';
 
 /// Fresh installs use [onCreate] at this version; legacy upgrades run through v24.
-const int kSchemaBaselineVersion = 24;
+const int kSchemaBaselineVersion = 25;
 
 @DriftDatabase(
   tables: <Type>[
@@ -23,6 +23,7 @@ const int kSchemaBaselineVersion = 24;
     MoneyLoans,
     MoneyLoanEntries,
     CustomerSubscriptions,
+    MediaAttachments,
   ],
 )
 class AppDatabase extends _$AppDatabase {

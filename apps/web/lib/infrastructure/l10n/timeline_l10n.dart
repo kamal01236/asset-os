@@ -23,6 +23,8 @@ abstract final class TimelineTitleKey {
   static const dueExtended = 'due_extended';
   static const autoVacated = 'auto_vacated';
   static const paymentReceived = 'payment_received';
+  static const handoverVerified = 'handover_verified';
+  static const conditionRecorded = 'condition_recorded';
 }
 
 /// Stable subtitle keys (optionally with `|`-separated args). See [encodeTimelineSubtitle].
@@ -49,6 +51,8 @@ abstract final class TimelineSubtitleKey {
   static const dueExtended = 'due_extended';
   static const autoVacated = 'auto_vacated';
   static const paymentReceived = 'payment_received';
+  static const handoverVerified = 'handover_verified';
+  static const conditionRecorded = 'condition_recorded';
 }
 
 const String _kDiscountPrefix = 'd:';
@@ -124,6 +128,10 @@ String localizeTimelineTitle(AppLocalizations l10n, String raw) {
       return l10n.timelineTitleAutoVacated;
     case TimelineTitleKey.paymentReceived:
       return l10n.timelineTitlePaymentReceived;
+    case TimelineTitleKey.handoverVerified:
+      return l10n.timelineTitleHandoverVerified;
+    case TimelineTitleKey.conditionRecorded:
+      return l10n.timelineTitleConditionRecorded;
     default:
       return raw;
   }
@@ -181,6 +189,13 @@ String? _localizeEncodedSubtitle(AppLocalizations l10n, String raw) {
       continue;
     }
     args.add(part);
+  }
+
+  if (key == TimelineSubtitleKey.conditionRecorded) {
+    if (note != null && note.isNotEmpty) {
+      return l10n.timelineSubtitleConditionRecorded(note);
+    }
+    return l10n.timelineSubtitleConditionRecordedGeneric;
   }
 
   final String? base = _subtitleForKey(l10n, key, args);
@@ -315,6 +330,11 @@ String? _subtitleForKey(
         return null;
       }
       return l10n.timelineSubtitlePaymentReceived(args[0], args[1], args[2]);
+    case TimelineSubtitleKey.handoverVerified:
+      if (args.isEmpty) {
+        return l10n.timelineSubtitleHandoverVerifiedGeneric;
+      }
+      return l10n.timelineSubtitleHandoverVerified(args.first);
     default:
       return null;
   }

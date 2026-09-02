@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../../domain/inventory/inventory_categories.dart';
+import '../../../domain/verification/verification_engine.dart';
+import '../../../domain/verification/verification_models.dart';
 import '../../../infrastructure/l10n/india_date_format.dart';
 import '../../../infrastructure/l10n/l10n_ext.dart';
 import '../../../domain/models/entities.dart';
@@ -42,7 +45,7 @@ class NewOrderFlowScreen extends ConsumerStatefulWidget {
   ConsumerState<NewOrderFlowScreen> createState() => _NewOrderFlowScreenState();
 }
 
-enum _OrderPhase { form, customer, commercial, summary }
+enum _OrderPhase { form, customer, commercial, summary, verification }
 
 /// Soft upper bound for qty stepper (not stock-related).
 const int _kMaxOrderLineQuantity = 999;
@@ -135,6 +138,13 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
   final TextEditingController _advanceController = TextEditingController();
   final TextEditingController _referenceController = TextEditingController();
   bool _commercialSeeded = false;
+  bool _handoverAcknowledged = false;
+  final TextEditingController _handoverPinController = TextEditingController();
+  String? _handoverOtp;
+  bool _handoverOtpConfirmed = false;
+  final Map<String, bool> _handoverChecklist = <String, bool>{};
+  Uint8List? _handoverPhotoBytes;
+  VerificationRecord? _completedVerification;
 
   bool get _skipCustomerStep {
     final String? id = widget.initialCustomerId;
@@ -1097,6 +1107,8 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
     setState(() => _submitting = true);
     final AppLocalizations l10n = context.l10n;
     final LocalRepository repository = ref.read(repositoryProvider);
+    final VerificationSettings verification =
+        ref.read(verificationSettingsProvider);
     final Customer customer;
     final String? nickname;
     try {
@@ -1154,6 +1166,24 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
           nickname: nickname,
         );
       }
+      if (verification.handoverEnabled && _completedVerification != null) {
+        VerificationRecord record = _completedVerification!;
+        if (_handoverPhotoBytes != null) {
+          final MediaAttachment attachment = await repository.attachMedia(
+            'rental',
+            rentalId,
+            _handoverPhotoBytes!,
+          );
+          record = buildVerificationRecord(
+            method: record.method,
+            code: record.code,
+            checklistResults: record.checklistResults,
+            verifiedAt: record.verifiedAt,
+            mediaIds: <String>[attachment.id],
+          );
+        }
+        await repository.recordHandoverVerification(rentalId, record);
+      }
       if (!mounted) {
         return;
       }
@@ -1188,6 +1218,173 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
     }
   }
 
+  bool _needsVerificationStep(VerificationSettings settings) {
+    return settings.handoverEnabled;
+  }
+
+  bool _verificationSatisfied(VerificationSettings settings) {
+    if (!settings.handoverEnabled) {
+      return true;
+    }
+    switch (settings.handoverMethod) {
+      case VerificationMethod.manual:
+        return _handoverAcknowledged;
+      case VerificationMethod.pin:
+        return validatePin(_handoverPinController.text, settings.pin);
+      case VerificationMethod.otpDisplay:
+        return _handoverOtpConfirmed;
+      case VerificationMethod.photo:
+        return _handoverPhotoBytes != null;
+      case VerificationMethod.checklist:
+        return validateChecklist(_handoverChecklist, settings.checklistItems);
+    }
+  }
+
+  void _completeVerificationStep(
+    VerificationSettings settings,
+    List<InventoryItem> catalog,
+  ) {
+    if (!_verificationSatisfied(settings)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.handoverVerificationIncomplete)),
+      );
+      return;
+    }
+    _completedVerification = buildVerificationRecord(
+      method: settings.handoverMethod,
+      code: settings.handoverMethod == VerificationMethod.otpDisplay
+          ? _handoverOtp
+          : null,
+      checklistResults: settings.handoverMethod == VerificationMethod.checklist
+          ? Map<String, bool>.from(_handoverChecklist)
+          : null,
+    );
+    _generateOrder(catalog);
+  }
+
+  Future<void> _pickHandoverPhoto() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? file = await picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1920,
+      imageQuality: 85,
+    );
+    if (file == null || !mounted) {
+      return;
+    }
+    final Uint8List bytes = await file.readAsBytes();
+    if (!mounted) {
+      return;
+    }
+    setState(() => _handoverPhotoBytes = bytes);
+  }
+
+  List<Widget> _buildVerificationStep(
+    AppLocalizations l10n,
+    VerificationSettings settings,
+  ) {
+    switch (settings.handoverMethod) {
+      case VerificationMethod.manual:
+        return <Widget>[
+          CheckboxListTile(
+            value: _handoverAcknowledged,
+            onChanged: (bool? value) {
+              setState(() => _handoverAcknowledged = value ?? false);
+            },
+            title: Text(l10n.handoverManualAck),
+          ),
+        ];
+      case VerificationMethod.pin:
+        return <Widget>[
+          Text(l10n.handoverPinPrompt, style: Theme.of(context).textTheme.bodyMedium),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _handoverPinController,
+            obscureText: true,
+            keyboardType: TextInputType.number,
+            inputFormatters: <TextInputFormatter>[
+              FilteringTextInputFormatter.digitsOnly,
+              LengthLimitingTextInputFormatter(6),
+            ],
+            decoration: InputDecoration(
+              labelText: l10n.handoverPinFieldLabel,
+              border: const OutlineInputBorder(),
+            ),
+            onChanged: (_) => setState(() {}),
+          ),
+        ];
+      case VerificationMethod.otpDisplay:
+        _handoverOtp ??= generateOfflineOtp();
+        return <Widget>[
+          Text(l10n.handoverOtpPrompt, style: Theme.of(context).textTheme.bodyMedium),
+          const SizedBox(height: 16),
+          Center(
+            child: Text(
+              _handoverOtp!,
+              style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                    letterSpacing: 8,
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          CheckboxListTile(
+            value: _handoverOtpConfirmed,
+            onChanged: (bool? value) {
+              setState(() => _handoverOtpConfirmed = value ?? false);
+            },
+            title: Text(l10n.handoverOtpConfirm),
+          ),
+        ];
+      case VerificationMethod.photo:
+        return <Widget>[
+          Text(l10n.handoverPhotoPrompt, style: Theme.of(context).textTheme.bodyMedium),
+          const SizedBox(height: 12),
+          OutlinedButton.icon(
+            onPressed: _pickHandoverPhoto,
+            icon: const Icon(Icons.photo_camera_outlined),
+            label: Text(l10n.handoverPhotoAction),
+          ),
+          if (_handoverPhotoBytes != null) ...<Widget>[
+            const SizedBox(height: 12),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.memory(_handoverPhotoBytes!, height: 160, fit: BoxFit.cover),
+            ),
+          ],
+        ];
+      case VerificationMethod.checklist:
+        for (final String item in settings.checklistItems) {
+          _handoverChecklist.putIfAbsent(item, () => false);
+        }
+        return <Widget>[
+          Text(l10n.handoverChecklistPrompt, style: Theme.of(context).textTheme.titleSmall),
+          ...settings.checklistItems.map(
+            (String item) => CheckboxListTile(
+              value: _handoverChecklist[item] ?? false,
+              onChanged: (bool? value) {
+                setState(() => _handoverChecklist[item] = value ?? false);
+              },
+              title: Text(_checklistLabel(l10n, item)),
+            ),
+          ),
+        ];
+    }
+  }
+
+  String _checklistLabel(AppLocalizations l10n, String key) {
+    switch (key) {
+      case 'scratches':
+        return l10n.verificationChecklistScratches;
+      case 'missingParts':
+        return l10n.verificationChecklistMissingParts;
+      case 'powersOn':
+        return l10n.verificationChecklistPowersOn;
+      default:
+        return key;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final AppLocalizations l10n = context.l10n;
@@ -1200,11 +1397,17 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
     final bool onCustomer = _phase == _OrderPhase.customer;
     final bool onCommercial = _phase == _OrderPhase.commercial;
     final bool onSummary = _phase == _OrderPhase.summary;
+    final bool onVerification = _phase == _OrderPhase.verification;
+    final VerificationSettings verification =
+        ref.watch(verificationSettingsProvider);
     final bool formReady = _formReady(inventory);
     final AggregatedOrderCommercial commercial =
         _aggregatedCommercial(inventory);
     final bool showCommercial = _shouldShowCommercial(commercial, inventory);
-    final int totalSteps = (_skipCustomerStep ? 2 : 3) + (showCommercial ? 1 : 0);
+    final bool showVerification = _needsVerificationStep(verification);
+    final int totalSteps = (_skipCustomerStep ? 2 : 3) +
+        (showCommercial ? 1 : 0) +
+        (showVerification ? 1 : 0);
     final int stepCurrent;
     if (onForm) {
       stepCurrent = 1;
@@ -1212,6 +1415,8 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
       stepCurrent = 2;
     } else if (onCommercial) {
       stepCurrent = _skipCustomerStep ? 2 : 3;
+    } else if (onSummary) {
+      stepCurrent = totalSteps - (showVerification ? 1 : 0);
     } else {
       stepCurrent = totalSteps;
     }
@@ -1239,10 +1444,25 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
       if (_commercialSatisfied(commercial, inventory)) {
         primaryAction = () => setState(() => _phase = _OrderPhase.summary);
       }
+    } else if (onSummary) {
+      primaryLabel = showVerification ? l10n.continueAction : l10n.confirmRental;
+      if (formReady && _commercialSatisfied(commercial, inventory)) {
+        primaryAction = () {
+          if (showVerification) {
+            if (verification.handoverMethod == VerificationMethod.otpDisplay) {
+              _handoverOtp = generateOfflineOtp();
+              _handoverOtpConfirmed = false;
+            }
+            setState(() => _phase = _OrderPhase.verification);
+          } else {
+            _generateOrder(inventory);
+          }
+        };
+      }
     } else {
       primaryLabel = l10n.confirmRental;
-      if (formReady && _commercialSatisfied(commercial, inventory)) {
-        primaryAction = () => _generateOrder(inventory);
+      if (_verificationSatisfied(verification) && !_submitting) {
+        primaryAction = () => _completeVerificationStep(verification, inventory);
       }
     }
 
@@ -1261,6 +1481,11 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
           if (onCustomer) ..._buildCustomerStep(l10n, inventory),
           if (onCommercial) ..._buildCommercialStep(l10n, commercial, inventory),
           if (onSummary) ..._buildSummaryStep(l10n, inventory),
+          if (onVerification) ...<Widget>[
+            Text(l10n.handoverVerificationTitle, style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 12),
+            ..._buildVerificationStep(l10n, verification),
+          ],
         ],
       ),
       bottomNavigationBar: SafeArea(
@@ -1275,7 +1500,9 @@ class _NewOrderFlowScreenState extends ConsumerState<NewOrderFlowScreen> {
                     onPressed: _submitting
                         ? null
                         : () => setState(() {
-                              if (onSummary) {
+                              if (onVerification) {
+                                _phase = _OrderPhase.summary;
+                              } else if (onSummary) {
                                 _phase = showCommercial
                                     ? _OrderPhase.commercial
                                     : (_skipCustomerStep

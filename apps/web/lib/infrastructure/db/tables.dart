@@ -267,3 +267,20 @@ class MoneyLoanEntries extends Table {
   @override
   Set<Column<Object>> get primaryKey => <Column<Object>>{id};
 }
+
+/// Photo / evidence metadata (bytes stored outside SQLite).
+@DataClassName('MediaAttachmentRow')
+class MediaAttachments extends Table {
+  TextColumn get id => text()();
+  /// `customer` | `inventory` | `rental` | `rental_item`
+  TextColumn get entityType => text()();
+  TextColumn get entityId => text()();
+  TextColumn get filePath => text()();
+  TextColumn get mimeType => text().withDefault(const Constant('image/jpeg'))();
+  IntColumn get sizeBytes => integer().withDefault(const Constant(0))();
+  TextColumn get caption => text().nullable()();
+  DateTimeColumn get createdAt => dateTime()();
+
+  @override
+  Set<Column<Object>> get primaryKey => <Column<Object>>{id};
+}

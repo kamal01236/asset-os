@@ -8,6 +8,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:asset_os/application/local_repository.dart';
 import 'package:asset_os/application/providers/app_providers.dart';
+import 'package:asset_os/application/reminders/reminder_settings.dart';
+import 'package:asset_os/application/verification/verification_settings.dart';
+import 'package:asset_os/domain/verification/verification_models.dart';
 import 'package:asset_os/infrastructure/db/app_database.dart';
 
 import 'support/test_harness.dart';
@@ -27,6 +30,7 @@ Future<Map<String, Set<Object?>>> _tableSnapshot(AppDatabase db) async {
     'customerSubscriptions':
         (await db.select(db.customerSubscriptions).get()).toSet(),
     'appMeta': (await db.select(db.appMeta).get()).toSet(),
+    'mediaAttachments': (await db.select(db.mediaAttachments).get()).toSet(),
   };
 }
 
@@ -50,24 +54,42 @@ Future<void> _wipeAllTables(AppDatabase db) async {
     await db.delete(db.inventoryItems).go();
     await db.delete(db.customers).go();
     await db.delete(db.appMeta).go();
+    await db.delete(db.mediaAttachments).go();
   });
 }
 
 void main() {
   group('backup round-trip', () {
-    test('export -> wipe -> import restores all 11 tables and preferences',
+    test('export -> wipe -> import restores all tables and preferences',
         () async {
       final LocalRepository repository = await bootRepo(seedDemo: true);
       final AppDatabase db = repository.database;
       final SharedPreferences prefs = await SharedPreferences.getInstance();
 
-      // Exercise every preference value type (String + bool).
+      // Exercise every preference value type (String + bool + int).
       await prefs.setString(kLocalePrefsKey, 'hi');
       await prefs.setString(kThemeModePrefsKey, 'light');
       await prefs.setString(kPreferredModePrefsKey, 'online');
       await prefs.setString(kOwnerWhatsAppPhoneKey, '9876543210');
       await prefs.setString(kOwnerWhatsAppCountryCodeKey, '91');
       await prefs.setBool(kHomeModulesCustomizedKey, true);
+      await prefs.setBool(kRemindersEnabledKey, false);
+      await prefs.setInt(kRemindersHourKey, 10);
+      await prefs.setInt(kRemindersMinuteKey, 30);
+      await prefs.setBool(kRemindersDueTomorrowKey, false);
+      await prefs.setBool(kHandoverVerificationEnabledKey, true);
+      await prefs.setString(
+        kHandoverVerificationMethodKey,
+        VerificationMethod.pin.name,
+      );
+      await prefs.setString(kHandoverPinKey, '4321');
+      await prefs.setString(kConditionModeKey, ConditionMode.standard.name);
+
+      await repository.attachMedia(
+        'rental',
+        'RNT-BACKUP-TEST',
+        <int>[1, 2, 3],
+      );
 
       // Sanity: there is data to round-trip.
       final Map<String, Set<Object?>> before = await _tableSnapshot(db);
@@ -103,6 +125,10 @@ void main() {
       expect(restoredPrefs[kLocalePrefsKey], 'hi');
       expect(restoredPrefs[kThemeModePrefsKey], 'light');
       expect(restoredPrefs[kHomeModulesCustomizedKey], true);
+      expect(restoredPrefs[kRemindersEnabledKey], false);
+      expect(restoredPrefs[kRemindersHourKey], 10);
+      expect(restoredPrefs[kHandoverPinKey], '4321');
+      expect(restored['mediaAttachments'], isNotEmpty);
     });
 
     test('export envelope carries version + schema metadata', () async {
@@ -128,6 +154,7 @@ void main() {
           'moneyLoanEntries',
           'customerSubscriptions',
           'appMeta',
+          'mediaAttachments',
         ]),
       );
       expect(envelope['preferences'], isA<Map<String, dynamic>>());

@@ -9,7 +9,10 @@ Future<void> runForwardMigration(
   int toVersion,
 ) async {
   switch (toVersion) {
-    // v25+ — add exactly one case per schema bump.
+    case 25:
+      await m.createTable(db.mediaAttachments);
+      break;
+    // v26+ — add exactly one case per schema bump.
     default:
       break;
   }

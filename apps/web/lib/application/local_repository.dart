@@ -35,6 +35,9 @@ import '../domain/validation/text_rules.dart';
 import '../domain/reminders/reminder_evaluator.dart';
 import '../domain/reminders/reminder_models.dart';
 import 'reminders/reminder_settings.dart';
+import 'verification/verification_settings.dart';
+import '../infrastructure/media/media_store.dart';
+import '../domain/verification/verification_models.dart';
 export '../domain/inventory/unit_code_pool.dart'
     show generateUnitPool, normalizeUnitCodePrefix, UnitOccupancyRow;
 export '../domain/loans/loan_models.dart';
@@ -124,7 +127,7 @@ String _nextStamp() {
 String nextId(String prefix) => '$prefix-${_nextStamp()}';
 
 /// Envelope format version for local backup JSON. Bump on breaking layout changes.
-const int kBackupFormatVersion = 1;
+const int kBackupFormatVersion = 2;
 
 /// SharedPreferences keys captured in a backup and restored verbatim.
 ///
@@ -143,6 +146,20 @@ const List<String> kBackupPreferenceKeys = <String>[
   kReportWidgetsPrefsKey,
   kHomeModulesPrefsKey,
   kHomeModulesCustomizedKey,
+  kRemindersEnabledKey,
+  kRemindersHourKey,
+  kRemindersMinuteKey,
+  kRemindersDueTomorrowKey,
+  kRemindersDueTodayKey,
+  kRemindersOverdueKey,
+  kRemindersLowStockKey,
+  kRemindersLoansDueKey,
+  kLowStockThresholdKey,
+  kHandoverVerificationEnabledKey,
+  kHandoverVerificationMethodKey,
+  kHandoverPinKey,
+  kConditionModeKey,
+  kChecklistItemsKey,
 ];
 
 /// Why a restore was rejected; the presentation layer maps these to l10n copy.
@@ -1332,6 +1349,9 @@ class LocalRepository {
     List<String> lineIds, {
     int? chargedTotalPaise,
     String? note,
+    String? conditionNote,
+    List<String> mediaIds = const <String>[],
+    Map<String, bool>? checklist,
   }) async {
     return _settleOpenRentLines(
       rentalId: rentalId,
@@ -1340,6 +1360,9 @@ class LocalRepository {
       restoreStock: true,
       chargedTotalPaise: chargedTotalPaise,
       note: note,
+      conditionNote: conditionNote,
+      mediaIds: mediaIds,
+      checklist: checklist,
     );
   }
 
@@ -1349,6 +1372,9 @@ class LocalRepository {
     List<String> lineIds, {
     int? chargedTotalPaise,
     String? note,
+    String? conditionNote,
+    List<String> mediaIds = const <String>[],
+    Map<String, bool>? checklist,
   }) async {
     return _settleOpenRentLines(
       rentalId: rentalId,
@@ -1357,6 +1383,9 @@ class LocalRepository {
       restoreStock: false,
       chargedTotalPaise: chargedTotalPaise,
       note: note,
+      conditionNote: conditionNote,
+      mediaIds: mediaIds,
+      checklist: checklist,
     );
   }
 
@@ -1443,6 +1472,9 @@ class LocalRepository {
     required bool restoreStock,
     int? chargedTotalPaise,
     String? note,
+    String? conditionNote,
+    List<String> mediaIds = const <String>[],
+    Map<String, bool>? checklist,
     bool autoVacate = false,
   }) async {
     if (lineIds.isEmpty) {
@@ -1690,6 +1722,23 @@ class LocalRepository {
           at: now,
         ),
       );
+
+      final String? trimmedCondition = conditionNote?.trim();
+      if ((trimmedCondition != null && trimmedCondition.isNotEmpty) ||
+          mediaIds.isNotEmpty ||
+          (checklist != null && checklist.isNotEmpty)) {
+        await _db.into(_db.rentalEvents).insert(
+          RentalEventsCompanion.insert(
+            rentalId: rentalId,
+            title: TimelineTitleKey.conditionRecorded,
+            subtitle: encodeTimelineSubtitle(
+              TimelineSubtitleKey.conditionRecorded,
+              note: trimmedCondition,
+            ),
+            at: now,
+          ),
+        );
+      }
 
       if (noOpenWork) {
         final String? fromStatus = effectiveWorkflowStatusId(
@@ -3938,6 +3987,129 @@ class LocalRepository {
   }
 
   // ---------------------------------------------------------------------------
+  // Media attachments (Track 3)
+  // ---------------------------------------------------------------------------
+
+  MediaAttachment _mapMediaRow(MediaAttachmentRow row) {
+    return MediaAttachment(
+      id: row.id,
+      entityType: row.entityType,
+      entityId: row.entityId,
+      filePath: row.filePath,
+      mimeType: row.mimeType,
+      sizeBytes: row.sizeBytes,
+      caption: row.caption,
+      createdAt: row.createdAt,
+    );
+  }
+
+  /// Saves bytes to platform store and inserts a metadata row.
+  Future<MediaAttachment> attachMedia(
+    String entityType,
+    String entityId,
+    List<int> bytes, {
+    String mimeType = 'image/jpeg',
+    String? caption,
+  }) async {
+    final String id = nextId('MED');
+    final String filePath = await saveImageBytes(id, Uint8List.fromList(bytes));
+    final DateTime now = DateTime.now();
+    await _db.into(_db.mediaAttachments).insert(
+          MediaAttachmentsCompanion.insert(
+            id: id,
+            entityType: entityType,
+            entityId: entityId,
+            filePath: filePath,
+            mimeType: Value<String>(mimeType),
+            sizeBytes: Value<int>(bytes.length),
+            caption: Value<String?>(caption),
+            createdAt: now,
+          ),
+        );
+    return MediaAttachment(
+      id: id,
+      entityType: entityType,
+      entityId: entityId,
+      filePath: filePath,
+      mimeType: mimeType,
+      sizeBytes: bytes.length,
+      caption: caption,
+      createdAt: now,
+    );
+  }
+
+  Future<List<MediaAttachment>> listMedia(
+    String entityType,
+    String entityId,
+  ) async {
+    final List<MediaAttachmentRow> rows = await (_db.select(_db.mediaAttachments)
+          ..where(
+            (t) => t.entityType.equals(entityType) & t.entityId.equals(entityId),
+          )
+          ..orderBy(<OrderingTerm Function($MediaAttachmentsTable)>[
+            ($MediaAttachmentsTable t) => OrderingTerm.desc(t.createdAt),
+          ]))
+        .get();
+    return rows.map(_mapMediaRow).toList(growable: false);
+  }
+
+  Future<void> deleteMedia(String id) async {
+    final MediaAttachmentRow? row = await (_db.select(_db.mediaAttachments)
+          ..where((t) => t.id.equals(id)))
+        .getSingleOrNull();
+    if (row == null) {
+      return;
+    }
+    await deleteImage(row.id);
+    await (_db.delete(_db.mediaAttachments)..where((t) => t.id.equals(id)))
+        .go();
+  }
+
+  Future<Uint8List?> readMediaBytes(String mediaId) async {
+    return readImageBytes(mediaId);
+  }
+
+  Future<void> _relinkMediaEntity({
+    required String mediaId,
+    required String entityType,
+    required String entityId,
+  }) async {
+    await (_db.update(_db.mediaAttachments)..where((t) => t.id.equals(mediaId)))
+        .write(
+      MediaAttachmentsCompanion(
+        entityType: Value<String>(entityType),
+        entityId: Value<String>(entityId),
+      ),
+    );
+  }
+
+  /// Records handover verification on a rental timeline.
+  Future<void> recordHandoverVerification(
+    String rentalId,
+    VerificationRecord record,
+  ) async {
+    final String subtitle = encodeTimelineSubtitle(
+      TimelineSubtitleKey.handoverVerified,
+      args: <String>[record.method.name],
+    );
+    await _db.into(_db.rentalEvents).insert(
+          RentalEventsCompanion.insert(
+            rentalId: rentalId,
+            title: TimelineTitleKey.handoverVerified,
+            subtitle: subtitle,
+            at: record.verifiedAt,
+          ),
+        );
+    for (final String mediaId in record.mediaIds) {
+      await _relinkMediaEntity(
+        mediaId: mediaId,
+        entityType: 'rental',
+        entityId: rentalId,
+      );
+    }
+  }
+
+  // ---------------------------------------------------------------------------
   // Local reminders (Track 2)
   // ---------------------------------------------------------------------------
 
@@ -4050,6 +4222,9 @@ class LocalRepository {
       'appMeta': (await _db.select(_db.appMeta).get())
           .map((AppMetaRow r) => r.toJson())
           .toList(),
+      'mediaAttachments': (await _db.select(_db.mediaAttachments).get())
+          .map((MediaAttachmentRow r) => r.toJson())
+          .toList(),
     };
 
     final Map<String, Object?> preferences = <String, Object?>{};
@@ -4157,12 +4332,15 @@ class LocalRepository {
     final List<Map<String, dynamic>> customerSubscriptions =
         rowsFor('customerSubscriptions');
     final List<Map<String, dynamic>> appMeta = rowsFor('appMeta');
+    final List<Map<String, dynamic>> mediaAttachments =
+        rowsFor('mediaAttachments');
 
     try {
       await _db.transaction(() async {
         // Delete children before parents to respect FK references.
         await _db.delete(_db.rentalNotes).go();
         await _db.delete(_db.rentalEvents).go();
+        await _db.delete(_db.mediaAttachments).go();
         await _db.delete(_db.depositLedger).go();
         await _db.delete(_db.customerSubscriptions).go();
         await _db.delete(_db.moneyLoanEntries).go();
@@ -4212,6 +4390,11 @@ class LocalRepository {
         }
         for (final Map<String, dynamic> j in appMeta) {
           await _db.into(_db.appMeta).insert(AppMetaRow.fromJson(j));
+        }
+        for (final Map<String, dynamic> j in mediaAttachments) {
+          await _db
+              .into(_db.mediaAttachments)
+              .insert(MediaAttachmentRow.fromJson(j));
         }
       });
     } on BackupRestoreException {

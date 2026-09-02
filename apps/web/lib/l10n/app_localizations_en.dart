@@ -2746,4 +2746,188 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reminderDigestBannerDismiss => 'Dismiss';
+
+  @override
+  String get backupMediaNote =>
+      'Photo files on this device are not included in the JSON file — only attachment metadata is saved. Re-attach photos after restore if needed.';
+
+  @override
+  String get verificationSettingsTitle => 'Verification';
+
+  @override
+  String verificationSettingsSubtitle(String appName) {
+    return 'Configure handover checks and return condition capture for $appName.';
+  }
+
+  @override
+  String get verificationSettingsCardSubtitle =>
+      'Handover checks and return condition modes';
+
+  @override
+  String get verificationSettingsOperatorNote =>
+      'Operator-only settings. Customer SMS verification is not included — use offline codes or manual confirmation.';
+
+  @override
+  String get verificationSettingsSaved => 'Verification settings saved';
+
+  @override
+  String get verificationHandoverEnabledTitle => 'Handover verification';
+
+  @override
+  String get verificationHandoverEnabledSubtitle =>
+      'Require a check before generating a new order';
+
+  @override
+  String get verificationHandoverMethodTitle => 'Handover method';
+
+  @override
+  String get verificationMethodManual => 'Manual acknowledge';
+
+  @override
+  String get verificationMethodPin => 'Operator PIN';
+
+  @override
+  String get verificationMethodOtpDisplay => 'Offline code (show customer)';
+
+  @override
+  String get verificationMethodPhoto => 'Photo evidence';
+
+  @override
+  String get verificationMethodChecklist => 'Checklist';
+
+  @override
+  String get verificationPinLabel => 'Handover PIN';
+
+  @override
+  String get verificationPinHelper =>
+      'Stored on this device only — not a security boundary';
+
+  @override
+  String get verificationConditionModeTitle => 'Return condition mode';
+
+  @override
+  String get verificationConditionBasic => 'Basic';
+
+  @override
+  String get verificationConditionStandard => 'Standard';
+
+  @override
+  String get verificationConditionAdvanced => 'Advanced';
+
+  @override
+  String get verificationConditionBasicBody =>
+      'Disposition only — no extra condition capture';
+
+  @override
+  String get verificationConditionStandardBody =>
+      'Optional condition notes and one photo before settlement';
+
+  @override
+  String get verificationConditionAdvancedBody =>
+      'Required checklist and up to three photos before settlement';
+
+  @override
+  String get verificationChecklistTitle => 'Checklist items';
+
+  @override
+  String verificationChecklistItemLabel(int index) {
+    return 'Item $index';
+  }
+
+  @override
+  String get verificationChecklistAdd => 'Add item';
+
+  @override
+  String get verificationChecklistScratches => 'No major scratches';
+
+  @override
+  String get verificationChecklistMissingParts => 'No missing parts';
+
+  @override
+  String get verificationChecklistPowersOn => 'Powers on / works';
+
+  @override
+  String get handoverVerificationTitle => 'Handover verification';
+
+  @override
+  String get handoverVerificationIncomplete =>
+      'Complete handover verification to continue';
+
+  @override
+  String get handoverManualAck => 'Handover acknowledged';
+
+  @override
+  String get handoverPinPrompt => 'Enter your operator PIN to confirm handover';
+
+  @override
+  String get handoverPinFieldLabel => 'PIN';
+
+  @override
+  String get handoverOtpPrompt => 'Ask the customer to confirm this code';
+
+  @override
+  String get handoverOtpConfirm => 'Customer confirmed the code';
+
+  @override
+  String get handoverPhotoPrompt =>
+      'Take or attach a photo of items at handover';
+
+  @override
+  String get handoverPhotoAction => 'Add photo';
+
+  @override
+  String get handoverChecklistPrompt => 'Confirm item condition at handover';
+
+  @override
+  String get returnConditionTitle => 'Return condition';
+
+  @override
+  String get returnConditionLostTitle => 'Lost item condition';
+
+  @override
+  String get returnConditionNoteLabel => 'Condition notes (optional)';
+
+  @override
+  String returnConditionAddPhoto(int current, int max) {
+    return 'Photos ($current of $max)';
+  }
+
+  @override
+  String get returnConditionChecklistHeading => 'Condition checklist';
+
+  @override
+  String get returnEvidenceHeading => 'Evidence photos';
+
+  @override
+  String get timelineTitleHandoverVerified => 'Handover verified';
+
+  @override
+  String get timelineTitleConditionRecorded => 'Condition recorded';
+
+  @override
+  String timelineSubtitleHandoverVerified(String method) {
+    return 'Method: $method';
+  }
+
+  @override
+  String get timelineSubtitleHandoverVerifiedGeneric =>
+      'Handover verification completed';
+
+  @override
+  String timelineSubtitleConditionRecorded(String note) {
+    return 'Notes: $note';
+  }
+
+  @override
+  String get timelineSubtitleConditionRecordedGeneric =>
+      'Return condition captured';
+
+  @override
+  String get onboardingVerificationCopy =>
+      'Owner verification uses offline codes during handover — no SMS required.';
+
+  @override
+  String onboardingVerificationSettingsHint(String appName) {
+    return 'Configure handover checks anytime under More → Verification in $appName.';
+  }
 }

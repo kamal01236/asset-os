@@ -2746,4 +2746,184 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get reminderDigestBannerDismiss => 'बंद करें';
+
+  @override
+  String get backupMediaNote =>
+      'इस डिवाइस की फ़ोटो JSON फ़ाइल में शामिल नहीं हैं — केवल अटैचमेंट मेटाडेटा सहेजा जाता है। रिस्टोर के बाद ज़रूरत हो तो फ़ोटो दोबारा जोड़ें।';
+
+  @override
+  String get verificationSettingsTitle => 'सत्यापन';
+
+  @override
+  String verificationSettingsSubtitle(String appName) {
+    return '$appName के लिए हैंडओवर जाँच और रिटर्न कंडीशन सेट करें।';
+  }
+
+  @override
+  String get verificationSettingsCardSubtitle =>
+      'हैंडओवर जाँच और रिटर्न कंडीशन मोड';
+
+  @override
+  String get verificationSettingsOperatorNote =>
+      'केवल ऑपरेटर सेटिंग। ग्राहक SMS सत्यापन शामिल नहीं — ऑफ़लाइन कोड या मैन्युअल पुष्टि उपयोग करें।';
+
+  @override
+  String get verificationSettingsSaved => 'सत्यापन सेटिंग सहेजी गई';
+
+  @override
+  String get verificationHandoverEnabledTitle => 'हैंडओवर सत्यापन';
+
+  @override
+  String get verificationHandoverEnabledSubtitle =>
+      'नया ऑर्डर बनाने से पहले जाँच आवश्यक';
+
+  @override
+  String get verificationHandoverMethodTitle => 'हैंडओवर विधि';
+
+  @override
+  String get verificationMethodManual => 'मैन्युअल पुष्टि';
+
+  @override
+  String get verificationMethodPin => 'ऑपरेटर PIN';
+
+  @override
+  String get verificationMethodOtpDisplay => 'ऑफ़लाइन कोड (ग्राहक को दिखाएँ)';
+
+  @override
+  String get verificationMethodPhoto => 'फ़ोटो प्रमाण';
+
+  @override
+  String get verificationMethodChecklist => 'चेकलिस्ट';
+
+  @override
+  String get verificationPinLabel => 'हैंडओवर PIN';
+
+  @override
+  String get verificationPinHelper => 'केवल इस डिवाइस पर — सुरक्षा सीमा नहीं';
+
+  @override
+  String get verificationConditionModeTitle => 'रिटर्न कंडीशन मोड';
+
+  @override
+  String get verificationConditionBasic => 'बेसिक';
+
+  @override
+  String get verificationConditionStandard => 'स्टैंडर्ड';
+
+  @override
+  String get verificationConditionAdvanced => 'एडवांस्ड';
+
+  @override
+  String get verificationConditionBasicBody =>
+      'केवल disposition — अतिरिक्त कंडीशन नहीं';
+
+  @override
+  String get verificationConditionStandardBody =>
+      'सेटलमेंट से पहले वैकल्पिक नोट और एक फ़ोटो';
+
+  @override
+  String get verificationConditionAdvancedBody =>
+      'सेटलमेंट से पहले अनिवार्य चेकलिस्ट और तीन फ़ोटो तक';
+
+  @override
+  String get verificationChecklistTitle => 'चेकलिस्ट आइटम';
+
+  @override
+  String verificationChecklistItemLabel(int index) {
+    return 'आइटम $index';
+  }
+
+  @override
+  String get verificationChecklistAdd => 'आइटम जोड़ें';
+
+  @override
+  String get verificationChecklistScratches => 'कोई बड़े खरोंच नहीं';
+
+  @override
+  String get verificationChecklistMissingParts => 'कोई पार्ट गायब नहीं';
+
+  @override
+  String get verificationChecklistPowersOn => 'चालू / काम करता है';
+
+  @override
+  String get handoverVerificationTitle => 'हैंडओवर सत्यापन';
+
+  @override
+  String get handoverVerificationIncomplete =>
+      'जारी रखने के लिए हैंडओवर सत्यापन पूरा करें';
+
+  @override
+  String get handoverManualAck => 'हैंडओवर स्वीकार';
+
+  @override
+  String get handoverPinPrompt => 'हैंडओवर पुष्टि के लिए अपना PIN दर्ज करें';
+
+  @override
+  String get handoverPinFieldLabel => 'PIN';
+
+  @override
+  String get handoverOtpPrompt => 'ग्राहक से यह कोड पुष्टि करवाएँ';
+
+  @override
+  String get handoverOtpConfirm => 'ग्राहक ने कोड की पुष्टि की';
+
+  @override
+  String get handoverPhotoPrompt => 'हैंडओवर पर आइटम की फ़ोटो लें या जोड़ें';
+
+  @override
+  String get handoverPhotoAction => 'फ़ोटो जोड़ें';
+
+  @override
+  String get handoverChecklistPrompt => 'हैंडओवर पर आइटम की स्थिति पुष्टि करें';
+
+  @override
+  String get returnConditionTitle => 'रिटर्न कंडीशन';
+
+  @override
+  String get returnConditionLostTitle => 'खोया आइटम कंडीशन';
+
+  @override
+  String get returnConditionNoteLabel => 'कंडीशन नोट (वैकल्पिक)';
+
+  @override
+  String returnConditionAddPhoto(int current, int max) {
+    return 'फ़ोटो ($current / $max)';
+  }
+
+  @override
+  String get returnConditionChecklistHeading => 'कंडीशन चेकलिस्ट';
+
+  @override
+  String get returnEvidenceHeading => 'प्रमाण फ़ोटो';
+
+  @override
+  String get timelineTitleHandoverVerified => 'हैंडओवर सत्यापित';
+
+  @override
+  String get timelineTitleConditionRecorded => 'कंडीशन दर्ज';
+
+  @override
+  String timelineSubtitleHandoverVerified(String method) {
+    return 'विधि: $method';
+  }
+
+  @override
+  String get timelineSubtitleHandoverVerifiedGeneric => 'हैंडओवर सत्यापन पूरा';
+
+  @override
+  String timelineSubtitleConditionRecorded(String note) {
+    return 'नोट: $note';
+  }
+
+  @override
+  String get timelineSubtitleConditionRecordedGeneric => 'रिटर्न कंडीशन दर्ज';
+
+  @override
+  String get onboardingVerificationCopy =>
+      'मालिक सत्यापन हैंडओवर के दौरान ऑफ़लाइन कोड से होता है — SMS की ज़रूरत नहीं।';
+
+  @override
+  String onboardingVerificationSettingsHint(String appName) {
+    return '$appName में More → Verification से कभी भी हैंडओवर सेट करें।';
+  }
 }

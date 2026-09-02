@@ -16,6 +16,7 @@ import '../domain/orders/order_payment.dart';
 import '../domain/pricing/rental_pricing.dart';
 import '../domain/subscriptions/subscription_coverage.dart';
 import '../domain/subscriptions/subscription_models.dart';
+import '../domain/verification/verification_models.dart';
 import '../application/providers/app_providers.dart';
 import '../application/local_repository.dart';
 import '../application/reminders/reminder_scheduler.dart';
@@ -41,6 +42,8 @@ import 'features/orders/new_order_flow_screen.dart';
 import 'features/orders/order_payment_screen.dart';
 import 'features/orders/rental_detail_nav.dart';
 import 'features/reports/share_reports_screen.dart';
+import 'features/orders/return_verification_sheet.dart';
+import 'features/settings/verification_settings_screen.dart';
 import 'features/settings/backup_restore_screen.dart';
 import 'features/settings/reminders_screen.dart';
 import 'features/templates/business_templates_screen.dart';
@@ -986,6 +989,20 @@ class MoreScreen extends ConsumerWidget {
             Navigator.of(context).push(
               MaterialPageRoute<void>(
                 builder: (_) => const RemindersScreen(),
+              ),
+            );
+          },
+        ),
+        const SizedBox(height: 10),
+        EntityCard(
+          title: l10n.verificationSettingsTitle,
+          subtitle: l10n.verificationSettingsCardSubtitle,
+          leadingIcon: Icons.verified_user_outlined,
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const VerificationSettingsScreen(),
               ),
             );
           },
@@ -1948,6 +1965,20 @@ class _RentalDetailScreenState extends ConsumerState<RentalDetailScreen> {
                         ),
                       );
                     }),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(l10n.returnEvidenceHeading, style: Theme.of(context).textTheme.titleSmall),
+                  const SizedBox(height: 8),
+                  RentalMediaThumbnailGrid(rentalId: rental.id),
                 ],
               ),
             ),
@@ -3893,6 +3924,20 @@ Future<bool> _confirmAndMarkLinesLost({
     return false;
   }
 
+  final VerificationSettings verification =
+      ref.read(verificationSettingsProvider);
+  final ReturnConditionCapture? condition = await showReturnConditionSheet(
+    context: context,
+    ref: ref,
+    rentalId: rental.id,
+    mode: verification.conditionMode,
+    checklistItems: verification.checklistItems,
+    isLost: true,
+  );
+  if (!context.mounted || condition == null) {
+    return false;
+  }
+
   final bool? confirmed = await showDialog<bool>(
     context: context,
     builder: (BuildContext dialogContext) {
@@ -3921,6 +3966,9 @@ Future<bool> _confirmAndMarkLinesLost({
       .markRentalLinesLost(
         rental.id,
         targets.map((RentalLine l) => l.id).toList(),
+        conditionNote: condition.conditionNote,
+        mediaIds: condition.mediaIds,
+        checklist: condition.checklist,
       );
   if (!context.mounted) {
     return result != null;
@@ -4070,6 +4118,19 @@ Future<bool> _confirmAndReturnRental({
     return false;
   }
 
+  final VerificationSettings verification =
+      ref.read(verificationSettingsProvider);
+  final ReturnConditionCapture? condition = await showReturnConditionSheet(
+    context: context,
+    ref: ref,
+    rentalId: rental.id,
+    mode: verification.conditionMode,
+    checklistItems: verification.checklistItems,
+  );
+  if (!context.mounted || condition == null) {
+    return false;
+  }
+
   int computedTotal = 0;
   for (final RentalLine line in targets) {
     computedTotal += line.totalAmountAsOf(rental.startedAt, rental.dueAt, now);
@@ -4186,6 +4247,9 @@ Future<bool> _confirmAndReturnRental({
         targets.map((RentalLine l) => l.id).toList(),
         chargedTotalPaise: chargedTotal,
         note: note,
+        conditionNote: condition.conditionNote,
+        mediaIds: condition.mediaIds,
+        checklist: condition.checklist,
       );
   if (!context.mounted) {
     return result != null;

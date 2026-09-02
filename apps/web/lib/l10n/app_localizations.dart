@@ -4845,6 +4845,324 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Dismiss'**
   String get reminderDigestBannerDismiss;
+
+  /// No description provided for @backupMediaNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo files on this device are not included in the JSON file — only attachment metadata is saved. Re-attach photos after restore if needed.'**
+  String get backupMediaNote;
+
+  /// No description provided for @verificationSettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Verification'**
+  String get verificationSettingsTitle;
+
+  /// No description provided for @verificationSettingsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Configure handover checks and return condition capture for {appName}.'**
+  String verificationSettingsSubtitle(String appName);
+
+  /// No description provided for @verificationSettingsCardSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Handover checks and return condition modes'**
+  String get verificationSettingsCardSubtitle;
+
+  /// No description provided for @verificationSettingsOperatorNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Operator-only settings. Customer SMS verification is not included — use offline codes or manual confirmation.'**
+  String get verificationSettingsOperatorNote;
+
+  /// No description provided for @verificationSettingsSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Verification settings saved'**
+  String get verificationSettingsSaved;
+
+  /// No description provided for @verificationHandoverEnabledTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Handover verification'**
+  String get verificationHandoverEnabledTitle;
+
+  /// No description provided for @verificationHandoverEnabledSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Require a check before generating a new order'**
+  String get verificationHandoverEnabledSubtitle;
+
+  /// No description provided for @verificationHandoverMethodTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Handover method'**
+  String get verificationHandoverMethodTitle;
+
+  /// No description provided for @verificationMethodManual.
+  ///
+  /// In en, this message translates to:
+  /// **'Manual acknowledge'**
+  String get verificationMethodManual;
+
+  /// No description provided for @verificationMethodPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Operator PIN'**
+  String get verificationMethodPin;
+
+  /// No description provided for @verificationMethodOtpDisplay.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline code (show customer)'**
+  String get verificationMethodOtpDisplay;
+
+  /// No description provided for @verificationMethodPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo evidence'**
+  String get verificationMethodPhoto;
+
+  /// No description provided for @verificationMethodChecklist.
+  ///
+  /// In en, this message translates to:
+  /// **'Checklist'**
+  String get verificationMethodChecklist;
+
+  /// No description provided for @verificationPinLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Handover PIN'**
+  String get verificationPinLabel;
+
+  /// No description provided for @verificationPinHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Stored on this device only — not a security boundary'**
+  String get verificationPinHelper;
+
+  /// No description provided for @verificationConditionModeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Return condition mode'**
+  String get verificationConditionModeTitle;
+
+  /// No description provided for @verificationConditionBasic.
+  ///
+  /// In en, this message translates to:
+  /// **'Basic'**
+  String get verificationConditionBasic;
+
+  /// No description provided for @verificationConditionStandard.
+  ///
+  /// In en, this message translates to:
+  /// **'Standard'**
+  String get verificationConditionStandard;
+
+  /// No description provided for @verificationConditionAdvanced.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced'**
+  String get verificationConditionAdvanced;
+
+  /// No description provided for @verificationConditionBasicBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Disposition only — no extra condition capture'**
+  String get verificationConditionBasicBody;
+
+  /// No description provided for @verificationConditionStandardBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional condition notes and one photo before settlement'**
+  String get verificationConditionStandardBody;
+
+  /// No description provided for @verificationConditionAdvancedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Required checklist and up to three photos before settlement'**
+  String get verificationConditionAdvancedBody;
+
+  /// No description provided for @verificationChecklistTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Checklist items'**
+  String get verificationChecklistTitle;
+
+  /// No description provided for @verificationChecklistItemLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Item {index}'**
+  String verificationChecklistItemLabel(int index);
+
+  /// No description provided for @verificationChecklistAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add item'**
+  String get verificationChecklistAdd;
+
+  /// No description provided for @verificationChecklistScratches.
+  ///
+  /// In en, this message translates to:
+  /// **'No major scratches'**
+  String get verificationChecklistScratches;
+
+  /// No description provided for @verificationChecklistMissingParts.
+  ///
+  /// In en, this message translates to:
+  /// **'No missing parts'**
+  String get verificationChecklistMissingParts;
+
+  /// No description provided for @verificationChecklistPowersOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Powers on / works'**
+  String get verificationChecklistPowersOn;
+
+  /// No description provided for @handoverVerificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Handover verification'**
+  String get handoverVerificationTitle;
+
+  /// No description provided for @handoverVerificationIncomplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete handover verification to continue'**
+  String get handoverVerificationIncomplete;
+
+  /// No description provided for @handoverManualAck.
+  ///
+  /// In en, this message translates to:
+  /// **'Handover acknowledged'**
+  String get handoverManualAck;
+
+  /// No description provided for @handoverPinPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your operator PIN to confirm handover'**
+  String get handoverPinPrompt;
+
+  /// No description provided for @handoverPinFieldLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'PIN'**
+  String get handoverPinFieldLabel;
+
+  /// No description provided for @handoverOtpPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask the customer to confirm this code'**
+  String get handoverOtpPrompt;
+
+  /// No description provided for @handoverOtpConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer confirmed the code'**
+  String get handoverOtpConfirm;
+
+  /// No description provided for @handoverPhotoPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Take or attach a photo of items at handover'**
+  String get handoverPhotoPrompt;
+
+  /// No description provided for @handoverPhotoAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Add photo'**
+  String get handoverPhotoAction;
+
+  /// No description provided for @handoverChecklistPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm item condition at handover'**
+  String get handoverChecklistPrompt;
+
+  /// No description provided for @returnConditionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Return condition'**
+  String get returnConditionTitle;
+
+  /// No description provided for @returnConditionLostTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Lost item condition'**
+  String get returnConditionLostTitle;
+
+  /// No description provided for @returnConditionNoteLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Condition notes (optional)'**
+  String get returnConditionNoteLabel;
+
+  /// No description provided for @returnConditionAddPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Photos ({current} of {max})'**
+  String returnConditionAddPhoto(int current, int max);
+
+  /// No description provided for @returnConditionChecklistHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Condition checklist'**
+  String get returnConditionChecklistHeading;
+
+  /// No description provided for @returnEvidenceHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Evidence photos'**
+  String get returnEvidenceHeading;
+
+  /// No description provided for @timelineTitleHandoverVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Handover verified'**
+  String get timelineTitleHandoverVerified;
+
+  /// No description provided for @timelineTitleConditionRecorded.
+  ///
+  /// In en, this message translates to:
+  /// **'Condition recorded'**
+  String get timelineTitleConditionRecorded;
+
+  /// No description provided for @timelineSubtitleHandoverVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Method: {method}'**
+  String timelineSubtitleHandoverVerified(String method);
+
+  /// No description provided for @timelineSubtitleHandoverVerifiedGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'Handover verification completed'**
+  String get timelineSubtitleHandoverVerifiedGeneric;
+
+  /// No description provided for @timelineSubtitleConditionRecorded.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes: {note}'**
+  String timelineSubtitleConditionRecorded(String note);
+
+  /// No description provided for @timelineSubtitleConditionRecordedGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'Return condition captured'**
+  String get timelineSubtitleConditionRecordedGeneric;
+
+  /// No description provided for @onboardingVerificationCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Owner verification uses offline codes during handover — no SMS required.'**
+  String get onboardingVerificationCopy;
+
+  /// No description provided for @onboardingVerificationSettingsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Configure handover checks anytime under More → Verification in {appName}.'**
+  String onboardingVerificationSettingsHint(String appName);
 }
 
 class _AppLocalizationsDelegate

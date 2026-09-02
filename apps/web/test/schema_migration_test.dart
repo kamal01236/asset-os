@@ -6,12 +6,13 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:asset_os/infrastructure/db/app_database.dart';
+import 'package:asset_os/infrastructure/db/migrations/forward_migrations.dart';
 
 import 'support/schema_fixtures.dart';
 
 void main() {
   group('schema migrations', () {
-    test('fresh install is v24 with all tables and key columns', () async {
+    test('fresh install is v25 with all tables and key columns', () async {
       final AppDatabase db = AppDatabase(NativeDatabase.memory());
       addTearDown(db.close);
 
@@ -33,6 +34,7 @@ void main() {
           'customers',
           'deposit_ledger',
           'inventory_items',
+          'media_attachments',
           'money_loan_entries',
           'money_loans',
           'rental_events',
@@ -41,7 +43,7 @@ void main() {
           'rentals',
         ]),
       );
-      expect(tables.length, 11);
+      expect(tables.length, 12);
 
       final bool hasReferenceCode = await db
           .customSelect('PRAGMA table_info(rental_events)')
@@ -106,6 +108,26 @@ void main() {
           .getSingle();
       expect(event.rentalId, 'RNT-V23');
       expect(event.referenceCode, isNull);
+    });
+
+    test('v24 to v25 adds media_attachments table', () async {
+      final AppDatabase db = AppDatabase(NativeDatabase.memory());
+      addTearDown(db.close);
+
+      await db.customStatement('DROP TABLE IF EXISTS media_attachments');
+      await db.customStatement('PRAGMA user_version = 24');
+
+      final Migrator migrator = db.createMigrator();
+      await runForwardMigration(db, migrator, 25);
+
+      final bool hasMedia = await db
+          .customSelect(
+            "SELECT name FROM sqlite_master WHERE type = 'table' "
+            "AND name = 'media_attachments'",
+          )
+          .get()
+          .then((List<QueryRow> rows) => rows.isNotEmpty);
+      expect(hasMedia, isTrue);
     });
   });
 }

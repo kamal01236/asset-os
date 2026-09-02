@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../application/local_repository.dart';
 import '../../../application/providers/app_providers.dart';
+import '../../../application/reminders/reminder_scheduler.dart';
+import '../../../application/reminders/reminder_settings.dart';
 import '../../../domain/config/app_branding.dart';
 import '../../../infrastructure/l10n/india_date_format.dart';
 import '../../../infrastructure/l10n/l10n_ext.dart';
@@ -106,6 +108,13 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
       if (!mounted) {
         return;
       }
+      ref.read(localeProvider.notifier).reloadFromPreferences();
+      ref.read(themeModeProvider.notifier).reloadFromPreferences();
+      final ReminderSettings reminderSettings =
+          ref.read(reminderSettingsProvider.notifier).reloadFromPreferences();
+      ref.read(verificationSettingsProvider.notifier).reloadFromPreferences();
+      await ReminderScheduler(ref.read(repositoryProvider))
+          .refreshScheduledReminders(settings: reminderSettings, l10n: l10n);
       messenger.showSnackBar(
         SnackBar(content: Text(l10n.backupRestoreSuccess)),
       );
@@ -211,6 +220,13 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
                   Text(
                     l10n.backupExportSectionBody,
                     style: textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    l10n.backupMediaNote,
+                    style: textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                   const SizedBox(height: 6),
                   Text(

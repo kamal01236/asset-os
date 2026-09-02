@@ -8,6 +8,8 @@ import '../../domain/models/entities.dart';
 import '../../domain/subscriptions/subscription_models.dart';
 import '../local_repository.dart';
 import '../reminders/reminder_settings.dart';
+import '../verification/verification_settings.dart';
+import '../../domain/verification/verification_models.dart';
 import '../../infrastructure/sharing/whatsapp_share.dart';
 import '../../domain/templates/field_defs.dart';
 import '../../domain/templates/industry_templates.dart';
@@ -214,6 +216,10 @@ class LocaleNotifier extends StateNotifier<Locale> {
     state = Locale(code);
     await _preferences.setString(kLocalePrefsKey, code);
   }
+
+  void reloadFromPreferences() {
+    state = _localeFromPrefs(_preferences);
+  }
 }
 
 /// Persisted theme mode. Defaults to dark when missing or unsupported.
@@ -252,6 +258,10 @@ class ThemeModeNotifier extends StateNotifier<ThemeMode> {
       mode == ThemeMode.light ? 'light' : 'dark',
     );
   }
+
+  void reloadFromPreferences() {
+    state = _themeModeFromPrefs(_preferences);
+  }
 }
 
 /// Persisted reminder notification settings.
@@ -281,6 +291,37 @@ class ReminderSettingsNotifier extends StateNotifier<ReminderSettings> {
 
   Future<void> setLowStockThreshold(int threshold) async {
     await update(state.copyWith(lowStockThreshold: threshold.clamp(0, 5)));
+  }
+
+  ReminderSettings reloadFromPreferences() {
+    state = ReminderSettings.fromPreferences(_preferences);
+    return state;
+  }
+}
+
+/// Persisted handover / return verification settings.
+final verificationSettingsProvider = StateNotifierProvider<
+    VerificationSettingsNotifier, VerificationSettings>((ref) {
+  return VerificationSettingsNotifier(ref.watch(sharedPreferencesProvider));
+});
+
+class VerificationSettingsNotifier extends StateNotifier<VerificationSettings> {
+  VerificationSettingsNotifier(this._preferences)
+      : super(VerificationSettingsStore(_preferences).load());
+
+  final SharedPreferences _preferences;
+
+  late final VerificationSettingsStore _store =
+      VerificationSettingsStore(_preferences);
+
+  Future<void> update(VerificationSettings settings) async {
+    state = settings;
+    await _store.persist(settings);
+  }
+
+  VerificationSettings reloadFromPreferences() {
+    state = _store.load();
+    return state;
   }
 }
 
