@@ -1,5 +1,5 @@
 ---
-description: Hando project context — branding, web-only client, docs SoT, WSL workflow
+description: Hando project context — branding, web+Android client, docs SoT, WSL workflow
 alwaysApply: true
 ---
 
@@ -7,7 +7,7 @@ alwaysApply: true
 
 - Product display name is **Hando**. Change it only via `apps/web/lib/domain/config/app_branding.dart` (`kAppDisplayName`). Do not hardcode "Asset OS" in UI.
 - Keep package/repo ids (`asset_os`, `asset-os`) unless explicitly asked to rename them.
-- Client is **Flutter web only** in `apps/web`. Do not create or commit `android/`, `ios/`, `linux/`, `macos/`, or `windows/` under the app.
+- Client is **Flutter web + Android** in `apps/web` (shared `lib/`). Commit `android/` under `apps/web`. Do not add `ios/`, `linux/`, `macos/`, or `windows/` unless explicitly requested.
+- Web dev: `.\scripts\wsl.ps1 …` (Windows) or `./scripts/dev.sh …` (WSL). Android dev: `.\scripts\setup-android.ps1`, `localrun-android.ps1`, `build-apk-debug.ps1` (Windows PowerShell).
 - Product SoT: `docs/vision/complete-idea-summary.md`. Do not contradict local-first / offline-first / cloud-optional philosophy.
-- Dev entrypoints: `.\scripts\wsl.ps1 …` (Windows) or `./scripts/dev.sh …` (WSL). Prefer these over ad-hoc Flutter commands.
 - Prefer extending existing shell/flows over new frameworks or chart-heavy dashboards.

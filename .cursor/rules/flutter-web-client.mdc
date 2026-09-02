@@ -17,4 +17,4 @@ alwaysApply: false
 - Reuse `lib/presentation/widgets/ui_primitives.dart` and `lib/presentation/theme/app_theme.dart`; avoid one-off styles that fight the shell. Keep remaining screens in `app_shell.dart` until a clear split is needed.
 - User-visible product name: import `kAppDisplayName` from `lib/domain/config/app_branding.dart` — never literal brand strings.
 - Run checks via `.\scripts\wsl.ps1 test` or `./scripts/test.sh`, not a second ad-hoc CI path.
-- Do not add Android/iOS platform folders for web features.
+- Platform hosts: `web/` (WASM Drift, browser print/download) and `android/` (native SQLite, share sheet). Use conditional imports for platform-specific I/O; do not add `ios/` / desktop hosts unless requested.

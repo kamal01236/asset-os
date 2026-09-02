@@ -1,10 +1,10 @@
-# Hando — Flutter web client
+# Hando — Flutter web + Android client
 
-Flutter shell for Hando (web for local validation and GitHub Pages feedback). Native packaging is deferred until after feedback.
+Flutter app for Hando: **web** (GitHub Pages) and **Android** (debug APK) from the same `lib/` codebase. See [ADR-008](../../docs/architecture/decisions/ADR-008-android-packaging.md).
 
 ## Local-first foundation
 
-- **Source of truth:** Drift (SQLite). On web, `sqlite3.wasm` and `drift_worker.js` live under `web/`.
+- **Source of truth:** Drift (SQLite). On **web**, `sqlite3.wasm` and `drift_worker.js` live under `web/`. On **Android**, native SQLite via `drift_flutter`.
 - **Layers:** `lib/presentation/` (UI), `lib/application/` (Riverpod + `LocalRepository`), `lib/domain/` (rules), `lib/infrastructure/` (Drift + share + l10n helpers). Composition root is `lib/main.dart`. See [ADR-005](../../docs/architecture/decisions/ADR-005-client-layering.md).
 - **State:** Riverpod providers watch repository streams; UI screens are `ConsumerWidget`s.
 - **Migration:** One-time import from SharedPreferences `asset_os_snapshot_v1` when the DB is empty. Production first boot does **not** load the Priya/DSLR demo snapshot — only the Unknown customer sentinel, then the Language → Mode → WhatsApp (online) → industry-template wizard seeds inventory.
@@ -17,7 +17,7 @@ cd apps/web
 dart run build_runner build --delete-conflicting-outputs
 ```
 
-## Dev commands
+## Dev commands (web)
 
 Use repo-root scripts from WSL (or `.\scripts\wsl.ps1` from Windows):
 
@@ -35,6 +35,18 @@ Unit tests use `test/support/test_harness.dart` with `seedDemo: false` by defaul
 
 
 Public preview: push to `main` → GitHub Pages at [https://kamal01236.github.io/asset-os/](https://kamal01236.github.io/asset-os/). See the [repository README](../../README.md) for setup and the full command table.
+
+## Dev commands (Android, Windows)
+
+From the repo root in PowerShell:
+
+```powershell
+.\scripts\setup-android.ps1
+.\scripts\localrun-android.ps1
+.\scripts\build-apk-debug.ps1
+```
+
+Requires Flutter on Windows PATH, Android SDK (API 34), JDK 17, and a device or emulator. See [ADR-008](../../docs/architecture/decisions/ADR-008-android-packaging.md).
 
 ## First launch
 

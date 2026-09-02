@@ -6,7 +6,7 @@ Working product name is **Hando** (repo and package ids may still say `asset-os`
 
 ## Status
 
-Product vision lives in the [Complete Idea Summary](docs/vision/complete-idea-summary.md). Flutter web client is at `apps/web` for local validation and customer feedback on GitHub Pages. Native Android/iOS packaging is deferred until after feedback.
+Product vision lives in the [Complete Idea Summary](docs/vision/complete-idea-summary.md). Flutter client at `apps/web` ships **web** (GitHub Pages) and **Android** (debug APK sideload) from one codebase. Play Store / iOS packaging remain deferred.
 
 ## Project Philosophy
 
@@ -21,10 +21,11 @@ Product vision lives in the [Complete Idea Summary](docs/vision/complete-idea-su
 - **Start here:** [Complete Idea Summary](docs/vision/complete-idea-summary.md)
 - Index: [Documentation Index](docs/README.md)
 - Stack decision: [ADR-001: Flutter Web Client](docs/architecture/decisions/ADR-001-mobile-stack.md)
+- Android packaging: [ADR-008: Android packaging](docs/architecture/decisions/ADR-008-android-packaging.md)
 
 ## App
 
-Flutter web client: [`apps/web`](apps/web).
+Flutter client (web + Android): [`apps/web`](apps/web).
 
 ## Dev commands (WSL, web)
 
@@ -51,6 +52,16 @@ From Windows PowerShell:
 .\scripts\wsl.ps1 test orders
 .\scripts\wsl.ps1 wsldeploy
 .\scripts\wsl.ps1 servelocal
+```
+
+### Android (Windows PowerShell)
+
+Install Flutter stable, Android Studio (SDK API 34+), JDK 17, then:
+
+```powershell
+.\scripts\setup-android.ps1      # flutter doctor, pub get, build_runner
+.\scripts\localrun-android.ps1   # flutter run -d android
+.\scripts\build-apk-debug.ps1    # build/app/outputs/flutter-apk/app-debug.apk
 ```
 
 Suite filters: [Test Suites](docs/engineering/test-suites.md). Prefer focused suites during feature work; full `test` before PR/push.

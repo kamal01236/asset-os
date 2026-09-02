@@ -55,7 +55,10 @@ Commands:
   servelocal  Serve build/web locally and print the open URL
   doctor      flutter doctor -v
 
-Flutter web client only (apps/web). Android/Linux desktop doctor failures are expected.
+Flutter web client only (apps/web). Android uses Windows scripts:
+  .\scripts\setup-android.ps1
+  .\scripts\localrun-android.ps1
+  .\scripts\build-apk-debug.ps1
 "@
   exit 0
 }

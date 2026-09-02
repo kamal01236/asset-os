@@ -1,7 +1,8 @@
 import '../../../application/reports/report_document.dart';
 import '../../../domain/config/app_branding.dart';
 import 'report_browser_print_stub.dart'
-    if (dart.library.js_interop) 'report_browser_print_web.dart' as browser;
+    if (dart.library.js_interop) 'report_browser_print_web.dart'
+    if (dart.library.io) 'report_browser_print_io.dart' as browser;
 
 /// Print the current report via the browser (no PDF package).
 void printReportDocument(ReportDocument doc) {

@@ -8,8 +8,10 @@
 .pub/
 **/doc/api/
 
-# Native platform scaffolds (web-only client — do not commit)
+# Native platform scaffolds (commit apps/web/android; still ignore ios/linux/macos/windows)
 **/android/
+!apps/web/android/
+!apps/web/android/**
 **/ios/
 **/linux/
 **/macos/

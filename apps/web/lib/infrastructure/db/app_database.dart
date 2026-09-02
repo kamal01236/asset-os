@@ -1,6 +1,6 @@
 import 'package:drift/drift.dart';
-import 'package:drift_flutter/drift_flutter.dart';
 
+import 'app_database_connection.dart';
 import 'migrations/forward_migrations.dart';
 import 'migrations/legacy_migrations.dart';
 import 'tables.dart';
@@ -51,13 +51,5 @@ class AppDatabase extends _$AppDatabase {
     },
   );
 
-  static QueryExecutor _openConnection() {
-    return driftDatabase(
-      name: 'asset_os',
-      web: DriftWebOptions(
-        sqlite3Wasm: Uri.parse('sqlite3.wasm'),
-        driftWorker: Uri.parse('drift_worker.js'),
-      ),
-    );
-  }
+  static QueryExecutor _openConnection() => openAppDatabase();
 }
