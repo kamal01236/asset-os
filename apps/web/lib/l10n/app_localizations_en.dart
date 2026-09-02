@@ -3108,4 +3108,47 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get maskedPhoneSemanticLabel => 'Phone number hidden for privacy';
+
+  @override
+  String get activityLogTitle => 'Activity log';
+
+  @override
+  String get activityLogSubtitle =>
+      'Recent catalog, backup, and settings changes';
+
+  @override
+  String get activityLogEmptyTitle => 'No activity yet';
+
+  @override
+  String get activityLogEmptySubtitle =>
+      'Changes to customers, resources, backups, and settings will show up here.';
+
+  @override
+  String get auditEventCustomerUpsert => 'Customer saved';
+
+  @override
+  String get auditEventInventoryAdd => 'Resource added';
+
+  @override
+  String get auditEventInventoryUpdate => 'Resource updated';
+
+  @override
+  String get auditEventInventoryDelete => 'Resource deleted';
+
+  @override
+  String get auditEventInventoryArchive => 'Resource archived';
+
+  @override
+  String get auditEventInventoryRestore => 'Resource restored';
+
+  @override
+  String get auditEventBackupRestore => 'Backup restored';
+
+  @override
+  String get auditEventSettingsChanged => 'Settings changed';
+
+  @override
+  String auditEventUnknown(String event) {
+    return '$event';
+  }
 }

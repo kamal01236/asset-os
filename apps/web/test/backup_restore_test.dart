@@ -32,6 +32,7 @@ Future<Map<String, Set<Object?>>> _tableSnapshot(AppDatabase db) async {
         (await db.select(db.customerSubscriptions).get()).toSet(),
     'appMeta': (await db.select(db.appMeta).get()).toSet(),
     'mediaAttachments': (await db.select(db.mediaAttachments).get()).toSet(),
+    'auditEvents': (await db.select(db.auditEvents).get()).toSet(),
   };
 }
 
@@ -56,6 +57,7 @@ Future<void> _wipeAllTables(AppDatabase db) async {
     await db.delete(db.customers).go();
     await db.delete(db.appMeta).go();
     await db.delete(db.mediaAttachments).go();
+    await db.delete(db.auditEvents).go();
   });
 }
 
@@ -120,6 +122,20 @@ void main() {
       final Map<String, Object?> restoredPrefs = _prefsSnapshot(prefs);
 
       for (final String table in exported.keys) {
+        if (table == 'auditEvents') {
+          // Import appends a `backup_restore` row after the restored snapshot.
+          final Set<Object?> restoredAudit =
+              restored[table] ?? const <Object?>{};
+          final Set<Object?> exportedAudit =
+              exported[table] ?? const <Object?>{};
+          expect(
+            restoredAudit.length,
+            exportedAudit.length + 1,
+            reason: 'auditEvents should restore plus one backup_restore row',
+          );
+          expect(restoredAudit.containsAll(exportedAudit), isTrue);
+          continue;
+        }
         expect(
           restored[table],
           equals(exported[table]),
@@ -160,6 +176,7 @@ void main() {
           'customerSubscriptions',
           'appMeta',
           'mediaAttachments',
+          'auditEvents',
         ]),
       );
       expect(envelope['preferences'], isA<Map<String, dynamic>>());
@@ -185,6 +202,26 @@ void main() {
           ),
         ),
       );
+    });
+
+    test('import accepts formatVersion 2 without auditEvents', () async {
+      final LocalRepository repository = await bootRepo(seedDemo: true);
+      final Map<String, dynamic> envelope =
+          jsonDecode(await repository.exportBackupJson())
+              as Map<String, dynamic>;
+      envelope['formatVersion'] = 2;
+      final Map<String, dynamic> tables =
+          envelope['tables'] as Map<String, dynamic>;
+      tables.remove('auditEvents');
+
+      await repository.importBackupJson(
+        jsonEncode(envelope),
+        replaceExisting: true,
+      );
+
+      final List<AuditEvent> events = await repository.listAuditEvents();
+      expect(events, isNotEmpty);
+      expect(events.first.event, 'backup_restore');
     });
 
     test('restore rejects a schema newer than this build', () async {

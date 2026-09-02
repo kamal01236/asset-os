@@ -55,7 +55,6 @@ Documented impurities; do **not** “fix” in this pass:
 
 - Hexagonal ports, Result types, or per-feature packages
 - Splitting the repo / extracting `packages/*` modules
-- Extracting remaining screens from `app_shell.dart`
 - Splitting `LocalRepository` into application use cases + infrastructure DAOs
 - Removing Flutter from domain (`Locale` → `languageCode` strings)
 
@@ -67,6 +66,7 @@ Documented impurities; do **not** “fix” in this pass:
 - `lib/core/` must not return — no shims, no dump folder.
 - Drift codegen still runs from `apps/web` (`dart run build_runner build --delete-conflicting-outputs`); `setup.sh` points at `lib/infrastructure/db/app_database.dart`.
 - Branding constant stays `kAppDisplayName` in `lib/domain/config/app_branding.dart`.
+- Track 5 completed the `app_shell.dart` screen split into `features/*` (customers, inventory, orders, more, shell) with a thin shell orchestrator.
 
 ---
 

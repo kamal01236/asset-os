@@ -54,7 +54,7 @@ void main() {
     expect(find.text('Camera Rental'), findsOneWidget);
   });
 
-  testWidgets('MainApp shows wizard when empty; AppShell when seeded', (
+  testWidgets('MainApp shows wizard when database is empty', (
     WidgetTester tester,
   ) async {
     tester.view.physicalSize = const Size(400, 1200);
@@ -74,6 +74,15 @@ void main() {
     expect(find.byType(OnboardingWizardScreen), findsOneWidget);
     expect(find.byType(AppShell), findsNothing);
     expect(find.text('Choose your language'), findsOneWidget);
+  });
+
+  testWidgets('MainApp shows AppShell when demo data is seeded', (
+    WidgetTester tester,
+  ) async {
+    tester.view.physicalSize = const Size(400, 1200);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
 
     final ProviderContainer seeded = await bootContainer(seedDemo: true);
     expect(seeded.read(needsIndustryOnboardingProvider), isFalse);
@@ -150,7 +159,10 @@ void main() {
     await pumpFrames(tester);
 
     expect(find.text('Your WhatsApp number'), findsOneWidget);
-    expect(find.textContaining('OTP later'), findsOneWidget);
+    expect(
+      find.textContaining('offline codes'),
+      findsOneWidget,
+    );
     expect(find.text('Step 3 of 4'), findsOneWidget);
 
     // Empty / invalid blocks continue.

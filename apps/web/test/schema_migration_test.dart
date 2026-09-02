@@ -12,7 +12,7 @@ import 'support/schema_fixtures.dart';
 
 void main() {
   group('schema migrations', () {
-    test('fresh install is v25 with all tables and key columns', () async {
+    test('fresh install is v26 with all tables and key columns', () async {
       final AppDatabase db = AppDatabase(NativeDatabase.memory());
       addTearDown(db.close);
 
@@ -30,6 +30,7 @@ void main() {
         tables,
         containsAll(<String>[
           'app_meta',
+          'audit_events',
           'customer_subscriptions',
           'customers',
           'deposit_ledger',
@@ -43,7 +44,7 @@ void main() {
           'rentals',
         ]),
       );
-      expect(tables.length, 12);
+      expect(tables.length, 13);
 
       final bool hasReferenceCode = await db
           .customSelect('PRAGMA table_info(rental_events)')
@@ -128,6 +129,26 @@ void main() {
           .get()
           .then((List<QueryRow> rows) => rows.isNotEmpty);
       expect(hasMedia, isTrue);
+    });
+
+    test('v25 to v26 adds audit_events table', () async {
+      final AppDatabase db = AppDatabase(NativeDatabase.memory());
+      addTearDown(db.close);
+
+      await db.customStatement('DROP TABLE IF EXISTS audit_events');
+      await db.customStatement('PRAGMA user_version = 25');
+
+      final Migrator migrator = db.createMigrator();
+      await runForwardMigration(db, migrator, 26);
+
+      final bool hasAudit = await db
+          .customSelect(
+            "SELECT name FROM sqlite_master WHERE type = 'table' "
+            "AND name = 'audit_events'",
+          )
+          .get()
+          .then((List<QueryRow> rows) => rows.isNotEmpty);
+      expect(hasAudit, isTrue);
     });
   });
 }

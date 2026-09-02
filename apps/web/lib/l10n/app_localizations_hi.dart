@@ -3103,4 +3103,46 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get maskedPhoneSemanticLabel => 'गोपनीयता के लिए फ़ोन नंबर छिपा';
+
+  @override
+  String get activityLogTitle => 'गतिविधि लॉग';
+
+  @override
+  String get activityLogSubtitle => 'हाल की कैटलॉग, बैकअप और सेटिंग्स परिवर्तन';
+
+  @override
+  String get activityLogEmptyTitle => 'अभी कोई गतिविधि नहीं';
+
+  @override
+  String get activityLogEmptySubtitle =>
+      'ग्राहक, संसाधन, बैकअप और सेटिंग्स के बदलाव यहाँ दिखेंगे।';
+
+  @override
+  String get auditEventCustomerUpsert => 'ग्राहक सहेजा गया';
+
+  @override
+  String get auditEventInventoryAdd => 'संसाधन जोड़ा गया';
+
+  @override
+  String get auditEventInventoryUpdate => 'संसाधन अपडेट किया गया';
+
+  @override
+  String get auditEventInventoryDelete => 'संसाधन हटाया गया';
+
+  @override
+  String get auditEventInventoryArchive => 'संसाधन संग्रहित';
+
+  @override
+  String get auditEventInventoryRestore => 'संसाधन पुनर्स्थापित';
+
+  @override
+  String get auditEventBackupRestore => 'बैकअप पुनर्स्थापित';
+
+  @override
+  String get auditEventSettingsChanged => 'सेटिंग्स बदलीं';
+
+  @override
+  String auditEventUnknown(String event) {
+    return '$event';
+  }
 }

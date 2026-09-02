@@ -5463,6 +5463,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Phone number hidden for privacy'**
   String get maskedPhoneSemanticLabel;
+
+  /// No description provided for @activityLogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity log'**
+  String get activityLogTitle;
+
+  /// No description provided for @activityLogSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent catalog, backup, and settings changes'**
+  String get activityLogSubtitle;
+
+  /// No description provided for @activityLogEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No activity yet'**
+  String get activityLogEmptyTitle;
+
+  /// No description provided for @activityLogEmptySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Changes to customers, resources, backups, and settings will show up here.'**
+  String get activityLogEmptySubtitle;
+
+  /// No description provided for @auditEventCustomerUpsert.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer saved'**
+  String get auditEventCustomerUpsert;
+
+  /// No description provided for @auditEventInventoryAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Resource added'**
+  String get auditEventInventoryAdd;
+
+  /// No description provided for @auditEventInventoryUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Resource updated'**
+  String get auditEventInventoryUpdate;
+
+  /// No description provided for @auditEventInventoryDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Resource deleted'**
+  String get auditEventInventoryDelete;
+
+  /// No description provided for @auditEventInventoryArchive.
+  ///
+  /// In en, this message translates to:
+  /// **'Resource archived'**
+  String get auditEventInventoryArchive;
+
+  /// No description provided for @auditEventInventoryRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'Resource restored'**
+  String get auditEventInventoryRestore;
+
+  /// No description provided for @auditEventBackupRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup restored'**
+  String get auditEventBackupRestore;
+
+  /// No description provided for @auditEventSettingsChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings changed'**
+  String get auditEventSettingsChanged;
+
+  /// No description provided for @auditEventUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'{event}'**
+  String auditEventUnknown(String event);
 }
 
 class _AppLocalizationsDelegate

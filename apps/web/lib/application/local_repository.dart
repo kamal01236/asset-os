@@ -127,8 +127,31 @@ String _nextStamp() {
 /// Human-readable unique id, e.g. `INV-1710000000000-1`.
 String nextId(String prefix) => '$prefix-${_nextStamp()}';
 
+/// Lite audit row exposed to presentation (no Drift types).
+class AuditEvent {
+  const AuditEvent({
+    required this.id,
+    required this.event,
+    required this.entityType,
+    this.entityId,
+    this.details,
+    required this.createdAt,
+  });
+
+  final String id;
+  final String event;
+  final String entityType;
+  final String? entityId;
+  final String? details;
+  final DateTime createdAt;
+}
+
 /// Envelope format version for local backup JSON. Bump on breaking layout changes.
-const int kBackupFormatVersion = 2;
+///
+/// Import accepts [kBackupFormatVersion] and the previous version (2) so Track 3/4
+/// backups still restore (v2 leaves `auditEvents` empty).
+const int kBackupFormatVersion = 3;
+const int kMinSupportedBackupFormatVersion = 2;
 
 /// SharedPreferences keys captured in a backup and restored verbatim.
 ///
@@ -523,6 +546,72 @@ class LocalRepository {
     });
   }
 
+  Stream<List<AuditEvent>> watchAuditEvents({int limit = 200}) {
+    final query = _db.select(_db.auditEvents)
+      ..orderBy([
+        (t) => OrderingTerm(expression: t.createdAt, mode: OrderingMode.desc),
+      ])
+      ..limit(limit);
+    return query.watch().map(
+          (List<AuditEventRow> rows) =>
+              rows.map(_mapAuditEvent).toList(growable: false),
+        );
+  }
+
+  Future<List<AuditEvent>> listAuditEvents({int limit = 200}) async {
+    final query = _db.select(_db.auditEvents)
+      ..orderBy([
+        (t) => OrderingTerm(expression: t.createdAt, mode: OrderingMode.desc),
+      ])
+      ..limit(limit);
+    final List<AuditEventRow> rows = await query.get();
+    return rows.map(_mapAuditEvent).toList(growable: false);
+  }
+
+  AuditEvent _mapAuditEvent(AuditEventRow row) {
+    return AuditEvent(
+      id: row.id,
+      event: row.event,
+      entityType: row.entityType,
+      entityId: row.entityId,
+      details: row.details,
+      createdAt: row.createdAt,
+    );
+  }
+
+  Future<void> _appendAudit({
+    required String event,
+    required String entityType,
+    String? entityId,
+    String? details,
+    DateTime? at,
+  }) async {
+    final String? trimmedDetails = details?.trim();
+    await _db.into(_db.auditEvents).insert(
+          AuditEventsCompanion.insert(
+            id: nextId('AUD'),
+            event: event,
+            entityType: entityType,
+            entityId: Value<String?>(entityId),
+            details: Value<String?>(
+              (trimmedDetails == null || trimmedDetails.isEmpty)
+                  ? null
+                  : trimmedDetails,
+            ),
+            createdAt: at ?? DateTime.now(),
+          ),
+        );
+  }
+
+  /// Records a settings change (privacy / verification / reminders).
+  Future<void> recordSettingsAudit({String? details}) {
+    return _appendAudit(
+      event: 'settings_changed',
+      entityType: 'settings',
+      details: details,
+    );
+  }
+
   Future<List<Customer>> listCustomers() async {
     final query = _db.select(_db.customers)
       ..orderBy([(t) => OrderingTerm(expression: t.name)]);
@@ -558,6 +647,11 @@ class LocalRepository {
     await (_db.update(_db.inventoryItems)..where((t) => t.id.equals(id))).write(
       InventoryItemsCompanion(catalogActive: Value<bool>(active)),
     );
+    await _appendAudit(
+      event: active ? 'inventory_restore' : 'inventory_archive',
+      entityType: 'inventory',
+      entityId: id,
+    );
   }
 
   /// Hard-delete only when no [RentalItems] reference the catalog id.
@@ -569,6 +663,11 @@ class LocalRepository {
       throw InventoryInUseException(id, referenceCount: refs.length);
     }
     await (_db.delete(_db.inventoryItems)..where((t) => t.id.equals(id))).go();
+    await _appendAudit(
+      event: 'inventory_delete',
+      entityType: 'inventory',
+      entityId: id,
+    );
   }
 
   /// Normalize short codes for storage and uniqueness checks.
@@ -3092,6 +3191,12 @@ class LocalRepository {
         ),
       ),
     );
+    await _appendAudit(
+      event: 'inventory_add',
+      entityType: 'inventory',
+      entityId: id,
+      details: trimmedName,
+    );
     return id;
   }
 
@@ -3331,6 +3436,12 @@ class LocalRepository {
             : Value<int>(securityDepositPaise < 0 ? 0 : securityDepositPaise),
       ),
     );
+    await _appendAudit(
+      event: 'inventory_update',
+      entityType: 'inventory',
+      entityId: id,
+      details: trimmedName,
+    );
   }
 
   Future<Customer> upsertCustomerByPhone({
@@ -3365,6 +3476,12 @@ class LocalRepository {
       qrCode: 'customer:$stamp',
     );
     await _db.into(_db.customers).insert(_customerCompanion(customer));
+    await _appendAudit(
+      event: 'customer_upsert',
+      entityType: 'customer',
+      entityId: customer.id,
+      details: customer.name,
+    );
     return customer;
   }
 
@@ -4201,7 +4318,7 @@ class LocalRepository {
     return DateTime.tryParse(raw)?.toLocal();
   }
 
-  /// Serializes the full local database (all 11 tables) plus the known
+  /// Serializes the full local database (all tables) plus the known
   /// SharedPreferences keys into a versioned JSON envelope.
   ///
   /// Records the export time in [AppMeta] under [lastBackupExportedAtMetaKey]
@@ -4254,6 +4371,9 @@ class LocalRepository {
       'mediaAttachments': (await _db.select(_db.mediaAttachments).get())
           .map((MediaAttachmentRow r) => r.toJson())
           .toList(),
+      'auditEvents': (await _db.select(_db.auditEvents).get())
+          .map((AuditEventRow r) => r.toJson())
+          .toList(),
     };
 
     final Map<String, Object?> preferences = <String, Object?>{};
@@ -4278,13 +4398,14 @@ class LocalRepository {
 
   /// Restores a backup produced by [exportBackupJson].
   ///
-  /// Guards: rejects a malformed envelope, a `formatVersion` other than
-  /// [kBackupFormatVersion], or an `appSchemaVersion` newer than this build's
-  /// [kSchemaBaselineVersion] (the app must be updated first). When
-  /// [replaceExisting] is true every table is wiped and re-inserted inside a
-  /// single Drift transaction; the known preference keys are rewritten to match
-  /// the backup. [replaceExisting] false is reserved for a future merge mode
-  /// and currently rejects (only full replace is supported).
+  /// Guards: rejects a malformed envelope, a `formatVersion` outside
+  /// [kMinSupportedBackupFormatVersion]…[kBackupFormatVersion], or an
+  /// `appSchemaVersion` newer than this build's [kSchemaBaselineVersion]
+  /// (the app must be updated first). When [replaceExisting] is true every
+  /// table is wiped and re-inserted inside a single Drift transaction; the
+  /// known preference keys are rewritten to match the backup.
+  /// [replaceExisting] false is reserved for a future merge mode and currently
+  /// rejects (only full replace is supported).
   Future<void> importBackupJson(
     String json, {
     required bool replaceExisting,
@@ -4304,7 +4425,8 @@ class LocalRepository {
     if (formatVersion is! int) {
       throw const BackupRestoreException(BackupRestoreError.invalidFormat);
     }
-    if (formatVersion != kBackupFormatVersion) {
+    if (formatVersion < kMinSupportedBackupFormatVersion ||
+        formatVersion > kBackupFormatVersion) {
       throw BackupRestoreException(
         BackupRestoreError.unsupportedFormatVersion,
         backupSchemaVersion: envelope['appSchemaVersion'] as int?,
@@ -4363,6 +4485,8 @@ class LocalRepository {
     final List<Map<String, dynamic>> appMeta = rowsFor('appMeta');
     final List<Map<String, dynamic>> mediaAttachments =
         rowsFor('mediaAttachments');
+    // formatVersion 2 backups omit auditEvents → empty table after restore.
+    final List<Map<String, dynamic>> auditEvents = rowsFor('auditEvents');
 
     try {
       await _db.transaction(() async {
@@ -4370,6 +4494,7 @@ class LocalRepository {
         await _db.delete(_db.rentalNotes).go();
         await _db.delete(_db.rentalEvents).go();
         await _db.delete(_db.mediaAttachments).go();
+        await _db.delete(_db.auditEvents).go();
         await _db.delete(_db.depositLedger).go();
         await _db.delete(_db.customerSubscriptions).go();
         await _db.delete(_db.moneyLoanEntries).go();
@@ -4425,6 +4550,9 @@ class LocalRepository {
               .into(_db.mediaAttachments)
               .insert(MediaAttachmentRow.fromJson(j));
         }
+        for (final Map<String, dynamic> j in auditEvents) {
+          await _db.into(_db.auditEvents).insert(AuditEventRow.fromJson(j));
+        }
       });
     } on BackupRestoreException {
       rethrow;
@@ -4434,6 +4562,11 @@ class LocalRepository {
     }
 
     await _restorePreferences(envelope['preferences']);
+    await _appendAudit(
+      event: 'backup_restore',
+      entityType: 'backup',
+      details: 'formatVersion=$formatVersion',
+    );
   }
 
   /// Rewrites the known preference keys to match [raw]; keys absent from the

@@ -108,6 +108,10 @@ final rentalsProvider = StreamProvider<List<Rental>>((ref) {
   return ref.watch(repositoryProvider).watchRentals();
 });
 
+final auditEventsProvider = StreamProvider<List<AuditEvent>>((ref) {
+  return ref.watch(repositoryProvider).watchAuditEvents();
+});
+
 final moneyLoansProvider = StreamProvider<List<MoneyLoan>>((ref) {
   return ref.watch(repositoryProvider).watchMoneyLoans();
 });
@@ -268,18 +272,25 @@ class ThemeModeNotifier extends StateNotifier<ThemeMode> {
 /// Persisted reminder notification settings.
 final reminderSettingsProvider =
     StateNotifierProvider<ReminderSettingsNotifier, ReminderSettings>((ref) {
-  return ReminderSettingsNotifier(ref.watch(sharedPreferencesProvider));
+  return ReminderSettingsNotifier(
+    ref.watch(sharedPreferencesProvider),
+    ref,
+  );
 });
 
 class ReminderSettingsNotifier extends StateNotifier<ReminderSettings> {
-  ReminderSettingsNotifier(this._preferences)
+  ReminderSettingsNotifier(this._preferences, this._ref)
       : super(ReminderSettings.fromPreferences(_preferences));
 
   final SharedPreferences _preferences;
+  final Ref _ref;
 
   Future<void> update(ReminderSettings settings) async {
     state = settings;
     await settings.persist(_preferences);
+    await _ref.read(repositoryProvider).recordSettingsAudit(
+          details: 'reminders',
+        );
   }
 
   Future<void> setEnabled(bool enabled) async {
@@ -303,14 +314,18 @@ class ReminderSettingsNotifier extends StateNotifier<ReminderSettings> {
 /// Persisted handover / return verification settings.
 final verificationSettingsProvider = StateNotifierProvider<
     VerificationSettingsNotifier, VerificationSettings>((ref) {
-  return VerificationSettingsNotifier(ref.watch(sharedPreferencesProvider));
+  return VerificationSettingsNotifier(
+    ref.watch(sharedPreferencesProvider),
+    ref,
+  );
 });
 
 class VerificationSettingsNotifier extends StateNotifier<VerificationSettings> {
-  VerificationSettingsNotifier(this._preferences)
+  VerificationSettingsNotifier(this._preferences, this._ref)
       : super(VerificationSettingsStore(_preferences).load());
 
   final SharedPreferences _preferences;
+  final Ref _ref;
 
   late final VerificationSettingsStore _store =
       VerificationSettingsStore(_preferences);
@@ -318,6 +333,9 @@ class VerificationSettingsNotifier extends StateNotifier<VerificationSettings> {
   Future<void> update(VerificationSettings settings) async {
     state = settings;
     await _store.persist(settings);
+    await _ref.read(repositoryProvider).recordSettingsAudit(
+          details: 'verification',
+        );
   }
 
   VerificationSettings reloadFromPreferences() {
@@ -576,18 +594,25 @@ class OwnerWhatsAppNotifier extends StateNotifier<OwnerWhatsAppSettings> {
 
 final privacySettingsProvider =
     StateNotifierProvider<PrivacySettingsNotifier, PrivacySettings>((ref) {
-  return PrivacySettingsNotifier(ref.watch(sharedPreferencesProvider));
+  return PrivacySettingsNotifier(
+    ref.watch(sharedPreferencesProvider),
+    ref,
+  );
 });
 
 class PrivacySettingsNotifier extends StateNotifier<PrivacySettings> {
-  PrivacySettingsNotifier(this._preferences)
+  PrivacySettingsNotifier(this._preferences, this._ref)
       : super(PrivacySettings.fromPreferences(_preferences));
 
   final SharedPreferences _preferences;
+  final Ref _ref;
 
   Future<void> update(PrivacySettings settings) async {
     state = settings;
     await settings.persist(_preferences);
+    await _ref.read(repositoryProvider).recordSettingsAudit(
+          details: 'privacy',
+        );
   }
 
   PrivacySettings reloadFromPreferences() {

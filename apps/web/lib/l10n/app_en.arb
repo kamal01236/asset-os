@@ -2056,5 +2056,23 @@
   "aboutDbSchemaLabel": "Database schema",
   "aboutAppNameLabel": "App",
   "maskedMoneySemanticLabel": "Amount hidden for privacy",
-  "maskedPhoneSemanticLabel": "Phone number hidden for privacy"
+  "maskedPhoneSemanticLabel": "Phone number hidden for privacy",
+  "activityLogTitle": "Activity log",
+  "activityLogSubtitle": "Recent catalog, backup, and settings changes",
+  "activityLogEmptyTitle": "No activity yet",
+  "activityLogEmptySubtitle": "Changes to customers, resources, backups, and settings will show up here.",
+  "auditEventCustomerUpsert": "Customer saved",
+  "auditEventInventoryAdd": "Resource added",
+  "auditEventInventoryUpdate": "Resource updated",
+  "auditEventInventoryDelete": "Resource deleted",
+  "auditEventInventoryArchive": "Resource archived",
+  "auditEventInventoryRestore": "Resource restored",
+  "auditEventBackupRestore": "Backup restored",
+  "auditEventSettingsChanged": "Settings changed",
+  "auditEventUnknown": "{event}",
+  "@auditEventUnknown": {
+    "placeholders": {
+      "event": { "type": "String" }
+    }
+  }
 }

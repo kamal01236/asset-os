@@ -204,10 +204,15 @@ void main() {
     expect(find.text('Priya Patel'), findsWidgets);
     expect(find.textContaining('6666666666'), findsOneWidget);
 
+    // Tall viewport so More tab ListView builds rows below the fold.
+    tester.view.physicalSize = const Size(400, 3200);
+    await pumpFrames(tester);
+
     await tester.tap(find.text('More'));
     await pumpFrames(tester);
     expect(find.text('Offline simulation'), findsOneWidget);
     expect(find.text('Language'), findsOneWidget);
+    expect(find.text('Activity log'), findsOneWidget);
     expect(find.text('Customize Home'), findsOneWidget);
     expect(find.text('Enabled resource types'), findsOneWidget);
   });

@@ -12,7 +12,10 @@ Future<void> runForwardMigration(
     case 25:
       await m.createTable(db.mediaAttachments);
       break;
-    // v26+ — add exactly one case per schema bump.
+    case 26:
+      await m.createTable(db.auditEvents);
+      break;
+    // v27+ — add exactly one case per schema bump.
     default:
       break;
   }

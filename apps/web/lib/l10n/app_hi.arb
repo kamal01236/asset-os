@@ -2020,5 +2020,23 @@
   "aboutDbSchemaLabel": "डेटाबेस स्कीमा",
   "aboutAppNameLabel": "ऐप",
   "maskedMoneySemanticLabel": "गोपनीयता के लिए राशि छिपी",
-  "maskedPhoneSemanticLabel": "गोपनीयता के लिए फ़ोन नंबर छिपा"
+  "maskedPhoneSemanticLabel": "गोपनीयता के लिए फ़ोन नंबर छिपा",
+  "activityLogTitle": "गतिविधि लॉग",
+  "activityLogSubtitle": "हाल की कैटलॉग, बैकअप और सेटिंग्स परिवर्तन",
+  "activityLogEmptyTitle": "अभी कोई गतिविधि नहीं",
+  "activityLogEmptySubtitle": "ग्राहक, संसाधन, बैकअप और सेटिंग्स के बदलाव यहाँ दिखेंगे।",
+  "auditEventCustomerUpsert": "ग्राहक सहेजा गया",
+  "auditEventInventoryAdd": "संसाधन जोड़ा गया",
+  "auditEventInventoryUpdate": "संसाधन अपडेट किया गया",
+  "auditEventInventoryDelete": "संसाधन हटाया गया",
+  "auditEventInventoryArchive": "संसाधन संग्रहित",
+  "auditEventInventoryRestore": "संसाधन पुनर्स्थापित",
+  "auditEventBackupRestore": "बैकअप पुनर्स्थापित",
+  "auditEventSettingsChanged": "सेटिंग्स बदलीं",
+  "auditEventUnknown": "{event}",
+  "@auditEventUnknown": {
+    "placeholders": {
+      "event": { "type": "String" }
+    }
+  }
 }

@@ -284,3 +284,20 @@ class MediaAttachments extends Table {
   @override
   Set<Column<Object>> get primaryKey => <Column<Object>>{id};
 }
+
+/// Lite append-only audit for mutations without their own domain ledger.
+@DataClassName('AuditEventRow')
+class AuditEvents extends Table {
+  TextColumn get id => text()();
+  /// e.g. `customer_upsert`, `inventory_add`, `backup_restore`, `settings_changed`
+  TextColumn get event => text()();
+  /// `customer` | `inventory` | `backup` | `settings`
+  TextColumn get entityType => text()();
+  TextColumn get entityId => text().nullable()();
+  /// Short plain text; not a PII dump.
+  TextColumn get details => text().nullable()();
+  DateTimeColumn get createdAt => dateTime()();
+
+  @override
+  Set<Column<Object>> get primaryKey => <Column<Object>>{id};
+}
